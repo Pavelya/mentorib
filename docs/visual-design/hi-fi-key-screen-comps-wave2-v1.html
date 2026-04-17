@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mentor IB Hi-Fi Key Screen Comps Wave 2 v1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper-0: #fcfaf4;
+        --paper-1: #f6f1e7;
+        --paper-2: #ede4d4;
+        --ink-900: #1e1b18;
+        --ink-700: #3d3832;
+        --ink-500: #6a625a;
+        --ink-300: #b4aa9c;
+        --forest-700: #173c34;
+        --forest-600: #215347;
+        --forest-500: #2c6a59;
+        --forest-100: #dcebe4;
+        --forest-50: #eff6f1;
+        --clay-600: #b4573e;
+        --clay-100: #f3ded7;
+        --gold-500: #b8913d;
+        --gold-100: #f2e8c8;
+        --mist-100: #e7eef0;
+        --mist-300: #b7c7cc;
+        --success-500: #2f7a58;
+        --warning-500: #a8762a;
+        --danger-500: #b2473b;
+        --shadow-soft: 0 18px 50px rgba(26, 23, 17, 0.09);
+        --shadow-raised: 0 28px 90px rgba(26, 23, 17, 0.12);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "IBM Plex Sans", sans-serif;
+        color: var(--ink-900);
+        background:
+          radial-gradient(circle at top left, rgba(180, 87, 62, 0.09), transparent 28%),
+          radial-gradient(circle at top right, rgba(23, 60, 52, 0.12), transparent 32%),
+          linear-gradient(180deg, #f9f5ec 0%, #f5efe1 100%);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 28px;
+        max-width: 1800px;
+        margin: 0 auto;
+        padding: 28px;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 24px;
+        align-self: start;
+        padding: 24px 20px;
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        border-radius: var(--radius-xl);
+        background: linear-gradient(180deg, rgba(252, 250, 244, 0.95), rgba(246, 241, 231, 0.95));
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: blur(8px);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(23, 60, 52, 0.08);
+        color: var(--forest-700);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .sidebar h1 {
+        margin: 18px 0 12px;
+        font-size: 30px;
+        line-height: 1.04;
+      }
+
+      .serif {
+        font-family: "Instrument Serif", serif;
+        font-style: italic;
+        font-weight: 400;
+      }
+
+      .sidebar p {
+        margin: 0 0 22px;
+        color: var(--ink-500);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .sidebar nav {
+        display: grid;
+        gap: 10px;
+      }
+
+      .sidebar a {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 14px;
+        color: var(--ink-700);
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.48);
+        border: 1px solid rgba(61, 56, 50, 0.06);
+        transition: transform 140ms ease, background-color 140ms ease;
+      }
+
+      .sidebar a:hover {
+        background: rgba(23, 60, 52, 0.09);
+        transform: translateX(2px);
+      }
+
+      .sidebar a span {
+        font-size: 12px;
+        color: var(--ink-500);
+      }
+
+      .content {
+        display: grid;
+        gap: 28px;
+      }
+
+      .deck-note {
+        padding: 26px 30px;
+        border-radius: var(--radius-xl);
+        background: rgba(252, 250, 244, 0.88);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .deck-note h2 {
+        margin: 0 0 8px;
+        font-size: 24px;
+      }
+
+      .deck-note p {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--ink-500);
+      }
+
+      .screen-block {
+        display: grid;
+        gap: 14px;
+      }
+
+      .screen-meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 8px;
+      }
+
+      .screen-meta h2 {
+        margin: 0;
+        font-size: 26px;
+      }
+
+      .screen-meta p {
+        margin: 6px 0 0;
+        font-size: 14px;
+        color: var(--ink-500);
+      }
+
+      .artboard {
+        position: relative;
+        width: 100%;
+        min-height: 1020px;
+        overflow: hidden;
+        border-radius: 34px;
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        background:
+          radial-gradient(circle at top left, rgba(180, 87, 62, 0.05), transparent 24%),
+          radial-gradient(circle at bottom right, rgba(23, 60, 52, 0.08), transparent 28%),
+          var(--paper-0);
+        box-shadow: var(--shadow-raised);
+      }
+
+      .artboard::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(transparent 97%, rgba(61, 56, 50, 0.03) 97%),
+          linear-gradient(90deg, transparent 97%, rgba(61, 56, 50, 0.03) 97%);
+        background-size: 100% 40px, 40px 100%;
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .frame {
+        position: relative;
+        z-index: 1;
+        min-height: 1020px;
+        padding: 28px;
+      }
+
+      .screen-shell {
+        min-height: 964px;
+        border-radius: 26px;
+        overflow: hidden;
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        background: linear-gradient(180deg, rgba(252, 250, 244, 0.98), rgba(247, 242, 233, 0.98));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      }
+
+      .app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px;
+        border-bottom: 1px solid rgba(61, 56, 50, 0.08);
+        background: rgba(252, 250, 244, 0.85);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 700;
+      }
+
+      .brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--forest-700), var(--forest-500));
+        color: #fff;
+        font-family: "Instrument Serif", serif;
+        font-size: 24px;
+        box-shadow: 0 12px 24px rgba(23, 60, 52, 0.25);
+      }
+
+      .nav-links,
+      .meta-links {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 14px;
+        color: var(--ink-500);
+      }
+
+      .nav-links strong {
+        color: var(--ink-900);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 0 20px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .button-primary {
+        background: var(--forest-700);
+        color: #fff;
+        box-shadow: 0 12px 22px rgba(23, 60, 52, 0.18);
+      }
+
+      .button-secondary {
+        background: rgba(255, 255, 255, 0.68);
+        color: var(--ink-900);
+        border-color: rgba(61, 56, 50, 0.08);
+      }
+
+      .button-warm {
+        background: var(--clay-600);
+        color: #fff;
+        box-shadow: 0 12px 22px rgba(180, 87, 62, 0.18);
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        color: var(--ink-900);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .chip.active {
+        background: var(--forest-100);
+        color: var(--forest-700);
+        border-color: rgba(23, 60, 52, 0.12);
+      }
+
+      .chip.warm {
+        background: var(--clay-100);
+        color: var(--clay-600);
+      }
+
+      .chip.gold {
+        background: var(--gold-100);
+        color: #8e6e22;
+      }
+
+      .chip.mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      .panel {
+        border-radius: 26px;
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .panel.soft {
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .panel.mist {
+        background: rgba(231, 238, 240, 0.78);
+      }
+
+      .panel.forest {
+        background: linear-gradient(180deg, rgba(23, 60, 52, 0.96), rgba(33, 83, 71, 0.96));
+        color: #fff;
+      }
+
+      .panel.warm {
+        background: linear-gradient(180deg, rgba(243, 222, 215, 0.85), rgba(252, 250, 244, 0.98));
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .section-kicker {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ink-500);
+        font-weight: 700;
+      }
+
+      .panel-title {
+        margin: 4px 0 0;
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
+      .section-copy {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.65;
+        color: var(--ink-500);
+      }
+
+      .summary-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(239, 246, 241, 0.84));
+        border: 1px solid rgba(23, 60, 52, 0.1);
+      }
+
+      .summary-bar strong {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--forest-700);
+      }
+
+      .summary-pill {
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(61, 56, 50, 0.07);
+        font-size: 13px;
+        color: var(--ink-700);
+      }
+
+      .summary-pill.urgent {
+        background: rgba(243, 222, 215, 0.86);
+        color: var(--clay-600);
+      }
+
+      .screen-footer-note {
+        padding: 0 8px;
+        font-size: 13px;
+        color: var(--ink-500);
+      }
+
+      .person {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+
+      .avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        background:
+          linear-gradient(135deg, rgba(23, 60, 52, 0.12), rgba(184, 145, 61, 0.18)),
+          linear-gradient(180deg, #d8d0c2, #f4ebdc);
+        position: relative;
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+
+      .avatar::after {
+        content: "";
+        position: absolute;
+        inset: 14px 12px 10px;
+        border-radius: 999px 999px 40% 40%;
+        background:
+          radial-gradient(circle at 50% 30%, #eadfcd 0, #e7d7c3 42%, transparent 43%),
+          radial-gradient(circle at 50% 78%, #6d5748 0, #6d5748 16%, transparent 17%),
+          linear-gradient(180deg, #493529 0%, #7a5d49 100%);
+      }
+
+      .person h3,
+      .person h4 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .person p {
+        margin: 4px 0 0;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-500);
+      }
+
+      .metric-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .metric {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(246, 241, 231, 0.72);
+        border: 1px solid rgba(61, 56, 50, 0.07);
+        font-size: 13px;
+      }
+
+      .metric strong,
+      .metric span {
+        display: block;
+      }
+
+      .metric span {
+        color: var(--ink-500);
+      }
+
+      .metric strong.mono {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+      }
+
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .compare-grid,
+      .messages-grid,
+      .lessons-grid,
+      .schedule-grid,
+      .students-grid,
+      .application-grid {
+        display: grid;
+        gap: 18px;
+        padding: 22px;
+      }
+
+      .compare-table {
+        display: grid;
+        gap: 0;
+        overflow: hidden;
+      }
+
+      .compare-row {
+        display: grid;
+        grid-template-columns: 220px repeat(3, minmax(0, 1fr));
+        gap: 0;
+        border-top: 1px solid rgba(61, 56, 50, 0.08);
+      }
+
+      .compare-row:first-child {
+        border-top: none;
+      }
+
+      .compare-label {
+        padding: 18px;
+        background: rgba(246, 241, 231, 0.74);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ink-500);
+        font-weight: 700;
+      }
+
+      .compare-cell {
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.7);
+        border-left: 1px solid rgba(61, 56, 50, 0.06);
+      }
+
+      .compare-cell.highlight {
+        background: linear-gradient(180deg, rgba(239, 246, 241, 0.95), rgba(255, 255, 255, 0.82));
+      }
+
+      .compare-top .compare-label {
+        background: rgba(246, 241, 231, 0.88);
+      }
+
+      .compare-header-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .compare-fit {
+        font-size: 16px;
+        line-height: 1.45;
+        font-weight: 600;
+      }
+
+      .compare-bullets {
+        display: grid;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ink-700);
+      }
+
+      .compare-actions {
+        position: absolute;
+        left: 58px;
+        right: 58px;
+        bottom: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 18px 20px;
+        border-radius: 22px;
+        background: rgba(23, 60, 52, 0.96);
+        color: #fff;
+        box-shadow: 0 24px 60px rgba(23, 60, 52, 0.28);
+      }
+
+      .messages-layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 18px;
+      }
+
+      .thread-list,
+      .thread-main {
+        padding: 18px;
+      }
+
+      .thread-items {
+        display: grid;
+        gap: 12px;
+      }
+
+      .thread-item {
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+      }
+
+      .thread-item.active {
+        background: linear-gradient(180deg, rgba(239, 246, 241, 0.95), rgba(255, 255, 255, 0.82));
+        border-color: rgba(23, 60, 52, 0.12);
+      }
+
+      .thread-item strong {
+        display: block;
+        font-size: 15px;
+      }
+
+      .thread-item p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-500);
+      }
+
+      .thread-head {
+        display: grid;
+        gap: 14px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(61, 56, 50, 0.08);
+      }
+
+      .context-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .message-stream {
+        display: grid;
+        gap: 16px;
+        padding: 18px 0;
+      }
+
+      .day-marker {
+        text-align: center;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--ink-500);
+      }
+
+      .message {
+        max-width: 68%;
+        padding: 16px 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .message.out {
+        margin-left: auto;
+        background: linear-gradient(180deg, rgba(239, 246, 241, 0.96), rgba(220, 235, 228, 0.92));
+        border-color: rgba(23, 60, 52, 0.12);
+      }
+
+      .message.system {
+        max-width: 100%;
+        background: rgba(246, 241, 231, 0.76);
+      }
+
+      .composer {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding-top: 16px;
+        border-top: 1px solid rgba(61, 56, 50, 0.08);
+      }
+
+      .composer-box {
+        min-height: 60px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        color: var(--ink-500);
+        font-size: 14px;
+      }
+
+      .lessons-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 18px;
+      }
+
+      .tab-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .tab {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .tab.active {
+        background: var(--forest-700);
+        color: #fff;
+        border-color: transparent;
+      }
+
+      .lesson-list,
+      .lesson-detail,
+      .schedule-editor,
+      .schedule-preview,
+      .students-list,
+      .student-detail,
+      .application-main,
+      .application-rail {
+        padding: 20px;
+      }
+
+      .lesson-cards {
+        display: grid;
+        gap: 14px;
+      }
+
+      .lesson-card {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+      }
+
+      .lesson-card.selected {
+        background: linear-gradient(180deg, rgba(239, 246, 241, 0.95), rgba(255, 255, 255, 0.82));
+        border-color: rgba(23, 60, 52, 0.12);
+      }
+
+      .lesson-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+
+      .lesson-top strong {
+        display: block;
+        font-size: 17px;
+      }
+
+      .lesson-top p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: var(--ink-500);
+        line-height: 1.55;
+      }
+
+      .detail-stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .detail-block {
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+      }
+
+      .schedule-layout,
+      .students-layout,
+      .application-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 18px;
+      }
+
+      .notice-strip {
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(243, 222, 215, 0.5);
+        border: 1px solid rgba(180, 87, 62, 0.1);
+        font-size: 14px;
+        color: var(--ink-700);
+      }
+
+      .rule-list,
+      .student-cards,
+      .checklist-items,
+      .field-stack,
+      .upload-boxes {
+        display: grid;
+        gap: 12px;
+      }
+
+      .rule-card,
+      .student-row,
+      .check-item,
+      .field,
+      .upload-box {
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.76);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+      }
+
+      .week-grid {
+        display: grid;
+        grid-template-columns: 100px repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .week-grid .head,
+      .week-grid .time,
+      .week-grid .slot {
+        padding: 14px 10px;
+        border-radius: 14px;
+        text-align: center;
+        font-size: 13px;
+      }
+
+      .week-grid .head,
+      .week-grid .time {
+        background: rgba(246, 241, 231, 0.76);
+        color: var(--ink-500);
+      }
+
+      .week-grid .slot {
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(61, 56, 50, 0.07);
+      }
+
+      .week-grid .slot.on {
+        background: linear-gradient(180deg, rgba(239, 246, 241, 0.95), rgba(220, 235, 228, 0.92));
+        border-color: rgba(23, 60, 52, 0.12);
+      }
+
+      .student-row {
+        display: grid;
+        gap: 14px;
+      }
+
+      .student-meta {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .data-pairs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .data-pair {
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(246, 241, 231, 0.72);
+        border: 1px solid rgba(61, 56, 50, 0.07);
+        font-size: 13px;
+      }
+
+      .data-pair span {
+        display: block;
+        color: var(--ink-500);
+        margin-bottom: 4px;
+      }
+
+      .check-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .check-item strong {
+        font-size: 15px;
+      }
+
+      .check-item p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink-500);
+      }
+
+      .field strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .input {
+        min-height: 48px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(252, 250, 244, 0.9);
+        border: 1px solid rgba(61, 56, 50, 0.08);
+        color: var(--ink-500);
+        font-size: 14px;
+      }
+
+      .textarea {
+        min-height: 120px;
+      }
+
+      .upload-box {
+        min-height: 110px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: var(--ink-500);
+        line-height: 1.6;
+      }
+
+      .mono {
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      @media (max-width: 1200px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: relative;
+          top: auto;
+        }
+
+        .nav-links {
+          display: none;
+        }
+
+        .compare-row,
+        .messages-layout,
+        .lessons-layout,
+        .schedule-layout,
+        .students-layout,
+        .application-layout,
+        .student-meta,
+        .week-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .compare-actions {
+          position: static;
+          margin: 18px 22px 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="eyebrow">Wave 2 hi-fi</div>
+        <h1>Mentor IB <span class="serif">shared</span> ecosystem screens</h1>
+        <p>
+          Second-pass production comps extending the approved visual route into comparison, messaging,
+          and the tutor workflow system.
+        </p>
+        <nav>
+          <a href="#compare">Compare <span>Student</span></a>
+          <a href="#messages">Messages <span>Shared</span></a>
+          <a href="#tutor-lessons">Tutor Lessons <span>Tutor</span></a>
+          <a href="#tutor-schedule">Tutor Schedule <span>Tutor</span></a>
+          <a href="#tutor-students">Tutor Students <span>Tutor</span></a>
+          <a href="#tutor-application">Tutor Application <span>Tutor</span></a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <section class="deck-note panel soft">
+          <h2>What this deck is doing</h2>
+          <p>
+            Wave 2 extends the same approved design language into the cross-role continuity surfaces.
+            The goal here is to prove that compare, messages, lessons, schedule, students, and onboarding
+            all feel like one system rather than separate tools.
+          </p>
+        </section>
+
+        <section class="screen-block" id="compare">
+          <div class="screen-meta">
+            <div>
+              <h2>Compare</h2>
+              <p>Small-shortlist decision surface with anchored tutor columns and clear differences in fit, trust, and booking confidence.</p>
+            </div>
+            <div class="eyebrow">Desktop comp</div>
+          </div>
+          <div class="artboard">
+            <div class="frame">
+              <div class="screen-shell">
+                <header class="app-header">
+                  <div class="brand">
+                    <div class="brand-mark">I</div>
+                    <div>Mentor IB</div>
+                  </div>
+                  <nav class="nav-links">
+                    <div>Results</div>
+                    <strong>Compare</strong>
+                    <div>Saved</div>
+                  </nav>
+                  <div class="meta-links">
+                    <div class="button button-secondary">Back to results</div>
+                  </div>
+                </header>
+
+                <div class="compare-grid">
+                  <div class="summary-bar">
+                    <strong>Current need</strong>
+                    <div class="summary-pill">English A HL</div>
+                    <div class="summary-pill">IA feedback</div>
+                    <div class="summary-pill urgent">Urgent</div>
+                    <div class="summary-pill">Evenings</div>
+                    <div class="summary-pill mono">Europe/Warsaw</div>
+                  </div>
+
+                  <section class="panel" style="padding: 22px;">
+                    <div class="panel-header">
+                      <div>
+                        <div class="section-kicker">Small shortlist</div>
+                        <h3 class="panel-title">Compare what actually changes the decision.</h3>
+                      </div>
+                      <div class="chip gold">3 tutors selected</div>
+                    </div>
+
+                    <div class="compare-table">
+                      <div class="compare-row compare-top">
+                        <div class="compare-label">Tutor</div>
+                        <div class="compare-cell highlight">
+                          <div class="compare-header-card">
+                            <div class="person">
+                              <div class="avatar"></div>
+                              <div>
+                                <h3>Ivan M.</h3>
+                                <p>English A, TOK, EE guidance</p>
+                              </div>
+                            </div>
+                            <div class="chip-row">
+                              <div class="chip gold">4.9 - 42 reviews</div>
+                              <div class="chip active">Best fit</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="compare-cell">
+                          <div class="compare-header-card">
+                            <div class="person">
+                              <div class="avatar"></div>
+                              <div>
+                                <h3>Alicia R.</h3>
+                                <p>Weekly support and oral prep</p>
+                              </div>
+                            </div>
+                            <div class="chip-row">
+                              <div class="chip gold">4.8 - 31 reviews</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="compare-cell">
+                          <div class="compare-header-card">
+                            <div class="person">
+                              <div class="avatar"></div>
+                              <div>
+                                <h3>Marcus T.</h3>
+                                <p>Language confidence crossover</p>
+                              </div>
+                            </div>
+                            <div class="chip-row">
+                              <div class="chip gold">4.7 - 18 reviews</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="compare-row">
+                        <div class="compare-label">Best for</div>
+                        <div class="compare-cell highlight"><div class="compare-fit">Fast draft structure feedback and next-step clarity.</div></div>
+                        <div class="compare-cell"><div class="compare-fit">Steady weekly support and calm explanation.</div></div>
+                        <div class="compare-cell"><div class="compare-fit">Language confidence plus general essay support.</div></div>
+                      </div>
+
+                      <div class="compare-row">
+                        <div class="compare-label">Fit reasons</div>
+                        <div class="compare-cell highlight">
+                          <div class="compare-bullets">
+                            <div>Strong review language around commentary structure.</div>
+                            <div>High overlap with your urgent evening window.</div>
+                            <div>Specific English A HL positioning.</div>
+                          </div>
+                        </div>
+                        <div class="compare-cell">
+                          <div class="compare-bullets">
+                            <div>Strong for recurring support rather than one urgent draft rescue.</div>
+                            <div>Clear oral and writing confidence coaching.</div>
+                          </div>
+                        </div>
+                        <div class="compare-cell">
+                          <div class="compare-bullets">
+                            <div>Lower specificity for this exact need.</div>
+                            <div>Useful if language confidence is part of the problem.</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="compare-row">
+                        <div class="compare-label">Availability</div>
+                        <div class="compare-cell highlight"><strong class="mono">Wed 18:30</strong></div>
+                        <div class="compare-cell"><strong class="mono">Thu 17:00</strong></div>
+                        <div class="compare-cell"><strong class="mono">Fri 19:00</strong></div>
+                      </div>
+
+                      <div class="compare-row">
+                        <div class="compare-label">Trust proof</div>
+                        <div class="compare-cell highlight">Verified profile, strong review signal, clear IB writing scenarios.</div>
+                        <div class="compare-cell">Verified profile, strong teaching-style consistency.</div>
+                        <div class="compare-cell">Verified profile, lighter review depth for this need.</div>
+                      </div>
+
+                      <div class="compare-row">
+                        <div class="compare-label">Price</div>
+                        <div class="compare-cell highlight">$48 trial</div>
+                        <div class="compare-cell">$52 lesson</div>
+                        <div class="compare-cell">$39 lesson</div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <div class="compare-actions">
+                    <div>
+                      <div class="section-kicker" style="color: rgba(255, 255, 255, 0.7);">Decision support</div>
+                      <div style="font-size: 18px; font-weight: 600; margin-top: 6px;">Ivan is currently the strongest fit for the active need.</div>
+                    </div>
+                    <div class="action-row">
+                      <div class="button button-secondary">Remove Marcus</div>
+                      <div class="button button-warm">Book with Ivan</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-footer-note">Primary shared components: <code>NeedSummaryBar</code>, <code>CompareTable</code>, <code>PersonSummary</code>.</div>
+        </section>
+
+        <section class="screen-block" id="messages">
+          <div class="screen-meta">
+            <div>
+              <h2>Messages</h2>
+              <p>One conversation shell for both roles, anchored in lesson context and teaching continuity instead of generic chat tropes.</p>
+            </div>
+            <div class="eyebrow">Desktop comp</div>
+          </div>
+          <div class="artboard">
+            <div class="frame">
+              <div class="screen-shell">
+                <header class="app-header">
+                  <div class="brand">
+                    <div class="brand-mark">I</div>
+                    <div>Mentor IB</div>
+                  </div>
+                  <nav class="nav-links">
+                    <div>Lessons</div>
+                    <strong>Messages</strong>
+                    <div>Students</div>
+                  </nav>
+                  <div class="meta-links">
+                    <div class="chip active">4 unread</div>
+                  </div>
+                </header>
+
+                <div class="messages-grid">
+                  <div class="messages-layout">
+                    <aside class="panel thread-list">
+                      <div class="panel-header">
+                        <div>
+                          <div class="section-kicker">Conversations</div>
+                          <h3 class="panel-title">Teaching continuity lives here</h3>
+                        </div>
+                        <div class="chip gold">Shared shell</div>
+                      </div>
+                      <div class="thread-items">
+                        <div class="thread-item active">
+                          <strong>Mira K.</strong>
+                          <p>English A HL - Upcoming lesson - "I uploaded the revised paragraph notes."</p>
+                        </div>
+                        <div class="thread-item">
+                          <strong>Daniel P.</strong>
+                          <p>TOK planning - New thread - exhibition prompt clarification</p>
+                        </div>
+                        <div class="thread-item">
+                          <strong>System</strong>
+                          <p>Reschedule confirmation - Thu 17:00 moved to Fri 18:00</p>
+                        </div>
+                        <div class="thread-item">
+                          <strong>Sofia A.</strong>
+                          <p>Completed lesson - asking about next draft milestone</p>
+                        </div>
+                      </div>
+                    </aside>
+
+                    <section class="panel thread-main">
+                      <div class="thread-head">
+                        <div class="person">
+                          <div class="avatar"></div>
+                          <div>
+                            <h3>Mira K.</h3>
+                            <p>English A HL - Commentary draft review - Lesson tomorrow at 18:30</p>
+                          </div>
+                        </div>
+                        <div class="context-row">
+                          <div class="chip active">Upcoming lesson</div>
+                          <div class="chip">English A HL</div>
+                          <div class="chip">IA feedback</div>
+                          <div class="chip mono">Wed 18:30</div>
+                        </div>
+                      </div>
+
+                      <div class="message-stream">
+                        <div class="day-marker">Today</div>
+                        <div class="message system">Lesson request confirmed. Shared context stays attached so both people can see timing, focus, and updates in one place.</div>
+                        <div class="message">
+                          Hi Ivan, I uploaded the revised paragraph notes. I am still confused about how to make the commentary structure less repetitive.
+                        </div>
+                        <div class="message out">
+                          Thanks, I can already see the pattern. Tomorrow we should focus on paragraph logic first, then language cleanup after the structure is clearer.
+                        </div>
+                        <div class="message">
+                          That helps. I mostly need to know what to fix first instead of trying to rewrite everything.
+                        </div>
+                      </div>
+
+                      <div class="composer">
+                        <div class="composer-box">Reply with lesson context preserved...</div>
+                        <div class="action-row">
+                          <div class="button button-secondary">Attach</div>
+                          <div class="button button-primary">Send</div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-footer-note">Primary shared components: <code>ConversationShell</code>, <code>PersonSummary</code>, <code>ContextChipRow</code>.</div>
+        </section>
+
+        <section class="screen-block" id="tutor-lessons">
+          <div class="screen-meta">
+            <div>
+              <h2>Tutor Lessons</h2>
+              <p>Lesson lifecycle screen using the same lesson grammar as the student side, with tutor-specific actions layered on top.</p>
+            </div>
+            <div class="eyebrow">Desktop comp</div>
+          </div>
+          <div class="artboard">
+            <div class="frame">
+              <div class="screen-shell">
+                <header class="app-header">
+                  <div class="brand">
+                    <div class="brand-mark">I</div>
+                    <div>Mentor IB</div>
+                  </div>
+                  <nav class="nav-links">
+                    <div>Overview</div>
+                    <strong>Lessons</strong>
+                    <div>Students</div>
+                    <div>Schedule</div>
+                  </nav>
+                  <div class="meta-links">
+                    <div class="button button-secondary">Export week</div>
+                  </div>
+                </header>
+
+                <div class="lessons-grid">
+                  <section class="panel lesson-list">
+                    <div class="panel-header">
+                      <div>
+                        <div class="section-kicker">Requests and lessons</div>
+                        <h3 class="panel-title">One lesson system, not a logistics board.</h3>
+                      </div>
+                      <div class="tab-row">
+                        <div class="tab active">Pending</div>
+                        <div class="tab">Upcoming</div>
+                        <div class="tab">Past</div>
+                        <div class="tab">Cancelled</div>
+                      </div>
+                    </div>
+
+                    <div class="lessons-layout">
+                      <div class="lesson-cards">
+                        <div class="lesson-card selected">
+                          <div class="lesson-top">
+                            <div>
+                              <strong>TOK essay planning with Daniel P.</strong>
+                              <p>Requested for Thu 17:00 - student needs help narrowing argument structure and examples.</p>
+                            </div>
+                            <div class="chip warm">Pending</div>
+                          </div>
+                          <div class="chip-row">
+                            <div class="chip">TOK</div>
+                            <div class="chip">Essay structure</div>
+                            <div class="chip mono">Thu 17:00</div>
+                          </div>
+                          <div class="action-row" style="margin-top: 16px;">
+                            <div class="button button-primary">Accept</div>
+                            <div class="button button-secondary">Reschedule</div>
+                            <div class="button button-secondary">Decline</div>
+                          </div>
+                        </div>
+
+                        <div class="lesson-card">
+                          <div class="lesson-top">
+                            <div>
+                              <strong>English A HL draft review with Mira K.</strong>
+                              <p>Tomorrow at 18:30 - commentary structure, teacher comments, and revision order.</p>
+                            </div>
+                            <div class="chip active">Upcoming</div>
+                          </div>
+                          <div class="chip-row">
+                            <div class="chip">English A HL</div>
+                            <div class="chip">IA feedback</div>
+                            <div class="chip mono">Wed 18:30</div>
+                          </div>
+                        </div>
+
+                        <div class="lesson-card">
+                          <div class="lesson-top">
+                            <div>
+                              <strong>Weekly support with Alicia S.</strong>
+                              <p>Recurring Tuesday block - oral prep plus written structure follow-up.</p>
+                            </div>
+                            <div class="chip gold">Recurring</div>
+                          </div>
+                          <div class="chip-row">
+                            <div class="chip">Weekly support</div>
+                            <div class="chip mono">Tue 19:00</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <aside class="panel lesson-detail mist">
+                        <div class="panel-header">
+                          <div>
+                            <div class="section-kicker">Lesson detail</div>
+                            <h3 class="panel-title">TOK essay planning with Daniel P.</h3>
+                          </div>
+                          <div class="chip warm">Pending request</div>
+                        </div>
+                        <div class="detail-stack">
+                          <div class="detail-block">
+                            <strong>Student focus</strong>
+                            <p class="section-copy" style="margin-top: 8px;">Needs help choosing between two argument routes and building stronger example logic.</p>
+                          </div>
+                          <div class="detail-block">
+                            <strong>Requested slot</strong>
+                            <p class="section-copy mono" style="margin-top: 8px;">Thu 17:00 - Europe/Warsaw</p>
+                          </div>
+                          <div class="detail-block">
+                            <strong>Recommended action</strong>
+                            <p class="section-copy" style="margin-top: 8px;">Accept if you want to keep the slot. Reschedule if you need a longer lead time to review materials.</p>
+                          </div>
+                        </div>
+                        <div class="action-row" style="margin-top: 18px;">
+                          <div class="button button-primary">Accept lesson</div>
+                          <div class="button button-secondary">Message first</div>
+                        </div>
+                      </aside>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-footer-note">Primary shared components: <code>LessonCard</code>, <code>LessonDetail</code>, <code>TabBar</code>.</div>
+        </section>
+
+        <section class="screen-block" id="tutor-schedule">
+          <div class="screen-meta">
+            <div>
+              <h2>Tutor Schedule</h2>
+              <p>Editing and student-visible preview stay together so availability changes are understandable before saving.</p>
+            </div>
+            <div class="eyebrow">Desktop comp</div>
+          </div>
+          <div class="artboard">
+            <div class="frame">
+              <div class="screen-shell">
+                <header class="app-header">
+                  <div class="brand">
+                    <div class="brand-mark">I</div>
+                    <div>Mentor IB</div>
+                  </div>
+                  <nav class="nav-links">
+                    <div>Overview</div>
+                    <div>Lessons</div>
+                    <strong>Schedule</strong>
+                    <div>Earnings</div>
+                  </nav>
+                  <div class="meta-links">
+                    <div class="button button-secondary">Reset</div>
+                    <div class="button button-primary">Save changes</div>
+                  </div>
+                </header>
+
+                <div class="schedule-grid">
+                  <div class="summary-bar">
+                    <strong>Schedule rules</strong>
+                    <div class="summary-pill mono">Europe/Warsaw</div>
+                    <div class="summary-pill">24h notice</div>
+                    <div class="summary-pill">15m buffer</div>
+                    <div class="summary-pill">Max 4 lessons / day</div>
+                  </div>
+
+                  <div class="schedule-layout">
+                    <section class="panel schedule-editor">
+                      <div class="panel-header">
+                        <div>
+                          <div class="section-kicker">Edit availability</div>
+                          <h3 class="panel-title">Recurring hours and exceptions in one scheduling environment</h3>
+                        </div>
+                        <div class="chip active">Edit mode</div>
+                      </div>
+
+                      <div class="week-grid">
+                        <div class="head"></div>
+                        <div class="head">Mon</div>
+                        <div class="head">Tue</div>
+                        <div class="head">Wed</div>
+                        <div class="head">Thu</div>
+                        <div class="head">Fri</div>
+
+                        <div class="time mono">16:00</div>
+                        <div class="slot"></div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+
+                        <div class="time mono">17:00</div>
+                        <div class="slot"></div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+
+                        <div class="time mono">18:00</div>
+                        <div class="slot"></div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+                        <div class="slot"></div>
+
+                        <div class="time mono">19:00</div>
+                        <div class="slot"></div>
+                        <div class="slot on">On</div>
+                        <div class="slot on">On</div>
+                        <div class="slot"></div>
+                        <div class="slot"></div>
+                      </div>
+
+                      <div class="rule-list" style="margin-top: 18px;">
+                        <div class="rule-card">
+                          <strong>Blackout date</strong>
+                          <p class="section-copy" style="margin-top: 8px;">Fri 18 Apr - unavailable after 17:00 due to exams week conflict.</p>
+                        </div>
+                        <div class="rule-card">
+                          <strong>Meeting limits</strong>
+                          <p class="section-copy" style="margin-top: 8px;">15-minute buffer between lessons, no same-day bookings under 24 hours.</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <aside class="panel schedule-preview mist">
+                      <div class="panel-header">
+                        <div>
+                          <div class="section-kicker">What students see</div>
+                          <h3 class="panel-title">Preview the booking outcome before saving</h3>
+                        </div>
+                        <div class="chip gold">Preview</div>
+                      </div>
+
+                      <div class="metric-stack">
+                        <div class="metric"><span>Next visible slot</span><strong class="mono">Tue 16:00</strong></div>
+                        <div class="metric"><span>Best overlap window</span><strong>Tue to Thu evenings</strong></div>
+                        <div class="metric"><span>Friday effect</span><strong>Reduced visibility</strong></div>
+                      </div>
+
+                      <div class="notice-strip" style="margin-top: 18px;">
+                        Friday evening visibility is currently weak. Expanding one additional slot would improve match overlap in a strong booking window.
+                      </div>
+
+                      <div class="rule-list" style="margin-top: 18px;">
+                        <div class="rule-card">
+                          <strong>Student-facing language</strong>
+                          <p class="section-copy" style="margin-top: 8px;">Next available: Tue 16:00. Times shown in student timezone with your notice and buffer rules already applied.</p>
+                        </div>
+                      </div>
+                    </aside>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-footer-note">Primary shared components: <code>ScheduleSurface</code>, <code>AvailabilityPreview</code>, <code>PolicyNotice</code>.</div>
+        </section>
+
+        <section class="screen-block" id="tutor-students">
+          <div class="screen-meta">
+            <div>
+              <h2>Tutor Students</h2>
+              <p>Identity-first teaching relationship view instead of a generic CRM table.</p>
+            </div>
+            <div class="eyebrow">Desktop comp</div>
+          </div>
+          <div class="artboard">
+            <div class="frame">
+              <div class="screen-shell">
+                <header class="app-header">
+                  <div class="brand">
+                    <div class="brand-mark">I</div>
+                    <div>Mentor IB</div>
+                  </div>
+                  <nav class="nav-links">
+                    <div>Overview</div>
+                    <div>Lessons</div>
+                    <strong>Students</strong>
+                    <div>Messages</div>
+                  </nav>
+                  <div class="meta-links">
+                    <div class="button button-secondary">Export notes</div>
+                  </div>
+                </header>
+
+                <div class="students-grid">
+                  <section class="panel" style="padding: 20px;">
+                    <div class="panel-header">
+                      <div>
+                        <div class="section-kicker">My students</div>
+                        <h3 class="panel-title">Teaching relationships, not contact records.</h3>
+                      </div>
+                      <div class="chip-row">
+                        <div class="chip">Search: Mira</div>
+                        <div class="chip active">Active</div>
+                        <div class="chip">Needs follow-up</div>
+                      </div>
+                    </div>
+
+                    <div class="students-layout">
+                      <div class="student-cards">
+                        <div class="student-row">
+                          <div class="student-meta">
+                            <div class="person">
+                              <div class="avatar"></div>
+                              <div>
+                                <h3>Mira K.</h3>
+                                <p>English A HL - Commentary structure and revision order</p>
+                              </div>
+                            </div>
+                            <div class="data-pairs">
+                              <div class="data-pair"><span>Next lesson</span><strong class="mono">Wed 18:30</strong></div>
+                              <div class="data-pair"><span>Status</span><strong>Active</strong></div>
+                            </div>
+                          </div>
+                          <div class="chip-row">
+                            <div class="chip active">Needs draft feedback</div>
+                            <div class="chip">2 recent lessons</div>
+                            <div class="chip gold">Strong momentum</div>
+                          </div>
+                          <div class="action-row">
+                            <div class="button button-primary">Open detail</div>
+                            <div class="button button-secondary">Message</div>
+                          </div>
+                        </div>
+
+                        <div class="student-row">
+                          <div class="student-meta">
+                            <div class="person">
+                              <div class="avatar"></div>
+                              <div>
+                                <h3>Daniel P.</h3>
+                                <p>TOK essay planning - Argument focus and examples</p>
+                              </div>
+                            </div>
+                            <div class="data-pairs">
+                              <div class="data-pair"><span>Next lesson</span><strong class="mono">Thu 17:00</strong></div>
+                              <div class="data-pair"><span>Status</span><strong>New</strong></div>
+                            </div>
+                          </div>
+                          <div class="chip-row">
+                            <div class="chip warm">Pending request</div>
+                            <div class="chip">Needs onboarding</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <aside class="panel student-detail mist">
+                        <div class="panel-header">
+                          <div>
+                            <div class="section-kicker">Student detail</div>
+                            <h3 class="panel-title">Mira K.</h3>
+                          </div>
+                          <div class="chip active">Active student</div>
+                        </div>
+
+                        <div class="person" style="margin-bottom: 16px;">
+                          <div class="avatar"></div>
+                          <div>
+                            <h3>English A HL</h3>
+                            <p>Current focus: commentary structure, teacher comments, revision order.</p>
+                          </div>
+                        </div>
+
+                        <div class="tab-row" style="margin-bottom: 16px;">
+                          <div class="tab active">Overview</div>
+                          <div class="tab">Lessons</div>
+                          <div class="tab">Notes</div>
+                          <div class="tab">Messages</div>
+                        </div>
+
+                        <div class="detail-stack">
+                          <div class="detail-block">
+                            <strong>Momentum</strong>
+                            <p class="section-copy" style="margin-top: 8px;">Student is responding well to concrete revision sequencing. Next lesson should stay focused on paragraph logic rather than line-level polish.</p>
+                          </div>
+                          <div class="detail-block">
+                            <strong>Next touchpoint</strong>
+                            <p class="section-copy mono" style="margin-top: 8px;">Wed 18:30 - commentary draft review</p>
+                          </div>
+                        </div>
+                      </aside>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-footer-note">Primary shared components: <code>PersonSummary</code>, <code>TabBar</code>, <code>MetricTile</code>.</div>
+        </section>
+
+        <section class="screen-block" id="tutor-application">
+          <div class="screen-meta">
+            <div>
+              <h2>Tutor Application</h2>
+              <p>Confidence-building staged onboarding, with one major task per step and helpful support instead of bureaucracy.</p>
+            </div>
+            <div class="eyebrow">Desktop comp</div>
+          </div>
+          <div class="artboard">
+            <div class="frame">
+              <div class="screen-shell">
+                <header class="app-header">
+                  <div class="brand">
+                    <div class="brand-mark">I</div>
+                    <div>Mentor IB</div>
+                  </div>
+                  <nav class="nav-links">
+                    <strong>Become a Tutor</strong>
+                    <div>Standards</div>
+                    <div>FAQ</div>
+                  </nav>
+                  <div class="meta-links">
+                    <div class="button button-secondary">Save and exit</div>
+                  </div>
+                </header>
+
+                <div class="application-grid">
+                  <section class="panel" style="padding: 20px;">
+                    <div class="panel-header">
+                      <div>
+                        <div class="section-kicker">Application step 4 of 9</div>
+                        <h3 class="panel-title">Show students what you are actually strong for.</h3>
+                      </div>
+                      <div class="chip-row">
+                        <div class="chip active">Required</div>
+                        <div class="chip">Recommended</div>
+                      </div>
+                    </div>
+
+                    <div class="application-layout">
+                      <section class="panel application-main">
+                        <div class="field-stack">
+                          <div class="field">
+                            <strong>Primary IB subjects</strong>
+                            <div class="chip-row">
+                              <div class="chip active">English A</div>
+                              <div class="chip">TOK</div>
+                              <div class="chip">Extended Essay</div>
+                            </div>
+                          </div>
+                          <div class="field">
+                            <strong>Best-for scenarios</strong>
+                            <div class="input">Ex: draft structure feedback, weekly support, oral practice, essay planning...</div>
+                          </div>
+                          <div class="field">
+                            <strong>Profile headline</strong>
+                            <div class="input">English A and TOK tutor for clear written feedback and commentary structure.</div>
+                          </div>
+                          <div class="field">
+                            <strong>Teaching approach</strong>
+                            <div class="input textarea">Describe how you work with students, what kind of clarity you bring, and the situations where your teaching is strongest.</div>
+                          </div>
+                          <div class="field">
+                            <strong>Credentials and proof</strong>
+                            <div class="upload-boxes">
+                              <div class="upload-box">Upload teaching or academic credentials</div>
+                              <div class="upload-box">Optional profile image and public proof assets</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="action-row" style="margin-top: 18px;">
+                          <div class="button button-secondary">Back</div>
+                          <div class="button button-primary">Continue</div>
+                        </div>
+                      </section>
+
+                      <aside class="application-rail">
+                        <section class="panel application-rail warm">
+                          <div class="section-kicker">Why this matters</div>
+                          <h3 class="panel-title">Students choose tutors through pressure-point language, not resumes alone.</h3>
+                          <p class="section-copy" style="margin-top: 12px;">
+                            Strong applications sound specific about the situations they solve. Generic "experienced tutor" language performs poorly.
+                          </p>
+                        </section>
+
+                        <section class="panel application-rail mist" style="margin-top: 18px;">
+                          <div class="section-kicker">Completion guide</div>
+                          <div class="checklist-items" style="margin-top: 16px;">
+                            <div class="check-item">
+                              <div>
+                                <strong>Headline is specific</strong>
+                                <p>Mentions real IB scenarios rather than broad expertise claims.</p>
+                              </div>
+                              <div class="chip active">Done</div>
+                            </div>
+                            <div class="check-item">
+                              <div>
+                                <strong>Best-for scenarios added</strong>
+                                <p>At least three concrete student situations are visible.</p>
+                              </div>
+                              <div class="chip warm">Need work</div>
+                            </div>
+                            <div class="check-item">
+                              <div>
+                                <strong>Credentials attached</strong>
+                                <p>Add public proof so trust is not carried by copy alone.</p>
+                              </div>
+                              <div class="chip">Pending</div>
+                            </div>
+                          </div>
+                        </section>
+                      </aside>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-footer-note">Primary shared components: <code>OptionCard</code>, <code>Uploader</code>, <code>ChecklistPanel</code>.</div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,252 @@
+.frame {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background:
+    radial-gradient(circle at top left, rgb(243 222 215 / 0.65), transparent 28%),
+    linear-gradient(180deg, var(--paper-1), var(--paper-0));
+  color: var(--ink-900);
+}
+
+.minimal {
+  background: var(--paper-0);
+}
+
+.header {
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgb(252 250 244 / 0.9);
+  backdrop-filter: blur(14px);
+}
+
+.headerInner,
+.main,
+.footer {
+  width: min(1120px, calc(100vw - 2rem));
+  margin: 0 auto;
+}
+
+.headerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding: 1rem 0;
+}
+
+.brandBlock {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.brand {
+  color: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--ink-700);
+  text-decoration: none;
+}
+
+.navLink:hover {
+  border-color: var(--border-subtle);
+  background: rgb(255 255 255 / 0.65);
+  color: var(--ink-900);
+}
+
+.main {
+  width: min(1120px, calc(100vw - 2rem));
+  padding: 2rem 0 3rem;
+}
+
+.hero {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: rgb(255 255 255 / 0.72);
+  box-shadow: var(--shadow-soft);
+}
+
+.title {
+  margin: 0;
+  max-width: 14ch;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.05;
+}
+
+.description {
+  margin: 0;
+  max-width: 66ch;
+  color: var(--ink-700);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.content {
+  margin-top: 1.5rem;
+}
+
+.footer {
+  padding: 1rem 0 2rem;
+  color: var(--ink-500);
+  font-size: 0.9rem;
+}
+
+.placeholder {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: rgb(255 255 255 / 0.78);
+  box-shadow: var(--shadow-soft);
+}
+
+.placeholderMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--forest-100);
+  color: var(--forest-700);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.78rem;
+}
+
+.placeholderTitle {
+  margin: 0;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  line-height: 1.15;
+}
+
+.placeholderText,
+.placeholderList {
+  margin: 0;
+  color: var(--ink-700);
+  line-height: 1.65;
+}
+
+.placeholderList {
+  padding-left: 1.25rem;
+}
+
+.placeholderList li + li {
+  margin-top: 0.4rem;
+}
+
+.linkGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.actionLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.65rem 0.95rem;
+  border-radius: 0.9rem;
+  background: var(--forest-700);
+  color: white;
+  text-decoration: none;
+}
+
+.actionLink:hover {
+  background: var(--forest-600);
+}
+
+.ghostLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.9rem;
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.ghostLink:hover {
+  background: var(--paper-1);
+}
+
+.errorCard {
+  display: grid;
+  gap: 0.9rem;
+  max-width: 40rem;
+  margin: 4rem auto;
+  padding: 1.5rem;
+  border: 1px solid rgb(178 71 59 / 0.25);
+  border-radius: var(--radius-xl);
+  background: rgb(255 247 245);
+  box-shadow: var(--shadow-soft);
+}
+
+.errorCard h1,
+.errorCard p {
+  margin: 0;
+}
+
+.errorCard button {
+  width: fit-content;
+  min-height: 2.5rem;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0.9rem;
+  background: var(--danger-500);
+  color: white;
+  cursor: pointer;
+}
+
+.errorCard button:hover {
+  filter: brightness(1.05);
+}
+
+@media (max-width: 768px) {
+  .headerInner {
+    align-items: flex-start;
+  }
+
+  .main {
+    padding-top: 1.5rem;
+  }
+
+  .hero,
+  .placeholder {
+    padding: 1.2rem;
+  }
+}

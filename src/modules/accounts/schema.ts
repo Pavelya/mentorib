@@ -109,20 +109,3 @@ export const studentProfiles = pgTable(
   },
   (table) => [uniqueIndex("student_profiles_app_user_id_key").on(table.app_user_id)],
 );
-
-export const tutorProfiles = pgTable(
-  "tutor_profiles",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    app_user_id: uuid("app_user_id")
-      .notNull()
-      .references(() => appUsers.id, { onDelete: "cascade" }),
-    created_at: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updated_at: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [uniqueIndex("tutor_profiles_app_user_id_key").on(table.app_user_id)],
-);

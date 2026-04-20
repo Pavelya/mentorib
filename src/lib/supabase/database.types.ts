@@ -12,6 +12,15 @@ import type {
   WebhookProvider,
   WebhookVerificationStatus,
 } from "@/modules/jobs/constants";
+import type {
+  AvailabilityOverrideType,
+  AvailabilityRuleVisibilityStatus,
+  PayoutReadinessStatus,
+  TutorApplicationStatus,
+  TutorCredentialReviewStatus,
+  TutorProfileVisibilityStatus,
+  TutorPublicListingStatus,
+} from "@/modules/tutors/constants";
 
 type Json =
   | string
@@ -44,6 +53,138 @@ type UserRoleRow = {
   revoked_at: string | null;
   role: Role;
   role_status: RoleStatus;
+  updated_at: string;
+};
+
+type SubjectRow = {
+  created_at: string;
+  display_name: string;
+  id: string;
+  is_active: boolean;
+  slug: string;
+  sort_order: number;
+  subject_code: string;
+  updated_at: string;
+};
+
+type SubjectFocusAreaRow = {
+  created_at: string;
+  display_name: string;
+  focus_area_code: string;
+  id: string;
+  is_active: boolean;
+  slug: string;
+  sort_order: number;
+  updated_at: string;
+};
+
+type LanguageRow = {
+  created_at: string;
+  display_name: string;
+  is_active: boolean;
+  language_code: string;
+  sort_order: number;
+  updated_at: string;
+};
+
+type VideoMediaProviderRow = {
+  created_at: string;
+  display_name: string;
+  is_active: boolean;
+  provider_key: string;
+  sort_order: number;
+  updated_at: string;
+};
+
+type TutorProfileRow = {
+  app_user_id: string;
+  application_status: TutorApplicationStatus;
+  best_for_summary: string | null;
+  bio: string | null;
+  created_at: string;
+  display_name: string | null;
+  headline: string | null;
+  id: string;
+  intro_video_external_id: string | null;
+  intro_video_provider: string | null;
+  intro_video_url: string | null;
+  payout_readiness_status: PayoutReadinessStatus;
+  pricing_summary: string | null;
+  profile_visibility_status: TutorProfileVisibilityStatus;
+  public_listing_status: TutorPublicListingStatus;
+  public_slug: string | null;
+  teaching_style_summary: string | null;
+  updated_at: string;
+};
+
+type TutorSubjectCapabilityRow = {
+  created_at: string;
+  display_priority: number;
+  experience_summary: string | null;
+  id: string;
+  subject_focus_area_id: string;
+  subject_id: string;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type TutorLanguageCapabilityRow = {
+  created_at: string;
+  display_priority: number;
+  id: string;
+  language_code: string;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type TutorCredentialRow = {
+  created_at: string;
+  credential_type: string;
+  id: string;
+  issuing_body: string | null;
+  public_display_preference: boolean;
+  review_status: TutorCredentialReviewStatus;
+  reviewed_at: string | null;
+  storage_object_path: string;
+  title: string;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type SchedulePolicyRow = {
+  buffer_after_minutes: number;
+  buffer_before_minutes: number;
+  created_at: string;
+  daily_capacity: number | null;
+  id: string;
+  is_accepting_new_students: boolean;
+  minimum_notice_minutes: number;
+  timezone: string;
+  tutor_profile_id: string;
+  updated_at: string;
+  weekly_capacity: number | null;
+};
+
+type AvailabilityRuleRow = {
+  created_at: string;
+  day_of_week: number;
+  end_local_time: string;
+  id: string;
+  start_local_time: string;
+  tutor_profile_id: string;
+  updated_at: string;
+  visibility_status: AvailabilityRuleVisibilityStatus;
+};
+
+type AvailabilityOverrideRow = {
+  created_at: string;
+  end_local_time: string | null;
+  id: string;
+  override_date: string;
+  override_type: AvailabilityOverrideType;
+  reason: string | null;
+  start_local_time: string | null;
+  tutor_profile_id: string;
   updated_at: string;
 };
 
@@ -114,11 +255,48 @@ export type MentorIbDatabase = {
         Row: AppUserRow;
         Update: Partial<Omit<AppUserRow, "auth_user_id" | "created_at" | "id" | "updated_at">>;
       };
+      availability_overrides: {
+        Insert: Pick<AvailabilityOverrideRow, "override_date" | "override_type" | "tutor_profile_id"> & {
+          end_local_time?: string | null;
+          reason?: string | null;
+          start_local_time?: string | null;
+        };
+        Relationships: [];
+        Row: AvailabilityOverrideRow;
+        Update: Partial<
+          Omit<AvailabilityOverrideRow, "created_at" | "id" | "override_date" | "tutor_profile_id" | "updated_at">
+        >;
+      };
+      availability_rules: {
+        Insert: Pick<
+          AvailabilityRuleRow,
+          "day_of_week" | "end_local_time" | "start_local_time" | "tutor_profile_id"
+        > & {
+          visibility_status?: AvailabilityRuleVisibilityStatus;
+        };
+        Relationships: [];
+        Row: AvailabilityRuleRow;
+        Update: Partial<
+          Omit<
+            AvailabilityRuleRow,
+            "created_at" | "day_of_week" | "end_local_time" | "id" | "start_local_time" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
       user_roles: {
         Insert: never;
         Relationships: [];
         Row: UserRoleRow;
         Update: never;
+      };
+      languages: {
+        Insert: Pick<LanguageRow, "display_name" | "language_code"> & {
+          is_active?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [];
+        Row: LanguageRow;
+        Update: Partial<Omit<LanguageRow, "created_at" | "language_code" | "updated_at">>;
       };
       job_runs: {
         Insert: Pick<JobRunRow, "job_type"> & {
@@ -145,6 +323,42 @@ export type MentorIbDatabase = {
           Omit<JobRunRow, "attempt_number" | "created_at" | "id" | "job_type" | "updated_at">
         >;
       };
+      schedule_policies: {
+        Insert: Pick<SchedulePolicyRow, "tutor_profile_id"> & {
+          buffer_after_minutes?: number;
+          buffer_before_minutes?: number;
+          daily_capacity?: number | null;
+          is_accepting_new_students?: boolean;
+          minimum_notice_minutes?: number;
+          timezone?: string;
+          weekly_capacity?: number | null;
+        };
+        Relationships: [];
+        Row: SchedulePolicyRow;
+        Update: Partial<
+          Omit<SchedulePolicyRow, "created_at" | "id" | "tutor_profile_id" | "updated_at">
+        >;
+      };
+      subject_focus_areas: {
+        Insert: Pick<SubjectFocusAreaRow, "display_name" | "focus_area_code" | "slug"> & {
+          is_active?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [];
+        Row: SubjectFocusAreaRow;
+        Update: Partial<
+          Omit<SubjectFocusAreaRow, "created_at" | "focus_area_code" | "id" | "updated_at">
+        >;
+      };
+      subjects: {
+        Insert: Pick<SubjectRow, "display_name" | "slug" | "subject_code"> & {
+          is_active?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [];
+        Row: SubjectRow;
+        Update: Partial<Omit<SubjectRow, "created_at" | "id" | "subject_code" | "updated_at">>;
+      };
       webhook_events: {
         Insert: Pick<
           WebhookEventRow,
@@ -162,6 +376,87 @@ export type MentorIbDatabase = {
         Row: WebhookEventRow;
         Update: Partial<
           Omit<WebhookEventRow, "created_at" | "event_type" | "id" | "provider" | "provider_event_id" | "received_at" | "updated_at" | "verification_status">
+        >;
+      };
+      tutor_credentials: {
+        Insert: Pick<
+          TutorCredentialRow,
+          "credential_type" | "storage_object_path" | "title" | "tutor_profile_id"
+        > & {
+          issuing_body?: string | null;
+          public_display_preference?: boolean;
+          review_status?: TutorCredentialReviewStatus;
+          reviewed_at?: string | null;
+        };
+        Relationships: [];
+        Row: TutorCredentialRow;
+        Update: Partial<
+          Omit<
+            TutorCredentialRow,
+            "created_at" | "credential_type" | "id" | "storage_object_path" | "title" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
+      tutor_language_capabilities: {
+        Insert: Pick<TutorLanguageCapabilityRow, "language_code" | "tutor_profile_id"> & {
+          display_priority?: number;
+        };
+        Relationships: [];
+        Row: TutorLanguageCapabilityRow;
+        Update: Partial<
+          Omit<
+            TutorLanguageCapabilityRow,
+            "created_at" | "id" | "language_code" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
+      tutor_profiles: {
+        Insert: Pick<TutorProfileRow, "app_user_id"> & {
+          application_status?: TutorApplicationStatus;
+          best_for_summary?: string | null;
+          bio?: string | null;
+          display_name?: string | null;
+          headline?: string | null;
+          intro_video_external_id?: string | null;
+          intro_video_provider?: string | null;
+          intro_video_url?: string | null;
+          payout_readiness_status?: PayoutReadinessStatus;
+          pricing_summary?: string | null;
+          profile_visibility_status?: TutorProfileVisibilityStatus;
+          public_listing_status?: TutorPublicListingStatus;
+          public_slug?: string | null;
+          teaching_style_summary?: string | null;
+        };
+        Relationships: [];
+        Row: TutorProfileRow;
+        Update: Partial<Omit<TutorProfileRow, "app_user_id" | "created_at" | "id" | "updated_at">>;
+      };
+      tutor_subject_capabilities: {
+        Insert: Pick<
+          TutorSubjectCapabilityRow,
+          "subject_focus_area_id" | "subject_id" | "tutor_profile_id"
+        > & {
+          display_priority?: number;
+          experience_summary?: string | null;
+        };
+        Relationships: [];
+        Row: TutorSubjectCapabilityRow;
+        Update: Partial<
+          Omit<
+            TutorSubjectCapabilityRow,
+            "created_at" | "id" | "subject_focus_area_id" | "subject_id" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
+      video_media_providers: {
+        Insert: Pick<VideoMediaProviderRow, "display_name" | "provider_key"> & {
+          is_active?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [];
+        Row: VideoMediaProviderRow;
+        Update: Partial<
+          Omit<VideoMediaProviderRow, "created_at" | "provider_key" | "updated_at">
         >;
       };
     };

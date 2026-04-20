@@ -1,0 +1,85 @@
+.panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.default {
+  background: var(--surface-panel);
+}
+
+.soft {
+  background: var(--surface-panel-soft);
+}
+
+.mist {
+  border-color: var(--border-support);
+  background: var(--surface-support);
+}
+
+.warm {
+  background: var(--panel-warm);
+}
+
+.raised {
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.forest {
+  border-color: transparent;
+  background: var(--panel-forest);
+  color: white;
+}
+
+.header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.forest .eyebrow {
+  color: rgb(255 255 255 / 0.72);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title-md);
+  line-height: var(--line-tight);
+}
+
+.description,
+.footer {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.forest .description,
+.forest .footer {
+  color: rgb(255 255 255 / 0.8);
+}
+
+.content {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (max-width: 767px) {
+  .panel {
+    padding: var(--space-5);
+  }
+}

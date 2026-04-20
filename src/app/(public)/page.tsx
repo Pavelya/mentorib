@@ -1,3 +1,4 @@
+import { FoundationPreview } from "@/components/shell/foundation-preview";
 import { RoutePlaceholder } from "@/components/shell/route-placeholder";
 
 export default function HomePage() {
@@ -15,6 +16,8 @@ export default function HomePage() {
         "The student and tutor experiences remain inside one Next.js application.",
         "The home page will later become the primary problem-led entry point.",
       ]}
-    />
+    >
+      <FoundationPreview />
+    </RoutePlaceholder>
   );
 }

@@ -95,10 +95,21 @@ src/
   lib/          # cross-cutting helpers
   styles/       # tokens and shared CSS
   test/         # test utilities
-drizzle/        # migrations and DB config
+  server/       # server-only DB and infrastructure wiring
+supabase/       # canonical SQL migrations, seeds, DB tests, and Supabase config
 public/         # static assets
 docs/           # architecture, planning, and source-of-truth docs
 ```
+
+Important note:
+The older bootstrap baseline used `drizzle/` as a placeholder for DB work.
+The current canonical database contract is:
+
+- `supabase/` owns SQL migrations, seeds, DB tests, and local Supabase config
+- `src/server/db` owns shared Drizzle wiring
+- `src/modules/**/schema.ts` owns module-level Drizzle table declarations
+
+Do not split database ownership across both `drizzle/` and `supabase/`.
 
 ## Default execution model
 
@@ -200,6 +211,8 @@ Unless the task says otherwise, finish with:
 - `pnpm build`
 
 Add task-specific tests or manual checks when the task requires them.
+If any relevant verification could not be run, say exactly what was not run and why.
+If a task introduces or depends on SQL migrations, Supabase dashboard changes, seed scripts, or other operational steps, call those out explicitly instead of implying they are included in app verification.
 Do not call code “done” if it is unverified.
 
 ## Report format
@@ -211,8 +224,30 @@ End each task with:
 - verification run and result
 - blockers or caveats
 - required manual steps, if any
+- local testing checklist for the human, if any
+
+For `required manual steps`, be explicit about:
+
+- whether the human needs to run SQL, migrations, seeds, or dashboard/provider configuration
+- the exact file, command, route, or dashboard area involved
+- whether the step is required now, later, or only in production
+- any environment-variable changes required for the task
+
+For `local testing checklist`, be explicit about:
+
+- which routes, flows, or edge cases the human should test locally
+- the minimum smoke-test path to confirm the task works
+- whether there is no extra local testing needed beyond automated verification
 
 If there are no manual steps, say so explicitly.
+If there is no extra local testing checklist, say so explicitly.
+
+If a task requires environment changes, explicitly list:
+
+- the exact variable names
+- whether each belongs in `.env.local`, `.env.example`, or provider/dashboard configuration
+- where the human should get each value
+- whether missing env vars blocked any verification or runtime behavior
 
 ## Git rule
 
@@ -251,4 +286,3 @@ Do not ignore the detailed `Depends on:` lines.
 - `docs/planning/phase1-5-task-pack-v1.md`
 - `docs/planning/phase2-task-pack-v1.md`
 - `docs/planning/agent-implementation-decision-index-v1.md`
-

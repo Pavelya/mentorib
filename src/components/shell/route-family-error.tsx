@@ -1,5 +1,7 @@
 "use client";
 
+import { Button, InlineNotice, Panel } from "@/components/ui";
+
 import styles from "./app-frame.module.css";
 
 type RouteFamilyErrorProps = {
@@ -14,17 +16,27 @@ export function RouteFamilyError({
   reset,
 }: RouteFamilyErrorProps) {
   return (
-    <div className={styles.errorCard}>
-      <p className={styles.eyebrow}>{familyLabel} boundary</p>
-      <h1>Something broke inside this route family.</h1>
-      <p>
-        This is an intentional top-level error boundary for the {familyLabel.toLowerCase()}{" "}
-        section. Later tasks can replace this with domain-specific recovery.
-      </p>
-      <p>{error.message || "Unknown error"}</p>
-      <button onClick={reset} type="button">
+    <Panel
+      className={styles.errorCard}
+      description={
+        <>
+          This is an intentional top-level error boundary for the{" "}
+          {familyLabel.toLowerCase()} section. Later tasks can replace this with
+          domain-specific recovery.
+        </>
+      }
+      eyebrow={`${familyLabel} boundary`}
+      title="Something broke inside this route family."
+      titleAs="h1"
+      tone="raised"
+    >
+      <InlineNotice title="Runtime message" tone="actionNeeded">
+        <p>{error.message || "Unknown error"}</p>
+      </InlineNotice>
+
+      <Button onClick={reset} variant="danger">
         Try again
-      </button>
-    </div>
+      </Button>
+    </Panel>
   );
 }

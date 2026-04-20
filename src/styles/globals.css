@@ -1,32 +1,129 @@
 :root {
+  color-scheme: light;
+
+  --font-sans: var(--font-ui-sans), system-ui, sans-serif;
+  --font-serif: var(--font-ui-serif), "Times New Roman", serif;
+  --font-mono: var(--font-ui-mono), "SFMono-Regular", monospace;
+
+  --display-xl: clamp(2.125rem, 2.45vw + 1.575rem, 3.5rem);
+  --display-lg: clamp(1.875rem, 1.55vw + 1.525rem, 2.75rem);
+  --title-xl: clamp(1.625rem, 0.9vw + 1.425rem, 2.125rem);
+  --title-lg: clamp(1.375rem, 0.65vw + 1.225rem, 1.75rem);
+  --title-md: clamp(1.125rem, 0.4vw + 1.025rem, 1.375rem);
+  --body-lg: clamp(1rem, 0.2vw + 0.955rem, 1.125rem);
+  --body-md: 1rem;
+  --body-sm: 0.875rem;
+  --caption: 0.75rem;
+  --utility-sm: 0.8125rem;
+  --line-tight: 1.15;
+  --line-body: 1.65;
+  --line-utility: 1.45;
+
   --paper-0: #fcfaf4;
   --paper-1: #f6f1e7;
   --paper-2: #ede4d4;
   --ink-900: #1e1b18;
   --ink-700: #3d3832;
   --ink-500: #6a625a;
+  --ink-300: #b4aa9c;
   --forest-700: #173c34;
   --forest-600: #215347;
+  --forest-500: #2c6a59;
   --forest-100: #dcebe4;
+  --forest-50: #eff6f1;
+  --clay-600: #b4573e;
+  --clay-500: #c56a50;
+  --clay-100: #f3ded7;
+  --gold-500: #b8913d;
+  --gold-100: #f2e8c8;
+  --mist-100: #e7eef0;
+  --mist-300: #b7c7cc;
+  --success-500: #2f7a58;
+  --warning-500: #a8762a;
   --danger-500: #b2473b;
+
+  --surface-page: var(--paper-0);
+  --surface-section: var(--paper-1);
+  --surface-panel: rgb(255 255 255 / 0.72);
+  --surface-panel-soft: rgb(255 255 255 / 0.58);
+  --surface-raised: rgb(255 255 255 / 0.84);
+  --surface-support: rgb(231 238 240 / 0.78);
+  --surface-overlay: rgb(252 250 244 / 0.96);
+  --panel-warm: linear-gradient(180deg, rgb(243 222 215 / 0.88), rgb(252 250 244 / 0.92));
+  --panel-forest: linear-gradient(160deg, var(--forest-700), var(--forest-500));
+
   --border-subtle: rgb(61 56 50 / 0.12);
-  --radius-xl: 1.25rem;
-  --shadow-soft: 0 18px 45px rgb(30 27 24 / 0.08);
+  --border-strong: rgb(61 56 50 / 0.2);
+  --border-support: rgb(183 199 204 / 0.58);
+
+  --radius-xl: 1.75rem;
+  --radius-lg: 1.375rem;
+  --radius-md: 1rem;
+  --radius-sm: 0.75rem;
+
+  --shadow-soft: 0 18px 50px rgb(26 23 17 / 0.09);
+  --shadow-raised: 0 28px 90px rgb(26 23 17 / 0.12);
+  --shadow-action: 0 18px 50px rgb(23 60 52 / 0.22);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  --motion-fast: 140ms;
+  --motion-default: 200ms;
+  --motion-panel: 260ms;
+
+  --breakpoint-phone: 22.5rem;
+  --breakpoint-tablet: 48rem;
+  --breakpoint-desktop: 75rem;
+
+  --focus-outline: rgb(23 60 52 / 0.42);
+  --focus-ring: 0 0 0 3px rgb(23 60 52 / 0.18);
+
+  --state-disabled-surface: rgb(180 170 156 / 0.18);
+  --state-disabled-border: rgb(180 170 156 / 0.28);
+  --state-disabled-text: var(--ink-300);
+  --state-selected-surface: var(--forest-100);
+  --state-selected-border: rgb(23 60 52 / 0.18);
+  --state-info-surface: rgb(231 238 240 / 0.88);
+  --state-info-border: rgb(183 199 204 / 0.72);
+  --state-positive-surface: rgb(220 235 228 / 0.92);
+  --state-positive-border: rgb(47 122 88 / 0.24);
+  --state-warning-surface: rgb(242 232 200 / 0.92);
+  --state-warning-border: rgb(168 118 42 / 0.24);
+  --state-danger-surface: rgb(243 222 215 / 0.92);
+  --state-danger-border: rgb(178 71 59 / 0.24);
+  --state-trust-surface: rgb(242 232 200 / 0.78);
+  --state-trust-border: rgb(184 145 61 / 0.28);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
-  background: var(--paper-0);
+  background: var(--surface-page);
   color: var(--ink-900);
+  text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-size: var(--body-md);
+  line-height: var(--line-body);
+  background: var(--surface-page);
   color: var(--ink-900);
 }
 
@@ -40,12 +137,35 @@ textarea {
 
 a {
   color: inherit;
+  text-underline-offset: 0.18em;
 }
 
 button {
   font-family: inherit;
 }
 
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+::placeholder {
+  color: var(--ink-500);
+  opacity: 1;
+}
+
 ::selection {
   background: rgb(23 60 52 / 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

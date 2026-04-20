@@ -385,7 +385,8 @@ src/
   lib/
   styles/
   test/
-drizzle/
+  server/
+supabase/
 public/
 ```
 
@@ -396,12 +397,15 @@ Meaning:
 - `src/modules` owns domain logic
 - `src/lib` owns cross-cutting helpers
 - `src/styles` owns tokens and shared CSS
-- `drizzle` owns migrations and DB config
+- `src/server` owns shared server-only infrastructure wiring such as DB clients
+- `supabase` owns canonical SQL migrations, seeds, database tests, and local Supabase config
 
 This should align with:
 
 - `docs/architecture/architecture-discussion-v1.md`
 - `docs/architecture/route-layout-implementation-map-v1.md`
+- `docs/data/supabase-folder-and-file-conventions-v1.md`
+- `docs/data/drizzle-schema-and-query-conventions-v1.md`
 
 ## 15. Agent Execution Rule
 

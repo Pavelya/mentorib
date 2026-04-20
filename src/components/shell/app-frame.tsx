@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Panel, TabBar } from "@/components/ui";
 import type { NavItem } from "@/lib/routing/navigation";
 
 import styles from "./app-frame.module.css";
@@ -24,6 +25,7 @@ export function AppFrame({
 }: AppFrameProps) {
   const frameClassName =
     tone === "minimal" ? `${styles.frame} ${styles.minimal}` : styles.frame;
+  const heroTone = tone === "public" ? "warm" : tone === "minimal" ? "soft" : "raised";
 
   return (
     <div className={frameClassName}>
@@ -37,23 +39,31 @@ export function AppFrame({
           </div>
 
           {navItems.length > 0 ? (
-            <nav aria-label={`${eyebrow} navigation`} className={styles.nav}>
-              {navItems.map((item) => (
-                <Link className={styles.navLink} href={item.href} key={item.href}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <TabBar
+              ariaLabel={`${eyebrow} navigation`}
+              className={styles.nav}
+              items={navItems.map((item) => ({
+                href: item.href,
+                id: item.href,
+                label: item.label,
+              }))}
+            />
           ) : null}
         </div>
       </header>
 
       <main className={styles.main}>
-        <section className={styles.hero}>
-          <p className={styles.eyebrow}>{eyebrow}</p>
-          <h1 className={styles.title}>{title}</h1>
-          <p className={styles.description}>{description}</p>
-        </section>
+        <Panel
+          className={styles.heroPanel}
+          description={description}
+          descriptionClassName={styles.heroDescription}
+          eyebrow={eyebrow}
+          eyebrowClassName={styles.eyebrow}
+          title={title}
+          titleAs="h1"
+          titleClassName={styles.heroTitle}
+          tone={heroTone}
+        />
 
         <div className={styles.content}>{children}</div>
       </main>

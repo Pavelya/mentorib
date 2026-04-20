@@ -13,6 +13,14 @@ import type {
   WebhookVerificationStatus,
 } from "@/modules/jobs/constants";
 import type {
+  AbuseReportStatus,
+  AbuseReportType,
+  ConversationStatus,
+  MessageStatus,
+  ParticipantRole,
+  UserBlockStatus,
+} from "@/modules/messages/constants";
+import type {
   AvailabilityOverrideType,
   AvailabilityRuleVisibilityStatus,
   PayoutReadinessStatus,
@@ -188,6 +196,75 @@ type AvailabilityOverrideRow = {
   updated_at: string;
 };
 
+type ConversationRow = {
+  conversation_status: ConversationStatus;
+  created_at: string;
+  id: string;
+  last_message_at: string | null;
+  last_message_id: string | null;
+  student_profile_id: string;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type ConversationParticipantRow = {
+  app_user_id: string;
+  conversation_id: string;
+  created_at: string;
+  id: string;
+  is_archived: boolean;
+  is_muted: boolean;
+  joined_at: string;
+  participant_role: ParticipantRole;
+  updated_at: string;
+};
+
+type MessageRow = {
+  body: string;
+  conversation_id: string;
+  created_at: string;
+  edited_at: string | null;
+  id: string;
+  message_status: MessageStatus;
+  removed_at: string | null;
+  reply_to_message_id: string | null;
+  sender_app_user_id: string;
+  updated_at: string;
+};
+
+type MessageReadRow = {
+  app_user_id: string;
+  created_at: string;
+  id: string;
+  message_id: string;
+  read_at: string;
+  updated_at: string;
+};
+
+type UserBlockRow = {
+  blocked_app_user_id: string;
+  blocker_app_user_id: string;
+  block_status: UserBlockStatus;
+  created_at: string;
+  id: string;
+  released_at: string | null;
+  updated_at: string;
+};
+
+type AbuseReportRow = {
+  conversation_id: string | null;
+  created_at: string;
+  id: string;
+  lesson_id: string | null;
+  reported_app_user_id: string;
+  reported_message_id: string | null;
+  report_status: AbuseReportStatus;
+  report_type: AbuseReportType;
+  reporter_app_user_id: string;
+  summary: string;
+  updated_at: string;
+};
+
 type JobRunRow = {
   attempt_number: number;
   available_at: string;
@@ -255,6 +332,25 @@ export type MentorIbDatabase = {
         Row: AppUserRow;
         Update: Partial<Omit<AppUserRow, "auth_user_id" | "created_at" | "id" | "updated_at">>;
       };
+      abuse_reports: {
+        Insert: Pick<
+          AbuseReportRow,
+          "reported_app_user_id" | "report_type" | "reporter_app_user_id" | "summary"
+        > & {
+          conversation_id?: string | null;
+          lesson_id?: string | null;
+          reported_message_id?: string | null;
+          report_status?: AbuseReportStatus;
+        };
+        Relationships: [];
+        Row: AbuseReportRow;
+        Update: Partial<
+          Omit<
+            AbuseReportRow,
+            "created_at" | "id" | "reported_app_user_id" | "reporter_app_user_id" | "updated_at"
+          >
+        >;
+      };
       availability_overrides: {
         Insert: Pick<AvailabilityOverrideRow, "override_date" | "override_type" | "tutor_profile_id"> & {
           end_local_time?: string | null;
@@ -280,6 +376,39 @@ export type MentorIbDatabase = {
           Omit<
             AvailabilityRuleRow,
             "created_at" | "day_of_week" | "end_local_time" | "id" | "start_local_time" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
+      conversation_participants: {
+        Insert: Pick<
+          ConversationParticipantRow,
+          "app_user_id" | "conversation_id" | "participant_role"
+        > & {
+          is_archived?: boolean;
+          is_muted?: boolean;
+          joined_at?: string;
+        };
+        Relationships: [];
+        Row: ConversationParticipantRow;
+        Update: Partial<
+          Omit<
+            ConversationParticipantRow,
+            "app_user_id" | "conversation_id" | "created_at" | "id" | "participant_role" | "updated_at"
+          >
+        >;
+      };
+      conversations: {
+        Insert: Pick<ConversationRow, "student_profile_id" | "tutor_profile_id"> & {
+          conversation_status?: ConversationStatus;
+          last_message_at?: string | null;
+          last_message_id?: string | null;
+        };
+        Relationships: [];
+        Row: ConversationRow;
+        Update: Partial<
+          Omit<
+            ConversationRow,
+            "created_at" | "id" | "student_profile_id" | "tutor_profile_id" | "updated_at"
           >
         >;
       };
@@ -321,6 +450,32 @@ export type MentorIbDatabase = {
         Row: JobRunRow;
         Update: Partial<
           Omit<JobRunRow, "attempt_number" | "created_at" | "id" | "job_type" | "updated_at">
+        >;
+      };
+      message_reads: {
+        Insert: Pick<MessageReadRow, "app_user_id" | "message_id"> & {
+          read_at?: string;
+        };
+        Relationships: [];
+        Row: MessageReadRow;
+        Update: Partial<
+          Omit<MessageReadRow, "app_user_id" | "created_at" | "id" | "message_id" | "updated_at">
+        >;
+      };
+      messages: {
+        Insert: Pick<MessageRow, "body" | "conversation_id" | "sender_app_user_id"> & {
+          edited_at?: string | null;
+          message_status?: MessageStatus;
+          removed_at?: string | null;
+          reply_to_message_id?: string | null;
+        };
+        Relationships: [];
+        Row: MessageRow;
+        Update: Partial<
+          Omit<
+            MessageRow,
+            "conversation_id" | "created_at" | "id" | "sender_app_user_id" | "updated_at"
+          >
         >;
       };
       schedule_policies: {
@@ -445,6 +600,20 @@ export type MentorIbDatabase = {
           Omit<
             TutorSubjectCapabilityRow,
             "created_at" | "id" | "subject_focus_area_id" | "subject_id" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
+      user_blocks: {
+        Insert: Pick<UserBlockRow, "blocked_app_user_id" | "blocker_app_user_id"> & {
+          block_status?: UserBlockStatus;
+          released_at?: string | null;
+        };
+        Relationships: [];
+        Row: UserBlockRow;
+        Update: Partial<
+          Omit<
+            UserBlockRow,
+            "blocked_app_user_id" | "blocker_app_user_id" | "created_at" | "id" | "updated_at"
           >
         >;
       };

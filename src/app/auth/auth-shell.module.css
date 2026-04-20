@@ -1,0 +1,26 @@
+.shell {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--space-5);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgb(243 222 215 / 0.52), transparent 28%),
+    radial-gradient(circle at bottom right, rgb(220 235 228 / 0.5), transparent 26%),
+    linear-gradient(180deg, var(--surface-section), var(--surface-page));
+}
+
+.main {
+  width: min(100%, 30rem);
+}
+
+.content {
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: var(--space-4);
+  }
+}

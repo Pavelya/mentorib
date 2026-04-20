@@ -1,16 +1,46 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import type { Route } from "next";
+import { redirect } from "next/navigation";
 
-export default function SignInPage() {
+import { SignInForm } from "@/app/auth/sign-in/sign-in-form";
+import { buildPostSignInRedirect, ensureAuthAccount } from "@/lib/auth/account-service";
+import { getSafeRedirectPath } from "@/lib/auth/allowed-redirects";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+type SignInPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function SignInPage({ searchParams }: SignInPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const nextPath = getSafeRedirectPath(getSearchParam(resolvedSearchParams.next));
+
+  if (isSupabaseAuthConfigured()) {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user?.email) {
+      try {
+        const account = await ensureAuthAccount(user);
+
+        redirect(buildPostSignInRedirect(account, nextPath) as Route);
+      } catch {
+        // Fall through to the sign-in screen so auth failures stay recoverable.
+      }
+    }
+  }
+
   return (
-    <RoutePlaceholder
-      routePath="/auth/sign-in"
-      phase="Phase 1"
-      title="Sign-in route shell"
-      description="Placeholder sign-in route reserved for the magic-link and Google auth task."
-      notes={[
-        "No provider logic is implemented in the foundation scaffold.",
-        "This page confirms the auth family layout and URL posture.",
-      ]}
+    <SignInForm
+      canStartAuth={isSupabaseAuthConfigured()}
+      hasReturnPath={Boolean(nextPath)}
+      nextPath={nextPath}
     />
   );
+}
+
+function getSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }

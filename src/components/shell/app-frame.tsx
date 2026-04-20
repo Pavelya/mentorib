@@ -10,6 +10,7 @@ type AppFrameProps = {
   eyebrow: string;
   title: string;
   description: string;
+  footerNote?: string;
   navItems?: NavItem[];
   children: ReactNode;
   tone?: "public" | "private" | "minimal";
@@ -19,6 +20,7 @@ export function AppFrame({
   eyebrow,
   title,
   description,
+  footerNote = "Route-family scaffold for Phase 1 foundations. Feature logic lands in later tickets.",
   navItems = [],
   children,
   tone = "private",
@@ -69,8 +71,7 @@ export function AppFrame({
       </main>
 
       <footer className={styles.footer}>
-        Route-family scaffold for Phase 1 foundations. Feature logic lands in later
-        tickets.
+        {footerNote}
       </footer>
     </div>
   );

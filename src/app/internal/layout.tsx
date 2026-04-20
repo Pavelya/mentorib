@@ -2,19 +2,13 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Internal",
-    template: "%s | Mentor IB",
-  },
-  description: "Privileged internal routes for moderation, reference data, and operational oversight.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export const metadata: Metadata = buildNonIndexableSectionMetadata(
+  "Internal",
+  "Privileged internal routes for moderation, reference data, and operational oversight.",
+);
 
 type InternalLayoutProps = {
   children: ReactNode;

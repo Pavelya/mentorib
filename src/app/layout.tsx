@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { buildRootMetadata } from "@/lib/seo/metadata/defaults";
 import "@/styles/globals.css";
 
 const sans = IBM_Plex_Sans({
@@ -25,15 +26,7 @@ const serif = Instrument_Serif({
   weight: ["400"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("http://localhost:3000"),
-  title: {
-    default: "Mentor IB",
-    template: "%s | Mentor IB",
-  },
-  description:
-    "Mentor IB is a matching-first IB tutoring product built as one ecosystem for students and tutors.",
-};
+export const metadata: Metadata = buildRootMetadata();
 
 type RootLayoutProps = {
   children: ReactNode;

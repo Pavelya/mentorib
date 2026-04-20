@@ -2,16 +2,10 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { buildPublicLayoutMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Mentor IB",
-    template: "%s | Mentor IB",
-  },
-  description:
-    "Public marketing and discovery routes for the matching-first Mentor IB product.",
-};
+export const metadata: Metadata = buildPublicLayoutMetadata();
 
 type PublicLayoutProps = {
   children: ReactNode;

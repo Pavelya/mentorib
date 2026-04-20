@@ -2,19 +2,13 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Setup",
-    template: "%s | Mentor IB",
-  },
-  description: "Bootstrap routes for role resolution and post-auth account setup.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export const metadata: Metadata = buildNonIndexableSectionMetadata(
+  "Setup",
+  "Bootstrap routes for role resolution and post-auth account setup.",
+);
 
 type SetupLayoutProps = {
   children: ReactNode;

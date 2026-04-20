@@ -2,19 +2,13 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Tutor",
-    template: "%s | Mentor IB",
-  },
-  description: "Tutor operational routes for overview, lessons, schedule, messaging, and earnings.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export const metadata: Metadata = buildNonIndexableSectionMetadata(
+  "Tutor",
+  "Tutor operational routes for overview, lessons, schedule, messaging, and earnings.",
+);
 
 type TutorLayoutProps = {
   children: ReactNode;

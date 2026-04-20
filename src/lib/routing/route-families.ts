@@ -1,5 +1,7 @@
 import type { Route } from "next";
 
+import { seoRouteFamilyPolicies } from "@/lib/seo/route-class";
+
 export type RouteFamilyKey =
   | "public"
   | "auth"
@@ -14,6 +16,7 @@ export type RouteFamilyDefinition = {
   defaultHref: Route;
   description: string;
   indexed: boolean;
+  routeClass: (typeof seoRouteFamilyPolicies)[RouteFamilyKey]["routeClass"];
 };
 
 export const routeFamilies: Record<RouteFamilyKey, RouteFamilyDefinition> = {
@@ -21,42 +24,49 @@ export const routeFamilies: Record<RouteFamilyKey, RouteFamilyDefinition> = {
     label: "Public",
     defaultHref: "/",
     description: "Marketing, discovery, and trust entry points.",
-    indexed: true,
+    indexed: seoRouteFamilyPolicies.public.routeClass === "A",
+    routeClass: seoRouteFamilyPolicies.public.routeClass,
   },
   auth: {
     label: "Auth",
     defaultHref: "/auth/sign-in",
     description: "Entry, verification, and callback handling.",
-    indexed: false,
+    indexed: seoRouteFamilyPolicies.auth.routeClass === "A",
+    routeClass: seoRouteFamilyPolicies.auth.routeClass,
   },
   setup: {
     label: "Setup",
     defaultHref: "/setup/role",
     description: "Role selection and account bootstrap routing.",
-    indexed: false,
+    indexed: seoRouteFamilyPolicies.setup.routeClass === "A",
+    routeClass: seoRouteFamilyPolicies.setup.routeClass,
   },
   account: {
     label: "Account",
     defaultHref: "/settings",
     description: "Shared account settings, billing, and privacy surfaces.",
-    indexed: false,
+    indexed: seoRouteFamilyPolicies.account.routeClass === "A",
+    routeClass: seoRouteFamilyPolicies.account.routeClass,
   },
   student: {
     label: "Student",
     defaultHref: "/match",
     description: "Student matching, booking, messages, and lesson continuity.",
-    indexed: false,
+    indexed: seoRouteFamilyPolicies.student.routeClass === "A",
+    routeClass: seoRouteFamilyPolicies.student.routeClass,
   },
   tutor: {
     label: "Tutor",
     defaultHref: "/tutor/overview",
     description: "Tutor operations, schedule, messaging, and earnings.",
-    indexed: false,
+    indexed: seoRouteFamilyPolicies.tutor.routeClass === "A",
+    routeClass: seoRouteFamilyPolicies.tutor.routeClass,
   },
   internal: {
     label: "Internal",
     defaultHref: "/internal",
     description: "Privileged operations, moderation, and reference-data tools.",
-    indexed: false,
+    indexed: seoRouteFamilyPolicies.internal.routeClass === "A",
+    routeClass: seoRouteFamilyPolicies.internal.routeClass,
   },
 };

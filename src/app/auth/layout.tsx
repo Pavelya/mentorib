@@ -2,19 +2,13 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Auth",
-    template: "%s | Mentor IB",
-  },
-  description: "Auth entry routes for sign-in, verification, and callback handling.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export const metadata: Metadata = buildNonIndexableSectionMetadata(
+  "Auth",
+  "Auth entry routes for sign-in, verification, and callback handling.",
+);
 
 type AuthLayoutProps = {
   children: ReactNode;

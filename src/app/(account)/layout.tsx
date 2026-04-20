@@ -2,19 +2,13 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Account",
-    template: "%s | Mentor IB",
-  },
-  description: "Shared account-level routes for settings, notifications, privacy, and billing.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+export const metadata: Metadata = buildNonIndexableSectionMetadata(
+  "Account",
+  "Shared account-level routes for settings, notifications, privacy, and billing.",
+);
 
 type AccountLayoutProps = {
   children: ReactNode;

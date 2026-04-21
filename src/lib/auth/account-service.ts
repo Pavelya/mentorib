@@ -1,6 +1,11 @@
 import type { User } from "@supabase/supabase-js";
 
+import {
+  getAuthReturnPathFamily,
+  type AuthReturnPathFamily,
+} from "@/lib/auth/auth-boundary";
 import { routeFamilies } from "@/lib/routing/route-families";
+import { siteConfig } from "@/lib/seo/site";
 import {
   hasRole,
   isRestrictedAccount,
@@ -200,7 +205,7 @@ export function buildPostSignInRedirect(
     return routeFamilies.account.defaultHref;
   }
 
-  if (requestedNextPath) {
+  if (requestedNextPath && canUsePostSignInRedirect(snapshot, requestedNextPath)) {
     return requestedNextPath;
   }
 
@@ -225,6 +230,53 @@ export function buildPostSignInRedirect(
   }
 
   return routeFamilies.account.defaultHref;
+}
+
+function canUsePostSignInRedirect(
+  snapshot: AccountStateSnapshot,
+  requestedNextPath: string,
+) {
+  const family = getReturnPathFamily(requestedNextPath);
+
+  if (!family) {
+    return false;
+  }
+
+  return canAccessReturnPathFamily(snapshot, family);
+}
+
+function canAccessReturnPathFamily(
+  snapshot: AccountStateSnapshot,
+  family: AuthReturnPathFamily,
+) {
+  switch (family) {
+    case "account":
+    case "public":
+      return true;
+    case "internal":
+      return hasRole(snapshot, "admin");
+    case "setup":
+      return requiresRoleSelection(snapshot);
+    case "student":
+      return hasRole(snapshot, "student");
+    case "tutor":
+      return hasRole(snapshot, "tutor");
+    case "tutor_application":
+      return (
+        hasRole(snapshot, "tutor", ["active", "pending"]) ||
+        snapshot.primary_role_context === "tutor"
+      );
+  }
+}
+
+function getReturnPathFamily(requestedNextPath: string) {
+  try {
+    return getAuthReturnPathFamily(
+      new URL(requestedNextPath, siteConfig.origin).pathname,
+    );
+  } catch {
+    return null;
+  }
 }
 
 export function buildSetupRoleRedirect(selectedRole: SetupRoleSelection) {

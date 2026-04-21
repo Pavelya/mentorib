@@ -1,28 +1,12 @@
 import { siteConfig } from "@/lib/seo/site";
+import {
+  authRoutes,
+  type AuthVerifyStatus,
+  getSafeAuthCallbackOrigin,
+  isApprovedAuthReturnPath,
+} from "@/lib/auth/auth-boundary";
 
-const ALLOWED_TOP_LEVEL_SEGMENTS = new Set([
-  "",
-  "become-a-tutor",
-  "billing",
-  "book",
-  "compare",
-  "how-it-works",
-  "internal",
-  "lessons",
-  "match",
-  "messages",
-  "notifications",
-  "privacy",
-  "results",
-  "settings",
-  "setup",
-  "support",
-  "trust-and-safety",
-  "tutor",
-  "tutors",
-]);
-
-export type AuthVerifyStatus = "error" | "expired" | "sent";
+export type { AuthVerifyStatus } from "@/lib/auth/auth-boundary";
 
 export function getSafeRedirectPath(candidate: string | null | undefined) {
   if (!candidate) {
@@ -37,11 +21,10 @@ export function getSafeRedirectPath(candidate: string | null | undefined) {
 
   try {
     const resolvedUrl = new URL(trimmedCandidate, siteConfig.origin);
-    const topLevelSegment = resolvedUrl.pathname.split("/").filter(Boolean)[0] ?? "";
 
     if (
       resolvedUrl.pathname.startsWith("/auth/") ||
-      !ALLOWED_TOP_LEVEL_SEGMENTS.has(topLevelSegment)
+      !isApprovedAuthReturnPath(resolvedUrl.pathname)
     ) {
       return null;
     }
@@ -53,18 +36,28 @@ export function getSafeRedirectPath(candidate: string | null | undefined) {
 }
 
 export function buildAuthCallbackPath(nextPath?: string | null) {
-  return buildPathWithOptionalNext("/auth/callback", nextPath);
+  return buildPathWithOptionalNext(authRoutes.callback, nextPath);
+}
+
+export function buildAuthCallbackUrl(
+  originCandidate: string | null | undefined,
+  nextPath?: string | null,
+) {
+  return new URL(
+    buildAuthCallbackPath(nextPath),
+    getSafeAuthCallbackOrigin(originCandidate),
+  ).toString();
 }
 
 export function buildAuthSignInPath(nextPath?: string | null) {
-  return buildPathWithOptionalNext("/auth/sign-in", nextPath);
+  return buildPathWithOptionalNext(authRoutes.signIn, nextPath);
 }
 
 export function buildAuthVerifyPath(
   status: AuthVerifyStatus = "sent",
   nextPath?: string | null,
 ) {
-  const url = new URL("/auth/verify", siteConfig.origin);
+  const url = new URL(authRoutes.verify, siteConfig.origin);
   url.searchParams.set("status", status);
 
   const safeNextPath = getSafeRedirectPath(nextPath);
@@ -82,6 +75,13 @@ export function isExpiredAuthError(errorMessage: string | null | undefined) {
   }
 
   return /expired|otp_expired|invalid or has expired/i.test(errorMessage);
+}
+
+export function getAuthVerifyStatusForCallbackError(
+  errorMessage: string | null | undefined,
+  defaultStatus: Exclude<AuthVerifyStatus, "expired" | "sent"> = "error",
+): Exclude<AuthVerifyStatus, "sent"> {
+  return isExpiredAuthError(errorMessage) ? "expired" : defaultStatus;
 }
 
 function buildPathWithOptionalNext(pathname: string, nextPath?: string | null) {

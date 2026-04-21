@@ -7,8 +7,8 @@ import { createServerClient } from "@supabase/ssr";
 import { buildPostSignInRedirect, ensureAuthAccount } from "@/lib/auth/account-service";
 import {
   buildAuthVerifyPath,
+  getAuthVerifyStatusForCallbackError,
   getSafeRedirectPath,
-  isExpiredAuthError,
 } from "@/lib/auth/allowed-redirects";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       new URL(
         buildAuthVerifyPath(
-          isExpiredAuthError(upstreamError) ? "expired" : "error",
+          getAuthVerifyStatusForCallbackError(upstreamError, "callback_error"),
           nextPath,
         ),
         request.url,
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(
         new URL(
           buildAuthVerifyPath(
-            isExpiredAuthError(exchangeError.message) ? "expired" : "error",
+            getAuthVerifyStatusForCallbackError(exchangeError.message),
             nextPath,
           ),
           request.url,

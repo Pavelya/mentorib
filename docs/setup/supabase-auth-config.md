@@ -4,6 +4,11 @@ This document defines the Supabase dashboard configuration expectations
 for Google OAuth, callback safety, and branded auth email delivery.
 These are manual setup steps — they cannot be done via code.
 
+The matching application boundary lives in
+`src/lib/auth/auth-boundary.ts`. Keep provider identifiers, approved return
+paths, callback origins, and Supabase auth-email branding expectations aligned
+there before changing dashboard configuration.
+
 ## 1. Google Provider Configuration
 
 ### Supabase Dashboard → Authentication → Providers → Google

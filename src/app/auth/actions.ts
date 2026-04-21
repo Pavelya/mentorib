@@ -4,10 +4,11 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import {
-  buildAuthCallbackPath,
+  buildAuthCallbackUrl,
   buildAuthVerifyPath,
   getSafeRedirectPath,
 } from "@/lib/auth/allowed-redirects";
+import { authProviders } from "@/lib/auth/auth-boundary";
 import { getRequestOrigin } from "@/lib/http/request-origin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -43,7 +44,7 @@ export async function sendMagicLinkAction(
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: new URL(buildAuthCallbackPath(nextPath), requestOrigin).toString(),
+        emailRedirectTo: buildAuthCallbackUrl(requestOrigin, nextPath),
         shouldCreateUser: true,
       },
     });
@@ -78,12 +79,10 @@ export async function startGoogleSignInAction(
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.signInWithOAuth({
       options: {
-        queryParams: {
-          prompt: "select_account",
-        },
-        redirectTo: new URL(buildAuthCallbackPath(nextPath), requestOrigin).toString(),
+        queryParams: authProviders.google.queryParams,
+        redirectTo: buildAuthCallbackUrl(requestOrigin, nextPath),
       },
-      provider: "google",
+      provider: authProviders.google.id,
     });
 
     if (error || !data.url) {

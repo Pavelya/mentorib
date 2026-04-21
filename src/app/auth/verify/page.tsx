@@ -22,6 +22,11 @@ const VERIFY_CONTENT: Record<
     title: string;
   }
 > = {
+  callback_error: {
+    body: "The provider callback did not complete. Please try Google again or request an email sign-in link.",
+    ctaLabel: "Try sign-in again",
+    title: "Sign-in did not complete",
+  },
   error: {
     body: "We couldn't complete sign-in. Please try again.",
     ctaLabel: "Try sign-in again",
@@ -81,5 +86,10 @@ function getSearchParam(value: string | string[] | undefined) {
 }
 
 function getVerifyStatus(value: string | undefined): AuthVerifyStatus {
-  return value === "error" || value === "expired" || value === "sent" ? value : "sent";
+  return value === "callback_error" ||
+    value === "error" ||
+    value === "expired" ||
+    value === "sent"
+    ? value
+    : "sent";
 }

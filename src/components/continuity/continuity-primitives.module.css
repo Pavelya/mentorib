@@ -1,0 +1,232 @@
+.surface {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.92), rgb(252 250 244 / 0.88)),
+    var(--surface-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.surfaceHeader,
+.lessonHeader,
+.personHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.surfaceIntro,
+.personTitleBlock,
+.personBody {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.surfaceSignals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title-md);
+  line-height: var(--line-tight);
+}
+
+.actionSlot {
+  display: flex;
+  align-items: center;
+}
+
+.needBar.compact {
+  gap: var(--space-3);
+}
+
+.needBar.compact .surfaceHeader {
+  align-items: center;
+}
+
+.needBar.compact .title {
+  font-size: var(--body-lg);
+}
+
+.needBar.stacked .surfaceSignals {
+  justify-content: flex-start;
+}
+
+.needBar.readOnly {
+  background:
+    linear-gradient(180deg, rgb(247 242 232 / 0.94), rgb(252 249 243 / 0.86)),
+    var(--surface-panel-soft);
+}
+
+.qualifierList,
+.metaList,
+.detailList,
+.contextChipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qualifierChip,
+.metaItem,
+.detailItem,
+.contextChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: var(--caption);
+  font-weight: 600;
+  line-height: var(--line-utility);
+}
+
+.qualifierChip,
+.contextChip,
+.detailItem {
+  border: 1px solid var(--border-support);
+  background: rgb(244 239 230 / 0.9);
+  color: var(--ink-700);
+}
+
+.qualifierSupport {
+  border-style: dashed;
+  color: var(--ink-500);
+}
+
+.personSummary {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: flex-start;
+}
+
+.personDescriptor,
+.lessonMetaLabel {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+  line-height: var(--line-body);
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.metaItem {
+  border: 1px solid rgb(61 56 50 / 0.08);
+  background: rgb(255 255 255 / 0.72);
+  color: var(--ink-600);
+}
+
+.compact {
+  padding: var(--space-4);
+}
+
+.compact .title {
+  font-size: var(--body-md);
+}
+
+.header {
+  padding: var(--space-6);
+}
+
+.operational {
+  background:
+    linear-gradient(180deg, rgb(251 250 245 / 0.94), rgb(247 243 236 / 0.9)),
+    var(--surface-panel);
+}
+
+.lessonSummary {
+  gap: var(--space-3);
+}
+
+.lessonMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.lessonPerson {
+  display: grid;
+}
+
+.contextRow {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.chipToneDefault {
+  border-color: var(--border-support);
+  background: rgb(244 239 230 / 0.88);
+  color: var(--ink-700);
+}
+
+.chipToneInfo {
+  border-color: var(--state-info-border);
+  background: var(--state-info-surface);
+  color: var(--ink-700);
+}
+
+.chipTonePositive {
+  border-color: var(--state-positive-border);
+  background: var(--state-positive-surface);
+  color: var(--success-500);
+}
+
+.chipToneWarning {
+  border-color: var(--state-warning-border);
+  background: var(--state-warning-surface);
+  color: var(--warning-500);
+}
+
+.chipToneDestructive {
+  border-color: var(--state-danger-border);
+  background: var(--state-danger-surface);
+  color: var(--danger-500);
+}
+
+.chipToneTrust {
+  border-color: var(--state-trust-border);
+  background: var(--state-trust-surface);
+  color: var(--gold-500);
+}
+
+@media (max-width: 767px) {
+  .surface {
+    padding: var(--space-4);
+  }
+
+  .personSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .surfaceSignals,
+  .lessonMetaRow,
+  .personHeader {
+    justify-content: flex-start;
+  }
+}

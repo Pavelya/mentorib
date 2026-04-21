@@ -64,6 +64,16 @@ type UserRoleRow = {
   updated_at: string;
 };
 
+type StudentProfileRow = {
+  app_user_id: string;
+  created_at: string;
+  current_stage_summary: string | null;
+  display_name: string | null;
+  id: string;
+  notes_visibility_preference: string | null;
+  updated_at: string;
+};
+
 type SubjectRow = {
   created_at: string;
   display_name: string;
@@ -413,10 +423,15 @@ export type MentorIbDatabase = {
         >;
       };
       user_roles: {
-        Insert: never;
+        Insert: Pick<UserRoleRow, "app_user_id" | "role" | "role_status"> & {
+          granted_at?: string;
+          revoked_at?: string | null;
+        };
         Relationships: [];
         Row: UserRoleRow;
-        Update: never;
+        Update: Partial<
+          Omit<UserRoleRow, "app_user_id" | "created_at" | "id" | "role" | "updated_at">
+        >;
       };
       languages: {
         Insert: Pick<LanguageRow, "display_name" | "language_code"> & {
@@ -492,6 +507,18 @@ export type MentorIbDatabase = {
         Row: SchedulePolicyRow;
         Update: Partial<
           Omit<SchedulePolicyRow, "created_at" | "id" | "tutor_profile_id" | "updated_at">
+        >;
+      };
+      student_profiles: {
+        Insert: Pick<StudentProfileRow, "app_user_id"> & {
+          current_stage_summary?: string | null;
+          display_name?: string | null;
+          notes_visibility_preference?: string | null;
+        };
+        Relationships: [];
+        Row: StudentProfileRow;
+        Update: Partial<
+          Omit<StudentProfileRow, "app_user_id" | "created_at" | "id" | "updated_at">
         >;
       };
       subject_focus_areas: {

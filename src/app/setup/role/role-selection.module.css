@@ -1,0 +1,114 @@
+.shell {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.brand {
+  margin: 0;
+  color: var(--forest-700);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--title-xl);
+  letter-spacing: 0;
+  line-height: var(--line-tight);
+}
+
+.roleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.roleGrid form {
+  min-width: 0;
+}
+
+.roleOption {
+  min-height: 15rem;
+  display: grid;
+  place-items: center;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--space-5);
+  border-color: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  color: var(--ink-900);
+  box-shadow: var(--shadow-soft);
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.roleOption:hover:not(:disabled) {
+  border-color: rgb(23 60 52 / 0.28);
+  background: white;
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-2px);
+}
+
+.roleOption:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    0 0 0 1px var(--focus-outline),
+    var(--shadow-raised);
+}
+
+.roleOption:disabled {
+  cursor: progress;
+}
+
+.selected {
+  border-color: var(--state-selected-border);
+  background: var(--state-selected-surface);
+}
+
+.optionIcon {
+  width: 4.25rem;
+  height: 4.25rem;
+  color: var(--forest-700);
+}
+
+.roleOption span {
+  max-width: 15rem;
+  color: var(--ink-900);
+  font-size: var(--title-md);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: var(--line-tight);
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .shell {
+    gap: var(--space-6);
+  }
+
+  .title {
+    font-size: var(--title-lg);
+  }
+
+  .roleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .roleOption {
+    min-height: 11rem;
+    padding: var(--space-6) var(--space-4);
+  }
+}

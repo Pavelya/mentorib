@@ -12,8 +12,13 @@ import type {
   AccountStatus,
   OnboardingState,
   PrimaryRoleContext,
+  Role,
+  RoleStatus,
 } from "@/modules/accounts/constants";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+
+const accountSelect =
+  "id, auth_user_id, email, full_name, avatar_url, onboarding_state, account_status, primary_role_context";
 
 type AppUserRecord = {
   account_status: AccountStatus;
@@ -27,6 +32,7 @@ type AppUserRecord = {
 };
 
 type UserRoleRecord = AccountRoleSnapshot;
+export type SetupRoleSelection = Extract<Role, "student" | "tutor">;
 
 export type ResolvedAuthAccount = AppUserRecord & {
   isNewAccount: boolean;
@@ -39,9 +45,7 @@ export async function ensureAuthAccount(user: User): Promise<ResolvedAuthAccount
 
   const { data: existingAccount, error: existingAccountError } = await serviceRoleClient
     .from("app_users")
-    .select(
-      "id, auth_user_id, email, full_name, avatar_url, onboarding_state, account_status, primary_role_context",
-    )
+    .select(accountSelect)
     .eq("auth_user_id", user.id)
     .maybeSingle<AppUserRecord>();
 
@@ -61,9 +65,7 @@ export async function ensureAuthAccount(user: User): Promise<ResolvedAuthAccount
         email: profile.email,
         full_name: profile.fullName,
       })
-      .select(
-        "id, auth_user_id, email, full_name, avatar_url, onboarding_state, account_status, primary_role_context",
-      )
+      .select(accountSelect)
       .single<AppUserRecord>();
 
     if (insertError || !insertedAccount) {
@@ -80,9 +82,7 @@ export async function ensureAuthAccount(user: User): Promise<ResolvedAuthAccount
         .from("app_users")
         .update(accountUpdates)
         .eq("id", account.id)
-        .select(
-          "id, auth_user_id, email, full_name, avatar_url, onboarding_state, account_status, primary_role_context",
-        )
+        .select(accountSelect)
         .single<AppUserRecord>();
 
       if (updateError || !updatedAccount) {
@@ -108,6 +108,74 @@ export async function ensureAuthAccount(user: User): Promise<ResolvedAuthAccount
     isNewAccount,
     roles: roles ?? [],
   };
+}
+
+export async function applySetupRoleSelection(
+  account: Pick<ResolvedAuthAccount, "full_name" | "id">,
+  selectedRole: SetupRoleSelection,
+) {
+  const serviceRoleClient = createSupabaseServiceRoleClient();
+  const roleStatus: RoleStatus = selectedRole === "student" ? "active" : "pending";
+  const onboardingState: OnboardingState =
+    selectedRole === "student" ? "student_setup" : "tutor_application_started";
+  const displayName = normalizeOptionalText(account.full_name);
+
+  const { error: roleError } = await serviceRoleClient.from("user_roles").upsert(
+    {
+      app_user_id: account.id,
+      revoked_at: null,
+      role: selectedRole,
+      role_status: roleStatus,
+    },
+    { onConflict: "app_user_id,role" },
+  );
+
+  if (roleError) {
+    throw new Error("Could not save the selected account role.");
+  }
+
+  if (selectedRole === "student") {
+    const { error: profileError } = await serviceRoleClient
+      .from("student_profiles")
+      .upsert(
+        {
+          app_user_id: account.id,
+          display_name: displayName,
+        },
+        { ignoreDuplicates: true, onConflict: "app_user_id" },
+      );
+
+    if (profileError) {
+      throw new Error("Could not create the student profile.");
+    }
+  } else {
+    const { error: profileError } = await serviceRoleClient
+      .from("tutor_profiles")
+      .upsert(
+        {
+          app_user_id: account.id,
+          application_status: "in_progress",
+          display_name: displayName,
+        },
+        { ignoreDuplicates: true, onConflict: "app_user_id" },
+      );
+
+    if (profileError) {
+      throw new Error("Could not create the tutor profile.");
+    }
+  }
+
+  const { error: accountError } = await serviceRoleClient
+    .from("app_users")
+    .update({
+      onboarding_state: onboardingState,
+      primary_role_context: selectedRole,
+    })
+    .eq("id", account.id);
+
+  if (accountError) {
+    throw new Error("Could not update the account setup state.");
+  }
 }
 
 export function buildPostSignInRedirect(
@@ -159,6 +227,10 @@ export function buildPostSignInRedirect(
   return routeFamilies.account.defaultHref;
 }
 
+export function buildSetupRoleRedirect(selectedRole: SetupRoleSelection) {
+  return selectedRole === "student" ? routeFamilies.student.defaultHref : "/tutor/apply";
+}
+
 function normalizeProfileFromUser(user: User) {
   const fullName = getStringMetadata(user, "full_name") ?? getStringMetadata(user, "name");
   const avatarUrl =
@@ -198,4 +270,10 @@ function getStringMetadata(user: User, key: string) {
   const value = user.user_metadata?.[key];
 
   return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function normalizeOptionalText(value: string | null) {
+  const trimmedValue = value?.trim();
+
+  return trimmedValue && trimmedValue.length > 0 ? trimmedValue : null;
 }

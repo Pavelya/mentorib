@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { FocusedFlowShell } from "@/components/shell/focused-flow-shell";
 import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
-
-import styles from "./auth-shell.module.css";
 
 export const metadata: Metadata = buildNonIndexableSectionMetadata(
   "Auth",
@@ -15,11 +14,5 @@ type AuthLayoutProps = {
 };
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
-  return (
-    <div className={styles.shell}>
-      <main className={styles.main}>
-        <div className={styles.content}>{children}</div>
-      </main>
-    </div>
-  );
+  return <FocusedFlowShell>{children}</FocusedFlowShell>;
 }

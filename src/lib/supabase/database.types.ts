@@ -13,6 +13,23 @@ import type {
   WebhookVerificationStatus,
 } from "@/modules/jobs/constants";
 import type {
+  BookingOperationStatus,
+  BookingOperationType,
+  LearningNeedStatus,
+  LessonIssueCaseStatus,
+  LessonIssueCounterpartyResponseType,
+  LessonIssueResolutionOutcome,
+  LessonIssueType,
+  LessonMeetingAccessStatus,
+  LessonMeetingMethod,
+  LessonMeetingSourceType,
+  LessonStatus,
+  MatchCandidateState,
+  MatchRunStatus,
+  PaymentProvider,
+  PaymentStatus,
+} from "@/modules/lessons/constants";
+import type {
   AbuseReportStatus,
   AbuseReportType,
   ConversationStatus,
@@ -106,6 +123,15 @@ type LanguageRow = {
 };
 
 type VideoMediaProviderRow = {
+  created_at: string;
+  display_name: string;
+  is_active: boolean;
+  provider_key: string;
+  sort_order: number;
+  updated_at: string;
+};
+
+type MeetingProviderRow = {
   created_at: string;
   display_name: string;
   is_active: boolean;
@@ -275,6 +301,163 @@ type AbuseReportRow = {
   updated_at: string;
 };
 
+type BookingOperationRow = {
+  actor_app_user_id: string;
+  created_at: string;
+  error_code: string | null;
+  error_message: string | null;
+  id: string;
+  operation_key: string;
+  operation_status: BookingOperationStatus;
+  operation_type: BookingOperationType;
+  request_fingerprint: string;
+  updated_at: string;
+};
+
+type LearningNeedRow = {
+  archived_at: string | null;
+  created_at: string;
+  free_text_note: string | null;
+  id: string;
+  language_code: string;
+  need_status: LearningNeedStatus;
+  need_type: string;
+  session_frequency_intent: string | null;
+  student_profile_id: string;
+  subject_focus_area_id: string;
+  subject_id: string;
+  submitted_at: string | null;
+  support_style: string | null;
+  timezone: string;
+  updated_at: string;
+  urgency_level: string;
+};
+
+type MatchRunRow = {
+  candidate_count: number;
+  completed_at: string | null;
+  created_at: string;
+  failed_at: string | null;
+  id: string;
+  learning_need_id: string;
+  matching_projection_version: string;
+  need_signature: string;
+  ranking_version: string;
+  run_status: MatchRunStatus;
+  started_at: string | null;
+  updated_at: string;
+};
+
+type MatchCandidateRow = {
+  availability_signal: string | null;
+  best_for_summary: string | null;
+  candidate_state: MatchCandidateState;
+  confidence_label: string | null;
+  created_at: string;
+  fit_summary: string | null;
+  id: string;
+  match_run_id: string;
+  match_score: number;
+  rank_position: number;
+  trust_signal_snapshot: Json;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type LessonRow = {
+  accepted_at: string | null;
+  booking_operation_id: string;
+  cancelled_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  currency_code: string;
+  declined_at: string | null;
+  focus_snapshot: Json;
+  id: string;
+  is_trial: boolean;
+  learning_need_id: string;
+  lesson_status: LessonStatus;
+  lesson_timezone: string;
+  match_candidate_id: string | null;
+  meeting_method: LessonMeetingMethod;
+  price_amount: number;
+  request_expires_at: string;
+  scheduled_end_at: string;
+  scheduled_start_at: string;
+  student_note_snapshot: string | null;
+  student_profile_id: string;
+  subject_snapshot: Json;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type LessonStatusHistoryRow = {
+  booking_operation_id: string | null;
+  change_reason: string | null;
+  changed_by_app_user_id: string | null;
+  created_at: string;
+  from_status: LessonStatus | null;
+  id: string;
+  lesson_id: string;
+  to_status: LessonStatus;
+};
+
+type LessonMeetingAccessRow = {
+  access_status: LessonMeetingAccessStatus;
+  created_at: string;
+  display_label: string | null;
+  id: string;
+  lesson_id: string;
+  meeting_method: LessonMeetingMethod;
+  meeting_url: string | null;
+  normalized_host: string | null;
+  provider: string | null;
+  source_type: LessonMeetingSourceType;
+  updated_at: string;
+  updated_by_app_user_id: string | null;
+};
+
+type LessonIssueCaseRow = {
+  case_status: LessonIssueCaseStatus;
+  counterparty_deadline_at: string;
+  counterparty_response_type: LessonIssueCounterpartyResponseType | null;
+  counterparty_summary: string | null;
+  created_at: string;
+  id: string;
+  issue_type: LessonIssueType;
+  lesson_id: string;
+  reported_at: string;
+  reported_by_app_user_id: string;
+  reporter_summary: string | null;
+  resolution_note: string | null;
+  resolution_outcome: LessonIssueResolutionOutcome | null;
+  resolved_at: string | null;
+  resolved_by_app_user_id: string | null;
+  updated_at: string;
+};
+
+type PaymentRow = {
+  amount: number;
+  authorization_expires_at: string | null;
+  authorization_operation_id: string;
+  authorized_at: string | null;
+  capture_cancelled_at: string | null;
+  capture_operation_id: string | null;
+  captured_at: string | null;
+  created_at: string;
+  currency_code: string;
+  id: string;
+  lesson_id: string;
+  payer_app_user_id: string;
+  payment_status: PaymentStatus;
+  provider: PaymentProvider;
+  provider_idempotency_key: string | null;
+  refunded_at: string | null;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
+  updated_at: string;
+};
+
 type JobRunRow = {
   attempt_number: number;
   available_at: string;
@@ -361,6 +544,30 @@ export type MentorIbDatabase = {
           >
         >;
       };
+      booking_operations: {
+        Insert: Pick<
+          BookingOperationRow,
+          "actor_app_user_id" | "operation_key" | "operation_type" | "request_fingerprint"
+        > & {
+          error_code?: string | null;
+          error_message?: string | null;
+          operation_status?: BookingOperationStatus;
+        };
+        Relationships: [];
+        Row: BookingOperationRow;
+        Update: Partial<
+          Omit<
+            BookingOperationRow,
+            | "actor_app_user_id"
+            | "created_at"
+            | "id"
+            | "operation_key"
+            | "operation_type"
+            | "request_fingerprint"
+            | "updated_at"
+          >
+        >;
+      };
       availability_overrides: {
         Insert: Pick<AvailabilityOverrideRow, "override_date" | "override_type" | "tutor_profile_id"> & {
           end_local_time?: string | null;
@@ -422,6 +629,128 @@ export type MentorIbDatabase = {
           >
         >;
       };
+      learning_needs: {
+        Insert: Pick<
+          LearningNeedRow,
+          | "language_code"
+          | "need_type"
+          | "student_profile_id"
+          | "subject_focus_area_id"
+          | "subject_id"
+          | "urgency_level"
+        > & {
+          archived_at?: string | null;
+          free_text_note?: string | null;
+          need_status?: LearningNeedStatus;
+          session_frequency_intent?: string | null;
+          submitted_at?: string | null;
+          support_style?: string | null;
+          timezone?: string;
+        };
+        Relationships: [];
+        Row: LearningNeedRow;
+        Update: Partial<
+          Omit<LearningNeedRow, "created_at" | "id" | "student_profile_id" | "updated_at">
+        >;
+      };
+      lesson_issue_cases: {
+        Insert: Pick<
+          LessonIssueCaseRow,
+          "issue_type" | "lesson_id" | "reported_by_app_user_id"
+        > & {
+          case_status?: LessonIssueCaseStatus;
+          counterparty_deadline_at?: string;
+          counterparty_response_type?: LessonIssueCounterpartyResponseType | null;
+          counterparty_summary?: string | null;
+          reported_at?: string;
+          reporter_summary?: string | null;
+          resolution_note?: string | null;
+          resolution_outcome?: LessonIssueResolutionOutcome | null;
+          resolved_at?: string | null;
+          resolved_by_app_user_id?: string | null;
+        };
+        Relationships: [];
+        Row: LessonIssueCaseRow;
+        Update: Partial<
+          Omit<
+            LessonIssueCaseRow,
+            | "created_at"
+            | "id"
+            | "issue_type"
+            | "lesson_id"
+            | "reported_at"
+            | "reported_by_app_user_id"
+            | "updated_at"
+          >
+        >;
+      };
+      lesson_meeting_access: {
+        Insert: Pick<LessonMeetingAccessRow, "lesson_id"> & {
+          access_status?: LessonMeetingAccessStatus;
+          display_label?: string | null;
+          meeting_method?: LessonMeetingMethod;
+          meeting_url?: string | null;
+          normalized_host?: string | null;
+          provider?: string | null;
+          source_type?: LessonMeetingSourceType;
+          updated_by_app_user_id?: string | null;
+        };
+        Relationships: [];
+        Row: LessonMeetingAccessRow;
+        Update: Partial<Omit<LessonMeetingAccessRow, "created_at" | "id" | "lesson_id" | "updated_at">>;
+      };
+      lesson_status_history: {
+        Insert: Pick<LessonStatusHistoryRow, "lesson_id" | "to_status"> & {
+          booking_operation_id?: string | null;
+          change_reason?: string | null;
+          changed_by_app_user_id?: string | null;
+          from_status?: LessonStatus | null;
+        };
+        Relationships: [];
+        Row: LessonStatusHistoryRow;
+        Update: Partial<Omit<LessonStatusHistoryRow, "created_at" | "id" | "lesson_id">>;
+      };
+      lessons: {
+        Insert: Pick<
+          LessonRow,
+          | "booking_operation_id"
+          | "learning_need_id"
+          | "lesson_timezone"
+          | "price_amount"
+          | "request_expires_at"
+          | "scheduled_end_at"
+          | "scheduled_start_at"
+          | "student_profile_id"
+          | "subject_snapshot"
+          | "tutor_profile_id"
+        > & {
+          accepted_at?: string | null;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          currency_code?: string;
+          declined_at?: string | null;
+          focus_snapshot?: Json;
+          is_trial?: boolean;
+          lesson_status?: LessonStatus;
+          match_candidate_id?: string | null;
+          meeting_method?: LessonMeetingMethod;
+          student_note_snapshot?: string | null;
+        };
+        Relationships: [];
+        Row: LessonRow;
+        Update: Partial<
+          Omit<
+            LessonRow,
+            | "booking_operation_id"
+            | "created_at"
+            | "id"
+            | "learning_need_id"
+            | "student_profile_id"
+            | "tutor_profile_id"
+            | "updated_at"
+          >
+        >;
+      };
       user_roles: {
         Insert: Pick<UserRoleRow, "app_user_id" | "role" | "role_status"> & {
           granted_at?: string;
@@ -441,6 +770,58 @@ export type MentorIbDatabase = {
         Relationships: [];
         Row: LanguageRow;
         Update: Partial<Omit<LanguageRow, "created_at" | "language_code" | "updated_at">>;
+      };
+      match_candidates: {
+        Insert: Pick<
+          MatchCandidateRow,
+          "match_run_id" | "match_score" | "rank_position" | "tutor_profile_id"
+        > & {
+          availability_signal?: string | null;
+          best_for_summary?: string | null;
+          candidate_state?: MatchCandidateState;
+          confidence_label?: string | null;
+          fit_summary?: string | null;
+          trust_signal_snapshot?: Json;
+        };
+        Relationships: [];
+        Row: MatchCandidateRow;
+        Update: Partial<
+          Omit<
+            MatchCandidateRow,
+            "created_at" | "id" | "match_run_id" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
+      match_runs: {
+        Insert: Pick<
+          MatchRunRow,
+          | "learning_need_id"
+          | "matching_projection_version"
+          | "need_signature"
+          | "ranking_version"
+        > & {
+          candidate_count?: number;
+          completed_at?: string | null;
+          failed_at?: string | null;
+          run_status?: MatchRunStatus;
+          started_at?: string | null;
+        };
+        Relationships: [];
+        Row: MatchRunRow;
+        Update: Partial<
+          Omit<MatchRunRow, "created_at" | "id" | "learning_need_id" | "updated_at">
+        >;
+      };
+      meeting_providers: {
+        Insert: Pick<MeetingProviderRow, "display_name" | "provider_key"> & {
+          is_active?: boolean;
+          sort_order?: number;
+        };
+        Relationships: [];
+        Row: MeetingProviderRow;
+        Update: Partial<
+          Omit<MeetingProviderRow, "created_at" | "provider_key" | "updated_at">
+        >;
       };
       job_runs: {
         Insert: Pick<JobRunRow, "job_type"> & {
@@ -490,6 +871,38 @@ export type MentorIbDatabase = {
           Omit<
             MessageRow,
             "conversation_id" | "created_at" | "id" | "sender_app_user_id" | "updated_at"
+          >
+        >;
+      };
+      payments: {
+        Insert: Pick<
+          PaymentRow,
+          "amount" | "authorization_operation_id" | "lesson_id" | "payer_app_user_id"
+        > & {
+          authorization_expires_at?: string | null;
+          authorized_at?: string | null;
+          capture_cancelled_at?: string | null;
+          capture_operation_id?: string | null;
+          captured_at?: string | null;
+          currency_code?: string;
+          payment_status?: PaymentStatus;
+          provider?: PaymentProvider;
+          provider_idempotency_key?: string | null;
+          refunded_at?: string | null;
+          stripe_checkout_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+        };
+        Relationships: [];
+        Row: PaymentRow;
+        Update: Partial<
+          Omit<
+            PaymentRow,
+            | "authorization_operation_id"
+            | "created_at"
+            | "id"
+            | "lesson_id"
+            | "payer_app_user_id"
+            | "updated_at"
           >
         >;
       };

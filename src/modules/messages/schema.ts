@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { appUsers, studentProfiles } from "@/modules/accounts/schema";
+import { lessons } from "@/modules/lessons/schema";
 import {
   abuseReportStatuses,
   abuseReportTypes,
@@ -205,7 +206,9 @@ export const abuseReports = pgTable(
     conversation_id: uuid("conversation_id").references(() => conversations.id, {
       onDelete: "set null",
     }),
-    lesson_id: uuid("lesson_id"),
+    lesson_id: uuid("lesson_id").references(() => lessons.id, {
+      onDelete: "set null",
+    }),
     reported_message_id: uuid("reported_message_id").references(
       (): AnyPgColumn => messages.id,
       { onDelete: "set null" },

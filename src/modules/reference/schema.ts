@@ -77,3 +77,16 @@ export const videoMediaProviders = pgTable("video_media_providers", {
     .notNull()
     .defaultNow(),
 });
+
+export const meetingProviders = pgTable("meeting_providers", {
+  provider_key: text("provider_key").primaryKey(),
+  display_name: text("display_name").notNull(),
+  sort_order: integer("sort_order").notNull().default(0),
+  is_active: boolean("is_active").notNull().default(true),
+  created_at: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

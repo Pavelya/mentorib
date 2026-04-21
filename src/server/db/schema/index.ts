@@ -6,6 +6,17 @@ export {
 } from "@/modules/accounts/schema";
 export { jobRuns, webhookEvents } from "@/modules/jobs/schema";
 export {
+  bookingOperations,
+  learningNeeds,
+  lessonIssueCases,
+  lessonMeetingAccess,
+  lessons,
+  lessonStatusHistory,
+  matchCandidates,
+  matchRuns,
+  payments,
+} from "@/modules/lessons/schema";
+export {
   abuseReports,
   conversationParticipants,
   conversations,
@@ -15,6 +26,7 @@ export {
 } from "@/modules/messages/schema";
 export {
   languages,
+  meetingProviders,
   subjectFocusAreas,
   subjects,
   videoMediaProviders,

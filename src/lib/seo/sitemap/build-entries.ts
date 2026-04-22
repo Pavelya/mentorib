@@ -1,20 +1,19 @@
 import type { MetadataRoute } from "next";
 
 import { staticPublicRoutes } from "@/lib/seo/public-routes";
-import { createPendingPublicIndexability } from "@/lib/seo/quality/public-indexability";
 import { shouldIncludeStaticRouteInSitemap } from "@/lib/seo/sitemap/include-route";
 import { buildAbsoluteUrl } from "@/lib/seo/site";
+import { listPublicTutorProfileSitemapEntries } from "@/modules/tutors/public-profile";
 
 async function buildTutorProfileSitemapEntries(): Promise<MetadataRoute.Sitemap> {
-  const qualityGate = createPendingPublicIndexability(
-    "Tutor profile sitemap inclusion begins after approved public profile data is connected.",
-  );
+  const profiles = await listPublicTutorProfileSitemapEntries();
 
-  if (!qualityGate.isSitemapEligible) {
-    return [];
-  }
-
-  return [];
+  return profiles.map((profile) => ({
+    changeFrequency: "weekly" as const,
+    lastModified: new Date(profile.updatedAt),
+    priority: 0.6,
+    url: buildAbsoluteUrl(profile.pathname).toString(),
+  }));
 }
 
 export async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {

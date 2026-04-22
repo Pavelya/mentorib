@@ -5,15 +5,15 @@ export default function TutorProfileNotFound() {
     <RoutePlaceholder
       routePath="/tutors/[slug]"
       phase="Phase 1"
-      title="Tutor not found"
+      title="Tutor profile not available"
       titleAs="h1"
-      description="This dynamic public route has its own not-found boundary as recommended in the route-layout architecture."
+      description="This tutor profile is not currently available on the public Mentor IB surface."
       links={[
         { href: "/", label: "Return home" },
         { href: "/match", label: "Start matching", tone: "ghost" },
       ]}
       notes={[
-        "Later tasks can call notFound() when a tutor slug is missing or not publicly visible.",
+        "Profiles only render when the public listing state allows anonymous access.",
       ]}
     />
   );

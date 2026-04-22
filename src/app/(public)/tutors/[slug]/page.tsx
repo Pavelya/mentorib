@@ -81,6 +81,7 @@ export default async function TutorProfilePage({
         routePath={`/tutors/${slug}`}
         phase="Phase 1"
         title="Tutor profile route shell"
+        titleAs="h1"
         description={`Shared public tutor profile placeholder for "${slug}". The real decision-focused profile arrives in P1-PUBLIC-003.`}
         notes={[
           "A route-local not-found boundary exists for missing tutor slugs.",

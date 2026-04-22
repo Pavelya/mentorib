@@ -29,14 +29,13 @@ export const staticPublicRouteDefinitions: Record<
   becomeATutor: {
     breadcrumbLabel: "Become a tutor",
     description:
-      "Phase 1 scaffold for the public become-a-tutor route while the launch-ready recruitment explainer is still in progress.",
+      "Learn who should apply to teach on Mentor IB, what standards matter, and how the tutor application path begins.",
     key: "becomeATutor",
     openGraphType: "article",
     pathname: "/become-a-tutor",
     routeClass: "A",
-    searchReady: false,
-    searchReadyBlocker: SCAFFOLD_BLOCKER,
-    title: "Become a Tutor Route Scaffold",
+    searchReady: true,
+    title: "Become an IB Tutor on Mentor IB",
   },
   home: {
     description:
@@ -52,38 +51,35 @@ export const staticPublicRouteDefinitions: Record<
   howItWorks: {
     breadcrumbLabel: "How it works",
     description:
-      "Phase 1 scaffold for the Mentor IB how-it-works page while the full process explainer is still in progress.",
+      "See how Mentor IB turns an IB learning need into clearer tutor fit, booking context, and ongoing lesson continuity.",
     key: "howItWorks",
     openGraphType: "article",
     pathname: "/how-it-works",
     routeClass: "A",
-    searchReady: false,
-    searchReadyBlocker: SCAFFOLD_BLOCKER,
-    title: "How It Works Route Scaffold",
+    searchReady: true,
+    title: "How Mentor IB Matching Works for Students and Parents",
   },
   support: {
     breadcrumbLabel: "Support",
     description:
-      "Phase 1 scaffold for the public support route while the launch-ready standalone help content is still in progress.",
+      "Find public guidance for students, parents, and tutors on matching, booking, tutor applications, and trust questions.",
     key: "support",
     openGraphType: "article",
     pathname: "/support",
     routeClass: "A",
-    searchReady: false,
-    searchReadyBlocker: SCAFFOLD_BLOCKER,
-    title: "Support Route Scaffold",
+    searchReady: true,
+    title: "Mentor IB Support and Common Questions",
   },
   trustAndSafety: {
     breadcrumbLabel: "Trust and safety",
     description:
-      "Phase 1 scaffold for the Mentor IB trust-and-safety route while the launch-ready trust content is still in progress.",
+      "Understand how Mentor IB treats tutor profile quality, student fit, reporting paths, and public trust claims.",
     key: "trustAndSafety",
     openGraphType: "article",
     pathname: "/trust-and-safety",
     routeClass: "A",
-    searchReady: false,
-    searchReadyBlocker: SCAFFOLD_BLOCKER,
-    title: "Trust and Safety Route Scaffold",
+    searchReady: true,
+    title: "How Mentor IB Reviews Tutors, Safety, and Student Fit",
   },
 };
 

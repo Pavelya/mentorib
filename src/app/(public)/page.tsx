@@ -27,6 +27,7 @@ export default function HomePage() {
         routePath="/"
         phase="Phase 1"
         title="Home route shell"
+        titleAs="h1"
         description="This placeholder marks the public home route inside the shared app shell. The real home experience lands in P1-PUBLIC-002."
         links={[
           { href: "/match", label: "Open match flow" },

@@ -6,6 +6,7 @@ export default function GlobalNotFound() {
       routePath="*"
       phase="Phase 1"
       title="This route does not exist yet."
+      titleAs="h1"
       description="The root not-found boundary is in place so missing routes fail in one shared product shell instead of in isolated route islands."
       links={[
         { href: "/", label: "Back to home" },

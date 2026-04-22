@@ -4,5 +4,5 @@ export function shouldIncludeStaticRouteInSitemap(
   route: StaticPublicRouteDefinition,
   isIndexable: boolean,
 ) {
-  return route.searchReady && isIndexable;
+  return route.routeClass === "A" && route.searchReady && isIndexable;
 }

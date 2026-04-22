@@ -20,6 +20,7 @@ type RoutePlaceholderProps = {
   phase: string;
   routePath: string;
   title: string;
+  titleAs?: "h1" | "h2" | "h3" | "p";
 };
 
 export function RoutePlaceholder({
@@ -30,9 +31,10 @@ export function RoutePlaceholder({
   description,
   notes = [],
   links = [],
+  titleAs = "h2",
 }: RoutePlaceholderProps) {
   return (
-    <Panel description={description} eyebrow={routePath} title={title}>
+    <Panel description={description} eyebrow={routePath} title={title} titleAs={titleAs}>
       <div className={styles.placeholderMeta}>
         <StatusBadge tone="info">{phase}</StatusBadge>
         <StatusBadge tone="trust">Skeleton only</StatusBadge>

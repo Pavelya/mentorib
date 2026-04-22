@@ -13,6 +13,7 @@ type AppFrameProps = {
   footerNote?: string;
   navItems?: NavItem[];
   children: ReactNode;
+  showHero?: boolean;
   tone?: "public" | "private" | "minimal";
 };
 
@@ -23,6 +24,7 @@ export function AppFrame({
   footerNote = "Route-family scaffold for Phase 1 foundations. Feature logic lands in later tickets.",
   navItems = [],
   children,
+  showHero = true,
   tone = "private",
 }: AppFrameProps) {
   const frameClassName =
@@ -55,19 +57,27 @@ export function AppFrame({
       </header>
 
       <main className={styles.main}>
-        <Panel
-          className={styles.heroPanel}
-          description={description}
-          descriptionClassName={styles.heroDescription}
-          eyebrow={eyebrow}
-          eyebrowClassName={styles.eyebrow}
-          title={title}
-          titleAs="h1"
-          titleClassName={styles.heroTitle}
-          tone={heroTone}
-        />
+        {showHero ? (
+          <Panel
+            className={styles.heroPanel}
+            description={description}
+            descriptionClassName={styles.heroDescription}
+            eyebrow={eyebrow}
+            eyebrowClassName={styles.eyebrow}
+            title={title}
+            titleAs="h1"
+            titleClassName={styles.heroTitle}
+            tone={heroTone}
+          />
+        ) : null}
 
-        <div className={styles.content}>{children}</div>
+        <div
+          className={[styles.content, showHero ? "" : styles.contentWithoutHero]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {children}
+        </div>
       </main>
 
       <footer className={styles.footer}>

@@ -6,6 +6,7 @@ export default function TutorProfileNotFound() {
       routePath="/tutors/[slug]"
       phase="Phase 1"
       title="Tutor not found"
+      titleAs="h1"
       description="This dynamic public route has its own not-found boundary as recommended in the route-layout architecture."
       links={[
         { href: "/", label: "Return home" },

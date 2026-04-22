@@ -6,7 +6,10 @@ import {
   buildOpenGraphMetadata,
   buildTwitterMetadata,
 } from "@/lib/seo/metadata/open-graph";
-import { createPendingPublicIndexability } from "@/lib/seo/quality/public-indexability";
+import {
+  createApprovedPublicIndexability,
+  createPendingPublicIndexability,
+} from "@/lib/seo/quality/public-indexability";
 import { canAllowIndexing } from "@/lib/seo/site";
 
 type OpenGraphType = "article" | "profile" | "website";
@@ -78,13 +81,11 @@ export function buildRouteMetadata({
 export function buildStaticPublicRouteMetadata(
   route: StaticPublicRouteDefinition,
 ): Metadata {
-  const qualityGate = route.searchReady
-    ? {
-        isIndexable: true,
-      }
+  const qualityGate = route.searchReady && route.routeClass === "A"
+    ? createApprovedPublicIndexability()
     : createPendingPublicIndexability(
         route.searchReadyBlocker ??
-          "Public route is not approved for indexation yet.",
+          "Public route is not approved for indexation in its current route class or content state.",
       );
 
   return buildRouteMetadata({

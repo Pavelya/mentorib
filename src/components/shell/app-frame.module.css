@@ -94,6 +94,10 @@
   margin-top: var(--space-6);
 }
 
+.contentWithoutHero {
+  margin-top: 0;
+}
+
 .placeholderMeta {
   display: flex;
   flex-wrap: wrap;

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
 
+import { TimezoneSync } from "@/components/datetime";
 import { buildRootMetadata } from "@/lib/seo/metadata/defaults";
 import "@/styles/globals.css";
 
@@ -35,7 +36,10 @@ type RootLayoutProps = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html className={`${sans.variable} ${serif.variable} ${mono.variable}`} lang="en">
-      <body>{children}</body>
+      <body>
+        <TimezoneSync />
+        {children}
+      </body>
     </html>
   );
 }

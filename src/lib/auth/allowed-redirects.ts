@@ -5,6 +5,7 @@ import {
   getSafeAuthCallbackOrigin,
   isApprovedAuthReturnPath,
 } from "@/lib/auth/auth-boundary";
+import { normalizeTimezone } from "@/lib/datetime";
 
 export type { AuthVerifyStatus } from "@/lib/auth/auth-boundary";
 
@@ -42,9 +43,10 @@ export function buildAuthCallbackPath(nextPath?: string | null) {
 export function buildAuthCallbackUrl(
   originCandidate: string | null | undefined,
   nextPath?: string | null,
+  timezone?: string | null,
 ) {
   return new URL(
-    buildAuthCallbackPath(nextPath),
+    buildPathWithOptionalNext(authRoutes.callback, nextPath, timezone),
     getSafeAuthCallbackOrigin(originCandidate),
   ).toString();
 }
@@ -84,12 +86,21 @@ export function getAuthVerifyStatusForCallbackError(
   return isExpiredAuthError(errorMessage) ? "expired" : defaultStatus;
 }
 
-function buildPathWithOptionalNext(pathname: string, nextPath?: string | null) {
+function buildPathWithOptionalNext(
+  pathname: string,
+  nextPath?: string | null,
+  timezone?: string | null,
+) {
   const url = new URL(pathname, siteConfig.origin);
   const safeNextPath = getSafeRedirectPath(nextPath);
+  const normalizedTimezone = normalizeTimezone(timezone);
 
   if (safeNextPath) {
     url.searchParams.set("next", safeNextPath);
+  }
+
+  if (normalizedTimezone) {
+    url.searchParams.set("timezone", normalizedTimezone);
   }
 
   return `${url.pathname}${url.search}`;

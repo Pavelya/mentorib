@@ -8,8 +8,12 @@ import {
 } from "@/components/continuity";
 import { RoutePlaceholder } from "@/components/shell/route-placeholder";
 import { getButtonClassName } from "@/components/ui";
+import { formatTimezoneContext, formatUtcLessonRange } from "@/lib/datetime";
+import { getCurrentUserTimezone } from "@/lib/datetime/server";
 
-export default function TutorMessagesPage() {
+export default async function TutorMessagesPage() {
+  const timezone = await getCurrentUserTimezone();
+
   return (
     <RoutePlaceholder
       routePath="/tutor/messages"
@@ -40,9 +44,13 @@ export default function TutorMessagesPage() {
             variant="compact"
           />
         }
-        schedule="Friday, 18 April · 17:30"
+        schedule={formatUtcLessonRange(
+          "2026-04-24T16:30:00Z",
+          "2026-04-24T17:18:00Z",
+          timezone,
+        )}
         status="accepted"
-        timezone="Tutor local time · Europe/London"
+        timezone={formatTimezoneContext(timezone)}
         title="Biology HL strategy lesson"
       />
 

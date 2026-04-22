@@ -20,6 +20,11 @@ import {
   Textarea,
   TextField,
 } from "@/components/ui";
+import {
+  formatTimezoneContext,
+  formatUtcLessonRange,
+} from "@/lib/datetime";
+import { useDetectedTimezone } from "@/lib/datetime/client";
 
 import styles from "./foundation-preview.module.css";
 
@@ -41,9 +46,9 @@ const PREVIEW_COPY: Record<
     }>;
     lesson: {
       details: string[];
-      schedule: string;
+      endAtUtc: string;
+      startAtUtc: string;
       status: "pending" | "accepted" | "upcoming";
-      timezone: string;
       title: string;
     };
     need: {
@@ -99,9 +104,9 @@ const PREVIEW_COPY: Record<
     ],
     lesson: {
       details: ["Escalation trail visible", "Cross-role notes preserved"],
-      schedule: "Review handoff for 17:00 UTC lesson",
+      endAtUtc: "2026-04-24T17:48:00Z",
+      startAtUtc: "2026-04-24T17:00:00Z",
       status: "pending",
-      timezone: "Warsaw view · UTC+2",
       title: "Operational handoff for interrupted lesson",
     },
     need: {
@@ -157,9 +162,9 @@ const PREVIEW_COPY: Record<
     ],
     lesson: {
       details: ["Trial request", "48-minute slot", "Policy review still visible"],
-      schedule: "Friday, 18 April · 18:30",
+      endAtUtc: "2026-04-24T17:18:00Z",
+      startAtUtc: "2026-04-24T16:30:00Z",
       status: "upcoming",
-      timezone: "Your time · Europe/Warsaw",
       title: "Paper 2 revision sprint",
     },
     need: {
@@ -216,9 +221,9 @@ const PREVIEW_COPY: Record<
     ],
     lesson: {
       details: ["Follow-up note included", "Join link pending"],
-      schedule: "Friday, 18 April · 17:30",
+      endAtUtc: "2026-04-24T17:18:00Z",
+      startAtUtc: "2026-04-24T16:30:00Z",
       status: "accepted",
-      timezone: "Tutor time · Europe/London",
       title: "Biology HL strategy lesson",
     },
     need: {
@@ -269,6 +274,7 @@ const PREVIEW_COPY: Record<
 
 export function FoundationPreview() {
   const [activeMode, setActiveMode] = useState<PreviewMode>("student");
+  const timezone = useDetectedTimezone("UTC");
   const activePanelId = `foundation-${activeMode}-panel`;
   const copy = PREVIEW_COPY[activeMode];
 
@@ -393,9 +399,13 @@ export function FoundationPreview() {
                 variant="compact"
               />
             }
-            schedule={copy.lesson.schedule}
+            schedule={formatUtcLessonRange(
+              copy.lesson.startAtUtc,
+              copy.lesson.endAtUtc,
+              timezone,
+            )}
             status={copy.lesson.status}
-            timezone={copy.lesson.timezone}
+            timezone={formatTimezoneContext(timezone)}
             title={copy.lesson.title}
           />
 

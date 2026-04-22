@@ -10,11 +10,13 @@ import {
   getAuthVerifyStatusForCallbackError,
   getSafeRedirectPath,
 } from "@/lib/auth/allowed-redirects";
+import { normalizeTimezone } from "@/lib/datetime";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const nextPath = getSafeRedirectPath(requestUrl.searchParams.get("next"));
+  const timezone = normalizeTimezone(requestUrl.searchParams.get("timezone"));
   const upstreamError =
     requestUrl.searchParams.get("error_description") ??
     requestUrl.searchParams.get("error") ??
@@ -88,7 +90,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const account = await ensureAuthAccount(user);
+    const account = await ensureAuthAccount(user, timezone);
     const redirectResponse = NextResponse.redirect(
       new URL(buildPostSignInRedirect(account, nextPath), request.url),
     );

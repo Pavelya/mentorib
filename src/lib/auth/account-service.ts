@@ -4,6 +4,7 @@ import {
   getAuthReturnPathFamily,
   type AuthReturnPathFamily,
 } from "@/lib/auth/auth-boundary";
+import { normalizeTimezone } from "@/lib/datetime";
 import { routeFamilies } from "@/lib/routing/route-families";
 import { siteConfig } from "@/lib/seo/site";
 import {
@@ -23,7 +24,7 @@ import type {
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 
 const accountSelect =
-  "id, auth_user_id, email, full_name, avatar_url, onboarding_state, account_status, primary_role_context";
+  "id, auth_user_id, email, full_name, avatar_url, timezone, onboarding_state, account_status, primary_role_context";
 
 type AppUserRecord = {
   account_status: AccountStatus;
@@ -34,6 +35,7 @@ type AppUserRecord = {
   id: string;
   onboarding_state: OnboardingState;
   primary_role_context: PrimaryRoleContext | null;
+  timezone: string;
 };
 
 type UserRoleRecord = AccountRoleSnapshot;
@@ -44,9 +46,13 @@ export type ResolvedAuthAccount = AppUserRecord & {
   roles: readonly UserRoleRecord[];
 };
 
-export async function ensureAuthAccount(user: User): Promise<ResolvedAuthAccount> {
+export async function ensureAuthAccount(
+  user: User,
+  detectedTimezone?: string | null,
+): Promise<ResolvedAuthAccount> {
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const profile = normalizeProfileFromUser(user);
+  const timezone = normalizeTimezone(detectedTimezone);
 
   const { data: existingAccount, error: existingAccountError } = await serviceRoleClient
     .from("app_users")
@@ -69,6 +75,7 @@ export async function ensureAuthAccount(user: User): Promise<ResolvedAuthAccount
         avatar_url: profile.avatarUrl,
         email: profile.email,
         full_name: profile.fullName,
+        ...(timezone ? { timezone } : {}),
       })
       .select(accountSelect)
       .single<AppUserRecord>();
@@ -80,7 +87,7 @@ export async function ensureAuthAccount(user: User): Promise<ResolvedAuthAccount
     account = insertedAccount;
     isNewAccount = true;
   } else {
-    const accountUpdates = buildAccountUpdates(account, profile);
+    const accountUpdates = buildAccountUpdates(account, profile, timezone);
 
     if (Object.keys(accountUpdates).length > 0) {
       const { data: updatedAccount, error: updateError } = await serviceRoleClient
@@ -296,11 +303,12 @@ function normalizeProfileFromUser(user: User) {
 }
 
 function buildAccountUpdates(
-  account: Pick<AppUserRecord, "avatar_url" | "email" | "full_name">,
+  account: Pick<AppUserRecord, "avatar_url" | "email" | "full_name" | "timezone">,
   profile: ReturnType<typeof normalizeProfileFromUser>,
+  detectedTimezone: string | null,
 ) {
   const updates: Partial<
-    Pick<AppUserRecord, "avatar_url" | "email" | "full_name">
+    Pick<AppUserRecord, "avatar_url" | "email" | "full_name" | "timezone">
   > = {};
 
   if (account.email !== profile.email) {
@@ -313,6 +321,10 @@ function buildAccountUpdates(
 
   if (!account.avatar_url && profile.avatarUrl) {
     updates.avatar_url = profile.avatarUrl;
+  }
+
+  if (detectedTimezone && account.timezone !== detectedTimezone) {
+    updates.timezone = detectedTimezone;
   }
 
   return updates;

@@ -11,6 +11,7 @@ import {
   startGoogleSignInAction,
 } from "@/app/auth/actions";
 import { InlineNotice, Panel, TextField, getButtonClassName } from "@/components/ui";
+import { useDetectedTimezone } from "@/lib/datetime/client";
 
 import styles from "./sign-in.module.css";
 
@@ -43,6 +44,7 @@ export function SignInForm({
     startGoogleSignInAction,
     initialGoogleActionState,
   );
+  const detectedTimezone = useDetectedTimezone("");
 
   return (
     <Panel className={styles.authCard} tone="raised">
@@ -73,6 +75,7 @@ export function SignInForm({
 
       <form action={googleAction} className={styles.providerForm}>
         <input name="next" type="hidden" value={nextPath ?? ""} />
+        <input name="timezone" type="hidden" value={detectedTimezone} />
 
         {googleState.error ? (
           <InlineNotice title="Google sign-in could not start" tone="warning">
@@ -96,6 +99,7 @@ export function SignInForm({
 
       <form action={magicLinkAction} className={styles.magicLinkForm}>
         <input name="next" type="hidden" value={nextPath ?? ""} />
+        <input name="timezone" type="hidden" value={detectedTimezone} />
 
         {magicLinkState.error ? (
           <InlineNotice title="Magic link could not be sent" tone="warning">

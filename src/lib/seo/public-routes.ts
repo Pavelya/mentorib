@@ -1,8 +1,5 @@
 import type { SeoRouteClass } from "@/lib/seo/route-class";
 
-const SCAFFOLD_BLOCKER =
-  "Visible content is still scaffold-only, so the route stays non-indexable until the public content task ships.";
-
 export type StaticPublicRouteKey =
   | "home"
   | "howItWorks"
@@ -39,14 +36,13 @@ export const staticPublicRouteDefinitions: Record<
   },
   home: {
     description:
-      "Phase 1 scaffold for the Mentor IB public home route while the launch-ready matching narrative is still in progress.",
+      "Mentor IB matches students and parents with IB tutors for specific academic pressure points like IA feedback, TOK structure, oral practice, exam rescue, and weekly support.",
     key: "home",
     openGraphType: "website",
     pathname: "/",
     routeClass: "A",
-    searchReady: false,
-    searchReadyBlocker: SCAFFOLD_BLOCKER,
-    title: "Home Route Scaffold",
+    searchReady: true,
+    title: "Mentor IB Tutor Matching for Specific IB Pressure Points",
   },
   howItWorks: {
     breadcrumbLabel: "How it works",

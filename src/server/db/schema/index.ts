@@ -25,6 +25,12 @@ export {
   userBlocks,
 } from "@/modules/messages/schema";
 export {
+  notificationDeliveries,
+  notifications,
+  policyNoticeReceipts,
+  policyNoticeVersions,
+} from "@/modules/notifications/schema";
+export {
   languages,
   meetingProviders,
   subjectFocusAreas,

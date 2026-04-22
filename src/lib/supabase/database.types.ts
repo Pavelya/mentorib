@@ -38,6 +38,13 @@ import type {
   UserBlockStatus,
 } from "@/modules/messages/constants";
 import type {
+  NotificationChannel,
+  NotificationDeliveryStatus,
+  NotificationStatus,
+  NotificationType,
+  PolicyNoticeType,
+} from "@/modules/notifications/constants";
+import type {
   AvailabilityOverrideType,
   AvailabilityRuleVisibilityStatus,
   PayoutReadinessStatus,
@@ -299,6 +306,64 @@ type AbuseReportRow = {
   reporter_app_user_id: string;
   summary: string;
   updated_at: string;
+};
+
+type PolicyNoticeVersionRow = {
+  created_at: string;
+  document_url: string;
+  effective_at: string;
+  id: string;
+  notice_type: PolicyNoticeType;
+  published_at: string;
+  requires_acknowledgement: boolean;
+  summary: string;
+  title: string;
+  updated_at: string;
+  version_label: string;
+};
+
+type NotificationRow = {
+  app_user_id: string;
+  body_summary: string;
+  created_at: string;
+  dismissed_at: string | null;
+  id: string;
+  notification_status: NotificationStatus;
+  notification_type: NotificationType;
+  object_id: string | null;
+  object_type: string;
+  read_at: string | null;
+  title: string;
+  updated_at: string;
+};
+
+type NotificationDeliveryRow = {
+  accepted_at: string | null;
+  attempt_number: number;
+  attempted_at: string | null;
+  channel: NotificationChannel;
+  created_at: string;
+  delivery_status: NotificationDeliveryStatus;
+  error_code: string | null;
+  error_message: string | null;
+  failed_at: string | null;
+  id: string;
+  job_run_id: string | null;
+  notification_id: string;
+  provider: string | null;
+  provider_message_id: string | null;
+  updated_at: string;
+};
+
+type PolicyNoticeReceiptRow = {
+  acknowledged_at: string | null;
+  app_user_id: string;
+  created_at: string;
+  first_shown_at: string | null;
+  id: string;
+  policy_notice_version_id: string;
+  updated_at: string;
+  viewed_at: string | null;
 };
 
 type BookingOperationRow = {
@@ -874,6 +939,44 @@ export type MentorIbDatabase = {
           >
         >;
       };
+      notification_deliveries: {
+        Insert: Pick<NotificationDeliveryRow, "channel" | "notification_id"> & {
+          accepted_at?: string | null;
+          attempt_number?: number;
+          attempted_at?: string | null;
+          delivery_status?: NotificationDeliveryStatus;
+          error_code?: string | null;
+          error_message?: string | null;
+          failed_at?: string | null;
+          job_run_id?: string | null;
+          provider?: string | null;
+          provider_message_id?: string | null;
+        };
+        Relationships: [];
+        Row: NotificationDeliveryRow;
+        Update: Partial<
+          Omit<
+            NotificationDeliveryRow,
+            "created_at" | "id" | "notification_id" | "updated_at"
+          >
+        >;
+      };
+      notifications: {
+        Insert: Pick<
+          NotificationRow,
+          "app_user_id" | "body_summary" | "notification_type" | "object_type" | "title"
+        > & {
+          dismissed_at?: string | null;
+          notification_status?: NotificationStatus;
+          object_id?: string | null;
+          read_at?: string | null;
+        };
+        Relationships: [];
+        Row: NotificationRow;
+        Update: Partial<
+          Omit<NotificationRow, "app_user_id" | "created_at" | "id" | "updated_at">
+        >;
+      };
       payments: {
         Insert: Pick<
           PaymentRow,
@@ -905,6 +1008,37 @@ export type MentorIbDatabase = {
             | "updated_at"
           >
         >;
+      };
+      policy_notice_receipts: {
+        Insert: Pick<
+          PolicyNoticeReceiptRow,
+          "app_user_id" | "policy_notice_version_id"
+        > & {
+          acknowledged_at?: string | null;
+          first_shown_at?: string | null;
+          viewed_at?: string | null;
+        };
+        Relationships: [];
+        Row: PolicyNoticeReceiptRow;
+        Update: Partial<
+          Omit<
+            PolicyNoticeReceiptRow,
+            "app_user_id" | "created_at" | "id" | "policy_notice_version_id" | "updated_at"
+          >
+        >;
+      };
+      policy_notice_versions: {
+        Insert: Pick<
+          PolicyNoticeVersionRow,
+          "document_url" | "notice_type" | "summary" | "title" | "version_label"
+        > & {
+          effective_at?: string;
+          published_at?: string;
+          requires_acknowledgement?: boolean;
+        };
+        Relationships: [];
+        Row: PolicyNoticeVersionRow;
+        Update: Partial<Omit<PolicyNoticeVersionRow, "created_at" | "id" | "updated_at">>;
       };
       schedule_policies: {
         Insert: Pick<SchedulePolicyRow, "tutor_profile_id"> & {

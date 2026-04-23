@@ -1,0 +1,147 @@
+.row {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.96), rgb(252 248 240 / 0.92)),
+    var(--surface-panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.highConfidence {
+  border-color: var(--state-trust-border);
+  box-shadow:
+    0 0 0 1px rgb(182 140 39 / 0.12),
+    var(--shadow-soft);
+}
+
+.limitedAvailability {
+  background:
+    linear-gradient(180deg, rgb(255 249 241 / 0.98), rgb(251 244 233 / 0.94)),
+    var(--surface-panel-soft);
+}
+
+.header,
+.badgeRow,
+.contentGrid,
+.sideRail,
+.actionRail {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.header {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.badgeRow {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rankBlock {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.rankLabel,
+.blockLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.rankValue {
+  margin: 0;
+  color: var(--ink-900);
+  font-size: var(--title-md);
+  line-height: var(--line-tight);
+}
+
+.identity {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.contentGrid {
+  flex-wrap: wrap;
+  align-items: start;
+}
+
+.fitBlock {
+  display: grid;
+  flex: 1 1 24rem;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.reasonList,
+.metaList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reasonItem,
+.metaItem {
+  padding: 0.875rem 1rem;
+  border-radius: calc(var(--radius-md) - 2px);
+  color: var(--ink-800);
+  line-height: var(--line-body);
+}
+
+.reasonItem {
+  border: 1px solid rgb(31 86 63 / 0.12);
+  background: rgb(239 246 241 / 0.78);
+}
+
+.metaItem {
+  border: 1px solid var(--border-support);
+  background: rgb(250 247 240 / 0.92);
+}
+
+.sideRail {
+  display: grid;
+  flex: 0 1 18rem;
+  gap: var(--space-4);
+}
+
+.metaBlock {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.actionRail {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+  .row {
+    padding: var(--space-4);
+  }
+
+  .badgeRow {
+    justify-content: flex-start;
+  }
+
+  .actionRail {
+    flex-direction: column;
+  }
+
+  .actionRail > * {
+    width: 100%;
+    text-align: center;
+  }
+}

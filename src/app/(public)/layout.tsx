@@ -15,8 +15,8 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
   return (
     <AppFrame
       description="Shared public chrome for discovery, trust framing, and the problem-first entry into the product."
-      eyebrow="Public routes"
-      footerNote="Mentor IB connects students, parents, and tutors through one match-first product surface."
+      eyebrow="IB tutor matching"
+      footerNote="Mentor IB helps students and parents move from a specific IB need to a tutor who fits."
       navItems={navigationByFamily.public}
       showHero={false}
       title="One ecosystem. Match-first guidance."

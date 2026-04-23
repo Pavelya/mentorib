@@ -80,9 +80,11 @@ export function AppFrame({
         </div>
       </main>
 
-      <footer className={styles.footer}>
-        {footerNote}
-      </footer>
+      {footerNote ? (
+        <footer className={styles.footer}>
+          {footerNote}
+        </footer>
+      ) : null}
     </div>
   );
 }

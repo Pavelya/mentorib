@@ -1,6 +1,6 @@
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
-import { Avatar, Panel } from "@/components/ui";
+import { Avatar, Panel, StatusBadge } from "@/components/ui";
 import { getMatchOptionLabel } from "@/modules/lessons/match-flow-options";
 import { getSharedAccountRouteContext } from "@/modules/accounts/shared-account";
 
@@ -15,6 +15,7 @@ export default async function SettingsPage() {
 
   const { account, pendingLegalNotice } = context;
   const displayName = account.full_name?.trim() || "Account owner";
+  const roleBadges = buildRoleBadges(account);
 
   return (
     <div className={styles.page}>
@@ -36,9 +37,25 @@ export default async function SettingsPage() {
           tone="raised"
         >
           <div className={styles.identityRow}>
-            <Avatar name={displayName} size="lg" src={account.avatar_url ?? undefined} />
+            <Avatar
+              className={styles.profileAvatar}
+              name={displayName}
+              size="lg"
+              src={account.avatar_url ?? undefined}
+            />
             <div className={styles.identityCopy}>
-              <h2 className={styles.detailValue}>{displayName}</h2>
+              <div className={styles.identityHeadingRow}>
+                <h2 className={styles.detailValue}>{displayName}</h2>
+                {roleBadges.length > 0 ? (
+                  <div className={styles.identityBadges}>
+                    {roleBadges.map((badge) => (
+                      <StatusBadge key={badge.label} tone={badge.tone}>
+                        {badge.label}
+                      </StatusBadge>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
               <p className={styles.muted}>{account.email}</p>
             </div>
           </div>
@@ -101,4 +118,61 @@ function buildSettingRows(
       value: account.timezone,
     },
   ] as const;
+}
+
+function buildRoleBadges(account: {
+  primary_role_context: "admin" | "student" | "tutor" | null;
+  roles: readonly {
+    role: "admin" | "student" | "tutor";
+    role_status: "active" | "pending" | "revoked" | "suspended";
+  }[];
+}) {
+  const visibleRoles = account.roles.filter((role) => role.role_status !== "revoked");
+
+  if (visibleRoles.length === 0) {
+    if (account.primary_role_context === "student") {
+      return [{ label: "Student", tone: "info" }] as const;
+    }
+
+    if (account.primary_role_context === "tutor") {
+      return [{ label: "Tutor", tone: "info" }] as const;
+    }
+
+    return [] as const;
+  }
+
+  return visibleRoles.map((role) => {
+    if (role.role === "student") {
+      return {
+        label: role.role_status === "pending" ? "Student setup" : "Student",
+        tone: getRoleTone(role.role_status),
+      } as const;
+    }
+
+    if (role.role === "tutor") {
+      return {
+        label: role.role_status === "pending" ? "Tutor application" : "Tutor",
+        tone: getRoleTone(role.role_status),
+      } as const;
+    }
+
+    return {
+      label: "Admin",
+      tone: getRoleTone(role.role_status),
+    } as const;
+  });
+}
+
+function getRoleTone(
+  roleStatus: "active" | "pending" | "revoked" | "suspended",
+) {
+  switch (roleStatus) {
+    case "active":
+      return "trust";
+    case "pending":
+      return "warning";
+    case "revoked":
+    case "suspended":
+      return "destructive";
+  }
 }

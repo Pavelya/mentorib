@@ -19,7 +19,7 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
     <AppFrame
       description="Manage your profile, notifications, privacy, and billing in one place."
       eyebrow="Your account"
-      footerNote="Your account details stay consistent across student and tutor modes."
+      footerNote=""
       navItems={navigationByFamily.account}
       showHero={false}
       title="Account"

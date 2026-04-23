@@ -146,7 +146,7 @@ export default async function TutorProfilePage({
           >
             <div>
               <p className={styles.darkEyebrow}>Decision cues</p>
-              <h2>Fit, proof, and booking state in one place.</h2>
+              <h2>Fit, proof, and next steps in one place.</h2>
             </div>
 
             <div className={styles.badgeRow}>
@@ -174,7 +174,7 @@ export default async function TutorProfilePage({
               </div>
               <div>
                 <dt>Pricing</dt>
-                <dd>{profile.pricingSummary ?? "Shown during booking handoff."}</dd>
+                <dd>{profile.pricingSummary ?? "Shown when you book."}</dd>
               </div>
             </dl>
           </aside>
@@ -218,7 +218,7 @@ export default async function TutorProfilePage({
             <h2>How lessons tend to feel</h2>
             <p>
               {profile.teachingStyleSummary ??
-                "Teaching style details are kept to the approved public profile copy for this tutor."}
+                "This tutor has not added a teaching-style note yet."}
             </p>
 
             {profile.languages.length > 0 ? (
@@ -264,11 +264,10 @@ export default async function TutorProfilePage({
 
         <section className={styles.finalCta} aria-labelledby="profile-next-step-title">
           <div>
-            <p className={styles.darkEyebrow}>Next step</p>
-            <h2 id="profile-next-step-title">Carry this profile into booking.</h2>
+            <p className={styles.darkEyebrow}>Ready to decide?</p>
+            <h2 id="profile-next-step-title">Book a lesson with this tutor.</h2>
             <p>
-              The handoff keeps the tutor context attached so the booking route can
-              continue from this public profile.
+              Review available times and confirm the lesson details on the next screen.
             </p>
           </div>
           {profile.bookingHref ? (
@@ -276,7 +275,7 @@ export default async function TutorProfilePage({
               className={getButtonClassName({ className: styles.finalButton })}
               href={profile.bookingHref}
             >
-              Open booking handoff
+              Start booking
             </Link>
           ) : (
             <Link

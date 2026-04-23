@@ -19,7 +19,9 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     <AppFrame
       description="Student-mode shell for the problem-led match flow, booking path, and continuity surfaces."
       eyebrow="Student routes"
+      footerNote=""
       navItems={navigationByFamily.student}
+      showHero={false}
       title="Student workflow inside the shared product"
     >
       {children}

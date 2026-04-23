@@ -45,6 +45,7 @@ type NeedSummaryBarProps = HTMLAttributes<HTMLElement> & {
   mode?: NeedSummaryMode;
   need: ReactNode;
   qualifiers: NeedSummaryQualifier[];
+  stateLabel?: ReactNode;
   state?: NeedSummaryState;
   variant?: NeedSummaryVariant;
 };
@@ -115,6 +116,7 @@ export function NeedSummaryBar({
   mode = "editable",
   need,
   qualifiers,
+  stateLabel,
   state = "active",
   variant = "standard",
   ...props
@@ -133,7 +135,7 @@ export function NeedSummaryBar({
         </div>
 
         <div className={styles.surfaceSignals}>
-          <StatusBadge tone={stateMeta.tone}>{stateMeta.label}</StatusBadge>
+          <StatusBadge tone={stateMeta.tone}>{stateLabel ?? stateMeta.label}</StatusBadge>
           {action ? <div className={styles.actionSlot}>{action}</div> : null}
         </div>
       </div>

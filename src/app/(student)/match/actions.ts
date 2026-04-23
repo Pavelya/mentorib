@@ -51,8 +51,7 @@ export async function submitMatchFlowAction(
     return {
       code: "auth_unconfigured",
       fieldErrors: {},
-      message:
-        "Matching needs the Supabase auth and service-role environment variables before it can save your learning need.",
+      message: "Saving answers is not available in this environment yet.",
       values,
     };
   }
@@ -93,7 +92,7 @@ export async function submitMatchFlowAction(
     return {
       code: "match_submission_failed",
       fieldErrors: {},
-      message: "We couldn't submit your learning need yet. Please try again in a moment.",
+      message: "We couldn't save your request yet. Please try again in a moment.",
       values,
     };
   }
@@ -128,7 +127,7 @@ function validateMatchFlowValues(values: MatchFlowFormValues) {
   const fieldErrors: MatchFlowFieldErrors = {};
 
   if (!isKnownMatchOption("needType", values.needType)) {
-    fieldErrors.needType = "Choose the IB pressure point.";
+    fieldErrors.needType = "Choose what you need help with.";
   }
 
   if (!isKnownMatchOption("subjectSlug", values.subjectSlug)) {
@@ -140,7 +139,7 @@ function validateMatchFlowValues(values: MatchFlowFormValues) {
   }
 
   if (!isKnownMatchOption("sessionFrequencyIntent", values.sessionFrequencyIntent)) {
-    fieldErrors.sessionFrequencyIntent = "Choose the kind of lesson rhythm you want.";
+    fieldErrors.sessionFrequencyIntent = "Choose how often you want help.";
   }
 
   if (!isKnownMatchOption("supportStyle", values.supportStyle)) {

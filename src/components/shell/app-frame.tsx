@@ -21,7 +21,7 @@ export function AppFrame({
   eyebrow,
   title,
   description,
-  footerNote = "Route-family scaffold for Phase 1 foundations. Feature logic lands in later tickets.",
+  footerNote = "",
   navItems = [],
   children,
   showHero = true,

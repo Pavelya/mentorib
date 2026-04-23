@@ -1,12 +1,9 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import {
-  ContextChipRow,
-  NeedSummaryBar,
-} from "@/components/continuity";
+import { NeedSummaryBar } from "@/components/continuity";
 import {
   Button,
   InlineNotice,
@@ -53,39 +50,39 @@ type StepDefinition = {
 
 const steps = [
   {
-    description: "Start with the pressure point, not a generic tutor category.",
+    description: "Choose the closest option. You can refine it later.",
     fields: ["needType"],
     id: "problem",
     label: "Problem",
-    question: "What part of IB feels hard right now?",
+    question: "What do you need help with right now?",
   },
   {
-    description: "This narrows the tutor set before style or availability enters.",
+    description: "Choose the subject or IB component involved.",
     fields: ["subjectSlug"],
     id: "subject",
     label: "Subject",
-    question: "Which IB subject or component is involved?",
+    question: "Which subject is this for?",
   },
   {
-    description: "Matching treats an emergency IA review differently from a steady weekly plan.",
+    description: "Tell us how soon you need support and how often.",
     fields: ["urgencyLevel", "sessionFrequencyIntent"],
     id: "urgency",
     label: "Timing",
-    question: "How soon do you need useful progress?",
+    question: "When do you need help?",
   },
   {
-    description: "The best fit is partly about how help should feel in the lesson.",
+    description: "Choose the kind of tutoring that would feel most useful.",
     fields: ["supportStyle"],
     id: "style",
     label: "Style",
-    question: "What kind of support would help most?",
+    question: "What kind of support works best for you?",
   },
   {
-    description: "Timezone and language keep the handoff realistic for booking.",
+    description: "Add the last details so we can show realistic tutor options.",
     fields: ["languageCode", "timezone"],
     id: "details",
-    label: "Handoff",
-    question: "What should tutors know before we show results?",
+    label: "Final details",
+    question: "Final details before we show tutors",
   },
 ] as const satisfies readonly StepDefinition[];
 
@@ -108,6 +105,8 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
     timezone: state.values.timezone || initialTimezone,
   });
   const [localErrors, setLocalErrors] = useState<MatchFlowFieldErrors>({});
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const hasMountedRef = useRef(false);
   const currentStep = steps[currentStepIndex];
   const fieldErrors = { ...state.fieldErrors, ...localErrors };
   const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
@@ -116,6 +115,20 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
     () => buildTimezoneOptions(initialTimezone),
     [initialTimezone],
   );
+  const hasPreviousStep = currentStepIndex > 0;
+  const nextStep = steps[currentStepIndex + 1];
+
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
+
+    titleRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [currentStepIndex]);
 
   function updateValue(field: MatchFlowField, value: string) {
     setValues((currentValues) => ({
@@ -134,6 +147,7 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
 
     if (Object.keys(nextErrors).length > 0) {
       setLocalErrors(nextErrors);
+      revealFirstInvalidField(currentStep, nextErrors);
       return;
     }
 
@@ -144,50 +158,15 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
     setCurrentStepIndex((index) => Math.max(index - 1, 0));
   }
 
+  const currentStepErrorMessage = getCurrentStepErrorMessage(currentStep, fieldErrors);
+
   return (
     <section className={styles.page} aria-labelledby="match-flow-title">
-      <div className={styles.flowHeader}>
-        <div className={styles.flowIntro}>
-          <p className={styles.eyebrow}>Guided match</p>
-          <h2 id="match-flow-title">Build the learning need first.</h2>
-          <p>
-            Mentor IB uses the need, urgency, support style, language, and timezone
-            together before showing tutor fits.
-          </p>
-        </div>
-
-        <div className={styles.progressCard} aria-label="Match flow progress">
-          <div className={styles.progressTopline}>
-            <span>Step {currentStepIndex + 1} of {steps.length}</span>
-            <strong>{currentStep.label}</strong>
-          </div>
-          <div className={styles.progressTrack} aria-hidden="true">
-            <span style={{ width: `${progressPercent}%` }} />
-          </div>
-          <ol className={styles.stepList}>
-            {steps.map((step, index) => (
-              <li
-                className={[
-                  styles.stepItem,
-                  index === currentStepIndex ? styles.activeStep : "",
-                  index < currentStepIndex ? styles.completedStep : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                key={step.id}
-              >
-                {step.label}
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-
       {!canSubmit ? (
         <InlineNotice title="Matching setup required" tone="warning">
           <p>
-            The flow is ready for review, but saving needs Supabase auth and
-            service-role environment variables.
+            You can review the flow, but saving answers is not available in this
+            environment yet.
           </p>
         </InlineNotice>
       ) : null}
@@ -198,23 +177,66 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
         </InlineNotice>
       ) : null}
 
+      <div className={styles.progressCard} aria-label="Match flow progress">
+        <div className={styles.progressTopline}>
+          <div className={styles.progressIntro}>
+            <p className={styles.eyebrow}>Quick match</p>
+            <h1 id="match-flow-title" ref={titleRef}>
+              {currentStep.question}
+            </h1>
+          </div>
+
+          <p className={styles.progressStepLabel}>
+            Step {currentStepIndex + 1} of {steps.length}
+          </p>
+        </div>
+
+        <p className={styles.progressDescription}>{currentStep.description}</p>
+
+        <div className={styles.progressTrack} aria-hidden="true">
+          <span style={{ width: `${progressPercent}%` }} />
+        </div>
+
+        <ol className={styles.stepList}>
+          {steps.map((step, index) => (
+            <li
+              aria-current={index === currentStepIndex ? "step" : undefined}
+              className={[
+                styles.stepItem,
+                index === currentStepIndex ? styles.activeStep : "",
+                index < currentStepIndex ? styles.completedStep : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              key={step.id}
+            >
+              {step.label}
+            </li>
+          ))}
+        </ol>
+      </div>
+
       <NeedSummaryBar
-        label="Need so far"
+        className={styles.summaryBar}
+        label="Your request"
         mode="editable"
         need={getNeedTitle(values)}
         qualifiers={qualifiers}
-        state={qualifiers.length > 0 ? "draft" : "truncated"}
-        variant="stacked"
+        state="draft"
+        stateLabel="In progress"
+        variant="compact"
       />
 
       <form action={formAction} className={styles.form}>
         <HiddenMatchInputs values={values} />
 
-        <div className={styles.questionGrid}>
-          <section className={styles.questionPanel} aria-labelledby={`${currentStep.id}-title`}>
-            <p className={styles.stepEyebrow}>{currentStep.label}</p>
-            <h3 id={`${currentStep.id}-title`}>{currentStep.question}</h3>
-            <p>{currentStep.description}</p>
+        <div className={styles.formGrid}>
+          <section className={styles.questionPanel} aria-labelledby="match-flow-title">
+            {currentStepErrorMessage ? (
+              <InlineNotice title="Complete this step" tone="actionNeeded">
+                <p>{currentStepErrorMessage}</p>
+              </InlineNotice>
+            ) : null}
 
             <StepFields
               errors={fieldErrors}
@@ -225,34 +247,34 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
             />
           </section>
 
-          <aside className={styles.guidancePanel} aria-label="Matching guidance">
-            <p className={styles.stepEyebrow}>What matching uses here</p>
+          <aside className={styles.helperPanel} aria-label="Helpful context">
+            <p className={styles.stepEyebrow}>Why we ask</p>
             <h3>{getGuidanceTitle(currentStep.id)}</h3>
             <p>{getGuidanceBody(currentStep.id)}</p>
-            <ContextChipRow
-              items={[
-                { label: "Need remains attached", tone: "info" },
-                { label: "Fit before browsing", tone: "trust" },
-                { label: "Booking context survives", tone: "positive" },
-              ]}
-              label="Continuity"
-            />
+            <p className={styles.helperNote}>
+              Choose the closest option. You can update your answers before
+              booking.
+            </p>
           </aside>
         </div>
 
-        <div className={styles.actionRow}>
-          <Button
-            disabled={currentStepIndex === 0}
-            onClick={goBack}
-            type="button"
-            variant="secondary"
-          >
-            Back
-          </Button>
+        <div
+          className={[
+            styles.actionRow,
+            hasPreviousStep ? "" : styles.singleAction,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {hasPreviousStep ? (
+            <Button onClick={goBack} type="button" variant="secondary">
+              Back
+            </Button>
+          ) : null}
 
           {currentStepIndex < steps.length - 1 ? (
             <Button onClick={goForward} type="button">
-              Continue
+              {nextStep ? `Continue to ${nextStep.label.toLowerCase()}` : "Continue"}
             </Button>
           ) : (
             <SubmitButton canSubmit={canSubmit} />
@@ -307,7 +329,7 @@ function StepFields({
           <OptionGroup
             error={errors.urgencyLevel}
             field="urgencyLevel"
-            legend="Urgency"
+            legend="How soon?"
             options={matchUrgencyOptions}
             updateValue={updateValue}
             value={values.urgencyLevel}
@@ -315,7 +337,7 @@ function StepFields({
           <OptionGroup
             error={errors.sessionFrequencyIntent}
             field="sessionFrequencyIntent"
-            legend="Lesson rhythm"
+            legend="How often?"
             options={matchFrequencyOptions}
             updateValue={updateValue}
             value={values.sessionFrequencyIntent}
@@ -344,27 +366,33 @@ function StepFields({
             updateValue={updateValue}
             value={values.languageCode}
           />
-          <SelectField
-            error={errors.timezone}
-            label="Timezone"
-            value={values.timezone}
-            onChange={(event) => updateValue("timezone", event.target.value)}
-          >
-            {timezoneOptions.map((timezone) => (
-              <option key={timezone} value={timezone}>
-                {getTimezoneLabel(timezone)}
-              </option>
-            ))}
-          </SelectField>
-          <Textarea
-            description="Optional. Avoid private documents or sensitive details; the structured choices do the matching work."
-            error={errors.freeTextNote}
-            label="Anything else that affects fit?"
-            maxLength={600}
-            onChange={(event) => updateValue("freeTextNote", event.target.value)}
-            value={values.freeTextNote}
-            variant="longForm"
-          />
+          <div id={getFieldContainerId("timezone")}>
+            <SelectField
+              error={errors.timezone}
+              id="timezone"
+              label="Timezone"
+              value={values.timezone}
+              onChange={(event) => updateValue("timezone", event.target.value)}
+            >
+              {timezoneOptions.map((timezone) => (
+                <option key={timezone} value={timezone}>
+                  {getTimezoneLabel(timezone)}
+                </option>
+              ))}
+            </SelectField>
+          </div>
+          <div id={getFieldContainerId("freeTextNote")}>
+            <Textarea
+              description="Optional. Avoid private documents or sensitive details; the structured choices do the matching work."
+              error={errors.freeTextNote}
+              id="freeTextNote"
+              label="Anything else that affects fit?"
+              maxLength={600}
+              onChange={(event) => updateValue("freeTextNote", event.target.value)}
+              value={values.freeTextNote}
+              variant="longForm"
+            />
+          </div>
         </div>
       );
   }
@@ -390,7 +418,11 @@ function OptionGroup({
   const groupName = `${field}-choice`;
 
   return (
-    <fieldset className={styles.optionGroup} aria-invalid={error ? true : undefined}>
+    <fieldset
+      aria-invalid={error ? true : undefined}
+      className={styles.optionGroup}
+      id={getFieldContainerId(field)}
+    >
       <legend>{legend}</legend>
       <div className={styles.optionGrid}>
         {options.map((option) => {
@@ -410,8 +442,11 @@ function OptionGroup({
                 type="radio"
                 value={option.value}
               />
-              <span className={styles.optionTitle}>{option.label}</span>
-              <span className={styles.optionDescription}>{option.description}</span>
+              <span className={styles.optionText}>
+                <span className={styles.optionTitle}>{option.label}</span>
+                <span className={styles.optionDescription}>{option.description}</span>
+              </span>
+              <span aria-hidden="true" className={styles.optionIndicator} />
             </label>
           );
         })}
@@ -441,7 +476,7 @@ function SubmitButton({ canSubmit }: { canSubmit: boolean }) {
       disabled={!canSubmit || pending}
       type="submit"
     >
-      {pending ? "Starting match" : "See best fits"}
+      {pending ? "Starting match" : "See tutor matches"}
     </button>
   );
 }
@@ -481,7 +516,7 @@ function getMissingFieldMessage(field: MatchFlowField) {
 
 function getNeedTitle(values: MatchFlowFormValues) {
   if (!values.needType) {
-    return "Tell us what kind of IB help you need.";
+    return "Your IB request";
   }
 
   return getMatchOptionLabel("needType", values.needType);
@@ -529,32 +564,85 @@ function buildTimezoneOptions(initialTimezone: string) {
   );
 }
 
+function getFieldContainerId(field: MatchFlowField) {
+  return `${field}-field`;
+}
+
+function revealFirstInvalidField(
+  step: StepDefinition,
+  errors: MatchFlowFieldErrors,
+) {
+  const firstInvalidField = step.fields.find((field) => errors[field]);
+
+  if (!firstInvalidField) {
+    return;
+  }
+
+  const fieldContainer = document.getElementById(getFieldContainerId(firstInvalidField));
+
+  if (!fieldContainer) {
+    return;
+  }
+
+  fieldContainer.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+
+  const focusTarget = fieldContainer.querySelector<HTMLElement>(
+    "input:not([type='hidden']), select, textarea",
+  );
+
+  focusTarget?.focus();
+}
+
+function getCurrentStepErrorMessage(
+  step: StepDefinition,
+  errors: MatchFlowFieldErrors,
+) {
+  const currentStepErrors = step.fields.filter((field) => errors[field]);
+
+  if (currentStepErrors.length === 0) {
+    return null;
+  }
+
+  if (step.id === "urgency") {
+    return "Choose both how soon you need help and how often you want lessons.";
+  }
+
+  if (currentStepErrors.length > 1) {
+    return "Complete the required answers to continue.";
+  }
+
+  return errors[currentStepErrors[0]] ?? "Complete this step to continue.";
+}
+
 function getGuidanceTitle(stepId: StepId) {
   switch (stepId) {
     case "problem":
-      return "Problem-led matching";
+      return "Start with the real task";
     case "subject":
-      return "Subject fit";
+      return "Subject sharpens the fit";
     case "urgency":
-      return "Availability viability";
+      return "Timing changes the shortlist";
     case "style":
-      return "Lesson feel";
+      return "Teaching style matters";
     case "details":
-      return "Realistic handoff";
+      return "Practical details save time";
   }
 }
 
 function getGuidanceBody(stepId: StepId) {
   switch (stepId) {
     case "problem":
-      return "A strong match starts with the IB task the student is actually facing, then uses subject fit to narrow the field.";
+      return "We start with the pressure point so you see tutors who handle this kind of IB help, not just the broad subject.";
     case "subject":
-      return "The subject or component keeps the system from treating every good tutor as equally relevant.";
+      return "A great TOK tutor is not always the right fit for English, Math, or Biology support.";
     case "urgency":
-      return "Timing helps separate tutors who are theoretically relevant from tutors who can help soon enough.";
+      return "Urgent deadline support and steady weekly help usually surface different tutors.";
     case "style":
-      return "Support style shapes the fit rationale students see later, especially when several tutors cover the same subject.";
+      return "Two tutors can cover the same subject but teach in very different ways.";
     case "details":
-      return "Language and timezone make the next result screen ready for booking instead of just browsing.";
+      return "Language and timezone help us show tutors you can realistically work with and book.";
   }
 }

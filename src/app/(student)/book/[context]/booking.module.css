@@ -1,0 +1,178 @@
+.page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.pageHeader {
+  display: grid;
+  gap: 1rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.94), rgb(252 250 244 / 0.92)),
+    radial-gradient(circle at top right, rgb(44 106 89 / 0.08), transparent 40%);
+  box-shadow: var(--shadow-soft);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--forest-500);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  line-height: 1.05;
+}
+
+.description {
+  margin: 0;
+  max-width: 44rem;
+  color: var(--ink-500);
+  font-size: 1.02rem;
+  line-height: 1.6;
+}
+
+.surfaceGrid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.primaryColumn {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sidebar {
+  display: grid;
+  gap: 1rem;
+}
+
+.summaryList,
+.policyList {
+  margin: 0;
+  padding-left: 1rem;
+  color: var(--ink-500);
+  display: grid;
+  gap: 0.6rem;
+}
+
+.summaryCard {
+  display: grid;
+  gap: 1rem;
+}
+
+.metricGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.metricCard {
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.72);
+}
+
+.metricLabel {
+  margin: 0 0 0.25rem;
+  color: var(--ink-500);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metricValue {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.resultGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.resultMeta {
+  margin: 0;
+  color: var(--ink-500);
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.slotPreview,
+.checkoutSummary {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.7);
+}
+
+.slotPreviewLabel,
+.summaryLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.summaryValue {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.summaryCopy {
+  margin: 0;
+  color: var(--ink-500);
+  line-height: 1.55;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.configCard,
+.statusCard {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.configCard p,
+.statusCard p {
+  margin: 0;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.muted {
+  color: var(--ink-500);
+}
+
+@media (min-width: 64rem) {
+  .surfaceGrid {
+    grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 0.95fr);
+    align-items: start;
+  }
+}

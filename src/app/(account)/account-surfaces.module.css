@@ -1,0 +1,342 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.pageIntro {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: var(--title-xl);
+  line-height: var(--line-tight);
+}
+
+.pageDescription {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--ink-700);
+}
+
+.settingsLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.95fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.primaryStack,
+.sideStack {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.summaryGrid,
+.panelGrid,
+.metricGrid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.summaryGrid,
+.panelGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metricGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.identityRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.identityCopy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.settingsList,
+.shortcutList,
+.statusList {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settingsList,
+.shortcutList {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.settingRow,
+.shortcutItem,
+.statusRow {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+}
+
+.settingRow,
+.shortcutItem {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.statusRow + .statusRow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.settingCopy,
+.shortcutCopy,
+.statusCopy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.settingLabel,
+.statusLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--caption);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.settingValue {
+  margin: 0;
+  font-size: var(--body-md);
+  font-weight: 600;
+  line-height: var(--line-tight);
+}
+
+.settingHint,
+.shortcutDescription,
+.statusHint {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.settingMeta {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+  font-weight: 600;
+  text-align: right;
+}
+
+.shortcutTitle,
+.statusValue {
+  margin: 0;
+  font-size: var(--body-md);
+  font-weight: 600;
+  line-height: var(--line-tight);
+}
+
+.shortcutLink {
+  color: var(--forest-600);
+  font-size: var(--body-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.shortcutLink:hover,
+.inlineLink:hover {
+  color: var(--forest-700);
+}
+
+.sectionNote {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.bodyText,
+.muted {
+  margin: 0;
+}
+
+.bodyText {
+  color: var(--ink-700);
+}
+
+.muted {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.badgeRow,
+.actions,
+.itemMeta,
+.noticeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.detailGrid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detailCard,
+.metricCard,
+.listItem,
+.routeItem {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.42);
+}
+
+.detailCard,
+.metricCard,
+.routeItem {
+  padding: var(--space-4);
+}
+
+.detailCard {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.detailLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--caption);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detailValue,
+.metricValue,
+.itemTitle,
+.routeTitle {
+  margin: 0;
+  color: var(--ink-900);
+}
+
+.detailValue {
+  font-size: var(--body-md);
+  line-height: var(--line-body);
+}
+
+.metricCard {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.metricValue {
+  font-size: var(--title-lg);
+  line-height: var(--line-tight);
+}
+
+.metricLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.list,
+.routeList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.listItem {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.selectedItem {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.itemCopy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.itemTitle,
+.routeTitle {
+  font-size: var(--body-md);
+  line-height: var(--line-tight);
+}
+
+.routeItem {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.routeDescription {
+  margin: 0;
+  color: var(--ink-700);
+}
+
+.inlineLink {
+  color: var(--forest-600);
+  font-weight: 600;
+}
+
+.emptyState {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (max-width: 767px) {
+  .settingsLayout,
+  .summaryGrid,
+  .panelGrid,
+  .metricGrid,
+  .detailGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .itemHeader,
+  .identityRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .settingRow,
+  .shortcutItem {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settingMeta {
+    text-align: left;
+  }
+}

@@ -17,10 +17,13 @@ type AccountLayoutProps = {
 export default function AccountLayout({ children }: AccountLayoutProps) {
   return (
     <AppFrame
-      description="Shared account shell for settings and account-adjacent operational routes."
-      eyebrow="Account routes"
+      description="Manage your profile, notifications, privacy, and billing in one place."
+      eyebrow="Your account"
+      footerNote="Your account details stay consistent across student and tutor modes."
       navItems={navigationByFamily.account}
-      title="Account-level shared surfaces"
+      showHero={false}
+      title="Account"
+      tone="minimal"
     >
       {children}
     </AppFrame>

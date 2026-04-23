@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { RoleSelectionForm } from "@/app/setup/role/role-selection-form";
 import { InlineNotice } from "@/components/ui";
-import { buildPostSignInRedirect, ensureAuthAccount } from "@/lib/auth/account-service";
+import { ensureAuthAccount, resolvePostSignInRedirect } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import { routeFamilies } from "@/lib/routing/route-families";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
@@ -48,7 +48,7 @@ export default async function RoleSelectionPage() {
   }
 
   if (!requiresRoleSelection(account)) {
-    redirect(buildPostSignInRedirect(account) as Route);
+    redirect((await resolvePostSignInRedirect(account)) as Route);
   }
 
   return <RoleSelectionForm />;

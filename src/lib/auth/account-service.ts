@@ -21,10 +21,14 @@ import type {
   Role,
   RoleStatus,
 } from "@/modules/accounts/constants";
+import {
+  buildLegalNoticeReviewPath,
+  getLatestPendingLegalNotice,
+} from "@/modules/notifications/legal-notices";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 
 const accountSelect =
-  "id, auth_user_id, email, full_name, avatar_url, timezone, onboarding_state, account_status, primary_role_context";
+  "id, auth_user_id, email, full_name, avatar_url, timezone, preferred_language_code, onboarding_state, account_status, primary_role_context";
 
 type AppUserRecord = {
   account_status: AccountStatus;
@@ -34,6 +38,7 @@ type AppUserRecord = {
   full_name: string | null;
   id: string;
   onboarding_state: OnboardingState;
+  preferred_language_code: string | null;
   primary_role_context: PrimaryRoleContext | null;
   timezone: string;
 };
@@ -237,6 +242,29 @@ export function buildPostSignInRedirect(
   }
 
   return routeFamilies.account.defaultHref;
+}
+
+export async function resolvePostSignInRedirect(
+  account: Pick<
+    ResolvedAuthAccount,
+    "account_status" | "id" | "onboarding_state" | "primary_role_context" | "roles"
+  >,
+  requestedNextPath?: string | null,
+  fallbackPath?: string | null,
+) {
+  const resolvedFallbackPath = fallbackPath ?? buildPostSignInRedirect(account, requestedNextPath);
+
+  try {
+    const pendingLegalNotice = await getLatestPendingLegalNotice(account.id);
+
+    if (pendingLegalNotice) {
+      return buildLegalNoticeReviewPath(pendingLegalNotice.id, resolvedFallbackPath);
+    }
+  } catch {
+    return resolvedFallbackPath;
+  }
+
+  return resolvedFallbackPath;
 }
 
 function canUsePostSignInRedirect(

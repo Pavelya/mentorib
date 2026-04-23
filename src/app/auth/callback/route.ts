@@ -4,7 +4,7 @@ import type { CookieOptions } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-import { buildPostSignInRedirect, ensureAuthAccount } from "@/lib/auth/account-service";
+import { ensureAuthAccount, resolvePostSignInRedirect } from "@/lib/auth/account-service";
 import {
   buildAuthVerifyPath,
   getAuthVerifyStatusForCallbackError,
@@ -92,7 +92,7 @@ export async function GET(request: Request) {
 
     const account = await ensureAuthAccount(user, timezone);
     const redirectResponse = NextResponse.redirect(
-      new URL(buildPostSignInRedirect(account, nextPath), request.url),
+      new URL(await resolvePostSignInRedirect(account, nextPath), request.url),
     );
 
     pendingCookies.forEach(({ name, value, options }) => {

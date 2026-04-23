@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 
 import {
   applySetupRoleSelection,
-  buildPostSignInRedirect,
   buildSetupRoleRedirect,
   ensureAuthAccount,
+  resolvePostSignInRedirect,
   type SetupRoleSelection,
 } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
@@ -57,9 +57,13 @@ export async function selectSetupRoleAction(
 
       if (requiresRoleSelection(account)) {
         await applySetupRoleSelection(account, selectedRole);
-        redirectPath = buildSetupRoleRedirect(selectedRole);
+        redirectPath = await resolvePostSignInRedirect(
+          account,
+          null,
+          buildSetupRoleRedirect(selectedRole),
+        );
       } else {
-        redirectPath = buildPostSignInRedirect(account);
+        redirectPath = await resolvePostSignInRedirect(account);
       }
     }
   } catch {

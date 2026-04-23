@@ -22,9 +22,8 @@
 
 .settingsLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.95fr);
   gap: var(--space-6);
-  align-items: start;
+  max-width: 48rem;
 }
 
 .primaryStack,
@@ -317,7 +316,6 @@
 }
 
 @media (max-width: 767px) {
-  .settingsLayout,
   .summaryGrid,
   .panelGrid,
   .metricGrid,

@@ -114,7 +114,7 @@ export function MatchFlowForm({
   const currentStep = steps[currentStepIndex];
   const fieldErrors = { ...state.fieldErrors, ...localErrors };
   const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
-  const qualifiers = buildNeedQualifiers(values, optionsByField);
+  const qualifiers = buildNeedQualifiers(values, optionsByField, currentStep.id);
   const timezoneOptions = useMemo(
     () => buildTimezoneOptions(initialTimezone),
     [initialTimezone],
@@ -397,9 +397,10 @@ function StepFields({
           />
           <div id={getFieldContainerId("timezone")}>
             <SelectField
+              description="Booking times and availability are shown in your timezone. This does not limit tutors by country."
               error={errors.timezone}
               id="timezone"
-              label="Timezone"
+              label="Your timezone"
               value={values.timezone}
               onChange={(event) => updateValue("timezone", event.target.value)}
             >
@@ -508,47 +509,55 @@ function OptionGroup({
   value,
 }: OptionGroupProps) {
   const groupName = `${field}-choice`;
+  const groupLabelId = `${field}-legend`;
 
   return (
-    <fieldset
+    <div
       aria-invalid={error ? true : undefined}
+      aria-labelledby={groupLabelId}
       className={styles.optionGroup}
       id={getFieldContainerId(field)}
+      role="radiogroup"
     >
-      <legend>
-        <span className={styles.optionLegend}>{legend}</span>
-      </legend>
+      <p className={styles.optionLegend} id={groupLabelId}>
+        {legend}
+      </p>
       <div className={styles.optionGrid}>
         {options.map((option) => {
           const isSelected = value === option.value;
+          const inputId = `${groupName}-${option.value}`;
 
           return (
-            <label
-              className={[styles.optionCard, isSelected ? styles.selectedOption : ""]
-                .filter(Boolean)
-                .join(" ")}
-              key={option.value}
-            >
+            <div className={styles.optionChoice} key={option.value}>
               <input
                 checked={isSelected}
+                className={styles.optionInput}
+                id={inputId}
                 name={groupName}
                 onChange={() => updateValue(field, option.value)}
                 type="radio"
                 value={option.value}
               />
-              <span className={styles.optionText}>
-                <span className={styles.optionTitle}>{option.label}</span>
-                {option.description ? (
-                  <span className={styles.optionDescription}>{option.description}</span>
-                ) : null}
-              </span>
-              <span aria-hidden="true" className={styles.optionIndicator} />
-            </label>
+              <label
+                className={[styles.optionCard, isSelected ? styles.selectedOption : ""]
+                  .filter(Boolean)
+                  .join(" ")}
+                htmlFor={inputId}
+              >
+                <span className={styles.optionText}>
+                  <span className={styles.optionTitle}>{option.label}</span>
+                  {option.description ? (
+                    <span className={styles.optionDescription}>{option.description}</span>
+                  ) : null}
+                </span>
+                <span aria-hidden="true" className={styles.optionIndicator} />
+              </label>
+            </div>
           );
         })}
       </div>
       {error ? <p className={styles.fieldError}>{error}</p> : null}
-    </fieldset>
+    </div>
   );
 }
 
@@ -624,6 +633,7 @@ function getNeedTitle(
 function buildNeedQualifiers(
   values: MatchFlowFormValues,
   optionsByField: MatchFlowOptionsByField,
+  currentStepId: StepId,
 ) {
   const qualifiers = [];
 
@@ -652,8 +662,11 @@ function buildNeedQualifiers(
     });
   }
 
-  if (values.timezone) {
-    qualifiers.push({ label: getTimezoneLabel(values.timezone), priority: "support" as const });
+  if (values.timezone && currentStepId === "details") {
+    qualifiers.push({
+      label: `Times shown in ${getTimezoneLabel(values.timezone)}`,
+      priority: "support" as const,
+    });
   }
 
   return qualifiers;
@@ -786,7 +799,7 @@ function getGuidanceBody(
     case "style":
       return "Two tutors can cover the same subject but teach in very different ways.";
     case "details":
-      return "Language and timezone help us show tutors you can realistically work with and book.";
+      return "Language helps with fit, and timezone only controls how lesson times are shown to you for booking. It does not narrow tutors by country.";
   }
 }
 

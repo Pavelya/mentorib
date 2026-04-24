@@ -99,7 +99,7 @@ const OPTION_ROWS = [
     option_group: "need_type",
     option_key: "topic_help",
     display_label: "Topic help",
-    helper_text: "You need a concept explained, practice on a topic, or help getting unstuck.",
+    helper_text: "You need help understanding a topic or getting unstuck.",
     subject_focus_area_code: "topic_support",
     allowed_subject_codes: [
       "english_a",
@@ -121,7 +121,7 @@ const OPTION_ROWS = [
     option_group: "need_type",
     option_key: "ia_feedback",
     display_label: "IA feedback",
-    helper_text: "You already have work in progress and want clear, focused feedback.",
+    helper_text: "You already have a draft and want clear feedback.",
     subject_focus_area_code: "ia_feedback",
     allowed_subject_codes: [
       "mathematics_aa",
@@ -141,7 +141,7 @@ const OPTION_ROWS = [
     option_group: "need_type",
     option_key: "exam_prep",
     display_label: "Exam prep",
-    helper_text: "You want targeted help before a test, mock, or final exam.",
+    helper_text: "You want focused help for a test, mock, or final.",
     subject_focus_area_code: "exam_prep",
     allowed_subject_codes: [
       "english_a",
@@ -162,7 +162,7 @@ const OPTION_ROWS = [
     option_group: "need_type",
     option_key: "essay_help",
     display_label: "Essay help",
-    helper_text: "You want support with structure, argument, drafting, or written feedback.",
+    helper_text: "You want help with planning, structure, or written feedback.",
     subject_focus_area_code: "essay_support",
     allowed_subject_codes: [
       "english_a",
@@ -178,7 +178,7 @@ const OPTION_ROWS = [
     option_group: "need_type",
     option_key: "tok_essay",
     display_label: "TOK essay",
-    helper_text: "You need help with your TOK essay or exhibition thinking.",
+    helper_text: "You need help with your TOK essay or exhibition.",
     subject_focus_area_code: "tok_essay",
     allowed_subject_codes: ["tok"],
     sort_order: 50,
@@ -188,7 +188,7 @@ const OPTION_ROWS = [
     option_group: "need_type",
     option_key: "extended_essay",
     display_label: "Extended essay",
-    helper_text: "You need help choosing a question, planning structure, or improving a draft.",
+    helper_text: "You want help choosing a question, planning, or improving a draft.",
     subject_focus_area_code: "extended_essay",
     allowed_subject_codes: [
       "english_a",
@@ -209,7 +209,7 @@ const OPTION_ROWS = [
     option_group: "need_type",
     option_key: "oral_practice",
     display_label: "Oral practice",
-    helper_text: "You want speaking practice, timing help, and direct oral feedback.",
+    helper_text: "You want speaking practice and direct feedback.",
     subject_focus_area_code: "oral_practice",
     allowed_subject_codes: ["english_a"],
     sort_order: 70,

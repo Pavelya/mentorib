@@ -48,6 +48,10 @@
   line-height: var(--line-tight);
 }
 
+.helperPanel h3 {
+  font-size: var(--title-md);
+}
+
 .progressDescription,
 .helperPanel p {
   margin: 0;
@@ -140,11 +144,41 @@
   background:
     linear-gradient(180deg, rgb(247 242 232 / 0.94), rgb(252 249 243 / 0.9)),
     var(--surface-panel-soft);
+  gap: var(--space-3);
 }
 
 .helperNote {
   color: var(--ink-500);
   font-size: var(--body-sm);
+}
+
+.helperHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+}
+
+.helperCopy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.helperIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgb(23 60 52 / 0.12);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.52);
+  color: var(--forest-700);
+}
+
+.helperIcon svg {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .optionGroup {
@@ -200,7 +234,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: var(--space-3);
-  min-height: 5.75rem;
+  min-height: 5.1rem;
   padding: 0.875rem 1rem;
   border: 1px solid var(--border-strong);
   border-radius: calc(var(--radius-md) - 2px);
@@ -232,7 +266,7 @@
 
 .optionText {
   display: grid;
-  gap: var(--space-1);
+  gap: 0.4rem;
 }
 
 .optionTitle {
@@ -245,7 +279,7 @@
 .optionDescription {
   color: var(--ink-700);
   font-size: var(--body-sm);
-  line-height: var(--line-body);
+  line-height: 1.45;
 }
 
 .optionIndicator {

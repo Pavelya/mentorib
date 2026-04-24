@@ -23,14 +23,19 @@ import {
   type MatchFlowOptionsByField,
   type MatchOption,
 } from "@/modules/lessons/match-flow-options";
+import {
+  getMatchFlowGuidanceCopy,
+  getMatchFlowStepDescription,
+  getMatchFlowTimezoneNoticeCopy,
+  matchFlowStaticCopy,
+  type MatchFlowStepId,
+} from "@/modules/lessons/match-flow-copy";
 
 import {
   submitMatchFlowAction,
   type MatchFlowActionState,
 } from "./actions";
 import styles from "./match-flow.module.css";
-
-type StepId = "details" | "problem" | "subject";
 
 type MatchFlowFormProps = {
   canSubmit: boolean;
@@ -40,9 +45,8 @@ type MatchFlowFormProps = {
 };
 
 type StepDefinition = {
-  description: string;
   fields: readonly MatchFlowField[];
-  id: StepId;
+  id: MatchFlowStepId;
   label: string;
   question: string;
 };
@@ -51,25 +55,22 @@ const SUBJECT_CARD_LIMIT = 10;
 
 const steps = [
   {
-    description: "Choose the closest fit.",
     fields: ["needType"],
     id: "problem",
-    label: "Problem",
-    question: "What do you need help with right now?",
+    label: matchFlowStaticCopy.problemLabel,
+    question: matchFlowStaticCopy.problemQuestion,
   },
   {
-    description: "We only show subjects that match your request.",
     fields: ["subjectSlug"],
     id: "subject",
-    label: "Subject",
-    question: "Which subject is this for?",
+    label: matchFlowStaticCopy.subjectLabel,
+    question: matchFlowStaticCopy.subjectQuestion,
   },
   {
-    description: "Choose lesson language. Your saved timezone is used automatically.",
     fields: ["languageCode"],
     id: "details",
-    label: "Details",
-    question: "What language should lessons use?",
+    label: matchFlowStaticCopy.detailsLabel,
+    question: matchFlowStaticCopy.detailsQuestion,
   },
 ] as const satisfies readonly StepDefinition[];
 
@@ -103,6 +104,7 @@ export function MatchFlowForm({
   const fieldErrors = { ...state.fieldErrors, ...localErrors };
   const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
   const qualifiers = buildNeedQualifiers(values, optionsByField, currentStep.id);
+  const timezoneLabel = getTimezoneLabel(values.timezone);
   const compatibleSubjectOptions = useMemo(
     () => getCompatibleSubjectOptions(values.needType, optionsByField),
     [optionsByField, values.needType],
@@ -259,9 +261,16 @@ export function MatchFlowForm({
           </section>
 
           <aside className={styles.helperPanel} aria-label="Helpful context">
-            <p className={styles.stepEyebrow}>Why we ask</p>
-            <h3>{getGuidanceTitle(currentStep.id, values, optionsByField)}</h3>
-            <p>{getGuidanceBody(currentStep.id, values, optionsByField)}</p>
+            <div className={styles.helperHeader}>
+              <div aria-hidden="true" className={styles.helperIcon}>
+                <StepSupportIcon stepId={currentStep.id} />
+              </div>
+              <div className={styles.helperCopy}>
+                <p className={styles.stepEyebrow}>Why we ask</p>
+                <h3>{getGuidanceTitle(currentStep.id, values, optionsByField, timezoneLabel)}</h3>
+              </div>
+            </div>
+            <p>{getGuidanceBody(currentStep.id, values, optionsByField, timezoneLabel)}</p>
           </aside>
         </div>
 
@@ -313,7 +322,7 @@ function StepFields({
         <OptionGroup
           error={errors.needType}
           field="needType"
-          legend="Type of help"
+          legend={matchFlowStaticCopy.helpLegend}
           options={optionsByField.needType}
           updateValue={updateValue}
           value={values.needType}
@@ -341,23 +350,26 @@ function StepFields({
             value={values.languageCode}
           />
           <div id={getFieldContainerId("timezone")}>
-            <InlineNotice title={`Times shown in ${getTimezoneLabel(values.timezone)}`} tone="info">
-              <p>
-                Your saved timezone is used automatically for availability and
-                booking times.
-              </p>
+            <InlineNotice
+              icon={<TimezoneIcon />}
+              showToneLabel={false}
+              title={getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).title}
+              tone="info"
+            >
+              <p>{getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).body}</p>
             </InlineNotice>
           </div>
           <div id={getFieldContainerId("freeTextNote")}>
             <Textarea
-              description="Optional. Add one short note if there is something important we should keep in mind."
+              description={matchFlowStaticCopy.freeTextDescription}
               error={errors.freeTextNote}
               id="freeTextNote"
-              label="Anything important to mention? (optional)"
+              label={matchFlowStaticCopy.freeTextLabel}
+              labelMeta="Optional"
               maxLength={600}
               onChange={(event) => updateValue("freeTextNote", event.target.value)}
+              rows={4}
               value={values.freeTextNote}
-              variant="longForm"
             />
           </div>
         </div>
@@ -566,7 +578,7 @@ function getNeedTitle(
 function buildNeedQualifiers(
   values: MatchFlowFormValues,
   optionsByField: MatchFlowOptionsByField,
-  currentStepId: StepId,
+  currentStepId: MatchFlowStepId,
 ) {
   const qualifiers = [];
 
@@ -658,45 +670,29 @@ function getNormalizedSubjectValue(
 }
 
 function getGuidanceTitle(
-  stepId: StepId,
+  stepId: MatchFlowStepId,
   values: MatchFlowFormValues,
   optionsByField: MatchFlowOptionsByField,
+  timezoneLabel: string,
 ) {
-  switch (stepId) {
-    case "problem":
-      return "Start with the real task";
-    case "subject":
-      return getNeedTypeOption(values.needType, optionsByField)?.focusAreaCode === "tok_essay"
-        ? "TOK is the right subject here"
-        : "Subject sharpens the fit";
-    case "details":
-      return "Only one last choice";
-  }
+  return getMatchFlowGuidanceCopy(stepId, {
+    focusAreaCode: getNeedTypeOption(values.needType, optionsByField)?.focusAreaCode,
+    needTypeLabel: getMatchOptionLabel("needType", values.needType, optionsByField),
+    timezoneLabel,
+  }).title;
 }
 
 function getGuidanceBody(
-  stepId: StepId,
+  stepId: MatchFlowStepId,
   values: MatchFlowFormValues,
   optionsByField: MatchFlowOptionsByField,
+  timezoneLabel: string,
 ) {
-  const selectedNeedType = getNeedTypeOption(values.needType, optionsByField);
-
-  switch (stepId) {
-    case "problem":
-      return "Starting with the real task makes the results feel specific instead of like a generic tutor browse.";
-    case "subject":
-      if (selectedNeedType?.focusAreaCode === "tok_essay") {
-        return "TOK essay help should lead straight to TOK tutors, not a broad subject list.";
-      }
-
-      if (selectedNeedType?.focusAreaCode === "extended_essay") {
-        return "For EE support, the subject still matters because the best tutor needs both EE experience and subject fluency.";
-      }
-
-      return "We only show subjects that make sense for the kind of help you picked.";
-    case "details":
-      return "Language affects fit. Your saved timezone only changes how lesson times are shown during booking.";
-  }
+  return getMatchFlowGuidanceCopy(stepId, {
+    focusAreaCode: getNeedTypeOption(values.needType, optionsByField)?.focusAreaCode,
+    needTypeLabel: getMatchOptionLabel("needType", values.needType, optionsByField),
+    timezoneLabel,
+  }).body;
 }
 
 function getCurrentStepQuestion(
@@ -730,25 +726,11 @@ function getCurrentStepDescription(
   optionsByField: MatchFlowOptionsByField,
   compatibleSubjectOptions: readonly MatchOption[],
 ) {
-  if (step.id !== "subject") {
-    return step.description;
-  }
-
   const selectedNeedType = getNeedTypeOption(values.needType, optionsByField);
-
-  if (selectedNeedType?.focusAreaCode === "tok_essay") {
-    return "TOK essay support maps to TOK only, so we keep the handoff clear.";
-  }
-
-  if (selectedNeedType?.focusAreaCode === "extended_essay") {
-    return "Choose the subject area your EE belongs to so we can keep the shortlist relevant.";
-  }
-
-  if (compatibleSubjectOptions.length > SUBJECT_CARD_LIMIT + 1) {
-    return "We show the most common IB subjects first and keep the rest under More IB subjects.";
-  }
-
-  return step.description;
+  return getMatchFlowStepDescription(step.id, {
+    focusAreaCode: selectedNeedType?.focusAreaCode,
+    subjectCount: compatibleSubjectOptions.length,
+  });
 }
 
 function getSubjectLegend(focusAreaCode?: string) {
@@ -762,4 +744,61 @@ function getSubjectLegend(focusAreaCode?: string) {
     default:
       return "Subject";
   }
+}
+
+function StepSupportIcon({ stepId }: { stepId: MatchFlowStepId }) {
+  switch (stepId) {
+    case "problem":
+      return (
+        <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.75" />
+          <circle cx="12" cy="12" r="2.25" fill="currentColor" />
+        </svg>
+      );
+    case "subject":
+      return (
+        <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M6 6.5h7.5c2.5 0 4.5 2 4.5 4.5V18H10.5A4.5 4.5 0 0 1 6 13.5V6.5Z"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.75"
+          />
+          <path
+            d="M10 9.5h5M10 12.5h4"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.75"
+          />
+        </svg>
+      );
+    case "details":
+      return (
+        <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 19c4.4 0 8-2.9 8-6.5S16.4 6 12 6 4 8.9 4 12.5c0 1.6.7 3.1 2 4.2V20l3.1-1.6c.9.4 1.9.6 2.9.6Z"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.75"
+          />
+        </svg>
+      );
+  }
+}
+
+function TimezoneIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.75" />
+      <path
+        d="M12 8.5v4l2.5 1.5"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.75"
+      />
+    </svg>
+  );
 }

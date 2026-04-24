@@ -40,6 +40,27 @@ export type MatchFlowOptionsByField = {
   urgencyLevel: readonly MatchOption[];
 };
 
+const subjectDescriptionsByCode: Record<string, string> = {
+  biology: "Concepts, data questions, lab work, and revision.",
+  business_management: "Case analysis, structure, and exam support.",
+  chemistry: "Calculations, data, concepts, and lab support.",
+  economics: "Diagrams, explanations, essays, and data response.",
+  english_a: "Commentary, oral work, essays, and written analysis.",
+  history: "Source work, essays, structure, and revision.",
+  mathematics_aa: "Algebra, functions, calculus, and proof-heavy work.",
+  mathematics_ai: "Modeling, statistics, interpretation, and real-world math.",
+  physics: "Concepts, calculations, and exam-style problems.",
+  psychology: "Studies, essays, and structured argument.",
+  tok: "Essay, exhibition, claims, and knowledge questions.",
+};
+
+const languageDescriptionsByCode: Record<string, string> = {
+  en: "Main lesson language.",
+  es: "Useful for Spanish-speaking students or families.",
+  fr: "Useful for French-speaking students or families.",
+  pl: "Useful for Polish-speaking students or families.",
+};
+
 export const emptyMatchFlowValues: MatchFlowFormValues = {
   freeTextNote: "",
   languageCode: "",
@@ -53,10 +74,10 @@ export const emptyMatchFlowValues: MatchFlowFormValues = {
 
 export const previewMatchFlowOptions = {
   languageCode: [
-    { description: "Primary tutoring language.", label: "English", value: "en" },
-    { description: "Good for bilingual planning and parent context.", label: "Polish", value: "pl" },
-    { description: "Useful for Spanish-speaking students or families.", label: "Spanish", value: "es" },
-    { description: "Useful for French-speaking students or families.", label: "French", value: "fr" },
+    { description: languageDescriptionsByCode.en, label: "English", value: "en" },
+    { description: languageDescriptionsByCode.pl, label: "Polish", value: "pl" },
+    { description: languageDescriptionsByCode.es, label: "Spanish", value: "es" },
+    { description: languageDescriptionsByCode.fr, label: "French", value: "fr" },
   ],
   needType: [
     {
@@ -73,7 +94,7 @@ export const previewMatchFlowOptions = {
         "psychology",
         "tok",
       ],
-      description: "You need a concept explained, practice on a topic, or help getting unstuck.",
+      description: "You need help understanding a topic or getting unstuck.",
       focusAreaCode: "topic_support",
       label: "Topic help",
       value: "topic_help",
@@ -90,7 +111,7 @@ export const previewMatchFlowOptions = {
         "economics",
         "psychology",
       ],
-      description: "You already have work in progress and want clear, focused feedback.",
+      description: "You already have a draft and want clear feedback.",
       focusAreaCode: "ia_feedback",
       label: "IA feedback",
       value: "ia_feedback",
@@ -108,7 +129,7 @@ export const previewMatchFlowOptions = {
         "economics",
         "psychology",
       ],
-      description: "You want targeted help before a test, mock, or final exam.",
+      description: "You want focused help for a test, mock, or final.",
       focusAreaCode: "exam_prep",
       label: "Exam prep",
       value: "exam_prep",
@@ -121,14 +142,14 @@ export const previewMatchFlowOptions = {
         "economics",
         "psychology",
       ],
-      description: "You want support with structure, argument, drafting, or written feedback.",
+      description: "You want help with planning, structure, or written feedback.",
       focusAreaCode: "essay_support",
       label: "Essay help",
       value: "essay_help",
     },
     {
       allowedSubjectCodes: ["tok"],
-      description: "You need help with your TOK essay or exhibition thinking.",
+      description: "You need help with your TOK essay or exhibition.",
       focusAreaCode: "tok_essay",
       label: "TOK essay",
       value: "tok_essay",
@@ -146,14 +167,14 @@ export const previewMatchFlowOptions = {
         "economics",
         "psychology",
       ],
-      description: "You need help choosing a question, planning structure, or improving a draft.",
+      description: "You want help choosing a question, planning, or improving a draft.",
       focusAreaCode: "extended_essay",
       label: "Extended essay",
       value: "extended_essay",
     },
     {
       allowedSubjectCodes: ["english_a"],
-      description: "You want speaking practice, timing help, and direct oral feedback.",
+      description: "You want speaking practice and direct feedback.",
       focusAreaCode: "oral_practice",
       label: "Oral practice",
       value: "oral_practice",
@@ -182,29 +203,52 @@ export const previewMatchFlowOptions = {
     },
   ],
   subjectSlug: [
-    { label: "English A", subjectCode: "english_a", value: "english-a" },
     {
+      description: subjectDescriptionsByCode.english_a,
+      label: "English A",
+      subjectCode: "english_a",
+      value: "english-a",
+    },
+    {
+      description: subjectDescriptionsByCode.mathematics_aa,
       label: "Mathematics AA",
       subjectCode: "mathematics_aa",
       value: "mathematics-analysis-and-approaches",
     },
     {
+      description: subjectDescriptionsByCode.mathematics_ai,
       label: "Mathematics AI",
       subjectCode: "mathematics_ai",
       value: "mathematics-applications-and-interpretation",
     },
-    { label: "Biology", subjectCode: "biology", value: "biology" },
-    { label: "Chemistry", subjectCode: "chemistry", value: "chemistry" },
-    { label: "Physics", subjectCode: "physics", value: "physics" },
-    { label: "History", subjectCode: "history", value: "history" },
+    { description: subjectDescriptionsByCode.biology, label: "Biology", subjectCode: "biology", value: "biology" },
     {
+      description: subjectDescriptionsByCode.chemistry,
+      label: "Chemistry",
+      subjectCode: "chemistry",
+      value: "chemistry",
+    },
+    { description: subjectDescriptionsByCode.physics, label: "Physics", subjectCode: "physics", value: "physics" },
+    { description: subjectDescriptionsByCode.history, label: "History", subjectCode: "history", value: "history" },
+    {
+      description: subjectDescriptionsByCode.business_management,
       label: "Business Management",
       subjectCode: "business_management",
       value: "business-management",
     },
-    { label: "Economics", subjectCode: "economics", value: "economics" },
-    { label: "Psychology", subjectCode: "psychology", value: "psychology" },
-    { label: "TOK", subjectCode: "tok", value: "tok" },
+    {
+      description: subjectDescriptionsByCode.economics,
+      label: "Economics",
+      subjectCode: "economics",
+      value: "economics",
+    },
+    {
+      description: subjectDescriptionsByCode.psychology,
+      label: "Psychology",
+      subjectCode: "psychology",
+      value: "psychology",
+    },
+    { description: subjectDescriptionsByCode.tok, label: "TOK", subjectCode: "tok", value: "tok" },
   ],
   supportStyle: [
     {
@@ -304,4 +348,12 @@ export function getCompatibleSubjectOptions(
   return optionsByField.subjectSlug.filter((subject) =>
     allowedSubjectCodes.has(subject.subjectCode),
   );
+}
+
+export function getSubjectDescription(subjectCode: string) {
+  return subjectDescriptionsByCode[subjectCode];
+}
+
+export function getLanguageDescription(languageCode: string) {
+  return languageDescriptionsByCode[languageCode];
 }

@@ -30,6 +30,18 @@
   gap: var(--space-5);
 }
 
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .settingsLayout {
   display: grid;
   gap: var(--space-6);
@@ -90,6 +102,31 @@
 
 .profileFieldGrid {
   gap: var(--space-5);
+}
+
+.profileSectionList {
+  display: grid;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.profileSectionRow {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.profileSectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.profileSectionContent {
+  display: grid;
+  gap: var(--space-3);
 }
 
 .settingsList,

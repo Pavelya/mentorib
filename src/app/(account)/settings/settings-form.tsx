@@ -22,6 +22,7 @@ import styles from "../account-surfaces.module.css";
 
 type SettingsProfileFormProps = {
   avatarUrl?: string;
+  email: string;
   initialFullName: string;
   initialPreferredLanguageCode: string;
   languageOptions: readonly MatchLanguageOption[];
@@ -41,6 +42,7 @@ const emptyAccountProfileActionState: AccountProfileActionState = {
 
 export function SettingsProfileForm({
   avatarUrl,
+  email,
   initialFullName,
   initialPreferredLanguageCode,
   languageOptions,
@@ -69,6 +71,7 @@ export function SettingsProfileForm({
       key={formStateKey}
       action={formAction}
       avatarUrl={avatarUrl}
+      email={email}
       languageOptions={languageOptions}
       roleBadges={roleBadges}
       serverState={state}
@@ -80,6 +83,7 @@ export function SettingsProfileForm({
 function SettingsProfileFormBody({
   action,
   avatarUrl,
+  email,
   languageOptions,
   roleBadges,
   serverState,
@@ -87,6 +91,7 @@ function SettingsProfileFormBody({
 }: {
   action: (formData: FormData) => void;
   avatarUrl?: string;
+  email: string;
   languageOptions: readonly MatchLanguageOption[];
   roleBadges: SettingsProfileFormProps["roleBadges"];
   serverState: AccountProfileActionState;
@@ -126,51 +131,71 @@ function SettingsProfileFormBody({
               </div>
             ) : null}
           </div>
-          <p className={styles.muted}>
-            Update the name Mentor IB uses for your account and match preferences.
-          </p>
         </div>
       </div>
 
-      <div className={styles.profileFieldGrid}>
-        <TextField
-          autoComplete="name"
-          error={serverState.fieldErrors.fullName}
-          label="Full name"
-          maxLength={120}
-          name="fullName"
-          onChange={(event) =>
-            setValues((currentValues) => ({
-              ...currentValues,
-              fullName: event.target.value,
-            }))
-          }
-          placeholder="Enter your full name"
-          required
-          value={values.fullName}
-        />
+      <div className={styles.profileSectionList}>
+        <section className={styles.profileSectionRow}>
+          <div className={styles.profileSectionHeader}>
+            <p className={styles.settingLabel}>Full name</p>
+          </div>
+          <div className={styles.profileSectionContent}>
+            <TextField
+              autoComplete="name"
+              error={serverState.fieldErrors.fullName}
+              label={<span className={styles.srOnly}>Full name</span>}
+              maxLength={120}
+              name="fullName"
+              onChange={(event) =>
+                setValues((currentValues) => ({
+                  ...currentValues,
+                  fullName: event.target.value,
+                }))
+              }
+              placeholder="Enter your full name"
+              required
+              value={values.fullName}
+            />
+          </div>
+        </section>
 
-        <LanguageField
-          error={serverState.fieldErrors.preferredLanguageCode}
-          options={languageOptions}
-          value={values.preferredLanguageCode}
-          onChange={(preferredLanguageCode) =>
-            setValues((currentValues) => ({
-              ...currentValues,
-              preferredLanguageCode,
-            }))
-          }
-        />
-      </div>
+        <section className={styles.profileSectionRow}>
+          <div className={styles.profileSectionHeader}>
+            <p className={styles.settingLabel}>Email</p>
+          </div>
+          <div className={styles.profileSectionContent}>
+            <p className={styles.settingValue}>{email}</p>
+          </div>
+        </section>
 
-      <div className={styles.settingsList}>
-        <div className={styles.settingRow}>
-          <div className={styles.settingCopy}>
+        <section className={styles.profileSectionRow}>
+          <div className={styles.profileSectionHeader}>
+            <p className={styles.settingLabel}>Preferred lesson language</p>
+          </div>
+          <div className={styles.profileSectionContent}>
+            <LanguageField
+              error={serverState.fieldErrors.preferredLanguageCode}
+              hideLegend
+              options={languageOptions}
+              value={values.preferredLanguageCode}
+              onChange={(preferredLanguageCode) =>
+                setValues((currentValues) => ({
+                  ...currentValues,
+                  preferredLanguageCode,
+                }))
+              }
+            />
+          </div>
+        </section>
+
+        <section className={styles.profileSectionRow}>
+          <div className={styles.profileSectionHeader}>
             <p className={styles.settingLabel}>Timezone</p>
+          </div>
+          <div className={styles.profileSectionContent}>
             <p className={styles.settingValue}>{timezone}</p>
           </div>
-          <p className={styles.settingMeta}>Automatic</p>
-        </div>
+        </section>
       </div>
 
       <div className={styles.formActions}>
@@ -182,11 +207,13 @@ function SettingsProfileFormBody({
 
 function LanguageField({
   error,
+  hideLegend = false,
   options,
   value,
   onChange,
 }: {
   error?: string;
+  hideLegend?: boolean;
   options: readonly MatchLanguageOption[];
   value: string;
   onChange: (value: string) => void;
@@ -196,7 +223,16 @@ function LanguageField({
       aria-invalid={error ? true : undefined}
       className={styles.languageFieldset}
     >
-      <legend className={styles.languageLegend}>Preferred lesson language</legend>
+      <legend
+        className={[
+          styles.languageLegend,
+          hideLegend ? styles.srOnly : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        Preferred lesson language
+      </legend>
       <div className={styles.languageOptionGrid} role="radiogroup">
         {options.map((option) => {
           const inputId = `preferredLanguageCode-${option.value}`;

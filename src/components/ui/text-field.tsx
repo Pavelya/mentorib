@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
 
 import { FieldShell } from "./field-shell";
 import styles from "./field.module.css";
@@ -6,7 +6,7 @@ import styles from "./field.module.css";
 type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
   description?: string;
   error?: string;
-  label: string;
+  label: ReactNode;
   labelMeta?: string;
   size?: "default" | "compact";
 };

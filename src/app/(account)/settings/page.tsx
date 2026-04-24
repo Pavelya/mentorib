@@ -27,9 +27,7 @@ export default async function SettingsPage() {
     <div className={styles.page}>
       <header className={styles.pageIntro}>
         <h1 className={styles.pageTitle}>Settings</h1>
-        <p className={styles.pageDescription}>
-          Manage the basics for your account and lesson preferences.
-        </p>
+        <p className={styles.pageDescription}>Manage your Mentor IB account.</p>
       </header>
 
       {pendingLegalNotice ? (
@@ -37,13 +35,10 @@ export default async function SettingsPage() {
       ) : null}
 
       <section className={styles.settingsLayout}>
-        <Panel
-          description="Update the main details connected to your account."
-          title="Profile"
-          tone="raised"
-        >
+        <Panel title="Profile" tone="raised">
           <SettingsProfileForm
             avatarUrl={account.avatar_url ?? undefined}
+            email={account.email}
             initialFullName={account.full_name?.trim() ?? ""}
             initialPreferredLanguageCode={initialPreferredLanguageCode}
             languageOptions={languageOptions}

@@ -20,6 +20,16 @@
   color: var(--ink-700);
 }
 
+.profileForm,
+.profileFieldGrid,
+.languageFieldset {
+  display: grid;
+}
+
+.profileForm {
+  gap: var(--space-5);
+}
+
 .settingsLayout {
   display: grid;
   gap: var(--space-6);
@@ -76,6 +86,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.profileFieldGrid {
+  gap: var(--space-5);
 }
 
 .settingsList,
@@ -153,6 +167,170 @@
   text-align: right;
 }
 
+.languageFieldset {
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.languageLegend {
+  display: block;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  color: var(--ink-900);
+  font-size: var(--body-sm);
+  font-weight: 600;
+  line-height: var(--line-utility);
+}
+
+.fieldError {
+  margin: 0;
+  font-size: var(--body-sm);
+  line-height: var(--line-utility);
+}
+
+.fieldError {
+  color: var(--danger-500);
+}
+
+.languageOptionGrid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.languageChoice {
+  position: relative;
+  min-width: 0;
+}
+
+.languageInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.languageCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  min-height: 4.75rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: calc(var(--radius-md) - 2px);
+  background: rgb(255 255 255 / 0.76);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.compactLanguageCard {
+  align-items: center;
+}
+
+.languageCard:hover {
+  border-color: rgb(61 56 50 / 0.28);
+  transform: translateY(-1px);
+}
+
+.languageInput:focus-visible + .languageCard {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    0 0 0 1px var(--focus-outline);
+}
+
+.selectedLanguageCard {
+  border-color: var(--state-selected-border);
+  background: var(--state-selected-surface);
+}
+
+.languageCardMain {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.compactLanguageCard .languageCardMain {
+  align-items: center;
+}
+
+.languageVisual {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 1.7rem;
+  margin-top: 0.1rem;
+  border-radius: 0.6rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
+  color: var(--forest-700);
+  flex-shrink: 0;
+}
+
+.languageVisual svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.languageText {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.compactLanguageCard .languageText {
+  align-content: center;
+}
+
+.languageTitle {
+  margin: 0;
+  color: var(--ink-900);
+  font-size: var(--body-md);
+  font-weight: 600;
+  line-height: var(--line-tight);
+}
+
+.languageIndicator {
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.125rem;
+  border: 1.5px solid rgb(61 56 50 / 0.24);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.compactLanguageCard .languageIndicator {
+  margin-top: 0;
+  align-self: center;
+}
+
+.selectedLanguageCard .languageIndicator {
+  border-color: var(--forest-700);
+  box-shadow: inset 0 0 0 4px var(--forest-700);
+}
+
 .shortcutTitle,
 .statusValue {
   margin: 0;
@@ -177,6 +355,13 @@
   margin: 0;
   color: var(--ink-500);
   font-size: var(--body-sm);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
 }
 
 .eyebrow {
@@ -338,7 +523,8 @@
   .summaryGrid,
   .panelGrid,
   .metricGrid,
-  .detailGrid {
+  .detailGrid,
+  .languageOptionGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -356,6 +542,11 @@
   .settingRow,
   .shortcutItem {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .formActions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .settingMeta {

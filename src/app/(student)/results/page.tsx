@@ -130,6 +130,9 @@ function renderResultsPage({
   sort: ResultsSort;
 }) {
   const visibleMatches = sortMatches(filterMatches(results.matches, filter), sort);
+  const hasNoMatchesState =
+    (results.state === "ready" || results.state === "preview") &&
+    results.matches.length === 0;
   const countLabel =
     visibleMatches.length === 1 ? "1 tutor fit" : `${visibleMatches.length} tutor fits`;
 
@@ -143,107 +146,113 @@ function renderResultsPage({
                 className={getButtonClassName({ size: "compact", variant: "secondary" })}
                 href="/match"
               >
-                Refine need
+                Change request
               </Link>
             }
-            label="Current need"
+            label="Your request"
             mode="editable"
             need={results.currentNeed.headline}
             qualifiers={results.currentNeed.qualifiers}
             state={results.state === "queued" ? "draft" : "active"}
           />
 
-          <TimezoneNotice timezone={results.currentNeed.timezone} />
+          {!hasNoMatchesState ? <TimezoneNotice timezone={results.currentNeed.timezone} /> : null}
         </>
       ) : null}
 
-      <div className={styles.headerGrid}>
-        <Panel
-          description={buildSummaryDescription({
-            count: visibleMatches.length,
-            filter,
-            results,
-            sort,
-          })}
-          eyebrow="Tutor results"
-          title={buildSummaryTitle(results, countLabel)}
-          tone="warm"
-        >
-          <ul className={styles.summaryList}>
-            <li>Fit reasoning stays primary, with the need context still visible above.</li>
-            <li>
-              Tutor profiles and booking use the same result context instead of a generic
-              card wall.
-            </li>
-            {results.currentNeed?.note ? <li>Student note: {results.currentNeed.note}</li> : null}
-            <li>
-              {results.run.createdAt
-                ? `Latest match run started ${formatUtcDateTime(results.run.createdAt, {
-                    timezone: results.currentNeed?.timezone,
-                  })}.`
-                : "Results will appear here once the match run is ready."}
-            </li>
-          </ul>
-        </Panel>
+      {hasNoMatchesState ? (
+        <NoMatchesState results={results} />
+      ) : (
+        <div className={styles.headerGrid}>
+          <Panel
+            description={buildSummaryDescription({
+              count: visibleMatches.length,
+              filter,
+              results,
+              sort,
+            })}
+            eyebrow="Tutor results"
+            title={buildSummaryTitle(results, countLabel)}
+            tone="warm"
+          >
+            <ul className={styles.summaryList}>
+              <li>Fit reasoning stays primary, with the need context still visible above.</li>
+              <li>
+                Tutor profiles and booking use the same result context instead of a generic
+                card wall.
+              </li>
+              {results.currentNeed?.note ? <li>Student note: {results.currentNeed.note}</li> : null}
+              <li>
+                {results.run.createdAt
+                  ? `Latest match run started ${formatUtcDateTime(results.run.createdAt, {
+                      timezone: results.currentNeed?.timezone,
+                    })}.`
+                  : "Results will appear here once the match run is ready."}
+              </li>
+            </ul>
+          </Panel>
 
-        <Panel
-          description="The next step should feel like a continuation of the same decision, not a restart."
-          eyebrow="Handoff"
-          title="Profiles and booking keep the match context"
-          tone="mist"
-        >
-          <ul className={styles.handoffList}>
-            <li>Open a tutor profile to review proof and teaching style without losing the fit rationale.</li>
-            <li>Booking links use the candidate context so the selected match survives the handoff.</li>
-            <li>Compare remains lightweight and secondary to the main fit-based decision.</li>
-          </ul>
-        </Panel>
-      </div>
+          <Panel
+            description="The next step should feel like a continuation of the same decision, not a restart."
+            eyebrow="Handoff"
+            title="Profiles and booking keep the match context"
+            tone="mist"
+          >
+            <ul className={styles.handoffList}>
+              <li>Open a tutor profile to review proof and teaching style without losing the fit rationale.</li>
+              <li>Booking links use the candidate context so the selected match survives the handoff.</li>
+              <li>Compare remains lightweight and secondary to the main fit-based decision.</li>
+            </ul>
+          </Panel>
+        </div>
+      )}
 
       {results.state === "ready" || results.state === "preview" ? (
         <>
-          <section aria-label="Results controls" className={styles.controls}>
-            <div className={styles.controlGroup}>
-              <p className={styles.controlLabel}>Filter</p>
-              <TabBar
-                activeId={filter}
-                ariaLabel="Filter tutor results"
-                items={[
-                  { href: buildResultsHref({ filter: "all", sort }), id: "all", label: "All" },
-                  {
-                    href: buildResultsHref({ filter: "high-confidence", sort }),
-                    id: "high-confidence",
-                    label: "High confidence",
-                  },
-                  {
-                    href: buildResultsHref({ filter: "available-soon", sort }),
-                    id: "available-soon",
-                    label: "Available soon",
-                  },
-                ]}
-              />
-            </div>
+          {!hasNoMatchesState ? (
+            <section aria-label="Results controls" className={styles.controls}>
+              <div className={styles.controlGroup}>
+                <p className={styles.controlLabel}>Filter</p>
+                <TabBar
+                  activeId={filter}
+                  ariaLabel="Filter tutor results"
+                  items={[
+                    { href: buildResultsHref({ filter: "all", sort }), id: "all", label: "All" },
+                    {
+                      href: buildResultsHref({ filter: "high-confidence", sort }),
+                      id: "high-confidence",
+                      label: "High confidence",
+                    },
+                    {
+                      href: buildResultsHref({ filter: "available-soon", sort }),
+                      id: "available-soon",
+                      label: "Available soon",
+                    },
+                  ]}
+                />
+              </div>
 
-            <div className={styles.controlGroup}>
-              <p className={styles.controlLabel}>Sort</p>
-              <TabBar
-                activeId={sort}
-                ariaLabel="Sort tutor results"
-                items={[
-                  {
-                    href: buildResultsHref({ filter, sort: "best-fit" }),
-                    id: "best-fit",
-                    label: "Best fit",
-                  },
-                  {
-                    href: buildResultsHref({ filter, sort: "availability" }),
-                    id: "availability",
-                    label: "Availability first",
-                  },
-                ]}
-              />
-            </div>
-          </section>
+              <div className={styles.controlGroup}>
+                <p className={styles.controlLabel}>Sort</p>
+                <TabBar
+                  activeId={sort}
+                  ariaLabel="Sort tutor results"
+                  items={[
+                    {
+                      href: buildResultsHref({ filter, sort: "best-fit" }),
+                      id: "best-fit",
+                      label: "Best fit",
+                    },
+                    {
+                      href: buildResultsHref({ filter, sort: "availability" }),
+                      id: "availability",
+                      label: "Availability first",
+                    },
+                  ]}
+                />
+              </div>
+            </section>
+          ) : null}
 
           {visibleMatches.length > 0 ? (
             <section aria-label="Tutor match results" className={styles.resultList}>
@@ -251,7 +260,7 @@ function renderResultsPage({
                 <MatchRow key={match.candidateId} match={match} />
               ))}
             </section>
-          ) : (
+          ) : !hasNoMatchesState ? (
             <ScreenState
               action={
                 <Link className={getButtonClassName({ variant: "secondary" })} href="/results">
@@ -266,7 +275,7 @@ function renderResultsPage({
               kind="empty"
               title="No tutors match this filtered view"
             />
-          )}
+          ) : null}
         </>
       ) : null}
 
@@ -326,6 +335,62 @@ function renderResultsPage({
       ) : null}
     </article>
   );
+}
+
+function NoMatchesState({ results }: { results: MatchResultsPageDto }) {
+  const copy = getNoMatchesCopy(results.emptyReason);
+
+  return (
+    <Panel
+      className={styles.noMatchesPanel}
+      contentClassName={styles.noMatchesContent}
+      description={copy.description}
+      title={copy.title}
+      tone="warm"
+    >
+      {copy.lead ? <p className={styles.noMatchesLead}>{copy.lead}</p> : null}
+
+      {copy.suggestions.length > 0 ? (
+        <div className={styles.noMatchesSuggestionBlock}>
+          <p className={styles.noMatchesSuggestionLabel}>Try changing one thing first:</p>
+
+          <ul className={styles.noMatchesChips}>
+            {copy.suggestions.map((suggestion) => (
+              <li key={suggestion}>{suggestion}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className={styles.noMatchesActions}>
+        <Link className={getButtonClassName()} href="/match">
+          Change request
+        </Link>
+      </div>
+
+      {results.currentNeed?.note ? (
+        <p className={styles.noMatchesNote}>Your note stays attached if you change the request.</p>
+      ) : null}
+    </Panel>
+  );
+}
+
+function getNoMatchesCopy(reason: MatchResultsPageDto["emptyReason"]) {
+  if (reason === "no_tutor_supply") {
+    return {
+      description: "Your request is saved, but there are no tutors available to show here yet.",
+      lead: "You can still update the request now, and we'll keep it saved.",
+      suggestions: [],
+      title: "No tutor results yet",
+    };
+  }
+
+  return {
+    description: "Your request is saved, but we couldn't find a close tutor fit yet.",
+    lead: "If you're flexible, changing one thing first usually works best.",
+    suggestions: ["Type of help", "Subject", "Lesson language"],
+    title: "No close tutor match yet",
+  };
 }
 
 function parseResultsFilter(value: string | string[] | undefined): ResultsFilter {

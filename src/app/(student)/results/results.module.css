@@ -60,6 +60,68 @@
   gap: var(--space-4);
 }
 
+.noMatchesPanel {
+  max-width: 48rem;
+}
+
+.noMatchesContent {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 38rem;
+}
+
+.noMatchesLead,
+.noMatchesNote,
+.noMatchesSuggestionLabel {
+  margin: 0;
+  color: var(--ink-700);
+  line-height: var(--line-body);
+}
+
+.noMatchesSuggestionBlock {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.noMatchesSuggestionLabel {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.noMatchesActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.noMatchesChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.noMatchesChips li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--border-support);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.78);
+  color: var(--ink-700);
+  font-size: var(--caption);
+  font-weight: 600;
+  line-height: var(--line-utility);
+}
+
+.noMatchesNote {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
 .notice {
   margin-bottom: var(--space-5);
 }

@@ -127,6 +127,7 @@ export type MatchResultsNeedDto = {
 
 export type MatchResultsPageDto = {
   currentNeed: MatchResultsNeedDto | null;
+  emptyReason: "no_match_found" | "no_tutor_supply" | null;
   matches: MatchResultCardDto[];
   run: {
     candidateCount: number;
@@ -196,6 +197,15 @@ export async function getStudentMatchResults(
     loadLatestMatchRun(learningNeed.id),
   ]);
   const optionsByField = await loadMatchFlowOptions();
+  let cachedHasTutorSupply: boolean | null = null;
+
+  async function resolveHasTutorSupply() {
+    if (cachedHasTutorSupply === null) {
+      cachedHasTutorSupply = await hasPublicTutorSupply();
+    }
+
+    return cachedHasTutorSupply;
+  }
 
   const currentNeed = buildCurrentNeedDto({
     focusArea,
@@ -206,8 +216,11 @@ export async function getStudentMatchResults(
   });
 
   if (!matchRun) {
+    const hasTutorSupply = await resolveHasTutorSupply();
+
     return {
       currentNeed,
+      emptyReason: hasTutorSupply ? null : "no_tutor_supply",
       matches: [],
       run: {
         candidateCount: 0,
@@ -217,15 +230,27 @@ export async function getStudentMatchResults(
         id: null,
         status: null,
       },
-      state: "queued",
+      state: hasTutorSupply ? "queued" : "ready",
     };
   }
 
   const candidateRows = await loadVisibleCandidates(matchRun.id);
 
   if (!candidateRows.length) {
+    const hasTutorSupply = await resolveHasTutorSupply();
+    const canResolveAsEmpty =
+      !hasTutorSupply ||
+      matchRun.run_status === "completed" ||
+      matchRun.run_status === "expired";
+
     return {
       currentNeed,
+      emptyReason:
+        matchRun.run_status === "failed" || !canResolveAsEmpty
+          ? null
+          : hasTutorSupply
+            ? "no_match_found"
+            : "no_tutor_supply",
       matches: [],
       run: {
         candidateCount: matchRun.candidate_count,
@@ -235,7 +260,12 @@ export async function getStudentMatchResults(
         id: matchRun.id,
         status: matchRun.run_status,
       },
-      state: matchRun.run_status === "failed" ? "failed" : "queued",
+      state:
+        matchRun.run_status === "failed"
+          ? "failed"
+          : canResolveAsEmpty
+            ? "ready"
+            : "queued",
     };
   }
 
@@ -262,8 +292,26 @@ export async function getStudentMatchResults(
     subject,
   });
 
+  if (!cards.length) {
+    return {
+      currentNeed,
+      emptyReason: (await resolveHasTutorSupply()) ? "no_match_found" : "no_tutor_supply",
+      matches: [],
+      run: {
+        candidateCount: matchRun.candidate_count,
+        completedAt: matchRun.completed_at,
+        createdAt: matchRun.created_at,
+        failedAt: matchRun.failed_at,
+        id: matchRun.id,
+        status: matchRun.run_status,
+      },
+      state: "ready",
+    };
+  }
+
   return {
     currentNeed,
+    emptyReason: null,
     matches: cards,
     run: {
       candidateCount: matchRun.candidate_count,
@@ -297,6 +345,7 @@ export function buildPreviewMatchResultsDto(timezone: string): MatchResultsPageD
       submittedAt: "2026-04-23T09:30:00.000Z",
       timezone: resolvedTimezone,
     },
+    emptyReason: null,
     matches: [
       {
         availabilitySignal: "Available this week with strong evening overlap.",
@@ -922,6 +971,7 @@ function buildCardState({
 function buildEmptyResultsDto(): MatchResultsPageDto {
   return {
     currentNeed: null,
+    emptyReason: null,
     matches: [],
     run: {
       candidateCount: 0,
@@ -933,6 +983,22 @@ function buildEmptyResultsDto(): MatchResultsPageDto {
     },
     state: "empty",
   };
+}
+
+async function hasPublicTutorSupply() {
+  const supabase = createSupabaseServiceRoleClient();
+  const { count, error } = await supabase
+    .from("tutor_profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("application_status", "approved")
+    .eq("profile_visibility_status", "public_visible")
+    .eq("public_listing_status", "listed");
+
+  if (error) {
+    throw new Error("Could not check whether tutor supply is available.");
+  }
+
+  return (count ?? 0) > 0;
 }
 
 function isPubliclyListableProfile(profile: TutorProfileRecord) {

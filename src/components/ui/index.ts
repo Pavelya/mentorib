@@ -1,5 +1,14 @@
 export { Avatar } from "./avatar";
 export { Button, getButtonClassName } from "./button";
+export {
+  CheckIcon,
+  ClockIcon,
+  MatchOptionVisual,
+  PauseIcon,
+  ReviewedIcon,
+  StudentRoleIcon,
+  TutorRoleIcon,
+} from "./app-icons";
 export { InlineNotice } from "./inline-notice";
 export { Panel } from "./panel";
 export { SelectField } from "./select-field";

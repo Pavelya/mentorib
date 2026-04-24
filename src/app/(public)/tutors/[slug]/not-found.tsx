@@ -1,6 +1,12 @@
 import Link from "next/link";
 
-import { getButtonClassName } from "@/components/ui";
+import {
+  CheckIcon,
+  ClockIcon,
+  PauseIcon,
+  ReviewedIcon,
+  getButtonClassName,
+} from "@/components/ui";
 
 import styles from "./tutor-profile.module.css";
 
@@ -46,9 +52,24 @@ export default function TutorProfileNotFound() {
             </div>
 
             <ul className={styles.previewChecks}>
-              <li>Public profile</li>
-              <li>Reviewed proof</li>
-              <li>Bookable times</li>
+              <li>
+                <span aria-hidden="true" className={styles.previewCheckIcon}>
+                  <CheckIcon />
+                </span>
+                <span>Public profile</span>
+              </li>
+              <li>
+                <span aria-hidden="true" className={styles.previewCheckIcon}>
+                  <CheckIcon />
+                </span>
+                <span>Reviewed proof</span>
+              </li>
+              <li>
+                <span aria-hidden="true" className={styles.previewCheckIcon}>
+                  <CheckIcon />
+                </span>
+                <span>Bookable times</span>
+              </li>
             </ul>
           </div>
 
@@ -73,28 +94,25 @@ export default function TutorProfileNotFound() {
 
         <div className={styles.trustGrid}>
           <article className={styles.trustItem}>
-            <span
-              aria-hidden="true"
-              className={[styles.reasonIcon, styles.pauseIcon].join(" ")}
-            />
+            <span aria-hidden="true" className={styles.reasonIcon}>
+              <PauseIcon />
+            </span>
             <h3>Paused by the tutor</h3>
             <p>
               Some tutors take breaks or stop accepting new students for a while.
             </p>
           </article>
           <article className={styles.trustItem}>
-            <span
-              aria-hidden="true"
-              className={[styles.reasonIcon, styles.reviewIcon].join(" ")}
-            />
+            <span aria-hidden="true" className={styles.reasonIcon}>
+              <ReviewedIcon />
+            </span>
             <h3>Not public yet</h3>
             <p>A profile stays hidden until the tutor review is finished.</p>
           </article>
           <article className={styles.trustItem}>
-            <span
-              aria-hidden="true"
-              className={[styles.reasonIcon, styles.timeIcon].join(" ")}
-            />
+            <span aria-hidden="true" className={styles.reasonIcon}>
+              <ClockIcon />
+            </span>
             <h3>No clear booking path</h3>
             <p>
               If a tutor is not ready to book, we point you back to matching.

@@ -2,7 +2,6 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import type { LearningNeedOptionGroup } from "@/modules/lessons/constants";
 
 import {
-  getLanguageDescription,
   getSubjectDescription,
   previewMatchFlowOptions,
   type MatchFlowOptionsByField,
@@ -11,6 +10,10 @@ import {
   type MatchOption,
   type MatchSubjectOption,
 } from "./match-flow-options";
+import {
+  getLanguageFlagCode,
+  getSubjectIconKey,
+} from "./match-flow-visual-config";
 
 type SubjectRecord = {
   display_name: string;
@@ -157,6 +160,7 @@ function buildSubjectOptions(subjects: SubjectRecord[]): MatchSubjectOption[] {
 
   return subjects.map((subject) => ({
     description: getSubjectDescription(subject.subject_code),
+    iconKey: getSubjectIconKey(subject.subject_code),
     label: subject.display_name,
     subjectCode: subject.subject_code,
     subjectId: subject.id,
@@ -170,7 +174,7 @@ function buildLanguageOptions(languages: LanguageRecord[]): MatchLanguageOption[
   }
 
   return languages.map((language) => ({
-    description: getLanguageDescription(language.language_code),
+    flagCode: getLanguageFlagCode(language.language_code),
     label: language.display_name,
     value: language.language_code,
   }));

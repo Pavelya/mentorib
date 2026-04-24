@@ -348,14 +348,16 @@ The first branded email families should cover:
 ### Icon system
 
 - Use one clean line-icon family.
-- Lucide or a similar system is appropriate.
+- The implemented source of truth is the shared SVG icon set in `src/components/ui/app-icons.tsx`.
 - Avoid mixing heavy filled icons with fine outline icons.
+- Do not introduce page-local CSS-drawn icons or second icon libraries.
 
 ### Icon rules
 
 - Icons clarify, they do not decorate.
 - Operational cues should usually be icon plus text, not icon-only guessing.
 - Avoid playful classroom icon sets or emoji-driven affordances.
+- Subject icons, utility icons, and flag assets should all come through the shared icon module plus configuration mapping, not ad hoc page code.
 
 ## 5.8 Imagery
 

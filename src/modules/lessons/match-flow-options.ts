@@ -1,3 +1,12 @@
+import type {
+  MatchLanguageFlagCode,
+  MatchSubjectIconKey,
+} from "@/modules/lessons/match-flow-visual-config";
+import {
+  getLanguageFlagCode,
+  getSubjectIconKey,
+} from "@/modules/lessons/match-flow-visual-config";
+
 export type MatchFlowField =
   | "freeTextNote"
   | "languageCode"
@@ -14,6 +23,8 @@ export type MatchFlowFormValues = Record<MatchFlowField, string>;
 
 export type MatchOption = {
   description?: string | null;
+  flagCode?: MatchLanguageFlagCode | null;
+  iconKey?: MatchSubjectIconKey | null;
   label: string;
   value: string;
 };
@@ -54,13 +65,6 @@ const subjectDescriptionsByCode: Record<string, string> = {
   tok: "Essay, exhibition, claims, and knowledge questions.",
 };
 
-const languageDescriptionsByCode: Record<string, string> = {
-  en: "Main lesson language.",
-  es: "Useful for Spanish-speaking students or families.",
-  fr: "Useful for French-speaking students or families.",
-  pl: "Useful for Polish-speaking students or families.",
-};
-
 export const emptyMatchFlowValues: MatchFlowFormValues = {
   freeTextNote: "",
   languageCode: "",
@@ -74,10 +78,10 @@ export const emptyMatchFlowValues: MatchFlowFormValues = {
 
 export const previewMatchFlowOptions = {
   languageCode: [
-    { description: languageDescriptionsByCode.en, label: "English", value: "en" },
-    { description: languageDescriptionsByCode.pl, label: "Polish", value: "pl" },
-    { description: languageDescriptionsByCode.es, label: "Spanish", value: "es" },
-    { description: languageDescriptionsByCode.fr, label: "French", value: "fr" },
+    { flagCode: getLanguageFlagCode("en"), label: "English", value: "en" },
+    { flagCode: getLanguageFlagCode("pl"), label: "Polish", value: "pl" },
+    { flagCode: getLanguageFlagCode("es"), label: "Spanish", value: "es" },
+    { flagCode: getLanguageFlagCode("fr"), label: "French", value: "fr" },
   ],
   needType: [
     {
@@ -205,50 +209,81 @@ export const previewMatchFlowOptions = {
   subjectSlug: [
     {
       description: subjectDescriptionsByCode.english_a,
+      iconKey: getSubjectIconKey("english_a"),
       label: "English A",
       subjectCode: "english_a",
       value: "english-a",
     },
     {
       description: subjectDescriptionsByCode.mathematics_aa,
+      iconKey: getSubjectIconKey("mathematics_aa"),
       label: "Mathematics AA",
       subjectCode: "mathematics_aa",
       value: "mathematics-analysis-and-approaches",
     },
     {
       description: subjectDescriptionsByCode.mathematics_ai,
+      iconKey: getSubjectIconKey("mathematics_ai"),
       label: "Mathematics AI",
       subjectCode: "mathematics_ai",
       value: "mathematics-applications-and-interpretation",
     },
-    { description: subjectDescriptionsByCode.biology, label: "Biology", subjectCode: "biology", value: "biology" },
+    {
+      description: subjectDescriptionsByCode.biology,
+      iconKey: getSubjectIconKey("biology"),
+      label: "Biology",
+      subjectCode: "biology",
+      value: "biology",
+    },
     {
       description: subjectDescriptionsByCode.chemistry,
+      iconKey: getSubjectIconKey("chemistry"),
       label: "Chemistry",
       subjectCode: "chemistry",
       value: "chemistry",
     },
-    { description: subjectDescriptionsByCode.physics, label: "Physics", subjectCode: "physics", value: "physics" },
-    { description: subjectDescriptionsByCode.history, label: "History", subjectCode: "history", value: "history" },
+    {
+      description: subjectDescriptionsByCode.physics,
+      iconKey: getSubjectIconKey("physics"),
+      label: "Physics",
+      subjectCode: "physics",
+      value: "physics",
+    },
+    {
+      description: subjectDescriptionsByCode.history,
+      iconKey: getSubjectIconKey("history"),
+      label: "History",
+      subjectCode: "history",
+      value: "history",
+    },
     {
       description: subjectDescriptionsByCode.business_management,
+      iconKey: getSubjectIconKey("business_management"),
       label: "Business Management",
       subjectCode: "business_management",
       value: "business-management",
     },
     {
       description: subjectDescriptionsByCode.economics,
+      iconKey: getSubjectIconKey("economics"),
       label: "Economics",
       subjectCode: "economics",
       value: "economics",
     },
     {
       description: subjectDescriptionsByCode.psychology,
+      iconKey: getSubjectIconKey("psychology"),
       label: "Psychology",
       subjectCode: "psychology",
       value: "psychology",
     },
-    { description: subjectDescriptionsByCode.tok, label: "TOK", subjectCode: "tok", value: "tok" },
+    {
+      description: subjectDescriptionsByCode.tok,
+      iconKey: getSubjectIconKey("tok"),
+      label: "TOK",
+      subjectCode: "tok",
+      value: "tok",
+    },
   ],
   supportStyle: [
     {
@@ -352,8 +387,4 @@ export function getCompatibleSubjectOptions(
 
 export function getSubjectDescription(subjectCode: string) {
   return subjectDescriptionsByCode[subjectCode];
-}
-
-export function getLanguageDescription(languageCode: string) {
-  return languageDescriptionsByCode[languageCode];
 }

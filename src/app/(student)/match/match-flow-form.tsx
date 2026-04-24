@@ -6,7 +6,9 @@ import { useFormStatus } from "react-dom";
 import { NeedSummaryBar } from "@/components/continuity";
 import {
   Button,
+  ClockIcon,
   InlineNotice,
+  MatchOptionVisual,
   SelectField,
   Textarea,
   getButtonClassName,
@@ -261,15 +263,8 @@ export function MatchFlowForm({
           </section>
 
           <aside className={styles.helperPanel} aria-label="Helpful context">
-            <div className={styles.helperHeader}>
-              <div aria-hidden="true" className={styles.helperIcon}>
-                <StepSupportIcon stepId={currentStep.id} />
-              </div>
-              <div className={styles.helperCopy}>
-                <p className={styles.stepEyebrow}>Why we ask</p>
-                <h3>{getGuidanceTitle(currentStep.id, values, optionsByField, timezoneLabel)}</h3>
-              </div>
-            </div>
+            <p className={styles.stepEyebrow}>Why we ask</p>
+            <h3>{getGuidanceTitle(currentStep.id, values, optionsByField, timezoneLabel)}</h3>
             <p>{getGuidanceBody(currentStep.id, values, optionsByField, timezoneLabel)}</p>
           </aside>
         </div>
@@ -324,6 +319,7 @@ function StepFields({
           field="needType"
           legend={matchFlowStaticCopy.helpLegend}
           options={optionsByField.needType}
+          showDescriptions
           updateValue={updateValue}
           value={values.needType}
         />
@@ -346,18 +342,24 @@ function StepFields({
             field="languageCode"
             legend="Lesson language"
             options={optionsByField.languageCode}
+            showDescriptions={false}
             updateValue={updateValue}
             value={values.languageCode}
           />
           <div id={getFieldContainerId("timezone")}>
-            <InlineNotice
-              icon={<TimezoneIcon />}
-              showToneLabel={false}
-              title={getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).title}
-              tone="info"
-            >
-              <p>{getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).body}</p>
-            </InlineNotice>
+            <div className={styles.timezoneCard}>
+              <div aria-hidden="true" className={styles.timezoneIcon}>
+                <ClockIcon />
+              </div>
+              <div className={styles.timezoneCopy}>
+                <p className={styles.timezoneTitle}>
+                  {getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).title}
+                </p>
+                <p className={styles.timezoneBody}>
+                  {getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).body}
+                </p>
+              </div>
+            </div>
           </div>
           <div id={getFieldContainerId("freeTextNote")}>
             <Textarea
@@ -417,6 +419,7 @@ function SubjectGroup({
         field="subjectSlug"
         legend={getSubjectLegend(selectedNeedType?.focusAreaCode)}
         options={cardSubjects}
+        showDescriptions={false}
         updateValue={updateValue}
         value={value}
       />
@@ -447,6 +450,7 @@ type OptionGroupProps = {
   field: MatchFlowField;
   legend: string;
   options: readonly MatchOption[];
+  showDescriptions?: boolean;
   updateValue: (field: MatchFlowField, value: string) => void;
   value: string;
 };
@@ -456,6 +460,7 @@ function OptionGroup({
   field,
   legend,
   options,
+  showDescriptions = false,
   updateValue,
   value,
 }: OptionGroupProps) {
@@ -490,16 +495,34 @@ function OptionGroup({
                 value={option.value}
               />
               <label
-                className={[styles.optionCard, isSelected ? styles.selectedOption : ""]
+                className={[
+                  styles.optionCard,
+                  !showDescriptions ? styles.compactOptionCard : "",
+                  isSelected ? styles.selectedOption : "",
+                ]
                   .filter(Boolean)
                   .join(" ")}
                 htmlFor={inputId}
               >
-                <span className={styles.optionText}>
-                  <span className={styles.optionTitle}>{option.label}</span>
-                  {option.description ? (
-                    <span className={styles.optionDescription}>{option.description}</span>
+                <span className={styles.optionMain}>
+                  {option.iconKey || option.flagCode ? (
+                    <span
+                      className={[
+                        styles.optionVisual,
+                        option.flagCode ? styles.flagVisual : styles.iconVisual,
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      <MatchOptionVisual flagCode={option.flagCode} iconKey={option.iconKey} />
+                    </span>
                   ) : null}
+                  <span className={styles.optionText}>
+                    <span className={styles.optionTitle}>{option.label}</span>
+                    {showDescriptions && option.description ? (
+                      <span className={styles.optionDescription}>{option.description}</span>
+                    ) : null}
+                  </span>
                 </span>
                 <span aria-hidden="true" className={styles.optionIndicator} />
               </label>
@@ -744,61 +767,4 @@ function getSubjectLegend(focusAreaCode?: string) {
     default:
       return "Subject";
   }
-}
-
-function StepSupportIcon({ stepId }: { stepId: MatchFlowStepId }) {
-  switch (stepId) {
-    case "problem":
-      return (
-        <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.75" />
-          <circle cx="12" cy="12" r="2.25" fill="currentColor" />
-        </svg>
-      );
-    case "subject":
-      return (
-        <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M6 6.5h7.5c2.5 0 4.5 2 4.5 4.5V18H10.5A4.5 4.5 0 0 1 6 13.5V6.5Z"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.75"
-          />
-          <path
-            d="M10 9.5h5M10 12.5h4"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeWidth="1.75"
-          />
-        </svg>
-      );
-    case "details":
-      return (
-        <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M12 19c4.4 0 8-2.9 8-6.5S16.4 6 12 6 4 8.9 4 12.5c0 1.6.7 3.1 2 4.2V20l3.1-1.6c.9.4 1.9.6 2.9.6Z"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.75"
-          />
-        </svg>
-      );
-  }
-}
-
-function TimezoneIcon() {
-  return (
-    <svg fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.75" />
-      <path
-        d="M12 8.5v4l2.5 1.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.75"
-      />
-    </svg>
-  );
 }

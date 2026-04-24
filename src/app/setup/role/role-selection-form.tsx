@@ -7,7 +7,12 @@ import {
   selectSetupRoleAction,
   type RoleSelectionActionState,
 } from "@/app/setup/role/actions";
-import { InlineNotice, getButtonClassName } from "@/components/ui";
+import {
+  InlineNotice,
+  StudentRoleIcon,
+  TutorRoleIcon,
+  getButtonClassName,
+} from "@/components/ui";
 import type { SetupRoleSelection } from "@/lib/auth/account-service";
 
 import styles from "./role-selection.module.css";
@@ -121,65 +126,15 @@ function RoleSubmitButton({
 function RoleIcon({ role }: { role: SetupRoleSelection }) {
   if (role === "student") {
     return (
-      <svg
-        aria-hidden="true"
-        className={styles.optionIcon}
-        fill="none"
-        viewBox="0 0 48 48"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M13 12.5h10c3.3 0 6 2.7 6 6v19.5H18c-3.3 0-6-2.7-6-6V13.5c0-.6.4-1 1-1Z"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="3"
-        />
-        <path
-          d="M29 18.5c0-3.3 2.7-6 6-6h1c.6 0 1 .4 1 1V32c0 3.3-2.7 6-6 6h-2V18.5Z"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="3"
-        />
-        <path
-          d="M18 21h5M18 27h5"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeWidth="3"
-        />
-      </svg>
+      <span aria-hidden="true" className={styles.optionIcon}>
+        <StudentRoleIcon />
+      </span>
     );
   }
 
   return (
-    <svg
-      aria-hidden="true"
-      className={styles.optionIcon}
-      fill="none"
-      viewBox="0 0 48 48"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M11 18.5 24 11l13 7.5L24 26 11 18.5Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="3"
-      />
-      <path
-        d="M17 23v8c0 2.2 3.1 4 7 4s7-1.8 7-4v-8"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="3"
-      />
-      <path
-        d="M37 19v9"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="3"
-      />
-    </svg>
+    <span aria-hidden="true" className={styles.optionIcon}>
+      <TutorRoleIcon />
+    </span>
   );
 }

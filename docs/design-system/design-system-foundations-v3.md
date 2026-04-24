@@ -328,15 +328,17 @@ Use one icon system across the product.
 
 Recommended direction:
 
-- Lucide or similarly clean line icons
+- the shared SVG line-icon family in `src/components/ui/app-icons.tsx`
 - slightly refined stroke consistency
 - no mixed filled/outlined chaos
+- no page-local CSS-drawn icons or mixed vendor sets
 
 Rules:
 
 - icons should clarify, not decorate
 - avoid emoji or playful educational icon sets
 - use icon + text for operational cues, not icon-only guessing games
+- route-specific icon choices should map through shared configuration where applicable
 
 ## 8. Motion
 

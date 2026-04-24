@@ -401,6 +401,80 @@
   justify-content: flex-end;
 }
 
+.pendingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgb(252 250 244 / 0.76);
+  backdrop-filter: blur(6px);
+}
+
+.pendingCard {
+  display: grid;
+  gap: var(--space-3);
+  width: min(100%, 32rem);
+  padding: var(--space-5);
+  border: 1px solid var(--state-warning-border);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgb(255 250 240 / 0.97), rgb(249 244 233 / 0.95)),
+    var(--surface-panel-soft);
+  box-shadow: var(--shadow-raised);
+}
+
+.pendingEyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.pendingTitle,
+.pendingDescription {
+  margin: 0;
+}
+
+.pendingTitle {
+  font-size: var(--title-md);
+  line-height: var(--line-tight);
+}
+
+.pendingDescription {
+  color: var(--ink-700);
+  line-height: var(--line-body);
+}
+
+.pendingPreview {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.pendingBar {
+  display: block;
+  width: 100%;
+  height: 0.8rem;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgb(219 205 165 / 0.35), rgb(255 255 255 / 0.72), rgb(219 205 165 / 0.35));
+  background-size: 220% 100%;
+  animation: matchPendingShimmer 2s linear infinite;
+}
+
+.pendingBarStrong {
+  width: 72%;
+}
+
+.pendingBarShort {
+  width: 46%;
+}
+
 @media (max-width: 980px) {
   .formGrid {
     grid-template-columns: 1fr;
@@ -437,5 +511,15 @@
 
   .singleAction {
     justify-content: flex-start;
+  }
+}
+
+@keyframes matchPendingShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
   }
 }

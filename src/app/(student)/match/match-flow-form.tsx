@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 
 import { NeedSummaryBar } from "@/components/continuity";
 import {
@@ -89,6 +90,7 @@ export function MatchFlowForm({
   initialTimezone,
   optionsByField,
 }: MatchFlowFormProps) {
+  const router = useRouter();
   const [state, formAction] = useActionState(
     submitMatchFlowAction,
     initialActionState,
@@ -132,6 +134,14 @@ export function MatchFlowForm({
       block: "start",
     });
   }, [currentStepIndex]);
+
+  useEffect(() => {
+    if (!canSubmit) {
+      return;
+    }
+
+    router.prefetch("/results");
+  }, [canSubmit, router]);
 
   function updateValue(field: MatchFlowField, value: string) {
     setValues((currentValues) => ({
@@ -291,6 +301,8 @@ export function MatchFlowForm({
             <SubmitButton canSubmit={canSubmit} />
           )}
         </div>
+
+        <FormPendingOverlay />
       </form>
     </section>
   );
@@ -555,8 +567,37 @@ function SubmitButton({ canSubmit }: { canSubmit: boolean }) {
       disabled={!canSubmit || pending}
       type="submit"
     >
-      {pending ? "Starting match" : "See tutor matches"}
+      {pending ? "Opening results" : "See tutor matches"}
     </button>
+  );
+}
+
+function FormPendingOverlay() {
+  const { pending } = useFormStatus();
+
+  if (!pending) {
+    return null;
+  }
+
+  return (
+    <div
+      aria-live="polite"
+      className={styles.pendingOverlay}
+      role="status"
+    >
+      <div className={styles.pendingCard}>
+        <p className={styles.pendingEyebrow}>Opening results</p>
+        <h2 className={styles.pendingTitle}>We&apos;re getting your tutor matches ready.</h2>
+        <p className={styles.pendingDescription}>
+          You&apos;ll land on the results screen as soon as your request is saved.
+        </p>
+        <div aria-hidden="true" className={styles.pendingPreview}>
+          <span className={[styles.pendingBar, styles.pendingBarStrong].join(" ")} />
+          <span className={styles.pendingBar} />
+          <span className={[styles.pendingBar, styles.pendingBarShort].join(" ")} />
+        </div>
+      </div>
+    </div>
   );
 }
 

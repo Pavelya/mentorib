@@ -33,6 +33,7 @@ import {
 import { Panel, TabBar, getButtonClassName, InlineNotice } from "@/components/ui";
 
 import styles from "./results.module.css";
+import { QueuedResultsRefresh } from "./queued-results-refresh";
 
 type ResultsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -283,20 +284,32 @@ function renderResultsPage({
       ) : null}
 
       {results.state === "queued" ? (
-        <ScreenState
-          action={
-            <Link className={getButtonClassName({ variant: "secondary" })} href="/match">
-              Adjust need
-            </Link>
-          }
-          description="The matching run is still preparing fit-ranked tutors for this learning need."
-          hints={[
-            "Results appear here once the latest run finishes.",
-            "Your need summary stays attached so the next step still feels continuous.",
-          ]}
-          kind="loading"
-          title="Matching is still running"
-        />
+        <>
+          <QueuedResultsRefresh />
+
+          <Panel
+            description="We saved your request and are preparing the shortlist now."
+            eyebrow="Matching"
+            title="Your tutor results are on the way"
+            tone="warm"
+          >
+            <div aria-hidden="true" className={styles.loadingPreview}>
+              <span className={[styles.loadingBar, styles.loadingBarStrong].join(" ")} />
+              <span className={styles.loadingBar} />
+              <span className={[styles.loadingBar, styles.loadingBarShort].join(" ")} />
+            </div>
+
+            <p className={styles.loadingHint}>
+              We&apos;ll check again automatically for a short while while this run finishes.
+            </p>
+
+            <div className={styles.loadingActionRow}>
+              <Link className={getButtonClassName({ variant: "secondary" })} href="/match">
+                Adjust need
+              </Link>
+            </div>
+          </Panel>
+        </>
       ) : null}
 
       {results.state === "failed" ? (

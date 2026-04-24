@@ -20,11 +20,16 @@ import { MatchFlowForm } from "./match-flow-form";
 export default async function MatchPage() {
   const fallbackTimezone = await getCurrentUserTimezone();
   const optionsByField = await loadMatchFlowOptions();
+  const fallbackLanguageCode = resolveInitialLanguageCode(
+    null,
+    optionsByField,
+  );
 
   if (!isSupabaseAuthConfigured()) {
     return (
       <MatchFlowForm
         canSubmit={false}
+        initialLanguageCode={fallbackLanguageCode}
         initialTimezone={fallbackTimezone}
         optionsByField={optionsByField}
       />
@@ -60,6 +65,7 @@ export default async function MatchPage() {
         </InlineNotice>
         <MatchFlowForm
           canSubmit={false}
+          initialLanguageCode={fallbackLanguageCode}
           initialTimezone={fallbackTimezone}
           optionsByField={optionsByField}
         />
@@ -89,8 +95,30 @@ export default async function MatchPage() {
   return (
     <MatchFlowForm
       canSubmit
+      initialLanguageCode={resolveInitialLanguageCode(
+        account.preferred_language_code,
+        optionsByField,
+      )}
       initialTimezone={account.timezone}
       optionsByField={optionsByField}
     />
+  );
+}
+
+function resolveInitialLanguageCode(
+  preferredLanguageCode: string | null,
+  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>,
+) {
+  if (
+    preferredLanguageCode &&
+    optionsByField.languageCode.some((option) => option.value === preferredLanguageCode)
+  ) {
+    return preferredLanguageCode;
+  }
+
+  return (
+    optionsByField.languageCode.find((option) => option.value === "en")?.value ??
+    optionsByField.languageCode[0]?.value ??
+    ""
   );
 }

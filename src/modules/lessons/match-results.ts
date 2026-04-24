@@ -591,14 +591,17 @@ function buildCurrentNeedDto({
 }): MatchResultsNeedDto {
   const qualifiers: MatchResultsNeedDto["qualifiers"] = [
     { label: focusArea.display_name },
-    {
+  ];
+
+  if (learningNeed.urgency_level !== "flexible") {
+    qualifiers.push({
       label: getMatchOptionLabel(
         "urgencyLevel",
         learningNeed.urgency_level,
         optionsByField,
       ),
-    },
-  ];
+    });
+  }
 
   if (learningNeed.support_style) {
     qualifiers.push({

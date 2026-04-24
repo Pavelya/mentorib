@@ -139,11 +139,15 @@ function validateMatchFlowValues(
     fieldErrors.subjectSlug = "Choose the subject.";
   }
 
-  if (!isKnownMatchOption("urgencyLevel", values.urgencyLevel, optionsByField)) {
+  if (
+    values.urgencyLevel &&
+    !isKnownMatchOption("urgencyLevel", values.urgencyLevel, optionsByField)
+  ) {
     fieldErrors.urgencyLevel = "Choose when you need help.";
   }
 
   if (
+    values.sessionFrequencyIntent &&
     !isKnownMatchOption(
       "sessionFrequencyIntent",
       values.sessionFrequencyIntent,
@@ -153,7 +157,10 @@ function validateMatchFlowValues(
     fieldErrors.sessionFrequencyIntent = "Choose how often you want help.";
   }
 
-  if (!isKnownMatchOption("supportStyle", values.supportStyle, optionsByField)) {
+  if (
+    values.supportStyle &&
+    !isKnownMatchOption("supportStyle", values.supportStyle, optionsByField)
+  ) {
     fieldErrors.supportStyle = "Choose the support style that would help most.";
   }
 

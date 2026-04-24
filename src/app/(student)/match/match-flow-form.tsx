@@ -30,10 +30,11 @@ import {
 } from "./actions";
 import styles from "./match-flow.module.css";
 
-type StepId = "details" | "problem" | "style" | "subject" | "urgency";
+type StepId = "details" | "problem" | "subject";
 
 type MatchFlowFormProps = {
   canSubmit: boolean;
+  initialLanguageCode: string;
   initialTimezone: string;
   optionsByField: MatchFlowOptionsByField;
 };
@@ -50,39 +51,25 @@ const SUBJECT_CARD_LIMIT = 10;
 
 const steps = [
   {
-    description: "Choose the closest option. You can refine it later.",
+    description: "Choose the closest fit.",
     fields: ["needType"],
     id: "problem",
     label: "Problem",
     question: "What do you need help with right now?",
   },
   {
-    description: "Choose the subject or IB component involved.",
+    description: "We only show subjects that match your request.",
     fields: ["subjectSlug"],
     id: "subject",
     label: "Subject",
     question: "Which subject is this for?",
   },
   {
-    description: "Tell us how soon you need support and how often.",
-    fields: ["urgencyLevel", "sessionFrequencyIntent"],
-    id: "urgency",
-    label: "Timing",
-    question: "When do you need help?",
-  },
-  {
-    description: "Choose the kind of tutoring that would feel most useful.",
-    fields: ["supportStyle"],
-    id: "style",
-    label: "Style",
-    question: "What kind of support works best for you?",
-  },
-  {
-    description: "Add the last details so we can show realistic tutor options.",
-    fields: ["languageCode", "timezone"],
+    description: "Choose lesson language. Your saved timezone is used automatically.",
+    fields: ["languageCode"],
     id: "details",
-    label: "Final details",
-    question: "Final details before we show tutors",
+    label: "Details",
+    question: "What language should lessons use?",
   },
 ] as const satisfies readonly StepDefinition[];
 
@@ -95,6 +82,7 @@ const initialActionState: MatchFlowActionState = {
 
 export function MatchFlowForm({
   canSubmit,
+  initialLanguageCode,
   initialTimezone,
   optionsByField,
 }: MatchFlowFormProps) {
@@ -105,7 +93,7 @@ export function MatchFlowForm({
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [values, setValues] = useState<MatchFlowFormValues>({
     ...emptyMatchFlowValues,
-    languageCode: state.values.languageCode,
+    languageCode: state.values.languageCode || initialLanguageCode,
     timezone: state.values.timezone || initialTimezone,
   });
   const [localErrors, setLocalErrors] = useState<MatchFlowFieldErrors>({});
@@ -115,10 +103,6 @@ export function MatchFlowForm({
   const fieldErrors = { ...state.fieldErrors, ...localErrors };
   const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
   const qualifiers = buildNeedQualifiers(values, optionsByField, currentStep.id);
-  const timezoneOptions = useMemo(
-    () => buildTimezoneOptions(initialTimezone),
-    [initialTimezone],
-  );
   const compatibleSubjectOptions = useMemo(
     () => getCompatibleSubjectOptions(values.needType, optionsByField),
     [optionsByField, values.needType],
@@ -269,7 +253,6 @@ export function MatchFlowForm({
               errors={fieldErrors}
               optionsByField={optionsByField}
               step={currentStep}
-              timezoneOptions={timezoneOptions}
               updateValue={updateValue}
               values={values}
             />
@@ -279,10 +262,6 @@ export function MatchFlowForm({
             <p className={styles.stepEyebrow}>Why we ask</p>
             <h3>{getGuidanceTitle(currentStep.id, values, optionsByField)}</h3>
             <p>{getGuidanceBody(currentStep.id, values, optionsByField)}</p>
-            <p className={styles.helperNote}>
-              We keep the flow short and only show subject combinations that
-              make sense for the help you picked.
-            </p>
           </aside>
         </div>
 
@@ -317,7 +296,6 @@ type StepFieldsProps = {
   errors: MatchFlowFieldErrors;
   optionsByField: MatchFlowOptionsByField;
   step: StepDefinition;
-  timezoneOptions: readonly string[];
   updateValue: (field: MatchFlowField, value: string) => void;
   values: MatchFlowFormValues;
 };
@@ -326,7 +304,6 @@ function StepFields({
   errors,
   optionsByField,
   step,
-  timezoneOptions,
   updateValue,
   values,
 }: StepFieldsProps) {
@@ -352,71 +329,31 @@ function StepFields({
           value={values.subjectSlug}
         />
       );
-    case "urgency":
-      return (
-        <div className={styles.stackedGroups}>
-          <OptionGroup
-            error={errors.urgencyLevel}
-            field="urgencyLevel"
-            legend="How soon?"
-            options={optionsByField.urgencyLevel}
-            updateValue={updateValue}
-            value={values.urgencyLevel}
-          />
-          <OptionGroup
-            error={errors.sessionFrequencyIntent}
-            field="sessionFrequencyIntent"
-            legend="How often?"
-            options={optionsByField.sessionFrequencyIntent}
-            updateValue={updateValue}
-            value={values.sessionFrequencyIntent}
-          />
-        </div>
-      );
-    case "style":
-      return (
-        <OptionGroup
-          error={errors.supportStyle}
-          field="supportStyle"
-          legend="Support style"
-          options={optionsByField.supportStyle}
-          updateValue={updateValue}
-          value={values.supportStyle}
-        />
-      );
     case "details":
       return (
         <div className={styles.detailsGrid}>
           <OptionGroup
             error={errors.languageCode}
             field="languageCode"
-            legend="Tutoring language"
+            legend="Lesson language"
             options={optionsByField.languageCode}
             updateValue={updateValue}
             value={values.languageCode}
           />
           <div id={getFieldContainerId("timezone")}>
-            <SelectField
-              description="Booking times and availability are shown in your timezone. This does not limit tutors by country."
-              error={errors.timezone}
-              id="timezone"
-              label="Your timezone"
-              value={values.timezone}
-              onChange={(event) => updateValue("timezone", event.target.value)}
-            >
-              {timezoneOptions.map((timezone) => (
-                <option key={timezone} value={timezone}>
-                  {getTimezoneLabel(timezone)}
-                </option>
-              ))}
-            </SelectField>
+            <InlineNotice title={`Times shown in ${getTimezoneLabel(values.timezone)}`} tone="info">
+              <p>
+                Your saved timezone is used automatically for availability and
+                booking times.
+              </p>
+            </InlineNotice>
           </div>
           <div id={getFieldContainerId("freeTextNote")}>
             <Textarea
-              description="Optional. Avoid private documents or sensitive details; the structured choices do the matching work."
+              description="Optional. Add one short note if there is something important we should keep in mind."
               error={errors.freeTextNote}
               id="freeTextNote"
-              label="Anything else that affects fit?"
+              label="Anything important to mention? (optional)"
               maxLength={600}
               onChange={(event) => updateValue("freeTextNote", event.target.value)}
               value={values.freeTextNote}
@@ -446,6 +383,8 @@ function SubjectGroup({
   const compatibleSubjects = getCompatibleSubjectOptions(needTypeValue, optionsByField);
   const featuredSubjects = compatibleSubjects.slice(0, SUBJECT_CARD_LIMIT);
   const overflowSubjects = compatibleSubjects.slice(SUBJECT_CARD_LIMIT);
+  const usesOverflowSelect = overflowSubjects.length > 1;
+  const cardSubjects = usesOverflowSelect ? featuredSubjects : compatibleSubjects;
   const selectedNeedType = getNeedTypeOption(needTypeValue, optionsByField);
 
   if (compatibleSubjects.length === 0) {
@@ -465,12 +404,12 @@ function SubjectGroup({
         error={error}
         field="subjectSlug"
         legend={getSubjectLegend(selectedNeedType?.focusAreaCode)}
-        options={featuredSubjects}
+        options={cardSubjects}
         updateValue={updateValue}
         value={value}
       />
 
-      {overflowSubjects.length > 0 ? (
+      {usesOverflowSelect ? (
         <div id={getFieldContainerId("subjectSlug-overflow")}>
           <SelectField
             id="subjectSlug-overflow"
@@ -604,16 +543,10 @@ function getMissingFieldMessage(field: MatchFlowField) {
       return "Choose a tutoring language.";
     case "needType":
       return "Choose the IB pressure point.";
-    case "sessionFrequencyIntent":
-      return "Choose the kind of lesson rhythm you want.";
     case "subjectSlug":
       return "Choose the subject or component.";
-    case "supportStyle":
-      return "Choose the support style that would help most.";
     case "timezone":
       return "Choose a valid timezone.";
-    case "urgencyLevel":
-      return "Choose when you need help.";
     default:
       return "Complete this field.";
   }
@@ -643,19 +576,7 @@ function buildNeedQualifiers(
     });
   }
 
-  if (values.urgencyLevel) {
-    qualifiers.push({
-      label: getMatchOptionLabel("urgencyLevel", values.urgencyLevel, optionsByField),
-    });
-  }
-
-  if (values.supportStyle) {
-    qualifiers.push({
-      label: getMatchOptionLabel("supportStyle", values.supportStyle, optionsByField),
-    });
-  }
-
-  if (values.languageCode) {
+  if (values.languageCode && currentStepId === "details") {
     qualifiers.push({
       label: getMatchOptionLabel("languageCode", values.languageCode, optionsByField),
       priority: "support" as const,
@@ -670,19 +591,6 @@ function buildNeedQualifiers(
   }
 
   return qualifiers;
-}
-
-function buildTimezoneOptions(initialTimezone: string) {
-  return Array.from(
-    new Set([
-      initialTimezone,
-      "Europe/Warsaw",
-      "Europe/London",
-      "Asia/Dubai",
-      "America/New_York",
-      "UTC",
-    ]),
-  );
 }
 
 function getFieldContainerId(field: MatchFlowField | `${MatchFlowField}-overflow`) {
@@ -727,10 +635,6 @@ function getCurrentStepErrorMessage(
     return null;
   }
 
-  if (step.id === "urgency") {
-    return "Choose both how soon you need help and how often you want lessons.";
-  }
-
   if (currentStepErrors.length > 1) {
     return "Complete the required answers to continue.";
   }
@@ -765,12 +669,8 @@ function getGuidanceTitle(
       return getNeedTypeOption(values.needType, optionsByField)?.focusAreaCode === "tok_essay"
         ? "TOK is the right subject here"
         : "Subject sharpens the fit";
-    case "urgency":
-      return "Timing changes the shortlist";
-    case "style":
-      return "Teaching style matters";
     case "details":
-      return "Practical details save time";
+      return "Only one last choice";
   }
 }
 
@@ -783,23 +683,19 @@ function getGuidanceBody(
 
   switch (stepId) {
     case "problem":
-      return "We start with the kind of help you need so the next step only shows subjects that fit that type of support.";
+      return "Starting with the real task makes the results feel specific instead of like a generic tutor browse.";
     case "subject":
       if (selectedNeedType?.focusAreaCode === "tok_essay") {
-        return "TOK essay help should lead to TOK tutors, not a broad subject list.";
+        return "TOK essay help should lead straight to TOK tutors, not a broad subject list.";
       }
 
       if (selectedNeedType?.focusAreaCode === "extended_essay") {
-        return "For extended essay support, the subject still matters because the best tutor needs both EE experience and subject fluency.";
+        return "For EE support, the subject still matters because the best tutor needs both EE experience and subject fluency.";
       }
 
-      return "A strong subject match keeps the results relevant and avoids combinations that do not make sense in IB.";
-    case "urgency":
-      return "Urgent deadline support and steady weekly help usually surface different tutors.";
-    case "style":
-      return "Two tutors can cover the same subject but teach in very different ways.";
+      return "We only show subjects that make sense for the kind of help you picked.";
     case "details":
-      return "Language helps with fit, and timezone only controls how lesson times are shown to you for booking. It does not narrow tutors by country.";
+      return "Language affects fit. Your saved timezone only changes how lesson times are shown during booking.";
   }
 }
 
@@ -848,7 +744,7 @@ function getCurrentStepDescription(
     return "Choose the subject area your EE belongs to so we can keep the shortlist relevant.";
   }
 
-  if (compatibleSubjectOptions.length > SUBJECT_CARD_LIMIT) {
+  if (compatibleSubjectOptions.length > SUBJECT_CARD_LIMIT + 1) {
     return "We show the most common IB subjects first and keep the rest under More IB subjects.";
   }
 

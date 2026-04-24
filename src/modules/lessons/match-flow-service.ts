@@ -17,6 +17,7 @@ import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
 
 const MATCH_RANKING_VERSION = "mvp-ranking-v1";
 const MATCHING_PROJECTION_VERSION = "mvp-reference-projection-v1";
+const DEFAULT_URGENCY_LEVEL = "flexible";
 
 type StudentProfileRecord = {
   id: string;
@@ -134,6 +135,7 @@ export async function submitLearningNeedForMatching(
 
   const submittedAt = new Date().toISOString();
   const timezone = resolveTimezone(values.timezone || account.timezone);
+  const urgencyLevel = resolveUrgencyLevel(values.urgencyLevel, optionsByField);
   const freeTextNote = normalizeOptionalText(values.freeTextNote, 600);
   const sessionFrequencyIntent = normalizeOptionalText(values.sessionFrequencyIntent, 80);
   const supportStyle = normalizeOptionalText(values.supportStyle, 80);
@@ -149,7 +151,7 @@ export async function submitLearningNeedForMatching(
     submitted_at: submittedAt,
     support_style: supportStyle,
     timezone,
-    urgency_level: values.urgencyLevel,
+    urgency_level: urgencyLevel,
   };
   const { data: existingNeed, error: existingNeedError } = await serviceRoleClient
     .from("learning_needs")
@@ -191,7 +193,7 @@ export async function submitLearningNeedForMatching(
     subjectFocusAreaCode: needType.focusAreaCode,
     supportStyle,
     timezone,
-    urgencyLevel: values.urgencyLevel,
+    urgencyLevel,
   });
 
   const { data: matchRun, error: matchRunError } = await serviceRoleClient
@@ -332,11 +334,15 @@ function validateReferenceBackedOptions(
     fieldErrors.subjectSlug = "Choose the subject.";
   }
 
-  if (!isKnownMatchOption("urgencyLevel", values.urgencyLevel, optionsByField)) {
+  if (
+    values.urgencyLevel &&
+    !isKnownMatchOption("urgencyLevel", values.urgencyLevel, optionsByField)
+  ) {
     fieldErrors.urgencyLevel = "Choose when you need help.";
   }
 
   if (
+    values.sessionFrequencyIntent &&
     !isKnownMatchOption(
       "sessionFrequencyIntent",
       values.sessionFrequencyIntent,
@@ -346,7 +352,10 @@ function validateReferenceBackedOptions(
     fieldErrors.sessionFrequencyIntent = "Choose how often you want help.";
   }
 
-  if (!isKnownMatchOption("supportStyle", values.supportStyle, optionsByField)) {
+  if (
+    values.supportStyle &&
+    !isKnownMatchOption("supportStyle", values.supportStyle, optionsByField)
+  ) {
     fieldErrors.supportStyle = "Choose the support style that would help most.";
   }
 
@@ -369,4 +378,19 @@ function isCompatibleSubjectChoice(
   return getCompatibleSubjectOptions(needTypeValue, optionsByField).some(
     (subject) => subject.value === subjectSlug,
   );
+}
+
+function resolveUrgencyLevel(
+  urgencyLevel: string,
+  optionsByField: MatchFlowOptionsByField,
+) {
+  if (isKnownMatchOption("urgencyLevel", urgencyLevel, optionsByField)) {
+    return urgencyLevel;
+  }
+
+  if (isKnownMatchOption("urgencyLevel", DEFAULT_URGENCY_LEVEL, optionsByField)) {
+    return DEFAULT_URGENCY_LEVEL;
+  }
+
+  return optionsByField.urgencyLevel[optionsByField.urgencyLevel.length - 1]?.value ?? "flexible";
 }

@@ -1142,14 +1142,17 @@ function buildNeedSummaryDto(
   optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>,
 ): BookingNeedSummaryDto {
   const qualifiers: BookingNeedSummaryDto["qualifiers"] = [
-    {
+  ];
+
+  if (learningNeed.urgency_level !== "flexible") {
+    qualifiers.push({
       label: getMatchOptionLabel(
         "urgencyLevel",
         learningNeed.urgency_level,
         optionsByField,
       ),
-    },
-  ];
+    });
+  }
 
   if (learningNeed.session_frequency_intent) {
     qualifiers.push({

@@ -5,37 +5,21 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { hasRole, isRestrictedAccount } from "@/modules/accounts/account-state";
 import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import {
+  getCompatibleSubjectOptions,
   getNeedTypeOption,
   getSubjectOption,
   isKnownMatchOption,
   type MatchFlowFieldErrors,
   type MatchFlowFormValues,
+  type MatchFlowOptionsByField,
 } from "@/modules/lessons/match-flow-options";
+import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
 
 const MATCH_RANKING_VERSION = "mvp-ranking-v1";
 const MATCHING_PROJECTION_VERSION = "mvp-reference-projection-v1";
 
 type StudentProfileRecord = {
   id: string;
-};
-
-type ReferenceSubjectRecord = {
-  display_name: string;
-  id: string;
-  slug: string;
-  subject_code: string;
-};
-
-type ReferenceFocusAreaRecord = {
-  display_name: string;
-  focus_area_code: string;
-  id: string;
-  slug: string;
-};
-
-type ReferenceLanguageRecord = {
-  display_name: string;
-  language_code: string;
 };
 
 type LearningNeedIdentity = {
@@ -97,36 +81,26 @@ export async function submitLearningNeedForMatching(
     );
   }
 
-  const needType = getNeedTypeOption(values.needType);
-  const subjectOption = getSubjectOption(values.subjectSlug);
+  const optionsByField = await loadMatchFlowOptions();
+  const needType = getNeedTypeOption(values.needType, optionsByField);
+  const subjectOption = getSubjectOption(values.subjectSlug, optionsByField);
 
   if (!needType || !subjectOption) {
     throw new MatchFlowCommandError(
       "invalid_match_options",
       "Please complete the required steps to see your matches.",
       {
-        ...(needType ? {} : { needType: "Choose the IB pressure point." }),
-        ...(subjectOption ? {} : { subjectSlug: "Choose the subject or component." }),
+        ...(needType ? {} : { needType: "Choose what you need help with." }),
+        ...(subjectOption ? {} : { subjectSlug: "Choose the subject." }),
       },
     );
   }
 
-  const fieldErrors: MatchFlowFieldErrors = {};
+  const fieldErrors = validateReferenceBackedOptions(values, optionsByField);
 
-  if (!isKnownMatchOption("urgencyLevel", values.urgencyLevel)) {
-    fieldErrors.urgencyLevel = "Choose when you need help.";
-  }
-
-  if (!isKnownMatchOption("sessionFrequencyIntent", values.sessionFrequencyIntent)) {
-    fieldErrors.sessionFrequencyIntent = "Choose the kind of lesson rhythm you want.";
-  }
-
-  if (!isKnownMatchOption("supportStyle", values.supportStyle)) {
-    fieldErrors.supportStyle = "Choose the support style that would help most.";
-  }
-
-  if (!values.timezone) {
-    fieldErrors.timezone = "Choose a valid timezone.";
+  if (!isCompatibleSubjectChoice(values.needType, values.subjectSlug, optionsByField)) {
+    fieldErrors.subjectSlug =
+      "Choose a subject that fits the type of help you picked.";
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -139,11 +113,25 @@ export async function submitLearningNeedForMatching(
 
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const studentProfile = await resolveStudentProfile(account);
-  const [subject, focusArea, language] = await Promise.all([
-    resolveSubject(subjectOption),
-    resolveFocusArea(needType),
-    resolveLanguage(values.languageCode),
-  ]);
+  const focusAreaId = needType.focusAreaId;
+  const subjectId = subjectOption.subjectId;
+
+  if (!focusAreaId) {
+    throw new MatchFlowCommandError(
+      "focus_area_not_configured",
+      "This type of help is not configured for matching yet. Choose another one or try again later.",
+      { needType: "Choose an available type of help." },
+    );
+  }
+
+  if (!subjectId) {
+    throw new MatchFlowCommandError(
+      "subject_not_configured",
+      "This subject is not configured for matching yet. Choose another subject or try again later.",
+      { subjectSlug: "Choose an available subject." },
+    );
+  }
+
   const submittedAt = new Date().toISOString();
   const timezone = resolveTimezone(values.timezone || account.timezone);
   const freeTextNote = normalizeOptionalText(values.freeTextNote, 600);
@@ -151,13 +139,13 @@ export async function submitLearningNeedForMatching(
   const supportStyle = normalizeOptionalText(values.supportStyle, 80);
   const payload: LearningNeedPayload = {
     free_text_note: freeTextNote,
-    language_code: language.language_code,
+    language_code: values.languageCode,
     need_status: "active" as const,
     need_type: needType.value,
     session_frequency_intent: sessionFrequencyIntent,
     student_profile_id: studentProfile.id,
-    subject_focus_area_id: focusArea.id,
-    subject_id: subject.id,
+    subject_focus_area_id: focusAreaId,
+    subject_id: subjectId,
     submitted_at: submittedAt,
     support_style: supportStyle,
     timezone,
@@ -196,11 +184,11 @@ export async function submitLearningNeedForMatching(
     : await createLearningNeed(payload);
 
   const needSignature = buildNeedSignature({
-    languageCode: language.language_code,
+    languageCode: values.languageCode,
     needType: needType.value,
     sessionFrequencyIntent,
-    subjectFocusAreaId: focusArea.id,
-    subjectId: subject.id,
+    subjectCode: subjectOption.subjectCode,
+    subjectFocusAreaCode: needType.focusAreaCode,
     supportStyle,
     timezone,
     urgencyLevel: values.urgencyLevel,
@@ -309,92 +297,6 @@ async function updateLearningNeed(
   return updatedNeed.id;
 }
 
-async function resolveSubject(subjectOption: NonNullable<ReturnType<typeof getSubjectOption>>) {
-  const serviceRoleClient = createSupabaseServiceRoleClient();
-  const { data: subjects, error } = await serviceRoleClient
-    .from("subjects")
-    .select("id, display_name, slug, subject_code")
-    .eq("is_active", true)
-    .returns<ReferenceSubjectRecord[]>();
-
-  if (error) {
-    throw new MatchFlowCommandError(
-      "reference_subjects_failed",
-      "Subject options are unavailable right now. Please try again.",
-    );
-  }
-
-  const subject = subjects?.find((candidate) => {
-    return (
-      subjectOption.subjectSlugs.some((slug) => slug === candidate.slug) ||
-      subjectOption.subjectCodes.some((code) => code === candidate.subject_code)
-    );
-  });
-
-  if (!subject) {
-    throw new MatchFlowCommandError(
-      "subject_not_configured",
-      "This subject is not available in matching yet. Choose another subject or try again later.",
-      { subjectSlug: "Choose an available subject." },
-    );
-  }
-
-  return subject;
-}
-
-async function resolveFocusArea(needType: NonNullable<ReturnType<typeof getNeedTypeOption>>) {
-  const serviceRoleClient = createSupabaseServiceRoleClient();
-  const { data: focusAreas, error } = await serviceRoleClient
-    .from("subject_focus_areas")
-    .select("id, display_name, slug, focus_area_code")
-    .eq("is_active", true)
-    .returns<ReferenceFocusAreaRecord[]>();
-
-  if (error) {
-    throw new MatchFlowCommandError(
-      "reference_focus_areas_failed",
-      "Focus options are unavailable right now. Please try again.",
-    );
-  }
-
-  const focusArea = focusAreas?.find((candidate) => {
-    return (
-      needType.focusAreaSlugs.some((slug) => slug === candidate.slug) ||
-      needType.focusAreaCodes.some((code) => code === candidate.focus_area_code)
-    );
-  });
-
-  if (!focusArea) {
-    throw new MatchFlowCommandError(
-      "focus_area_not_configured",
-      "This pressure point is not available in matching yet. Choose another one or try again later.",
-      { needType: "Choose an available pressure point." },
-    );
-  }
-
-  return focusArea;
-}
-
-async function resolveLanguage(languageCode: string) {
-  const serviceRoleClient = createSupabaseServiceRoleClient();
-  const { data: language, error } = await serviceRoleClient
-    .from("languages")
-    .select("language_code, display_name")
-    .eq("language_code", languageCode)
-    .eq("is_active", true)
-    .maybeSingle<ReferenceLanguageRecord>();
-
-  if (error || !language) {
-    throw new MatchFlowCommandError(
-      "language_not_configured",
-      "This language is not available in matching yet. Choose another language or try again later.",
-      { languageCode: "Choose an available language." },
-    );
-  }
-
-  return language;
-}
-
 function buildNeedSignature(payload: Record<string, string | null>) {
   const stablePayload = Object.keys(payload)
     .sort()
@@ -414,4 +316,57 @@ function normalizeOptionalText(value: string | null | undefined, maxLength: numb
   }
 
   return normalized.slice(0, maxLength);
+}
+
+function validateReferenceBackedOptions(
+  values: MatchFlowFormValues,
+  optionsByField: MatchFlowOptionsByField,
+) {
+  const fieldErrors: MatchFlowFieldErrors = {};
+
+  if (!isKnownMatchOption("needType", values.needType, optionsByField)) {
+    fieldErrors.needType = "Choose what you need help with.";
+  }
+
+  if (!isKnownMatchOption("subjectSlug", values.subjectSlug, optionsByField)) {
+    fieldErrors.subjectSlug = "Choose the subject.";
+  }
+
+  if (!isKnownMatchOption("urgencyLevel", values.urgencyLevel, optionsByField)) {
+    fieldErrors.urgencyLevel = "Choose when you need help.";
+  }
+
+  if (
+    !isKnownMatchOption(
+      "sessionFrequencyIntent",
+      values.sessionFrequencyIntent,
+      optionsByField,
+    )
+  ) {
+    fieldErrors.sessionFrequencyIntent = "Choose how often you want help.";
+  }
+
+  if (!isKnownMatchOption("supportStyle", values.supportStyle, optionsByField)) {
+    fieldErrors.supportStyle = "Choose the support style that would help most.";
+  }
+
+  if (!isKnownMatchOption("languageCode", values.languageCode, optionsByField)) {
+    fieldErrors.languageCode = "Choose a tutoring language.";
+  }
+
+  if (!values.timezone) {
+    fieldErrors.timezone = "Choose a valid timezone.";
+  }
+
+  return fieldErrors;
+}
+
+function isCompatibleSubjectChoice(
+  needTypeValue: string,
+  subjectSlug: string,
+  optionsByField: MatchFlowOptionsByField,
+) {
+  return getCompatibleSubjectOptions(needTypeValue, optionsByField).some(
+    (subject) => subject.value === subjectSlug,
+  );
 }

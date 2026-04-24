@@ -31,6 +31,16 @@ export const learningNeedStatuses = [
 
 export type LearningNeedStatus = (typeof learningNeedStatuses)[number];
 
+export const learningNeedOptionGroups = [
+  "need_type",
+  "urgency_level",
+  "session_frequency_intent",
+  "support_style",
+] as const;
+
+export type LearningNeedOptionGroup =
+  (typeof learningNeedOptionGroups)[number];
+
 export const matchRunStatuses = [
   "queued",
   "running",

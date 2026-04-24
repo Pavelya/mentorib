@@ -13,17 +13,20 @@ import {
   isRestrictedAccount,
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
+import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
 
 import { MatchFlowForm } from "./match-flow-form";
 
 export default async function MatchPage() {
   const fallbackTimezone = await getCurrentUserTimezone();
+  const optionsByField = await loadMatchFlowOptions();
 
   if (!isSupabaseAuthConfigured()) {
     return (
       <MatchFlowForm
         canSubmit={false}
         initialTimezone={fallbackTimezone}
+        optionsByField={optionsByField}
       />
     );
   }
@@ -58,6 +61,7 @@ export default async function MatchPage() {
         <MatchFlowForm
           canSubmit={false}
           initialTimezone={fallbackTimezone}
+          optionsByField={optionsByField}
         />
       </>
     );
@@ -86,6 +90,7 @@ export default async function MatchPage() {
     <MatchFlowForm
       canSubmit
       initialTimezone={account.timezone}
+      optionsByField={optionsByField}
     />
   );
 }

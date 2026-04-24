@@ -32,6 +32,7 @@ export {
 } from "@/modules/notifications/schema";
 export {
   languages,
+  learningNeedOptionValues,
   meetingProviders,
   subjectFocusAreas,
   subjects,

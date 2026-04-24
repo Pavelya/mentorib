@@ -14,16 +14,13 @@ import {
 import { getTimezoneLabel } from "@/lib/datetime";
 import {
   emptyMatchFlowValues,
+  getCompatibleSubjectOptions,
   getMatchOptionLabel,
-  matchFrequencyOptions,
-  matchLanguageOptions,
-  matchNeedTypeOptions,
-  matchSubjectOptions,
-  matchSupportStyleOptions,
-  matchUrgencyOptions,
+  getNeedTypeOption,
   type MatchFlowField,
   type MatchFlowFieldErrors,
   type MatchFlowFormValues,
+  type MatchFlowOptionsByField,
   type MatchOption,
 } from "@/modules/lessons/match-flow-options";
 
@@ -38,6 +35,7 @@ type StepId = "details" | "problem" | "style" | "subject" | "urgency";
 type MatchFlowFormProps = {
   canSubmit: boolean;
   initialTimezone: string;
+  optionsByField: MatchFlowOptionsByField;
 };
 
 type StepDefinition = {
@@ -47,6 +45,8 @@ type StepDefinition = {
   label: string;
   question: string;
 };
+
+const SUBJECT_CARD_LIMIT = 10;
 
 const steps = [
   {
@@ -93,7 +93,11 @@ const initialActionState: MatchFlowActionState = {
   values: emptyMatchFlowValues,
 };
 
-export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps) {
+export function MatchFlowForm({
+  canSubmit,
+  initialTimezone,
+  optionsByField,
+}: MatchFlowFormProps) {
   const [state, formAction] = useActionState(
     submitMatchFlowAction,
     initialActionState,
@@ -110,13 +114,24 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
   const currentStep = steps[currentStepIndex];
   const fieldErrors = { ...state.fieldErrors, ...localErrors };
   const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
-  const qualifiers = buildNeedQualifiers(values);
+  const qualifiers = buildNeedQualifiers(values, optionsByField);
   const timezoneOptions = useMemo(
     () => buildTimezoneOptions(initialTimezone),
     [initialTimezone],
   );
+  const compatibleSubjectOptions = useMemo(
+    () => getCompatibleSubjectOptions(values.needType, optionsByField),
+    [optionsByField, values.needType],
+  );
   const hasPreviousStep = currentStepIndex > 0;
   const nextStep = steps[currentStepIndex + 1];
+  const currentQuestion = getCurrentStepQuestion(currentStep, values, optionsByField);
+  const currentDescription = getCurrentStepDescription(
+    currentStep,
+    values,
+    optionsByField,
+    compatibleSubjectOptions,
+  );
 
   useEffect(() => {
     if (!hasMountedRef.current) {
@@ -133,11 +148,23 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
   function updateValue(field: MatchFlowField, value: string) {
     setValues((currentValues) => ({
       ...currentValues,
-      [field]: value,
+      ...(field === "needType"
+        ? {
+            needType: value,
+            subjectSlug: getNormalizedSubjectValue(
+              value,
+              currentValues.subjectSlug,
+              optionsByField,
+            ),
+          }
+        : { [field]: value }),
     }));
     setLocalErrors((currentErrors) => {
       const nextErrors = { ...currentErrors };
       delete nextErrors[field];
+      if (field === "needType") {
+        delete nextErrors.subjectSlug;
+      }
       return nextErrors;
     });
   }
@@ -182,7 +209,7 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
           <div className={styles.progressIntro}>
             <p className={styles.eyebrow}>Quick match</p>
             <h1 id="match-flow-title" ref={titleRef}>
-              {currentStep.question}
+              {currentQuestion}
             </h1>
           </div>
 
@@ -191,7 +218,7 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
           </p>
         </div>
 
-        <p className={styles.progressDescription}>{currentStep.description}</p>
+        <p className={styles.progressDescription}>{currentDescription}</p>
 
         <div className={styles.progressTrack} aria-hidden="true">
           <span style={{ width: `${progressPercent}%` }} />
@@ -220,7 +247,7 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
         className={styles.summaryBar}
         label="Your request"
         mode="editable"
-        need={getNeedTitle(values)}
+        need={getNeedTitle(values, optionsByField)}
         qualifiers={qualifiers}
         state="draft"
         stateLabel="In progress"
@@ -240,6 +267,7 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
 
             <StepFields
               errors={fieldErrors}
+              optionsByField={optionsByField}
               step={currentStep}
               timezoneOptions={timezoneOptions}
               updateValue={updateValue}
@@ -249,11 +277,11 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
 
           <aside className={styles.helperPanel} aria-label="Helpful context">
             <p className={styles.stepEyebrow}>Why we ask</p>
-            <h3>{getGuidanceTitle(currentStep.id)}</h3>
-            <p>{getGuidanceBody(currentStep.id)}</p>
+            <h3>{getGuidanceTitle(currentStep.id, values, optionsByField)}</h3>
+            <p>{getGuidanceBody(currentStep.id, values, optionsByField)}</p>
             <p className={styles.helperNote}>
-              Choose the closest option. You can update your answers before
-              booking.
+              We keep the flow short and only show subject combinations that
+              make sense for the help you picked.
             </p>
           </aside>
         </div>
@@ -287,6 +315,7 @@ export function MatchFlowForm({ canSubmit, initialTimezone }: MatchFlowFormProps
 
 type StepFieldsProps = {
   errors: MatchFlowFieldErrors;
+  optionsByField: MatchFlowOptionsByField;
   step: StepDefinition;
   timezoneOptions: readonly string[];
   updateValue: (field: MatchFlowField, value: string) => void;
@@ -295,6 +324,7 @@ type StepFieldsProps = {
 
 function StepFields({
   errors,
+  optionsByField,
   step,
   timezoneOptions,
   updateValue,
@@ -306,19 +336,18 @@ function StepFields({
         <OptionGroup
           error={errors.needType}
           field="needType"
-          legend="Pressure point"
-          options={matchNeedTypeOptions}
+          legend="Type of help"
+          options={optionsByField.needType}
           updateValue={updateValue}
           value={values.needType}
         />
       );
     case "subject":
       return (
-        <OptionGroup
+        <SubjectGroup
           error={errors.subjectSlug}
-          field="subjectSlug"
-          legend="Subject or component"
-          options={matchSubjectOptions}
+          needTypeValue={values.needType}
+          optionsByField={optionsByField}
           updateValue={updateValue}
           value={values.subjectSlug}
         />
@@ -330,7 +359,7 @@ function StepFields({
             error={errors.urgencyLevel}
             field="urgencyLevel"
             legend="How soon?"
-            options={matchUrgencyOptions}
+            options={optionsByField.urgencyLevel}
             updateValue={updateValue}
             value={values.urgencyLevel}
           />
@@ -338,7 +367,7 @@ function StepFields({
             error={errors.sessionFrequencyIntent}
             field="sessionFrequencyIntent"
             legend="How often?"
-            options={matchFrequencyOptions}
+            options={optionsByField.sessionFrequencyIntent}
             updateValue={updateValue}
             value={values.sessionFrequencyIntent}
           />
@@ -350,7 +379,7 @@ function StepFields({
           error={errors.supportStyle}
           field="supportStyle"
           legend="Support style"
-          options={matchSupportStyleOptions}
+          options={optionsByField.supportStyle}
           updateValue={updateValue}
           value={values.supportStyle}
         />
@@ -362,7 +391,7 @@ function StepFields({
             error={errors.languageCode}
             field="languageCode"
             legend="Tutoring language"
-            options={matchLanguageOptions}
+            options={optionsByField.languageCode}
             updateValue={updateValue}
             value={values.languageCode}
           />
@@ -398,6 +427,69 @@ function StepFields({
   }
 }
 
+type SubjectGroupProps = {
+  error?: string;
+  needTypeValue: string;
+  optionsByField: MatchFlowOptionsByField;
+  updateValue: (field: MatchFlowField, value: string) => void;
+  value: string;
+};
+
+function SubjectGroup({
+  error,
+  needTypeValue,
+  optionsByField,
+  updateValue,
+  value,
+}: SubjectGroupProps) {
+  const compatibleSubjects = getCompatibleSubjectOptions(needTypeValue, optionsByField);
+  const featuredSubjects = compatibleSubjects.slice(0, SUBJECT_CARD_LIMIT);
+  const overflowSubjects = compatibleSubjects.slice(SUBJECT_CARD_LIMIT);
+  const selectedNeedType = getNeedTypeOption(needTypeValue, optionsByField);
+
+  if (compatibleSubjects.length === 0) {
+    return (
+      <InlineNotice title="Subject options unavailable" tone="warning">
+        <p>
+          This type of help does not have any active subject options yet. Go back
+          and choose another option.
+        </p>
+      </InlineNotice>
+    );
+  }
+
+  return (
+    <div className={styles.subjectStack}>
+      <OptionGroup
+        error={error}
+        field="subjectSlug"
+        legend={getSubjectLegend(selectedNeedType?.focusAreaCode)}
+        options={featuredSubjects}
+        updateValue={updateValue}
+        value={value}
+      />
+
+      {overflowSubjects.length > 0 ? (
+        <div id={getFieldContainerId("subjectSlug-overflow")}>
+          <SelectField
+            id="subjectSlug-overflow"
+            label="More IB subjects"
+            value={overflowSubjects.some((subject) => subject.value === value) ? value : ""}
+            onChange={(event) => updateValue("subjectSlug", event.target.value)}
+          >
+            <option value="">Choose another subject</option>
+            {overflowSubjects.map((subject) => (
+              <option key={subject.value} value={subject.value}>
+                {subject.label}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 type OptionGroupProps = {
   error?: string;
   field: MatchFlowField;
@@ -423,7 +515,9 @@ function OptionGroup({
       className={styles.optionGroup}
       id={getFieldContainerId(field)}
     >
-      <legend>{legend}</legend>
+      <legend>
+        <span className={styles.optionLegend}>{legend}</span>
+      </legend>
       <div className={styles.optionGrid}>
         {options.map((option) => {
           const isSelected = value === option.value;
@@ -444,7 +538,9 @@ function OptionGroup({
               />
               <span className={styles.optionText}>
                 <span className={styles.optionTitle}>{option.label}</span>
-                <span className={styles.optionDescription}>{option.description}</span>
+                {option.description ? (
+                  <span className={styles.optionDescription}>{option.description}</span>
+                ) : null}
               </span>
               <span aria-hidden="true" className={styles.optionIndicator} />
             </label>
@@ -514,32 +610,44 @@ function getMissingFieldMessage(field: MatchFlowField) {
   }
 }
 
-function getNeedTitle(values: MatchFlowFormValues) {
+function getNeedTitle(
+  values: MatchFlowFormValues,
+  optionsByField: MatchFlowOptionsByField,
+) {
   if (!values.needType) {
     return "Your IB request";
   }
 
-  return getMatchOptionLabel("needType", values.needType);
+  return getMatchOptionLabel("needType", values.needType, optionsByField);
 }
 
-function buildNeedQualifiers(values: MatchFlowFormValues) {
+function buildNeedQualifiers(
+  values: MatchFlowFormValues,
+  optionsByField: MatchFlowOptionsByField,
+) {
   const qualifiers = [];
 
   if (values.subjectSlug) {
-    qualifiers.push({ label: getMatchOptionLabel("subjectSlug", values.subjectSlug) });
+    qualifiers.push({
+      label: getMatchOptionLabel("subjectSlug", values.subjectSlug, optionsByField),
+    });
   }
 
   if (values.urgencyLevel) {
-    qualifiers.push({ label: getMatchOptionLabel("urgencyLevel", values.urgencyLevel) });
+    qualifiers.push({
+      label: getMatchOptionLabel("urgencyLevel", values.urgencyLevel, optionsByField),
+    });
   }
 
   if (values.supportStyle) {
-    qualifiers.push({ label: getMatchOptionLabel("supportStyle", values.supportStyle) });
+    qualifiers.push({
+      label: getMatchOptionLabel("supportStyle", values.supportStyle, optionsByField),
+    });
   }
 
   if (values.languageCode) {
     qualifiers.push({
-      label: getMatchOptionLabel("languageCode", values.languageCode),
+      label: getMatchOptionLabel("languageCode", values.languageCode, optionsByField),
       priority: "support" as const,
     });
   }
@@ -564,7 +672,7 @@ function buildTimezoneOptions(initialTimezone: string) {
   );
 }
 
-function getFieldContainerId(field: MatchFlowField) {
+function getFieldContainerId(field: MatchFlowField | `${MatchFlowField}-overflow`) {
   return `${field}-field`;
 }
 
@@ -617,12 +725,33 @@ function getCurrentStepErrorMessage(
   return errors[currentStepErrors[0]] ?? "Complete this step to continue.";
 }
 
-function getGuidanceTitle(stepId: StepId) {
+function getNormalizedSubjectValue(
+  needTypeValue: string,
+  subjectSlug: string,
+  optionsByField: MatchFlowOptionsByField,
+) {
+  const compatibleSubjects = getCompatibleSubjectOptions(needTypeValue, optionsByField);
+  const subjectStillFits = compatibleSubjects.some((subject) => subject.value === subjectSlug);
+
+  if (subjectStillFits) {
+    return subjectSlug;
+  }
+
+  return compatibleSubjects.length === 1 ? compatibleSubjects[0].value : "";
+}
+
+function getGuidanceTitle(
+  stepId: StepId,
+  values: MatchFlowFormValues,
+  optionsByField: MatchFlowOptionsByField,
+) {
   switch (stepId) {
     case "problem":
       return "Start with the real task";
     case "subject":
-      return "Subject sharpens the fit";
+      return getNeedTypeOption(values.needType, optionsByField)?.focusAreaCode === "tok_essay"
+        ? "TOK is the right subject here"
+        : "Subject sharpens the fit";
     case "urgency":
       return "Timing changes the shortlist";
     case "style":
@@ -632,17 +761,96 @@ function getGuidanceTitle(stepId: StepId) {
   }
 }
 
-function getGuidanceBody(stepId: StepId) {
+function getGuidanceBody(
+  stepId: StepId,
+  values: MatchFlowFormValues,
+  optionsByField: MatchFlowOptionsByField,
+) {
+  const selectedNeedType = getNeedTypeOption(values.needType, optionsByField);
+
   switch (stepId) {
     case "problem":
-      return "We start with the pressure point so you see tutors who handle this kind of IB help, not just the broad subject.";
+      return "We start with the kind of help you need so the next step only shows subjects that fit that type of support.";
     case "subject":
-      return "A great TOK tutor is not always the right fit for English, Math, or Biology support.";
+      if (selectedNeedType?.focusAreaCode === "tok_essay") {
+        return "TOK essay help should lead to TOK tutors, not a broad subject list.";
+      }
+
+      if (selectedNeedType?.focusAreaCode === "extended_essay") {
+        return "For extended essay support, the subject still matters because the best tutor needs both EE experience and subject fluency.";
+      }
+
+      return "A strong subject match keeps the results relevant and avoids combinations that do not make sense in IB.";
     case "urgency":
       return "Urgent deadline support and steady weekly help usually surface different tutors.";
     case "style":
       return "Two tutors can cover the same subject but teach in very different ways.";
     case "details":
       return "Language and timezone help us show tutors you can realistically work with and book.";
+  }
+}
+
+function getCurrentStepQuestion(
+  step: StepDefinition,
+  values: MatchFlowFormValues,
+  optionsByField: MatchFlowOptionsByField,
+) {
+  if (step.id !== "subject") {
+    return step.question;
+  }
+
+  const selectedNeedType = getNeedTypeOption(values.needType, optionsByField);
+
+  switch (selectedNeedType?.focusAreaCode) {
+    case "extended_essay":
+      return "Which subject is your extended essay in?";
+    case "ia_feedback":
+      return "Which subject is the coursework for?";
+    case "oral_practice":
+      return "Which subject is the oral for?";
+    case "tok_essay":
+      return "This help is for TOK";
+    default:
+      return step.question;
+  }
+}
+
+function getCurrentStepDescription(
+  step: StepDefinition,
+  values: MatchFlowFormValues,
+  optionsByField: MatchFlowOptionsByField,
+  compatibleSubjectOptions: readonly MatchOption[],
+) {
+  if (step.id !== "subject") {
+    return step.description;
+  }
+
+  const selectedNeedType = getNeedTypeOption(values.needType, optionsByField);
+
+  if (selectedNeedType?.focusAreaCode === "tok_essay") {
+    return "TOK essay support maps to TOK only, so we keep the handoff clear.";
+  }
+
+  if (selectedNeedType?.focusAreaCode === "extended_essay") {
+    return "Choose the subject area your EE belongs to so we can keep the shortlist relevant.";
+  }
+
+  if (compatibleSubjectOptions.length > SUBJECT_CARD_LIMIT) {
+    return "We show the most common IB subjects first and keep the rest under More IB subjects.";
+  }
+
+  return step.description;
+}
+
+function getSubjectLegend(focusAreaCode?: string) {
+  switch (focusAreaCode) {
+    case "extended_essay":
+      return "EE subject";
+    case "ia_feedback":
+      return "Coursework subject";
+    case "oral_practice":
+      return "Oral subject";
+    default:
+      return "Subject";
   }
 }

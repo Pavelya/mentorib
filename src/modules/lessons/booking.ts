@@ -9,6 +9,7 @@ import type { MentorIbDatabase } from "@/lib/supabase/database.types";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { hasRole, isRestrictedAccount } from "@/modules/accounts/account-state";
 import { getMatchOptionLabel } from "@/modules/lessons/match-flow-options";
+import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
 
 const BOOKING_NOTE_MAX_LENGTH = 600;
 const CHECKOUT_CANCEL_STATE = "cancelled";
@@ -285,6 +286,7 @@ type ResolvedBookingContext = {
   currencyCode: string;
   learningNeed: LearningNeedRecord;
   matchCandidateId: string | null;
+  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>;
   notePrefill: string;
   priceAmount: number | null;
   priceLabel: string | null;
@@ -419,6 +421,7 @@ export async function getStudentBookingContext(
     language: publicProfileContext.language,
     learningNeed: publicProfileContext.learningNeed,
     matchCandidateId: null,
+    optionsByField: publicProfileContext.optionsByField,
     notePrefill: normalizeOptionalText(publicProfileContext.learningNeed.free_text_note, BOOKING_NOTE_MAX_LENGTH) ?? "",
     priceAmount: publicProfileContext.priceAmount,
     priceLabel: publicProfileContext.priceLabel,
@@ -834,6 +837,7 @@ async function getResolvedBookingContext(
       language: publicContext.language,
       learningNeed: publicContext.learningNeed,
       matchCandidateId: null,
+      optionsByField: publicContext.optionsByField,
       notePrefill: normalizeOptionalText(publicContext.learningNeed.free_text_note, BOOKING_NOTE_MAX_LENGTH) ?? "",
       priceAmount: publicContext.priceAmount,
       priceLabel: publicContext.priceLabel,
@@ -970,11 +974,12 @@ async function resolveSharedBookingContext({
   studentProfileId: string;
   tutorProfileId: string;
 }) {
-  const [subject, focusArea, language, tutor, schedulePolicy, tutorLanguages] =
+  const [subject, focusArea, language, optionsByField, tutor, schedulePolicy, tutorLanguages] =
     await Promise.all([
       loadSubjectById(learningNeed.subject_id),
       loadFocusAreaById(learningNeed.subject_focus_area_id),
       loadLanguageByCode(learningNeed.language_code),
+      loadMatchFlowOptions(),
       loadTutorProfileById(tutorProfileId),
       loadSchedulePolicy(tutorProfileId),
       loadTutorLanguageNames(tutorProfileId),
@@ -1018,6 +1023,7 @@ async function resolveSharedBookingContext({
     language,
     learningNeed,
     matchCandidateId,
+    optionsByField,
     notePrefill: normalizeOptionalText(learningNeed.free_text_note, BOOKING_NOTE_MAX_LENGTH) ?? "",
     priceAmount,
     priceLabel:
@@ -1048,6 +1054,7 @@ function buildBookingContextDto(
     resolvedContext.subject,
     resolvedContext.focusArea,
     resolvedContext.language,
+    resolvedContext.optionsByField,
   );
 
   if (!resolvedContext.schedulePolicy.is_accepting_new_students) {
@@ -1132,19 +1139,45 @@ function buildNeedSummaryDto(
   subject: SubjectRecord,
   focusArea: FocusAreaRecord,
   language: LanguageRecord,
+  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>,
 ): BookingNeedSummaryDto {
+  const qualifiers: BookingNeedSummaryDto["qualifiers"] = [
+    {
+      label: getMatchOptionLabel(
+        "urgencyLevel",
+        learningNeed.urgency_level,
+        optionsByField,
+      ),
+    },
+  ];
+
+  if (learningNeed.session_frequency_intent) {
+    qualifiers.push({
+      label: getMatchOptionLabel(
+        "sessionFrequencyIntent",
+        learningNeed.session_frequency_intent,
+        optionsByField,
+      ),
+    });
+  }
+
+  if (learningNeed.support_style) {
+    qualifiers.push({
+      label: getMatchOptionLabel(
+        "supportStyle",
+        learningNeed.support_style,
+        optionsByField,
+      ),
+    });
+  }
+
+  qualifiers.push({ label: language.display_name });
+  qualifiers.push({ label: getTimezoneLabel(learningNeed.timezone), priority: "support" });
+
   return {
     headline: `${subject.display_name} · ${focusArea.display_name}`,
     note: normalizeOptionalText(learningNeed.free_text_note, BOOKING_NOTE_MAX_LENGTH),
-    qualifiers: [
-      { label: getMatchOptionLabel("urgencyLevel", learningNeed.urgency_level) },
-      {
-        label: getMatchOptionLabel("sessionFrequencyIntent", learningNeed.session_frequency_intent ?? "one_off"),
-      },
-      { label: getMatchOptionLabel("supportStyle", learningNeed.support_style ?? "calm_structure") },
-      { label: language.display_name },
-      { label: getTimezoneLabel(learningNeed.timezone), priority: "support" },
-    ],
+    qualifiers,
     status: learningNeed.need_status,
     timezone: resolveTimezone(learningNeed.timezone),
   };

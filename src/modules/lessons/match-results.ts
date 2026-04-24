@@ -2,6 +2,7 @@ import { resolveTimezone } from "@/lib/datetime";
 import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { getMatchOptionLabel } from "@/modules/lessons/match-flow-options";
+import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
 
 type StudentProfileRecord = {
   id: string;
@@ -194,11 +195,13 @@ export async function getStudentMatchResults(
     loadLanguageByCode(learningNeed.language_code),
     loadLatestMatchRun(learningNeed.id),
   ]);
+  const optionsByField = await loadMatchFlowOptions();
 
   const currentNeed = buildCurrentNeedDto({
     focusArea,
     language,
     learningNeed,
+    optionsByField,
     subject,
   });
 
@@ -279,14 +282,14 @@ export function buildPreviewMatchResultsDto(timezone: string): MatchResultsPageD
 
   return {
     currentNeed: {
-      headline: "Biology HL · IA feedback",
+      headline: "Biology · IA feedback",
       id: "preview-learning-need",
       note: "Needs clearer IA structure and a calmer plan before the next draft deadline.",
       qualifiers: [
-        { label: "Internal assessment" },
+        { label: "IA feedback" },
         { label: "This week" },
         { label: "Calm structure" },
-        { label: "Weekly rhythm" },
+        { label: "Weekly" },
         { label: "English" },
         { label: resolvedTimezone, priority: "support" },
       ],
@@ -302,7 +305,7 @@ export function buildPreviewMatchResultsDto(timezone: string): MatchResultsPageD
         compareHref: "/compare",
         confidenceLabel: "High confidence",
         fitReasons: [
-          "Subject fit: Biology HL and IA drafting.",
+          "Subject fit: Biology coursework feedback and assessment drafting.",
           "Supports English-first sessions with Europe-friendly timing.",
           "Profile reviewed with strong lesson continuity proof.",
         ],
@@ -314,7 +317,7 @@ export function buildPreviewMatchResultsDto(timezone: string): MatchResultsPageD
         tutor: {
           acceptingNewStudents: true,
           displayName: "Maya Chen",
-          headline: "Biology HL tutor focused on Paper 2 and IA structure",
+          headline: "Biology tutor focused on assessment structure and exam confidence",
           languages: ["English", "Polish"],
           pricingSummary: "From $62 per lesson",
           timezone: "Europe/London",
@@ -328,7 +331,7 @@ export function buildPreviewMatchResultsDto(timezone: string): MatchResultsPageD
         compareHref: "/compare",
         confidenceLabel: "Strong fit",
         fitReasons: [
-          "Subject fit: Biology HL revision and IA milestones.",
+          "Subject fit: Biology revision and coursework milestones.",
           "Useful when you want direct feedback on what to change next.",
           "Supports English and Spanish lessons.",
         ],
@@ -354,7 +357,7 @@ export function buildPreviewMatchResultsDto(timezone: string): MatchResultsPageD
         compareHref: "/compare",
         confidenceLabel: "Relevant fallback",
         fitReasons: [
-          "Subject fit: Biology HL support with a steady accountability style.",
+          "Subject fit: Biology support with a steady accountability style.",
           "Good timezone overlap for Warsaw evenings.",
           "Strong continuity signal, but limited booking capacity this week.",
         ],
@@ -577,27 +580,43 @@ function buildCurrentNeedDto({
   focusArea,
   language,
   learningNeed,
+  optionsByField,
   subject,
 }: {
   focusArea: FocusAreaRecord;
   language: LanguageRecord;
   learningNeed: LearningNeedRecord & { free_text_note: string | null };
+  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>;
   subject: SubjectRecord;
 }): MatchResultsNeedDto {
   const qualifiers: MatchResultsNeedDto["qualifiers"] = [
     { label: focusArea.display_name },
-    { label: getMatchOptionLabel("urgencyLevel", learningNeed.urgency_level) },
+    {
+      label: getMatchOptionLabel(
+        "urgencyLevel",
+        learningNeed.urgency_level,
+        optionsByField,
+      ),
+    },
   ];
 
   if (learningNeed.support_style) {
     qualifiers.push({
-      label: getMatchOptionLabel("supportStyle", learningNeed.support_style),
+      label: getMatchOptionLabel(
+        "supportStyle",
+        learningNeed.support_style,
+        optionsByField,
+      ),
     });
   }
 
   if (learningNeed.session_frequency_intent) {
     qualifiers.push({
-      label: getMatchOptionLabel("sessionFrequencyIntent", learningNeed.session_frequency_intent),
+      label: getMatchOptionLabel(
+        "sessionFrequencyIntent",
+        learningNeed.session_frequency_intent,
+        optionsByField,
+      ),
     });
   }
 
@@ -605,7 +624,7 @@ function buildCurrentNeedDto({
   qualifiers.push({ label: resolveTimezone(learningNeed.timezone), priority: "support" });
 
   return {
-    headline: `${subject.display_name} · ${getMatchOptionLabel("needType", learningNeed.need_type)}`,
+    headline: `${subject.display_name} · ${focusArea.display_name}`,
     id: learningNeed.id,
     note: normalizeText(learningNeed.free_text_note),
     qualifiers,

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   pgTable,
@@ -7,6 +8,8 @@ import {
   uuid,
   integer,
 } from "drizzle-orm/pg-core";
+
+import { learningNeedOptionGroups } from "@/modules/lessons/constants";
 
 export const subjects = pgTable(
   "subjects",
@@ -64,6 +67,38 @@ export const languages = pgTable("languages", {
     .notNull()
     .defaultNow(),
 });
+
+export const learningNeedOptionValues = pgTable(
+  "learning_need_option_values",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    option_group: text("option_group", { enum: learningNeedOptionGroups }).notNull(),
+    option_key: text("option_key").notNull(),
+    display_label: text("display_label").notNull(),
+    helper_text: text("helper_text"),
+    subject_focus_area_code: text("subject_focus_area_code").references(
+      () => subjectFocusAreas.focus_area_code,
+    ),
+    allowed_subject_codes: text("allowed_subject_codes")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    sort_order: integer("sort_order").notNull().default(0),
+    is_active: boolean("is_active").notNull().default(true),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("learning_need_option_values_group_key").on(
+      table.option_group,
+      table.option_key,
+    ),
+  ],
+);
 
 export const videoMediaProviders = pgTable("video_media_providers", {
   provider_key: text("provider_key").primaryKey(),

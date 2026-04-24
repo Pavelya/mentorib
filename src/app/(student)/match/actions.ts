@@ -17,6 +17,7 @@ import {
   type MatchFlowFieldErrors,
   type MatchFlowFormValues,
 } from "@/modules/lessons/match-flow-options";
+import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
 import {
   MatchFlowCommandError,
   submitLearningNeedForMatching,
@@ -36,7 +37,8 @@ export async function submitMatchFlowAction(
   formData: FormData,
 ): Promise<MatchFlowActionState> {
   const values = getMatchFlowValues(formData);
-  const fieldErrors = validateMatchFlowValues(values);
+  const optionsByField = await loadMatchFlowOptions();
+  const fieldErrors = validateMatchFlowValues(values, optionsByField);
 
   if (Object.keys(fieldErrors).length > 0) {
     return {
@@ -123,30 +125,39 @@ function getMatchFlowValues(formData: FormData): MatchFlowFormValues {
   };
 }
 
-function validateMatchFlowValues(values: MatchFlowFormValues) {
+function validateMatchFlowValues(
+  values: MatchFlowFormValues,
+  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>,
+) {
   const fieldErrors: MatchFlowFieldErrors = {};
 
-  if (!isKnownMatchOption("needType", values.needType)) {
+  if (!isKnownMatchOption("needType", values.needType, optionsByField)) {
     fieldErrors.needType = "Choose what you need help with.";
   }
 
-  if (!isKnownMatchOption("subjectSlug", values.subjectSlug)) {
-    fieldErrors.subjectSlug = "Choose the subject or component.";
+  if (!isKnownMatchOption("subjectSlug", values.subjectSlug, optionsByField)) {
+    fieldErrors.subjectSlug = "Choose the subject.";
   }
 
-  if (!isKnownMatchOption("urgencyLevel", values.urgencyLevel)) {
+  if (!isKnownMatchOption("urgencyLevel", values.urgencyLevel, optionsByField)) {
     fieldErrors.urgencyLevel = "Choose when you need help.";
   }
 
-  if (!isKnownMatchOption("sessionFrequencyIntent", values.sessionFrequencyIntent)) {
+  if (
+    !isKnownMatchOption(
+      "sessionFrequencyIntent",
+      values.sessionFrequencyIntent,
+      optionsByField,
+    )
+  ) {
     fieldErrors.sessionFrequencyIntent = "Choose how often you want help.";
   }
 
-  if (!isKnownMatchOption("supportStyle", values.supportStyle)) {
+  if (!isKnownMatchOption("supportStyle", values.supportStyle, optionsByField)) {
     fieldErrors.supportStyle = "Choose the support style that would help most.";
   }
 
-  if (!isKnownMatchOption("languageCode", values.languageCode)) {
+  if (!isKnownMatchOption("languageCode", values.languageCode, optionsByField)) {
     fieldErrors.languageCode = "Choose a tutoring language.";
   }
 

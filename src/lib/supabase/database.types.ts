@@ -15,6 +15,7 @@ import type {
 import type {
   BookingOperationStatus,
   BookingOperationType,
+  LearningNeedOptionGroup,
   LearningNeedStatus,
   LessonIssueCaseStatus,
   LessonIssueCounterpartyResponseType,
@@ -126,6 +127,20 @@ type LanguageRow = {
   is_active: boolean;
   language_code: string;
   sort_order: number;
+  updated_at: string;
+};
+
+type LearningNeedOptionValueRow = {
+  allowed_subject_codes: string[];
+  created_at: string;
+  display_label: string;
+  helper_text: string | null;
+  id: string;
+  is_active: boolean;
+  option_group: LearningNeedOptionGroup;
+  option_key: string;
+  sort_order: number;
+  subject_focus_area_code: string | null;
   updated_at: string;
 };
 
@@ -835,6 +850,26 @@ export type MentorIbDatabase = {
         Relationships: [];
         Row: LanguageRow;
         Update: Partial<Omit<LanguageRow, "created_at" | "language_code" | "updated_at">>;
+      };
+      learning_need_option_values: {
+        Insert: Pick<
+          LearningNeedOptionValueRow,
+          "display_label" | "option_group" | "option_key"
+        > & {
+          allowed_subject_codes?: string[];
+          helper_text?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          subject_focus_area_code?: string | null;
+        };
+        Relationships: [];
+        Row: LearningNeedOptionValueRow;
+        Update: Partial<
+          Omit<
+            LearningNeedOptionValueRow,
+            "created_at" | "id" | "option_group" | "option_key" | "updated_at"
+          >
+        >;
       };
       match_candidates: {
         Insert: Pick<

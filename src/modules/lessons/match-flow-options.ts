@@ -13,188 +13,32 @@ export type MatchFlowFieldErrors = Partial<Record<MatchFlowField, string>>;
 export type MatchFlowFormValues = Record<MatchFlowField, string>;
 
 export type MatchOption = {
-  description: string;
+  description?: string | null;
   label: string;
   value: string;
 };
 
-type NeedTypeOption = MatchOption & {
-  focusAreaCodes: readonly string[];
-  focusAreaSlugs: readonly string[];
+export type MatchNeedTypeOption = MatchOption & {
+  allowedSubjectCodes: readonly string[];
+  focusAreaCode: string;
+  focusAreaId?: string | null;
 };
 
-type SubjectOption = MatchOption & {
-  subjectCodes: readonly string[];
-  subjectSlugs: readonly string[];
+export type MatchSubjectOption = MatchOption & {
+  subjectCode: string;
+  subjectId?: string | null;
 };
 
-export const matchNeedTypeOptions = [
-  {
-    description: "Draft feedback, criteria checks, and clearer next edits.",
-    focusAreaCodes: ["ia_feedback", "internal_assessment"],
-    focusAreaSlugs: ["ia-feedback", "internal-assessment"],
-    label: "IA feedback",
-    value: "ia_feedback",
-  },
-  {
-    description: "Knowledge questions, essay structure, and presentation support.",
-    focusAreaCodes: ["tok_essay", "tok"],
-    focusAreaSlugs: ["tok-essay", "tok"],
-    label: "TOK essay",
-    value: "tok_essay",
-  },
-  {
-    description: "Oral outline, speaking confidence, and practice feedback.",
-    focusAreaCodes: ["io_practice", "oral_practice"],
-    focusAreaSlugs: ["io-practice", "oral-practice"],
-    label: "IO practice",
-    value: "io_practice",
-  },
-  {
-    description: "Research question, timeline, and supervisor-ready milestones.",
-    focusAreaCodes: ["ee_planning", "extended_essay"],
-    focusAreaSlugs: ["ee-planning", "extended-essay"],
-    label: "EE planning",
-    value: "ee_planning",
-  },
-  {
-    description: "Fast review for HL papers, weak topics, or final exam strategy.",
-    focusAreaCodes: ["exam_rescue", "exam_prep"],
-    focusAreaSlugs: ["exam-rescue", "exam-prep"],
-    label: "HL exam rescue",
-    value: "exam_rescue",
-  },
-  {
-    description: "Steady support, accountability, and less last-minute pressure.",
-    focusAreaCodes: ["weekly_support", "ongoing_support"],
-    focusAreaSlugs: ["weekly-support", "ongoing-support"],
-    label: "Weekly support",
-    value: "weekly_support",
-  },
-] as const satisfies readonly NeedTypeOption[];
+export type MatchLanguageOption = MatchOption;
 
-export const matchSubjectOptions = [
-  {
-    description: "Commentary, HL essay, IO, and written analysis.",
-    subjectCodes: ["english_a_hl", "english_a"],
-    subjectSlugs: ["english-a-hl", "english-a"],
-    label: "English A HL",
-    value: "english-a-hl",
-  },
-  {
-    description: "Literary analysis, IO structure, and essay confidence.",
-    subjectCodes: ["english_a_sl", "english_a"],
-    subjectSlugs: ["english-a-sl", "english-a"],
-    label: "English A SL",
-    value: "english-a-sl",
-  },
-  {
-    description: "Paper 2 planning, IA methods, and topic rescue.",
-    subjectCodes: ["biology_hl", "biology"],
-    subjectSlugs: ["biology-hl", "biology"],
-    label: "Biology HL",
-    value: "biology-hl",
-  },
-  {
-    description: "Problem practice, IA modeling, and exam strategy.",
-    subjectCodes: ["math_aa_hl", "mathematics_aa", "math_aa"],
-    subjectSlugs: ["math-aa-hl", "mathematics-analysis-and-approaches", "math-aa"],
-    label: "Math AA HL",
-    value: "math-aa-hl",
-  },
-  {
-    description: "Knowledge questions, essay planning, and exhibition polish.",
-    subjectCodes: ["tok", "theory_of_knowledge"],
-    subjectSlugs: ["tok", "theory-of-knowledge"],
-    label: "TOK",
-    value: "tok",
-  },
-  {
-    description: "Research question, structure, and milestone planning.",
-    subjectCodes: ["extended_essay", "ee"],
-    subjectSlugs: ["extended-essay", "ee"],
-    label: "Extended essay",
-    value: "extended-essay",
-  },
-  {
-    description: "Use this when the exact IB subject is not listed yet.",
-    subjectCodes: ["other", "general_ib"],
-    subjectSlugs: ["other", "general-ib"],
-    label: "Other IB subject",
-    value: "other",
-  },
-] as const satisfies readonly SubjectOption[];
-
-export const matchUrgencyOptions = [
-  {
-    description: "A deadline or exam is close and you need a clear plan quickly.",
-    label: "This week",
-    value: "this_week",
-  },
-  {
-    description: "You have a little room, but the next milestone matters.",
-    label: "Next two weeks",
-    value: "next_two_weeks",
-  },
-  {
-    description: "You want to build momentum without panic.",
-    label: "This month",
-    value: "this_month",
-  },
-  {
-    description: "You need continuity more than emergency help.",
-    label: "Steady support",
-    value: "steady",
-  },
-] as const satisfies readonly MatchOption[];
-
-export const matchFrequencyOptions = [
-  {
-    description: "One focused session to unblock the next step.",
-    label: "One-off help",
-    value: "one_off",
-  },
-  {
-    description: "Two or three sessions around a deadline.",
-    label: "Short burst",
-    value: "short_burst",
-  },
-  {
-    description: "Regular weekly lessons with continuity.",
-    label: "Weekly rhythm",
-    value: "weekly",
-  },
-] as const satisfies readonly MatchOption[];
-
-export const matchSupportStyleOptions = [
-  {
-    description: "A tutor who makes the next few steps feel manageable.",
-    label: "Calm structure",
-    value: "calm_structure",
-  },
-  {
-    description: "Clear critique on what to change and why.",
-    label: "Direct feedback",
-    value: "direct_feedback",
-  },
-  {
-    description: "Practice, timing, and strategy for papers or orals.",
-    label: "Exam strategy",
-    value: "exam_strategy",
-  },
-  {
-    description: "Check-ins, milestones, and steady accountability.",
-    label: "Accountability",
-    value: "accountability",
-  },
-] as const satisfies readonly MatchOption[];
-
-export const matchLanguageOptions = [
-  { description: "Primary tutoring language.", label: "English", value: "en" },
-  { description: "Good for bilingual planning and parent context.", label: "Polish", value: "pl" },
-  { description: "Useful for Spanish-speaking students or families.", label: "Spanish", value: "es" },
-  { description: "Useful for French-speaking students or families.", label: "French", value: "fr" },
-] as const satisfies readonly MatchOption[];
+export type MatchFlowOptionsByField = {
+  languageCode: readonly MatchLanguageOption[];
+  needType: readonly MatchNeedTypeOption[];
+  sessionFrequencyIntent: readonly MatchOption[];
+  subjectSlug: readonly MatchSubjectOption[];
+  supportStyle: readonly MatchOption[];
+  urgencyLevel: readonly MatchOption[];
+};
 
 export const emptyMatchFlowValues: MatchFlowFormValues = {
   freeTextNote: "",
@@ -207,27 +51,257 @@ export const emptyMatchFlowValues: MatchFlowFormValues = {
   urgencyLevel: "",
 };
 
-const optionListsByField = {
-  languageCode: matchLanguageOptions,
-  needType: matchNeedTypeOptions,
-  sessionFrequencyIntent: matchFrequencyOptions,
-  subjectSlug: matchSubjectOptions,
-  supportStyle: matchSupportStyleOptions,
-  urgencyLevel: matchUrgencyOptions,
-} as const;
+export const previewMatchFlowOptions = {
+  languageCode: [
+    { description: "Primary tutoring language.", label: "English", value: "en" },
+    { description: "Good for bilingual planning and parent context.", label: "Polish", value: "pl" },
+    { description: "Useful for Spanish-speaking students or families.", label: "Spanish", value: "es" },
+    { description: "Useful for French-speaking students or families.", label: "French", value: "fr" },
+  ],
+  needType: [
+    {
+      allowedSubjectCodes: [
+        "english_a",
+        "mathematics_aa",
+        "mathematics_ai",
+        "biology",
+        "chemistry",
+        "physics",
+        "history",
+        "business_management",
+        "economics",
+        "psychology",
+        "tok",
+      ],
+      description: "You need a concept explained, practice on a topic, or help getting unstuck.",
+      focusAreaCode: "topic_support",
+      label: "Topic help",
+      value: "topic_help",
+    },
+    {
+      allowedSubjectCodes: [
+        "mathematics_aa",
+        "mathematics_ai",
+        "biology",
+        "chemistry",
+        "physics",
+        "history",
+        "business_management",
+        "economics",
+        "psychology",
+      ],
+      description: "You already have work in progress and want clear, focused feedback.",
+      focusAreaCode: "ia_feedback",
+      label: "IA feedback",
+      value: "ia_feedback",
+    },
+    {
+      allowedSubjectCodes: [
+        "english_a",
+        "mathematics_aa",
+        "mathematics_ai",
+        "biology",
+        "chemistry",
+        "physics",
+        "history",
+        "business_management",
+        "economics",
+        "psychology",
+      ],
+      description: "You want targeted help before a test, mock, or final exam.",
+      focusAreaCode: "exam_prep",
+      label: "Exam prep",
+      value: "exam_prep",
+    },
+    {
+      allowedSubjectCodes: [
+        "english_a",
+        "history",
+        "business_management",
+        "economics",
+        "psychology",
+      ],
+      description: "You want support with structure, argument, drafting, or written feedback.",
+      focusAreaCode: "essay_support",
+      label: "Essay help",
+      value: "essay_help",
+    },
+    {
+      allowedSubjectCodes: ["tok"],
+      description: "You need help with your TOK essay or exhibition thinking.",
+      focusAreaCode: "tok_essay",
+      label: "TOK essay",
+      value: "tok_essay",
+    },
+    {
+      allowedSubjectCodes: [
+        "english_a",
+        "mathematics_aa",
+        "mathematics_ai",
+        "biology",
+        "chemistry",
+        "physics",
+        "history",
+        "business_management",
+        "economics",
+        "psychology",
+      ],
+      description: "You need help choosing a question, planning structure, or improving a draft.",
+      focusAreaCode: "extended_essay",
+      label: "Extended essay",
+      value: "extended_essay",
+    },
+    {
+      allowedSubjectCodes: ["english_a"],
+      description: "You want speaking practice, timing help, and direct oral feedback.",
+      focusAreaCode: "oral_practice",
+      label: "Oral practice",
+      value: "oral_practice",
+    },
+  ],
+  sessionFrequencyIntent: [
+    {
+      description: "Start with one focused session and decide after that.",
+      label: "One lesson first",
+      value: "one_off",
+    },
+    {
+      description: "A short run of lessons around a deadline or assessment.",
+      label: "2-3 lessons",
+      value: "short_burst",
+    },
+    {
+      description: "Regular lessons with continuity and accountability.",
+      label: "Weekly",
+      value: "weekly",
+    },
+    {
+      description: "You want to find the right tutor first and decide the rhythm later.",
+      label: "Not sure yet",
+      value: "not_sure",
+    },
+  ],
+  subjectSlug: [
+    { label: "English A", subjectCode: "english_a", value: "english-a" },
+    {
+      label: "Mathematics AA",
+      subjectCode: "mathematics_aa",
+      value: "mathematics-analysis-and-approaches",
+    },
+    {
+      label: "Mathematics AI",
+      subjectCode: "mathematics_ai",
+      value: "mathematics-applications-and-interpretation",
+    },
+    { label: "Biology", subjectCode: "biology", value: "biology" },
+    { label: "Chemistry", subjectCode: "chemistry", value: "chemistry" },
+    { label: "Physics", subjectCode: "physics", value: "physics" },
+    { label: "History", subjectCode: "history", value: "history" },
+    {
+      label: "Business Management",
+      subjectCode: "business_management",
+      value: "business-management",
+    },
+    { label: "Economics", subjectCode: "economics", value: "economics" },
+    { label: "Psychology", subjectCode: "psychology", value: "psychology" },
+    { label: "TOK", subjectCode: "tok", value: "tok" },
+  ],
+  supportStyle: [
+    {
+      description: "You want ideas broken down simply before moving into practice.",
+      label: "Clear explanations",
+      value: "clear_explanations",
+    },
+    {
+      description: "You want clear critique on what to change and why.",
+      label: "Direct feedback",
+      value: "direct_feedback",
+    },
+    {
+      description: "You want a tutor who makes the next steps feel manageable.",
+      label: "Calm structure",
+      value: "calm_structure",
+    },
+    {
+      description: "You want timing, exam technique, and smart question approach.",
+      label: "Exam strategy",
+      value: "exam_strategy",
+    },
+    {
+      description: "You want check-ins, milestones, and momentum between lessons.",
+      label: "Accountability",
+      value: "accountability",
+    },
+  ],
+  urgencyLevel: [
+    {
+      description: "A deadline or exam is close and you need help soon.",
+      label: "This week",
+      value: "this_week",
+    },
+    {
+      description: "You have a little room, but the next milestone matters.",
+      label: "Next 2 weeks",
+      value: "next_two_weeks",
+    },
+    {
+      description: "You want to build momentum without last-minute panic.",
+      label: "This month",
+      value: "this_month",
+    },
+    {
+      description: "You are planning ahead and want the right fit more than speed.",
+      label: "Flexible",
+      value: "flexible",
+    },
+  ],
+} as const satisfies MatchFlowOptionsByField;
 
-export function getMatchOptionLabel(field: keyof typeof optionListsByField, value: string) {
-  return optionListsByField[field].find((option) => option.value === value)?.label ?? value;
+type MatchFlowFieldWithOptions = keyof MatchFlowOptionsByField;
+
+export function getMatchOptionLabel(
+  field: MatchFlowFieldWithOptions,
+  value: string,
+  optionsByField: MatchFlowOptionsByField = previewMatchFlowOptions,
+) {
+  return optionsByField[field].find((option) => option.value === value)?.label ?? value;
 }
 
-export function getNeedTypeOption(value: string) {
-  return matchNeedTypeOptions.find((option) => option.value === value) ?? null;
+export function getNeedTypeOption(
+  value: string,
+  optionsByField: MatchFlowOptionsByField = previewMatchFlowOptions,
+) {
+  return optionsByField.needType.find((option) => option.value === value) ?? null;
 }
 
-export function getSubjectOption(value: string) {
-  return matchSubjectOptions.find((option) => option.value === value) ?? null;
+export function getSubjectOption(
+  value: string,
+  optionsByField: MatchFlowOptionsByField = previewMatchFlowOptions,
+) {
+  return optionsByField.subjectSlug.find((option) => option.value === value) ?? null;
 }
 
-export function isKnownMatchOption(field: keyof typeof optionListsByField, value: string) {
-  return optionListsByField[field].some((option) => option.value === value);
+export function isKnownMatchOption(
+  field: MatchFlowFieldWithOptions,
+  value: string,
+  optionsByField: MatchFlowOptionsByField = previewMatchFlowOptions,
+) {
+  return optionsByField[field].some((option) => option.value === value);
+}
+
+export function getCompatibleSubjectOptions(
+  needTypeValue: string,
+  optionsByField: MatchFlowOptionsByField = previewMatchFlowOptions,
+) {
+  const needType = getNeedTypeOption(needTypeValue, optionsByField);
+
+  if (!needType || needType.allowedSubjectCodes.length === 0) {
+    return optionsByField.subjectSlug;
+  }
+
+  const allowedSubjectCodes = new Set(needType.allowedSubjectCodes);
+
+  return optionsByField.subjectSlug.filter((subject) =>
+    allowedSubjectCodes.has(subject.subjectCode),
+  );
 }

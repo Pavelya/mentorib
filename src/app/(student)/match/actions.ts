@@ -17,11 +17,11 @@ import {
   type MatchFlowFieldErrors,
   type MatchFlowFormValues,
 } from "@/modules/lessons/match-flow-options";
-import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
 import {
   MatchFlowCommandError,
   submitLearningNeedForMatching,
 } from "@/modules/lessons/match-flow-service";
+import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
 const FREE_TEXT_NOTE_MAX_LENGTH = 600;
 
@@ -37,7 +37,7 @@ export async function submitMatchFlowAction(
   formData: FormData,
 ): Promise<MatchFlowActionState> {
   const values = getMatchFlowValues(formData);
-  const optionsByField = await loadMatchFlowOptions();
+  const optionsByField = await loadDiscoveryOptions();
   const fieldErrors = validateMatchFlowValues(values, optionsByField);
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -127,7 +127,7 @@ function getMatchFlowValues(formData: FormData): MatchFlowFormValues {
 
 function validateMatchFlowValues(
   values: MatchFlowFormValues,
-  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>,
+  optionsByField: Awaited<ReturnType<typeof loadDiscoveryOptions>>,
 ) {
   const fieldErrors: MatchFlowFieldErrors = {};
 

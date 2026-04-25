@@ -2,7 +2,16 @@ import { resolveTimezone } from "@/lib/datetime";
 import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { getMatchOptionLabel } from "@/modules/lessons/match-flow-options";
-import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
+import {
+  loadReferenceLanguageByCode,
+  loadReferenceLanguagesByCodes,
+  loadReferenceSubjectById,
+  loadReferenceSubjectFocusAreaById,
+  type ReferenceLanguage,
+  type ReferenceSubject,
+  type ReferenceSubjectFocusArea,
+} from "@/modules/reference/catalog";
+import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
 type StudentProfileRecord = {
   id: string;
@@ -71,21 +80,6 @@ type TutorSubjectCapabilityRecord = {
   subject_focus_area_id: string;
   subject_id: string;
   tutor_profile_id: string;
-};
-
-type SubjectRecord = {
-  display_name: string;
-  id: string;
-};
-
-type FocusAreaRecord = {
-  display_name: string;
-  id: string;
-};
-
-type LanguageRecord = {
-  display_name: string;
-  language_code: string;
 };
 
 export type MatchResultsState = "empty" | "failed" | "preview" | "queued" | "ready";
@@ -191,12 +185,16 @@ export async function getStudentMatchResults(
   }
 
   const [subject, focusArea, language, matchRun] = await Promise.all([
-    loadSubjectById(learningNeed.subject_id),
-    loadFocusAreaById(learningNeed.subject_focus_area_id),
-    loadLanguageByCode(learningNeed.language_code),
+    loadReferenceSubjectById(learningNeed.subject_id),
+    loadReferenceSubjectFocusAreaById(learningNeed.subject_focus_area_id),
+    loadReferenceLanguageByCode(learningNeed.language_code),
     loadLatestMatchRun(learningNeed.id),
   ]);
-  const optionsByField = await loadMatchFlowOptions();
+  const optionsByField = await loadDiscoveryOptions();
+
+  if (!subject || !focusArea || !language) {
+    throw new Error("Could not resolve the learning-need reference data.");
+  }
   let cachedHasTutorSupply: boolean | null = null;
 
   async function resolveHasTutorSupply() {
@@ -278,7 +276,7 @@ export async function getStudentMatchResults(
   ]);
 
   const languageCodes = languageCapabilities.map((capability) => capability.language_code);
-  const languageRows = await loadLanguagesByCodes(languageCodes);
+  const languageRows = await loadReferenceLanguagesByCodes(languageCodes);
   const cards = buildMatchCards({
     accountTimezone: resolveTimezone(account.timezone),
     candidateRows,
@@ -561,70 +559,6 @@ async function loadTutorLanguageCapabilitiesByIds(tutorProfileIds: string[]) {
   return data ?? [];
 }
 
-async function loadLanguagesByCodes(languageCodes: string[]) {
-  if (!languageCodes.length) {
-    return [];
-  }
-
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("languages")
-    .select("language_code, display_name")
-    .in("language_code", Array.from(new Set(languageCodes)))
-    .returns<LanguageRecord[]>();
-
-  if (error) {
-    throw new Error("Could not resolve language labels for match results.");
-  }
-
-  return data ?? [];
-}
-
-async function loadSubjectById(subjectId: string) {
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("subjects")
-    .select("id, display_name")
-    .eq("id", subjectId)
-    .single<SubjectRecord>();
-
-  if (error || !data) {
-    throw new Error("Could not resolve the subject label for the learning need.");
-  }
-
-  return data;
-}
-
-async function loadFocusAreaById(focusAreaId: string) {
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("subject_focus_areas")
-    .select("id, display_name")
-    .eq("id", focusAreaId)
-    .single<FocusAreaRecord>();
-
-  if (error || !data) {
-    throw new Error("Could not resolve the focus area label for the learning need.");
-  }
-
-  return data;
-}
-
-async function loadLanguageByCode(languageCode: string) {
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("languages")
-    .select("language_code, display_name")
-    .eq("language_code", languageCode)
-    .single<LanguageRecord>();
-
-  if (error || !data) {
-    throw new Error("Could not resolve the learning-need language label.");
-  }
-
-  return data;
-}
-
 function buildCurrentNeedDto({
   focusArea,
   language,
@@ -632,14 +566,14 @@ function buildCurrentNeedDto({
   optionsByField,
   subject,
 }: {
-  focusArea: FocusAreaRecord;
-  language: LanguageRecord;
+  focusArea: ReferenceSubjectFocusArea;
+  language: ReferenceLanguage;
   learningNeed: LearningNeedRecord & { free_text_note: string | null };
-  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>;
-  subject: SubjectRecord;
+  optionsByField: Awaited<ReturnType<typeof loadDiscoveryOptions>>;
+  subject: ReferenceSubject;
 }): MatchResultsNeedDto {
   const qualifiers: MatchResultsNeedDto["qualifiers"] = [
-    { label: focusArea.display_name },
+    { label: focusArea.displayName },
   ];
 
   if (learningNeed.urgency_level !== "flexible") {
@@ -672,11 +606,11 @@ function buildCurrentNeedDto({
     });
   }
 
-  qualifiers.push({ label: language.display_name });
+  qualifiers.push({ label: language.displayName });
   qualifiers.push({ label: resolveTimezone(learningNeed.timezone), priority: "support" });
 
   return {
-    headline: `${subject.display_name} · ${focusArea.display_name}`,
+    headline: `${subject.displayName} · ${focusArea.displayName}`,
     id: learningNeed.id,
     note: normalizeText(learningNeed.free_text_note),
     qualifiers,
@@ -701,13 +635,13 @@ function buildMatchCards({
   accountTimezone: string;
   candidateRows: MatchCandidateRecord[];
   capabilityRows: TutorSubjectCapabilityRecord[];
-  focusArea: FocusAreaRecord;
+  focusArea: ReferenceSubjectFocusArea;
   languageCapabilities: TutorLanguageCapabilityRecord[];
-  languageRows: LanguageRecord[];
-  needLanguage: LanguageRecord;
+  languageRows: ReferenceLanguage[];
+  needLanguage: ReferenceLanguage;
   profiles: TutorProfileRecord[];
   schedules: SchedulePolicyRecord[];
-  subject: SubjectRecord;
+  subject: ReferenceSubject;
 }) {
   const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
   const schedulesByTutorId = new Map(
@@ -717,7 +651,7 @@ function buildMatchCards({
     capabilityRows.map((capability) => [capability.tutor_profile_id, capability]),
   );
   const languageNameByCode = new Map(
-    languageRows.map((language) => [language.language_code, language.display_name]),
+    languageRows.map((language) => [language.languageCode, language.displayName]),
   );
   const languagesByTutorId = languageCapabilities.reduce<Map<string, string[]>>((accumulator, row) => {
     const label = languageNameByCode.get(row.language_code);
@@ -807,15 +741,15 @@ function buildFitSummary({
 }: {
   candidate: MatchCandidateRecord;
   capability: TutorSubjectCapabilityRecord | null;
-  focusArea: FocusAreaRecord;
-  needLanguage: LanguageRecord;
-  subject: SubjectRecord;
+  focusArea: ReferenceSubjectFocusArea;
+  needLanguage: ReferenceLanguage;
+  subject: ReferenceSubject;
 }) {
   return (
     normalizeText(candidate.fit_summary) ??
     normalizeText(candidate.best_for_summary) ??
     normalizeText(capability?.experience_summary) ??
-    `Strong fit for ${subject.display_name} students who need ${focusArea.display_name.toLowerCase()} in ${needLanguage.display_name}.`
+    `Strong fit for ${subject.displayName} students who need ${focusArea.displayName.toLowerCase()} in ${needLanguage.displayName}.`
   );
 }
 
@@ -835,18 +769,18 @@ function buildFitReasons({
   availabilitySignal: string | null;
   capability: TutorSubjectCapabilityRecord | null;
   fitSummary: string;
-  focusArea: FocusAreaRecord;
+  focusArea: ReferenceSubjectFocusArea;
   languages: string[];
-  needLanguage: LanguageRecord;
+  needLanguage: ReferenceLanguage;
   schedule: SchedulePolicyRecord | null;
-  subject: SubjectRecord;
+  subject: ReferenceSubject;
   trustSignals: string[];
 }) {
   const reasons = [
-    `Subject fit: ${subject.display_name} · ${focusArea.display_name}.`,
+    `Subject fit: ${subject.displayName} · ${focusArea.displayName}.`,
     normalizeReason(capability?.experience_summary, fitSummary),
     normalizeText(availabilitySignal),
-    buildLanguageReason(languages, needLanguage.display_name),
+    buildLanguageReason(languages, needLanguage.displayName),
     buildTimezoneReason(schedule?.timezone ?? null, accountTimezone),
     trustSignals[0] ?? null,
   ].filter((reason): reason is string => Boolean(reason));

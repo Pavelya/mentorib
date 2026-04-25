@@ -39,6 +39,7 @@ This document does not replace:
 - `docs/planning/service-dependency-baseline-v1.md`
 - `docs/planning/agent-implementation-decision-index-v1.md`
 - `docs/planning/implementation-task-template-v1.md`
+- `docs/design-system/agent-ui-rules.md`
 - `docs/architecture/configuration-and-governance-architecture-v1.md`
 - `docs/architecture/testing-and-release-architecture-v1.md`
 - `docs/architecture/security-architecture-v1.md`
@@ -153,6 +154,7 @@ Allowed local literals include:
 Practical rule:
 
 - if a value affects cross-screen consistency, business behavior, provider behavior, or public policy surfaces, it belongs in a shared source of truth
+- for Mentor IB core student and tutor surfaces, shared vocabularies should flow through `src/modules/reference/**`, timezone behavior through `src/lib/datetime/**`, and shared currency handling through `src/modules/pricing/**`
 
 ## 8. Environment, Secrets, And Config Access
 
@@ -230,6 +232,11 @@ Agents must:
 - extend shared components through variants or wrappers where appropriate
 - preserve one shared design language across student and tutor routes
 - look for an existing continuity anchor before creating a new composite
+
+For UI-affecting implementation, pair these guardrails with:
+
+- `docs/design-system/agent-ui-rules.md`
+- the canonical design-system and component-spec docs for the task
 
 Agents must not:
 

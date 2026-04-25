@@ -8,6 +8,8 @@
 
 This document defines how Mentor IB should centralize values, behavior switches, shared patterns, and ownership rules so implementation does not drift into scattered constants and duplicated UI.
 
+> **Implementation note:** `docs/architecture/canonical-value-ownership-map-v1.md` is the implementation-facing owner map for shared vocabularies, discovery filters, timezone behavior, and money formatting.
+
 It exists now because the approved product already depends on:
 
 - a shared design system

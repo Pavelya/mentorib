@@ -13,7 +13,7 @@ import {
   type MatchFlowFormValues,
   type MatchFlowOptionsByField,
 } from "@/modules/lessons/match-flow-options";
-import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
+import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
 const MATCH_RANKING_VERSION = "mvp-ranking-v1";
 const MATCHING_PROJECTION_VERSION = "mvp-reference-projection-v1";
@@ -82,7 +82,7 @@ export async function submitLearningNeedForMatching(
     );
   }
 
-  const optionsByField = await loadMatchFlowOptions();
+  const optionsByField = await loadDiscoveryOptions();
   const needType = getNeedTypeOption(values.needType, optionsByField);
   const subjectOption = getSubjectOption(values.subjectSlug, optionsByField);
 

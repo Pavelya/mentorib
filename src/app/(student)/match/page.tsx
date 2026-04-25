@@ -13,13 +13,13 @@ import {
   isRestrictedAccount,
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
-import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
+import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
 import { MatchFlowForm } from "./match-flow-form";
 
 export default async function MatchPage() {
   const fallbackTimezone = await getCurrentUserTimezone();
-  const optionsByField = await loadMatchFlowOptions();
+  const optionsByField = await loadDiscoveryOptions();
   const fallbackLanguageCode = resolveInitialLanguageCode(
     null,
     optionsByField,
@@ -107,7 +107,7 @@ export default async function MatchPage() {
 
 function resolveInitialLanguageCode(
   preferredLanguageCode: string | null,
-  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>,
+  optionsByField: Awaited<ReturnType<typeof loadDiscoveryOptions>>,
 ) {
   if (
     preferredLanguageCode &&

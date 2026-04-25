@@ -4,7 +4,7 @@ import {
   isKnownMatchOption,
   type MatchFlowOptionsByField,
 } from "@/modules/lessons/match-flow-options";
-import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
+import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
 const FULL_NAME_MAX_LENGTH = 120;
 
@@ -48,7 +48,7 @@ export async function updateAccountProfile(
   values: AccountProfileFormValues,
 ) {
   const normalizedValues = normalizeAccountProfileFormValues(values);
-  const optionsByField = await loadMatchFlowOptions();
+  const optionsByField = await loadDiscoveryOptions();
   const fieldErrors = validateAccountProfileValues(normalizedValues, optionsByField);
 
   if (Object.keys(fieldErrors).length > 0) {

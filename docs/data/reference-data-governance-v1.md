@@ -26,6 +26,8 @@ Without an explicit reference-data contract, teams usually drift into:
 
 This document exists to prevent that.
 
+> **Implementation note:** `docs/architecture/canonical-value-ownership-map-v1.md` is the code-module companion for this governance doc. It maps the canonical value families to the exact application modules that should own them in implementation.
+
 ## 2. Why This Lives In `docs/data`
 
 This document belongs in `docs/data` because it defines how shared database-backed vocabularies and taxonomies are modeled and governed.

@@ -293,6 +293,7 @@ Use these shortcuts when filling the required docs section.
 
 Required docs:
 
+- `docs/design-system/agent-ui-rules.md`
 - `docs/design-system/design-system-spec-final-v1.md`
 - `docs/design-system/component-specs-core-v1.md`
 - `docs/design-system/component-specs-phase2-v1.md` if the component is phase 2 or operational
@@ -300,10 +301,13 @@ Required docs:
 
 Must answer:
 
+- which existing screen or shared component is the live interaction reference
+- which canonical config or loader owns any shared options, labels, icons, or flags
 - which existing component or pattern is reused
 - which tokens are used
 - which responsive states are required
 - whether the component is shared or feature-local
+- whether copy was intentionally kept sparse
 
 ## 8.2 Public route task
 

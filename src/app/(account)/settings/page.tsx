@@ -2,7 +2,7 @@ import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
 import { Panel } from "@/components/ui";
 import { getSharedAccountRouteContext } from "@/modules/accounts/shared-account";
-import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
+import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
 import styles from "../account-surfaces.module.css";
 import { SettingsProfileForm } from "./settings-form";
@@ -16,7 +16,7 @@ export default async function SettingsPage() {
 
   const { account, pendingLegalNotice } = context;
   const roleBadges = buildRoleBadges(account);
-  const optionsByField = await loadMatchFlowOptions();
+  const optionsByField = await loadDiscoveryOptions();
   const languageOptions = optionsByField.languageCode;
   const initialPreferredLanguageCode = resolveInitialPreferredLanguageCode(
     account.preferred_language_code,

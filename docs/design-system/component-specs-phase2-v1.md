@@ -15,6 +15,8 @@ It should still make sense if copied on its own, though it is best paired with:
 - `component-specs-core-v1.md`
 - `design-system-foundations-v3.md`
 
+> **Implementation note:** `docs/design-system/agent-ui-rules.md` is the operational companion for coding agents applying these specs in the repo. If it conflicts with this document, the component specs and final design-system spec win.
+
 ## 2. Product Assumptions
 
 Mentor IB is:

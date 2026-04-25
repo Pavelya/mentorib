@@ -10,6 +10,7 @@ export {
   TutorRoleIcon,
 } from "./app-icons";
 export { InlineNotice } from "./inline-notice";
+export { OptionCardGroup } from "./option-card-group";
 export { Panel } from "./panel";
 export { SelectField } from "./select-field";
 export { StatusBadge } from "./status-badge";

@@ -138,6 +138,18 @@ For any nontrivial implementation task, read in this order:
 Do not reread the entire docs pack by default.
 Do not implement from the backlog row alone.
 
+For UI-affecting tasks, also read:
+
+- `docs/design-system/agent-ui-rules.md`
+- the relevant canonical design-system docs named by the task
+- the existing repo screen or shared component that already solves the same interaction, if one exists
+
+For tasks that affect shared vocabularies, discovery filters, timezones, or currency handling, also read:
+
+- `docs/data/reference-data-governance-v1.md`
+- `docs/architecture/configuration-and-governance-architecture-v1.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
+
 ### 3. Pre-flight before coding
 
 Before editing code, explicitly answer:
@@ -150,6 +162,9 @@ Before editing code, explicitly answer:
 - files you expect to touch
 - packages you expect to add, if any
 - whether the task needs migrations, RLS, DTO, env, provider, or SEO work
+- for UI work, which existing screen or shared component pattern you are reusing
+- for UI work, which canonical config or loader owns any reference-backed labels, icons, flags, or options
+- for UI work, whether copy can be removed instead of added
 
 If any of that is unclear, read more before coding.
 If it cannot be resolved safely, report a blocker.
@@ -190,6 +205,10 @@ When in doubt, the work is out of scope.
 - Use typed env modules. No scattered `process.env.*` reads.
 - Commit `.env.example`, never real secrets.
 - Do not hardcode shared design tokens, business statuses, provider IDs, webhook paths, analytics destinations, or policy content in random feature files.
+- Reference-backed UI options, labels, icons, and flags must come from shared loaders or configs, not route-local arrays.
+- Core shared vocabularies for match, search, settings, results, booking, and tutor surfaces must flow through `src/modules/reference/**`, not route-local helpers.
+- Timezone normalization and fallback behavior must flow through `src/lib/datetime/**`.
+- Currency defaults and shared money formatting must flow through `src/modules/pricing/**`.
 - Centralize meaningful config in shared modules rather than route-local literals.
 
 ## Phase 1 product rules that matter during coding
@@ -281,6 +300,8 @@ Do not ignore the detailed `Depends on:` lines.
 ## Useful doc entrypoints
 
 - `docs/README.md`
+- `docs/design-system/agent-ui-rules.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
 - `docs/planning/implementation-backlog-index-v1.md`
 - `docs/planning/phase1-mvp-task-pack-v1.md`
 - `docs/planning/phase1-5-task-pack-v1.md`

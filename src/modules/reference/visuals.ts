@@ -1,11 +1,11 @@
 import type {
-  AppLanguageFlagCode as MatchLanguageFlagCode,
-  AppSubjectIconKey as MatchSubjectIconKey,
+  AppLanguageFlagCode as ReferenceLanguageFlagCode,
+  AppSubjectIconKey as ReferenceSubjectIconKey,
 } from "@/components/ui/app-icons";
 
-export type { MatchLanguageFlagCode, MatchSubjectIconKey };
+export type { ReferenceLanguageFlagCode, ReferenceSubjectIconKey };
 
-const subjectIconKeysByCode: Record<string, MatchSubjectIconKey> = {
+const subjectIconKeysByCode: Record<string, ReferenceSubjectIconKey> = {
   biology: "biology",
   business_management: "business",
   chemistry: "chemistry",
@@ -19,17 +19,17 @@ const subjectIconKeysByCode: Record<string, MatchSubjectIconKey> = {
   tok: "tok",
 };
 
-const languageFlagCodesByCode: Record<string, MatchLanguageFlagCode> = {
+const languageFlagCodesByCode: Record<string, ReferenceLanguageFlagCode> = {
   en: "gb",
   es: "es",
   fr: "fr",
   pl: "pl",
 };
 
-export function getLanguageFlagCode(languageCode: string) {
+export function getReferenceLanguageFlagCode(languageCode: string) {
   return languageFlagCodesByCode[languageCode] ?? null;
 }
 
-export function getSubjectIconKey(subjectCode: string) {
+export function getReferenceSubjectIconKey(subjectCode: string) {
   return subjectIconKeysByCode[subjectCode] ?? null;
 }

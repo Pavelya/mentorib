@@ -1,11 +1,11 @@
 import type {
-  MatchLanguageFlagCode,
-  MatchSubjectIconKey,
-} from "@/modules/lessons/match-flow-visual-config";
+  ReferenceLanguageFlagCode as MatchLanguageFlagCode,
+  ReferenceSubjectIconKey as MatchSubjectIconKey,
+} from "@/modules/reference/visuals";
 import {
-  getLanguageFlagCode,
-  getSubjectIconKey,
-} from "@/modules/lessons/match-flow-visual-config";
+  getReferenceLanguageFlagCode as getLanguageFlagCode,
+  getReferenceSubjectIconKey as getSubjectIconKey,
+} from "@/modules/reference/visuals";
 
 export type MatchFlowField =
   | "freeTextNote"

@@ -6,6 +6,10 @@ import {
   getSharedAccountRouteContext,
   listAccountBillingHistory,
 } from "@/modules/accounts/shared-account";
+import {
+  DEFAULT_PLATFORM_CURRENCY_CODE,
+  formatCurrencyFromMinorUnits,
+} from "@/modules/pricing/money";
 
 import styles from "../account-surfaces.module.css";
 
@@ -56,7 +60,7 @@ export default async function BillingPage() {
               <p className={styles.metricValue}>
                 {formatCurrency(
                   capturedTotal,
-                  billingEntries[0]?.currencyCode ?? "USD",
+                  billingEntries[0]?.currencyCode ?? DEFAULT_PLATFORM_CURRENCY_CODE,
                 )}
               </p>
               <p className={styles.metricLabel}>Captured or refunded value</p>
@@ -152,11 +156,7 @@ export default async function BillingPage() {
 }
 
 function formatCurrency(amount: number, currencyCode: string) {
-  return new Intl.NumberFormat("en-US", {
-    currency: currencyCode,
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(amount);
+  return formatCurrencyFromMinorUnits(amount, currencyCode);
 }
 
 function formatPaymentStatus(

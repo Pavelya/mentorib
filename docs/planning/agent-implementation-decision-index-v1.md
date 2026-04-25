@@ -80,8 +80,10 @@ Before editing code, an agent should answer:
 - Does the task affect public routes, metadata, sitemap, structured data, or cache invalidation?
 - Does the task affect student/tutor shared UX objects?
 - Does the task introduce a new component or reuse an existing one?
+- For UI work, what existing screen or shared component already solves the same interaction?
 - Does the task require tests, and at which layer?
 - Is any new configuration, copy, color, status, reference data, or hardcoded value being introduced?
+- For UI work, are any shared options, labels, icons, or flags being introduced outside their canonical config or loader?
 - Is this a new decision that should update docs, or an implementation of an existing decision?
 
 If the answer is unclear, read the docs listed in the relevant section below before implementing.
@@ -123,7 +125,7 @@ For public route tasks, also read:
 | Product direction or scope | `docs/research/ui-ux-research-fresh-start.md`, `docs/research/ui-ux-research-two-sided-ecosystem.md`, `docs/planning/implementation-readiness-pack-v1.md`, `docs/foundations/cross-role-journey-inventory-v1.md` |
 | Shared object or IA decision | `docs/foundations/ux-object-model.md`, `docs/foundations/ia-map-two-sided.md`, `docs/foundations/service-blueprint-two-sided.md`, `docs/foundations/cross-role-journey-inventory-v1.md` |
 | Page, route, or layout implementation | `docs/architecture/route-layout-implementation-map-v1.md`, `docs/architecture/architecture-discussion-v1.md`, `docs/planning/implementation-readiness-pack-v1.md` |
-| Visual UI or component implementation | `docs/design-system/design-system-spec-final-v1.md`, `docs/design-system/component-specs-core-v1.md`, `docs/design-system/component-specs-phase2-v1.md` |
+| Visual UI or component implementation | `docs/design-system/agent-ui-rules.md`, `docs/design-system/design-system-spec-final-v1.md`, `docs/design-system/component-specs-core-v1.md`, `docs/design-system/component-specs-phase2-v1.md` |
 | Responsive or mobile UI | `docs/visual-design/hi-fi-key-screen-comps-wave2-v1.html`, `docs/visual-design/hi-fi-key-screen-review-guide-wave2-v1.md`, `docs/design-system/design-system-spec-final-v1.md` |
 | Home or public marketing route | `docs/visual-design/hi-fi-key-screen-comps-v1.html`, `docs/architecture/seo-app-architecture-v1.md`, `docs/planning/public-route-seo-acceptance-checklist-v1.md` |
 | Match flow or results | `docs/architecture/matching-and-ranking-architecture-v1.md`, `docs/architecture/search-and-query-architecture-v1.md`, `docs/data/data-dto-and-query-boundary-map-v1.md` |
@@ -138,7 +140,7 @@ For public route tasks, also read:
 | Drizzle query or repository | `docs/data/drizzle-schema-and-query-conventions-v1.md`, `docs/data/data-dto-and-query-boundary-map-v1.md`, `docs/data/database-index-and-query-review-v1.md` |
 | Toolchain, dependency, or scaffold baseline | `docs/planning/implementation-baseline-v1.md`, `docs/planning/service-dependency-baseline-v1.md`, root `package.json`, lockfile, `tsconfig.json`, `next.config.*` |
 | Projection or search read model | `docs/data/projection-maintenance-strategy-v1.md`, `docs/data/projection-sql-patterns-v1.md`, `docs/architecture/query-performance-slos-and-scaling-thresholds-v1.md` |
-| Reference data, enum, or status | `docs/data/reference-data-governance-v1.md`, `docs/data/database-enum-and-status-glossary-v1.md`, `docs/architecture/configuration-and-governance-architecture-v1.md` |
+| Reference data, enum, or status | `docs/data/reference-data-governance-v1.md`, `docs/data/database-enum-and-status-glossary-v1.md`, `docs/architecture/configuration-and-governance-architecture-v1.md`, `docs/architecture/canonical-value-ownership-map-v1.md` |
 | Seed, fixture, or test data | `docs/data/seed-and-fixture-data-strategy-v1.md`, `docs/data/database-test-conventions-v1.md`, `docs/data/supabase-folder-and-file-conventions-v1.md` |
 | File, certificate, video, or media | `docs/architecture/file-and-media-architecture-v1.md`, `docs/data/data-dto-and-query-boundary-map-v1.md`, `docs/data/database-observability-and-maintenance-v1.md` |
 | Meeting link or calendar export | `docs/architecture/meeting-and-calendar-architecture-v1.md`, `docs/data/api-and-server-action-contracts-v1.md`, `docs/data/data-dto-and-query-boundary-map-v1.md` |
@@ -182,9 +184,14 @@ Owned by:
 - `docs/visual-design/hi-fi-key-screen-comps-v1.html`
 - `docs/visual-design/hi-fi-key-screen-comps-wave2-v1.html`
 
+Operational implementation companion:
+
+- `docs/design-system/agent-ui-rules.md`
+
 Rule:
 
 - reuse approved tokens, primitives, and shared components before creating new local variants.
+- when the same interaction already exists in the repo, reuse or extract it instead of rebuilding a near-match version.
 
 ## 7.3 Route and application-shape decisions
 
@@ -575,6 +582,7 @@ Future agents should not:
 - implement from non-canonical external materials as the source of truth
 - duplicate student and tutor systems
 - create separate UI component families by role
+- rebuild an existing shared interaction locally with slightly different markup or styling
 - create an internal API layer by default
 - use Supabase Edge Functions by reflex
 - bypass DTOs because code is server-side
@@ -609,6 +617,7 @@ The operational model is:
 
 - `CLAUDE.md` is the agent entrypoint (loaded automatically every session)
 - this index is the decision-routing layer (read when a task touches an unfamiliar area)
+- `docs/design-system/agent-ui-rules.md` is the UI implementation companion for design-affecting tasks
 - the dedicated source docs remain the source of truth for each decision area
 - the phase task packs define what to build and in what order
 - update docs only when a real decision changes

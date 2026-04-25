@@ -33,6 +33,7 @@ This document does not replace:
 - `docs/planning/engineering-guardrails-v1.md`
 - `docs/architecture/architecture-discussion-v1.md`
 - `docs/architecture/route-layout-implementation-map-v1.md`
+- `docs/design-system/agent-ui-rules.md`
 - `docs/design-system/design-system-spec-final-v1.md`
 - `docs/planning/implementation-readiness-pack-v1.md`
 - `docs/planning/service-dependency-baseline-v1.md`
@@ -223,6 +224,11 @@ Why:
 - the design system is custom and expressive
 - CSS variables map cleanly to the token model already defined in the docs
 - CSS Modules reduce framework lock-in and help avoid generic utility-first page assembly
+
+For UI-affecting implementation work, pair this baseline with:
+
+- `docs/design-system/agent-ui-rules.md`
+- the canonical design-system and component-spec docs required by the task
 
 ### 7.2 Token rule
 
@@ -455,6 +461,12 @@ Use it to find:
 ### 15.4 Layer 4: task-specific source docs
 
 Read only the docs required by the detailed task section and the decision index.
+
+For UI-affecting tasks, this usually includes:
+
+- `docs/design-system/agent-ui-rules.md`
+- the relevant canonical design-system and component-spec docs
+- the existing repo screen or shared component already solving the same interaction
 
 This is the intended retrieval model.
 

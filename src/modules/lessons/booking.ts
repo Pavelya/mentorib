@@ -9,7 +9,20 @@ import type { MentorIbDatabase } from "@/lib/supabase/database.types";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { hasRole, isRestrictedAccount } from "@/modules/accounts/account-state";
 import { getMatchOptionLabel } from "@/modules/lessons/match-flow-options";
-import { loadMatchFlowOptions } from "@/modules/lessons/match-flow-reference";
+import {
+  loadReferenceLanguageByCode,
+  loadReferenceLanguagesByCodes,
+  loadReferenceSubjectById,
+  loadReferenceSubjectFocusAreaById,
+  type ReferenceLanguage,
+  type ReferenceSubject,
+  type ReferenceSubjectFocusArea,
+} from "@/modules/reference/catalog";
+import { loadDiscoveryOptions } from "@/modules/reference/discovery";
+import {
+  DEFAULT_PLATFORM_CURRENCY_CODE,
+  formatCurrencyFromMinorUnits,
+} from "@/modules/pricing/money";
 
 const BOOKING_NOTE_MAX_LENGTH = 600;
 const CHECKOUT_CANCEL_STATE = "cancelled";
@@ -19,7 +32,6 @@ const DEFAULT_BOOKING_LEAD_TIME_MINUTES = 480;
 const DEFAULT_BUFFER_AFTER_MINUTES = 0;
 const DEFAULT_BUFFER_BEFORE_MINUTES = 0;
 const DEFAULT_BOOKING_REQUEST_EXPIRY_BUFFER_MINUTES = 120;
-const DEFAULT_CURRENCY_CODE = "USD";
 const DEFAULT_LESSON_DURATION_MINUTES = 48;
 const MAX_BOOKING_ADVANCE_DAYS = 6;
 const MAX_BOOKING_SLOTS = 12;
@@ -106,23 +118,6 @@ type TutorProfileRecord = {
 type TutorLanguageCapabilityRecord = {
   language_code: string;
   tutor_profile_id: string;
-};
-
-type LanguageRecord = {
-  display_name: string;
-  language_code: string;
-};
-
-type SubjectRecord = {
-  display_name: string;
-  id: string;
-  slug: string;
-};
-
-type FocusAreaRecord = {
-  display_name: string;
-  id: string;
-  slug: string;
 };
 
 type SchedulePolicyRecord = {
@@ -286,7 +281,7 @@ type ResolvedBookingContext = {
   currencyCode: string;
   learningNeed: LearningNeedRecord;
   matchCandidateId: string | null;
-  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>;
+  optionsByField: Awaited<ReturnType<typeof loadDiscoveryOptions>>;
   notePrefill: string;
   priceAmount: number | null;
   priceLabel: string | null;
@@ -294,11 +289,11 @@ type ResolvedBookingContext = {
   slotOptions: BookingSlotOption[];
   source: BookingContextSource;
   studentProfile: StudentProfileRecord;
-  subject: SubjectRecord;
-  focusArea: FocusAreaRecord;
+  subject: ReferenceSubject;
+  focusArea: ReferenceSubjectFocusArea;
   tutor: TutorProfileRecord;
   tutorLanguages: string[];
-  language: LanguageRecord;
+  language: ReferenceLanguage;
 };
 
 type ReadyResolvedBookingContext = ResolvedBookingContext & {
@@ -416,7 +411,7 @@ export async function getStudentBookingContext(
   }
 
   return buildBookingContextDto(account.timezone, {
-    currencyCode: DEFAULT_CURRENCY_CODE,
+    currencyCode: DEFAULT_PLATFORM_CURRENCY_CODE,
     focusArea: publicProfileContext.focusArea,
     language: publicProfileContext.language,
     learningNeed: publicProfileContext.learningNeed,
@@ -788,7 +783,7 @@ function buildEmptyBookingContext(
   return {
     bookingPolicy: buildBookingPolicyLines(DEFAULT_BOOKING_LEAD_TIME_MINUTES),
     context,
-    currencyCode: DEFAULT_CURRENCY_CODE,
+    currencyCode: DEFAULT_PLATFORM_CURRENCY_CODE,
     notePrefill: "",
     priceLabel: null,
     sessionDurationMinutes: DEFAULT_LESSON_DURATION_MINUTES,
@@ -832,7 +827,7 @@ async function getResolvedBookingContext(
     }
 
     resolvedContext = {
-      currencyCode: DEFAULT_CURRENCY_CODE,
+      currencyCode: DEFAULT_PLATFORM_CURRENCY_CODE,
       focusArea: publicContext.focusArea,
       language: publicContext.language,
       learningNeed: publicContext.learningNeed,
@@ -979,7 +974,7 @@ async function resolveSharedBookingContext({
       loadSubjectById(learningNeed.subject_id),
       loadFocusAreaById(learningNeed.subject_focus_area_id),
       loadLanguageByCode(learningNeed.language_code),
-      loadMatchFlowOptions(),
+      loadDiscoveryOptions(),
       loadTutorProfileById(tutorProfileId),
       loadSchedulePolicy(tutorProfileId),
       loadTutorLanguageNames(tutorProfileId),
@@ -1018,7 +1013,7 @@ async function resolveSharedBookingContext({
   const priceAmount = parsePriceAmount(tutor.pricing_summary);
 
   return {
-    currencyCode: DEFAULT_CURRENCY_CODE,
+    currencyCode: DEFAULT_PLATFORM_CURRENCY_CODE,
     focusArea,
     language,
     learningNeed,
@@ -1028,7 +1023,7 @@ async function resolveSharedBookingContext({
     priceAmount,
     priceLabel:
       priceAmount !== null
-        ? formatCurrencyLabel(priceAmount, DEFAULT_CURRENCY_CODE)
+        ? formatCurrencyFromMinorUnits(priceAmount, DEFAULT_PLATFORM_CURRENCY_CODE)
         : tutor.pricing_summary ?? null,
     schedulePolicy,
     slotOptions,
@@ -1136,10 +1131,10 @@ function buildTutorSummaryDto(
 
 function buildNeedSummaryDto(
   learningNeed: LearningNeedRecord,
-  subject: SubjectRecord,
-  focusArea: FocusAreaRecord,
-  language: LanguageRecord,
-  optionsByField: Awaited<ReturnType<typeof loadMatchFlowOptions>>,
+  subject: ReferenceSubject,
+  focusArea: ReferenceSubjectFocusArea,
+  language: ReferenceLanguage,
+  optionsByField: Awaited<ReturnType<typeof loadDiscoveryOptions>>,
 ): BookingNeedSummaryDto {
   const qualifiers: BookingNeedSummaryDto["qualifiers"] = [
   ];
@@ -1174,11 +1169,11 @@ function buildNeedSummaryDto(
     });
   }
 
-  qualifiers.push({ label: language.display_name });
+  qualifiers.push({ label: language.displayName });
   qualifiers.push({ label: getTimezoneLabel(learningNeed.timezone), priority: "support" });
 
   return {
-    headline: `${subject.display_name} · ${focusArea.display_name}`,
+    headline: `${subject.displayName} · ${focusArea.displayName}`,
     note: normalizeOptionalText(learningNeed.free_text_note, BOOKING_NOTE_MAX_LENGTH),
     qualifiers,
     status: learningNeed.need_status,
@@ -1332,12 +1327,12 @@ async function ensureDraftLessonAndPayment({
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const subjectSnapshot = {
     id: bookingContext.subject.id,
-    label: bookingContext.subject.display_name,
+    label: bookingContext.subject.displayName,
     slug: bookingContext.subject.slug,
   };
   const focusSnapshot = {
     id: bookingContext.focusArea.id,
-    label: bookingContext.focusArea.display_name,
+    label: bookingContext.focusArea.displayName,
     slug: bookingContext.focusArea.slug,
   };
   const finalNote =
@@ -1469,7 +1464,7 @@ async function createCheckoutSession({
           price_data: {
             currency: bookingContext.currencyCode.toLowerCase(),
             product_data: {
-              description: `${bookingContext.subject.display_name} · ${lessonLabel}`,
+              description: `${bookingContext.subject.displayName} · ${lessonLabel}`,
               name: `Lesson request with ${bookingContext.tutor.display_name?.trim() ?? "Mentor IB tutor"}`,
             },
             unit_amount: bookingContext.priceAmount,
@@ -2002,20 +1997,20 @@ async function loadTutorLanguageNames(tutorProfileId: string) {
   }
 
   const languageCodes = capabilities.map((capability) => capability.language_code);
-  const { data: languages, error: languageError } = await serviceRoleClient
-    .from("languages")
-    .select("language_code, display_name")
-    .in("language_code", languageCodes)
-    .returns<LanguageRecord[]>();
+  let languages: ReferenceLanguage[];
 
-  if (languageError) {
+  try {
+    languages = await loadReferenceLanguagesByCodes(languageCodes);
+  } catch {
     throw new BookingCommandError(
       "language_lookup_failed",
       "We couldn't load the tutor's lesson languages yet.",
     );
   }
 
-  const namesByCode = new Map((languages ?? []).map((language) => [language.language_code, language.display_name]));
+  const namesByCode = new Map(
+    languages.map((language) => [language.languageCode, language.displayName]),
+  );
 
   return capabilities
     .map((capability) => namesByCode.get(capability.language_code))
@@ -2023,57 +2018,36 @@ async function loadTutorLanguageNames(tutorProfileId: string) {
 }
 
 async function loadSubjectById(subjectId: string) {
-  const serviceRoleClient = createSupabaseServiceRoleClient();
-  const { data, error } = await serviceRoleClient
-    .from("subjects")
-    .select("id, display_name, slug")
-    .eq("id", subjectId)
-    .maybeSingle<SubjectRecord>();
-
-  if (error) {
+  try {
+    return await loadReferenceSubjectById(subjectId);
+  } catch {
     throw new BookingCommandError(
       "subject_lookup_failed",
       "We couldn't load the lesson subject yet.",
     );
   }
-
-  return data ?? null;
 }
 
 async function loadFocusAreaById(focusAreaId: string) {
-  const serviceRoleClient = createSupabaseServiceRoleClient();
-  const { data, error } = await serviceRoleClient
-    .from("subject_focus_areas")
-    .select("id, display_name, slug")
-    .eq("id", focusAreaId)
-    .maybeSingle<FocusAreaRecord>();
-
-  if (error) {
+  try {
+    return await loadReferenceSubjectFocusAreaById(focusAreaId);
+  } catch {
     throw new BookingCommandError(
       "focus_area_lookup_failed",
       "We couldn't load the lesson focus area yet.",
     );
   }
-
-  return data ?? null;
 }
 
 async function loadLanguageByCode(languageCode: string) {
-  const serviceRoleClient = createSupabaseServiceRoleClient();
-  const { data, error } = await serviceRoleClient
-    .from("languages")
-    .select("language_code, display_name")
-    .eq("language_code", languageCode)
-    .maybeSingle<LanguageRecord>();
-
-  if (error) {
+  try {
+    return await loadReferenceLanguageByCode(languageCode);
+  } catch {
     throw new BookingCommandError(
       "language_lookup_failed",
       "We couldn't load the lesson language yet.",
     );
   }
-
-  return data ?? null;
 }
 
 function buildBookingRangeWindow(minimumNoticeMinutes: number) {
@@ -2275,7 +2249,7 @@ function buildBookingRequestOutcome(
   return {
     lessonStatus: lesson.lesson_status,
     paymentStatus: payment.payment_status,
-    priceLabel: formatCurrencyLabel(payment.amount, payment.currency_code),
+    priceLabel: formatCurrencyFromMinorUnits(payment.amount, payment.currency_code),
     requestExpiresLabel: formatUtcDateTime(lesson.request_expires_at),
     scheduledLabel: formatUtcLessonRange(lesson.scheduled_start_at, lesson.scheduled_end_at),
     tutorName: tutor?.display_name?.trim() ?? "Mentor IB tutor",
@@ -2386,13 +2360,6 @@ function weekdayToIndex(weekday: string) {
     default:
       return 0;
   }
-}
-
-function formatCurrencyLabel(amount: number, currencyCode: string) {
-  return new Intl.NumberFormat("en-US", {
-    currency: currencyCode,
-    style: "currency",
-  }).format(amount / 100);
 }
 
 function buildProviderIdempotencyKey(operationId: string) {

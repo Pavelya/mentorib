@@ -26,6 +26,8 @@ This document should be strong enough to act as the starting point for:
 - design QA
 - cross-role consistency review
 
+> **Implementation note:** `docs/design-system/agent-ui-rules.md` is the operational companion for coding agents. It explains how to apply this spec, the component specs, and existing repo patterns consistently. If it conflicts with this spec or the component specs, this spec and the component specs win.
+
 ## 2. Product And Experience Model
 
 Mentor IB is:

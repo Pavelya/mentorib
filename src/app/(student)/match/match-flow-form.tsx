@@ -9,7 +9,7 @@ import {
   Button,
   ClockIcon,
   InlineNotice,
-  MatchOptionVisual,
+  OptionCardGroup,
   SelectField,
   Textarea,
   getButtonClassName,
@@ -24,7 +24,7 @@ import {
   type MatchFlowFieldErrors,
   type MatchFlowFormValues,
   type MatchFlowOptionsByField,
-  type MatchOption,
+  type MatchSubjectOption,
 } from "@/modules/lessons/match-flow-options";
 import {
   getMatchFlowGuidanceCopy,
@@ -326,13 +326,14 @@ function StepFields({
   switch (step.id) {
     case "problem":
       return (
-        <OptionGroup
+        <OptionCardGroup
           error={errors.needType}
-          field="needType"
+          id={getFieldContainerId("needType")}
           legend={matchFlowStaticCopy.helpLegend}
+          name="needType-choice"
+          onChange={(nextValue) => updateValue("needType", nextValue)}
           options={optionsByField.needType}
           showDescriptions
-          updateValue={updateValue}
           value={values.needType}
         />
       );
@@ -349,13 +350,13 @@ function StepFields({
     case "details":
       return (
         <div className={styles.detailsGrid}>
-          <OptionGroup
+          <OptionCardGroup
             error={errors.languageCode}
-            field="languageCode"
+            id={getFieldContainerId("languageCode")}
             legend="Lesson language"
+            name="languageCode-choice"
+            onChange={(nextValue) => updateValue("languageCode", nextValue)}
             options={optionsByField.languageCode}
-            showDescriptions={false}
-            updateValue={updateValue}
             value={values.languageCode}
           />
           <div id={getFieldContainerId("timezone")}>
@@ -426,13 +427,13 @@ function SubjectGroup({
 
   return (
     <div className={styles.subjectStack}>
-      <OptionGroup
+      <OptionCardGroup
         error={error}
-        field="subjectSlug"
+        id={getFieldContainerId("subjectSlug")}
         legend={getSubjectLegend(selectedNeedType?.focusAreaCode)}
+        name="subjectSlug-choice"
+        onChange={(nextValue) => updateValue("subjectSlug", nextValue)}
         options={cardSubjects}
-        showDescriptions={false}
-        updateValue={updateValue}
         value={value}
       />
 
@@ -453,96 +454,6 @@ function SubjectGroup({
           </SelectField>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-type OptionGroupProps = {
-  error?: string;
-  field: MatchFlowField;
-  legend: string;
-  options: readonly MatchOption[];
-  showDescriptions?: boolean;
-  updateValue: (field: MatchFlowField, value: string) => void;
-  value: string;
-};
-
-function OptionGroup({
-  error,
-  field,
-  legend,
-  options,
-  showDescriptions = false,
-  updateValue,
-  value,
-}: OptionGroupProps) {
-  const groupName = `${field}-choice`;
-  const groupLabelId = `${field}-legend`;
-
-  return (
-    <div
-      aria-invalid={error ? true : undefined}
-      aria-labelledby={groupLabelId}
-      className={styles.optionGroup}
-      id={getFieldContainerId(field)}
-      role="radiogroup"
-    >
-      <p className={styles.optionLegend} id={groupLabelId}>
-        {legend}
-      </p>
-      <div className={styles.optionGrid}>
-        {options.map((option) => {
-          const isSelected = value === option.value;
-          const inputId = `${groupName}-${option.value}`;
-
-          return (
-            <div className={styles.optionChoice} key={option.value}>
-              <input
-                checked={isSelected}
-                className={styles.optionInput}
-                id={inputId}
-                name={groupName}
-                onChange={() => updateValue(field, option.value)}
-                type="radio"
-                value={option.value}
-              />
-              <label
-                className={[
-                  styles.optionCard,
-                  !showDescriptions ? styles.compactOptionCard : "",
-                  isSelected ? styles.selectedOption : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                htmlFor={inputId}
-              >
-                <span className={styles.optionMain}>
-                  {option.iconKey || option.flagCode ? (
-                    <span
-                      className={[
-                        styles.optionVisual,
-                        option.flagCode ? styles.flagVisual : styles.iconVisual,
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      <MatchOptionVisual flagCode={option.flagCode} iconKey={option.iconKey} />
-                    </span>
-                  ) : null}
-                  <span className={styles.optionText}>
-                    <span className={styles.optionTitle}>{option.label}</span>
-                    {showDescriptions && option.description ? (
-                      <span className={styles.optionDescription}>{option.description}</span>
-                    ) : null}
-                  </span>
-                </span>
-                <span aria-hidden="true" className={styles.optionIndicator} />
-              </label>
-            </div>
-          );
-        })}
-      </div>
-      {error ? <p className={styles.fieldError}>{error}</p> : null}
     </div>
   );
 }
@@ -788,7 +699,7 @@ function getCurrentStepDescription(
   step: StepDefinition,
   values: MatchFlowFormValues,
   optionsByField: MatchFlowOptionsByField,
-  compatibleSubjectOptions: readonly MatchOption[],
+  compatibleSubjectOptions: readonly MatchSubjectOption[],
 ) {
   const selectedNeedType = getNeedTypeOption(values.needType, optionsByField);
   return getMatchFlowStepDescription(step.id, {

@@ -6,6 +6,14 @@ import {
   evaluateTutorProfileIndexability,
   type TutorProfilePublicRouteInput,
 } from "@/lib/seo/quality/public-indexability";
+import {
+  loadReferenceLanguagesByCodes,
+  loadReferenceSubjectFocusAreasByIds,
+  loadReferenceSubjectsByIds,
+  type ReferenceLanguage,
+  type ReferenceSubject,
+  type ReferenceSubjectFocusArea,
+} from "@/modules/reference/catalog";
 
 const PUBLIC_TUTOR_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -35,23 +43,10 @@ type TutorSubjectCapabilityRecord = {
   tutor_profile_id: string;
 };
 
-type SubjectRecord = {
-  display_name: string;
-  id: string;
-  slug: string;
-};
-
-type SubjectFocusAreaRecord = SubjectRecord;
-
 type TutorLanguageCapabilityRecord = {
   display_priority: number;
   language_code: string;
   tutor_profile_id: string;
-};
-
-type LanguageRecord = {
-  display_name: string;
-  language_code: string;
 };
 
 type TutorCredentialRecord = {
@@ -274,11 +269,11 @@ export function buildTutorProfileIndexabilityInput(
 type RelatedPublicTutorProfileRecords = {
   credentials: TutorCredentialRecord[];
   languages: TutorLanguageCapabilityRecord[];
-  languageRows: LanguageRecord[];
+  languageRows: ReferenceLanguage[];
   schedule: SchedulePolicyRecord | null;
   subjectCapabilities: TutorSubjectCapabilityRecord[];
-  subjectFocusAreas: SubjectFocusAreaRecord[];
-  subjects: SubjectRecord[];
+  subjectFocusAreas: ReferenceSubjectFocusArea[];
+  subjects: ReferenceSubject[];
 };
 
 async function loadPublicTutorProfileRelatedRecords(
@@ -404,66 +399,27 @@ async function loadSchedulesByTutorIds(tutorProfileIds: string[]) {
 }
 
 async function loadSubjects(subjectIds: string[]) {
-  const uniqueIds = uniqueValues(subjectIds);
-
-  if (uniqueIds.length === 0) {
-    return [];
-  }
-
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("subjects")
-    .select("id, display_name, slug")
-    .in("id", uniqueIds)
-    .returns<SubjectRecord[]>();
-
-  if (error) {
+  try {
+    return await loadReferenceSubjectsByIds(subjectIds);
+  } catch {
     throw new Error("Could not load public tutor subjects.");
   }
-
-  return data ?? [];
 }
 
 async function loadSubjectFocusAreas(focusAreaIds: string[]) {
-  const uniqueIds = uniqueValues(focusAreaIds);
-
-  if (uniqueIds.length === 0) {
-    return [];
-  }
-
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("subject_focus_areas")
-    .select("id, display_name, slug")
-    .in("id", uniqueIds)
-    .returns<SubjectFocusAreaRecord[]>();
-
-  if (error) {
+  try {
+    return await loadReferenceSubjectFocusAreasByIds(focusAreaIds);
+  } catch {
     throw new Error("Could not load public tutor focus areas.");
   }
-
-  return data ?? [];
 }
 
 async function loadLanguages(languageCodes: string[]) {
-  const uniqueCodes = uniqueValues(languageCodes);
-
-  if (uniqueCodes.length === 0) {
-    return [];
-  }
-
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("languages")
-    .select("language_code, display_name")
-    .in("language_code", uniqueCodes)
-    .returns<LanguageRecord[]>();
-
-  if (error) {
+  try {
+    return await loadReferenceLanguagesByCodes(languageCodes);
+  } catch {
     throw new Error("Could not load public tutor languages.");
   }
-
-  return data ?? [];
 }
 
 function buildPublicTutorProfileDto(
@@ -540,9 +496,9 @@ function buildSubjectCapabilities({
 
       return {
         experienceSummary: normalizeOptionalText(capability.experience_summary),
-        focusArea: focusArea.display_name,
+        focusArea: focusArea.displayName,
         focusAreaSlug: focusArea.slug,
-        subject: subject.display_name,
+        subject: subject.displayName,
         subjectSlug: subject.slug,
       };
     })
@@ -554,11 +510,11 @@ function buildLanguages({
   languageRows,
 }: Pick<RelatedPublicTutorProfileRecords, "languages" | "languageRows">) {
   const languageRowsByCode = new Map(
-    languageRows.map((language) => [language.language_code, language]),
+    languageRows.map((language) => [language.languageCode, language]),
   );
 
   return languages
-    .map((language) => languageRowsByCode.get(language.language_code)?.display_name)
+    .map((language) => languageRowsByCode.get(language.language_code)?.displayName)
     .filter((language): language is string => Boolean(language));
 }
 

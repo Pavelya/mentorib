@@ -12,6 +12,8 @@ It includes the minimum strategic, UX, and visual assumptions needed to define t
 
 If only one component-spec file is used on its own, this should still make sense.
 
+> **Implementation note:** `docs/design-system/agent-ui-rules.md` is the operational companion for coding agents applying these specs in the repo. If it conflicts with this document or the final design-system spec, this document and the final design-system spec win.
+
 ## 2. Product Assumptions
 
 Mentor IB is:

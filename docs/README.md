@@ -100,6 +100,7 @@ If you want the shortest path through the pack:
 
 ### Design system
 
+- `docs/design-system/agent-ui-rules.md`
 - `docs/design-system/design-system-foundations-v3.md`
 - `docs/design-system/component-specs-core-v1.md`
 - `docs/design-system/component-specs-phase2-v1.md`
@@ -147,6 +148,7 @@ If you want the shortest path through the pack:
 
 - `docs/architecture/architecture-discussion-v1.md`
 - `docs/architecture/architecture-discussion-review-guide-v1.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
 - `docs/architecture/route-layout-implementation-map-v1.md`
 - `docs/architecture/accessibility-and-inclusive-ux-architecture-v1.md`
 - `docs/architecture/analytics-and-product-telemetry-architecture-v1.md`

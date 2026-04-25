@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -7,7 +8,7 @@ import {
   Avatar,
   Button,
   InlineNotice,
-  MatchOptionVisual,
+  OptionCardGroup,
   StatusBadge,
   TextField,
 } from "@/components/ui";
@@ -135,10 +136,7 @@ function SettingsProfileFormBody({
       </div>
 
       <div className={styles.profileSectionList}>
-        <section className={styles.profileSectionRow}>
-          <div className={styles.profileSectionHeader}>
-            <p className={styles.settingLabel}>Full name</p>
-          </div>
+        <SettingsSection label="Full name">
           <div className={styles.profileSectionContent}>
             <TextField
               autoComplete="name"
@@ -157,126 +155,44 @@ function SettingsProfileFormBody({
               value={values.fullName}
             />
           </div>
-        </section>
+        </SettingsSection>
 
-        <section className={styles.profileSectionRow}>
-          <div className={styles.profileSectionHeader}>
-            <p className={styles.settingLabel}>Email</p>
-          </div>
+        <SettingsSection label="Email">
           <div className={styles.profileSectionContent}>
             <p className={styles.settingValue}>{email}</p>
           </div>
-        </section>
+        </SettingsSection>
 
-        <section className={styles.profileSectionRow}>
-          <div className={styles.profileSectionHeader}>
-            <p className={styles.settingLabel}>Preferred lesson language</p>
-          </div>
+        <SettingsSection label="Preferred lesson language">
           <div className={styles.profileSectionContent}>
-            <LanguageField
+            <OptionCardGroup
               error={serverState.fieldErrors.preferredLanguageCode}
               hideLegend
-              options={languageOptions}
-              value={values.preferredLanguageCode}
+              legend="Preferred lesson language"
+              name="preferredLanguageCode"
               onChange={(preferredLanguageCode) =>
                 setValues((currentValues) => ({
                   ...currentValues,
                   preferredLanguageCode,
                 }))
               }
+              options={languageOptions}
+              value={values.preferredLanguageCode}
             />
           </div>
-        </section>
+        </SettingsSection>
 
-        <section className={styles.profileSectionRow}>
-          <div className={styles.profileSectionHeader}>
-            <p className={styles.settingLabel}>Timezone</p>
-          </div>
+        <SettingsSection label="Timezone">
           <div className={styles.profileSectionContent}>
             <p className={styles.settingValue}>{timezone}</p>
           </div>
-        </section>
+        </SettingsSection>
       </div>
 
       <div className={styles.formActions}>
         <SaveButton />
       </div>
     </form>
-  );
-}
-
-function LanguageField({
-  error,
-  hideLegend = false,
-  options,
-  value,
-  onChange,
-}: {
-  error?: string;
-  hideLegend?: boolean;
-  options: readonly MatchLanguageOption[];
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <fieldset
-      aria-invalid={error ? true : undefined}
-      className={styles.languageFieldset}
-    >
-      <legend
-        className={[
-          styles.languageLegend,
-          hideLegend ? styles.srOnly : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        Preferred lesson language
-      </legend>
-      <div className={styles.languageOptionGrid} role="radiogroup">
-        {options.map((option) => {
-          const inputId = `preferredLanguageCode-${option.value}`;
-          const isSelected = value === option.value;
-
-          return (
-            <div className={styles.languageChoice} key={option.value}>
-              <input
-                checked={isSelected}
-                className={styles.languageInput}
-                id={inputId}
-                name="preferredLanguageCode"
-                onChange={() => onChange(option.value)}
-                type="radio"
-                value={option.value}
-              />
-              <label
-                className={[
-                  styles.languageCard,
-                  styles.compactLanguageCard,
-                  isSelected ? styles.selectedLanguageCard : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                htmlFor={inputId}
-              >
-                <span className={styles.languageCardMain}>
-                  {option.flagCode ? (
-                    <span className={styles.languageVisual}>
-                      <MatchOptionVisual flagCode={option.flagCode} />
-                    </span>
-                  ) : null}
-                  <span className={styles.languageText}>
-                    <span className={styles.languageTitle}>{option.label}</span>
-                  </span>
-                </span>
-                <span aria-hidden="true" className={styles.languageIndicator} />
-              </label>
-            </div>
-          );
-        })}
-      </div>
-      {error ? <p className={styles.fieldError}>{error}</p> : null}
-    </fieldset>
   );
 }
 
@@ -287,6 +203,23 @@ function SaveButton() {
     <Button disabled={pending} type="submit">
       {pending ? "Saving changes" : "Save changes"}
     </Button>
+  );
+}
+
+function SettingsSection({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
+  return (
+    <section className={styles.profileSectionRow}>
+      <div className={styles.profileSectionHeader}>
+        <p className={styles.settingLabel}>{label}</p>
+      </div>
+      {children}
+    </section>
   );
 }
 

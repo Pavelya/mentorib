@@ -86,6 +86,41 @@ Rule:
 
 - if a shared domain value has an icon or flag, the mapping belongs here
 - pages and components should not define their own copies
+- the mapping resolves to DS icon keys and flag codes that are rendered through `src/components/ui/icon.tsx` and `src/components/ui/flag.tsx`; no other consumer renders subject icons or language flags
+
+### 3.3a Icon library
+
+Owns:
+
+- the single icon library used across the product (`lucide-react`)
+- the typed `IconKey` union and the `Icon` component that renders it
+
+Primary owner:
+
+- `src/components/ui/icon.tsx`
+
+Rule:
+
+- all icons in app code render through `Icon`
+- adding a new icon means adding a new `IconKey` and registry entry, never importing from `lucide-react` outside this wrapper
+- inline SVG icon definitions in route or component files are forbidden
+
+### 3.3b Country-flag library
+
+Owns:
+
+- the single country-flag library used across the product (`country-flag-icons`)
+- the typed `FlagCode` union and the `Flag` component that renders it
+
+Primary owner:
+
+- `src/components/ui/flag.tsx`
+
+Rule:
+
+- all country flags in app code render through `Flag`
+- adding a new flag means adding a new `FlagCode` entry, never importing from `country-flag-icons` outside this wrapper
+- inline flag SVGs in route or component files are forbidden
 
 ### 3.4 Timezone validation and meaning
 

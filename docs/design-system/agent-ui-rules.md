@@ -97,6 +97,12 @@ If this is the second use of a pattern:
 - Do not hardcode cross-screen design tokens, state colors, or product-facing status language in feature-local files.
 - If a page needs the same configurable option card already used elsewhere, reuse the same component and the same source data.
 - For Mentor IB core student and tutor surfaces, shared vocabularies should come from `src/modules/reference/**`, timezone meaning from `src/lib/datetime/**`, and shared currency handling from `src/modules/pricing/**`.
+- All icons must come from the DS `Icon` wrapper at `src/components/ui/icon.tsx` (the only bridge to `lucide-react`). All country flags must come from the DS `Flag` wrapper at `src/components/ui/flag.tsx` (the only bridge to `country-flag-icons`). Inline SVGs and route-local icon or flag components are forbidden.
+
+## 6a. DS-First Rule
+
+- If a needed pattern is not in the design system, extend the design system before using it locally. Route-local card, chip, panel, icon, or flag CSS and inline SVGs are forbidden.
+- Any task that adds a new DS primitive, variant, or token must update `docs/design-system/component-inventory-v1.md` and (if tokens changed) `docs/design-system/tokens-cheatsheet-v1.md` in the same commit. The inventory and cheatsheet are not allowed to lag behind the implementation.
 
 ## 7. Human-First Copy Rules
 

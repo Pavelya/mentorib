@@ -8,9 +8,8 @@ import {
   type RoleSelectionActionState,
 } from "@/app/setup/role/actions";
 import {
+  Icon,
   InlineNotice,
-  StudentRoleIcon,
-  TutorRoleIcon,
   getButtonClassName,
 } from "@/components/ui";
 import type { SetupRoleSelection } from "@/lib/auth/account-service";
@@ -124,17 +123,9 @@ function RoleSubmitButton({
 }
 
 function RoleIcon({ role }: { role: SetupRoleSelection }) {
-  if (role === "student") {
-    return (
-      <span aria-hidden="true" className={styles.optionIcon}>
-        <StudentRoleIcon />
-      </span>
-    );
-  }
-
   return (
     <span aria-hidden="true" className={styles.optionIcon}>
-      <TutorRoleIcon />
+      <Icon name={role === "student" ? "studentRole" : "tutorRole"} />
     </span>
   );
 }

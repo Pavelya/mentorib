@@ -873,6 +873,7 @@ Run the final Phase 2 verification pass across application state safety, interna
 - final cross-lane verification
 - unresolved risk and blocker summary
 - operational readiness for any newly added privileged or public-facing Phase 2 surfaces
+- DS adherence audit: confirm no route-local `.card`, `.chip`, or `.panel`-style CSS, no inline SVGs outside `src/components/ui/**`, no route-local copies of shared reference vocabularies, and no new `Intl.NumberFormat` or currency-code literals outside `src/modules/pricing/**`; if drift is found, raise a sub-task with an `-A` suffix on the offending feature task before marking the phase done
 
 **Out of scope**
 
@@ -885,6 +886,7 @@ Run the final Phase 2 verification pass across application state safety, interna
 - public trust or media surfaces are reviewed for correctness and exposure safety
 - any conditional growth work is justified by evidence
 - unresolved blockers are named clearly rather than hidden
+- the DS adherence audit produced either a clean result or named follow-up sub-tasks against specific feature tasks
 
 **Verification**
 

@@ -190,7 +190,16 @@ Bad parallel examples:
 | 10 | `P1-TUTOR-004` | `ready` | `P1` | 4 | Tutor messages route using shared conversation system |
 | 10 | `P1-TUTOR-005` | `ready` | `P1` | 4 | Tutor earnings route and payout-readiness flow |
 | 11 | `P1-QUALITY-001` | `ready` | `P2` | 4 | Observability, analytics, and safe logging baseline |
-| 12 | `P1-QUALITY-002` | `ready` | `P2` | 4 | Phase 1 release and verification checklist pass |
+| 12 | `P1-DS-FOUND-001-A` | `ready` | `P1` | 4 | Icon/flag libraries and DS-first enforcement docs |
+| 12 | `P1-DS-FOUND-001-B` | `ready` | `P1` | 4 | DB-backed reference copy and fallback removal |
+| 13 | `P1-DS-FOUND-001-C` | `ready` | `P1` | 4 | DS expansion and continuity-component naming reconciliation |
+| 14 | `P1-DS-FOUND-001-D1` | `ready` | `P1` | 4 | Public route family DS adoption |
+| 14 | `P1-DS-FOUND-001-D2` | `ready` | `P1` | 4 | Student route family DS adoption |
+| 14 | `P1-DS-FOUND-001-D3` | `ready` | `P1` | 4 | Tutor route family DS adoption |
+| 14 | `P1-DS-FOUND-001-D4` | `ready` | `P1` | 4 | Account and setup route family DS adoption |
+| 14 | `P1-DS-FOUND-001-D5` | `ready` | `P1` | 4 | Internal route family DS adoption |
+| 15 | `P1-DS-FOUND-001-E` | `ready` | `P1` | 4 | Component inventory and tokens cheatsheet |
+| 16 | `P1-QUALITY-002` | `ready` | `P2` | 4 | Phase 1 release and verification checklist pass |
 
 ## 9. Detailed Tasks
 
@@ -1751,7 +1760,533 @@ Implement the tutor earnings route and payout-readiness experience so approved t
 - provider-handoff boundary review
 - Stripe Connect pre-fill and webhook handling review
 
-## 10. Task Drafting Rules For Follow-Up
+## 9.35 `P1-DS-FOUND-001` parent — Design-system cleanup umbrella
+
+The cleanup work is split into nine implementation-ready sub-tasks under one parent id:
+
+- `P1-DS-FOUND-001-A` — icon and flag library adoption + DS-first enforcement docs
+- `P1-DS-FOUND-001-B` — DB-backed reference copy and fallback removal
+- `P1-DS-FOUND-001-C` — DS expansion and continuity-component naming reconciliation
+- `P1-DS-FOUND-001-D1` — public route family DS adoption
+- `P1-DS-FOUND-001-D2` — student route family DS adoption
+- `P1-DS-FOUND-001-D3` — tutor route family DS adoption
+- `P1-DS-FOUND-001-D4` — account and setup route family DS adoption
+- `P1-DS-FOUND-001-D5` — internal route family DS adoption
+- `P1-DS-FOUND-001-E` — component inventory and tokens cheatsheet
+
+Shared parent goal:
+
+Pay down the design-system, icon, and reference-copy drift that accumulated across Phase 1 route work so every route family consumes one shared component vocabulary, one icon library, one flag library, and one canonical reference-data source — closing the door on per-page UI dialects before release verification.
+
+Shared parent outcome (verified at `-E`):
+
+- one icon library (`lucide-react`) and one flag library (`country-flag-icons`) own every icon and country-flag rendering in the product
+- every shared vocabulary (subjects, focus areas, languages, learning-need options) — including human-readable description copy — comes from `src/modules/reference/**` and the database, not from route-local arrays or fallback constants
+- every route family consumes the design-system primitives and continuity grammar instead of bespoke per-page card / chip / panel CSS
+- documentation enforces a "DS-first" rule that future tasks can cite
+
+Sequencing note:
+
+- the cleanup sub-tasks do not depend on `P1-QUALITY-001`
+- `-D1..D5` heavily edit route files, so they should not run in parallel with `P1-QUALITY-001` (which is also expected to edit route files to add telemetry); sequence them in either order, but not concurrently
+
+Shared required source docs (each sub-task may cite a tighter subset):
+
+- `docs/design-system/design-system-spec-final-v1.md`
+- `docs/design-system/component-specs-core-v1.md`
+- `docs/design-system/component-specs-phase2-v1.md`
+- `docs/design-system/agent-ui-rules.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
+- `docs/planning/engineering-guardrails-v1.md`
+- `docs/data/reference-data-and-config-baseline-v1.md`
+
+## 9.35a `P1-DS-FOUND-001-A` Icon and flag libraries, DS-first enforcement docs
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-FOUND-002`, `P1-FOUND-003`
+
+**Goal**
+
+Adopt `lucide-react` as the single icon library and `country-flag-icons` as the single flag library, expose them as DS wrappers, and update governance docs so subsequent sub-tasks have authoritative DS-first rules to cite.
+
+**Required source docs**
+
+- `docs/design-system/design-system-spec-final-v1.md`
+- `docs/design-system/component-specs-core-v1.md`
+- `docs/design-system/agent-ui-rules.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
+
+**Scope**
+
+- add `lucide-react` and `country-flag-icons` to `package.json` (runtime deps)
+- create `src/components/ui/icon.tsx` as the single bridge to lucide, exposing the project icon set as a typed `iconKey` → `LucideIcon` map and forwarding `size`, `strokeWidth`, `aria-label`, and `className`; pick the `strokeWidth` and default `size` that visually match the existing hand-drawn primitives so `OptionCardGroup` icon slots do not change weight
+- create `src/components/ui/flag.tsx` as the single bridge to `country-flag-icons`, taking an ISO 3166 alpha-2 code and rendering the bundled SVG with consistent radius, viewBox, and accessible label
+- replace the inline SVGs and hardcoded flag SVGs in `src/components/ui/app-icons.tsx` with re-exports from the new wrappers; delete `app-icons.tsx` once no caller imports from it
+- update `src/modules/reference/visuals.ts` to export `iconKey` values that resolve through the new `Icon` wrapper and `flagCode` values that resolve through the new `Flag` wrapper
+- update `CLAUDE.md` to add `lucide-react` and `country-flag-icons` to the frozen baseline and to add a "DS-first" hard boundary: if a needed pattern is not in the design system, extend the design system before using it locally; route-local card / chip / panel / icon / flag CSS is forbidden
+- update `docs/design-system/agent-ui-rules.md` to carry the same DS-first rule, reference the new `Icon` / `Flag` wrappers as the only source for icons and country flags, and add this obligation: any task that adds a new DS primitive, variant, or token must update `docs/design-system/component-inventory-v1.md` and (if tokens changed) `docs/design-system/tokens-cheatsheet-v1.md` in the same commit — the inventory and cheatsheet are not allowed to lag
+- update `docs/architecture/canonical-value-ownership-map-v1.md` to add icon-library and flag-library ownership entries pointing to the new wrappers
+
+**Out of scope**
+
+- DB schema changes (covered by `-B`)
+- new DS primitives beyond `Icon` / `Flag` (covered by `-C`)
+- per-route refactors (covered by `-D1..D5`)
+
+**Acceptance criteria**
+
+- `Icon` and `Flag` are exported from `src/components/ui/index.ts` and used by `OptionCardGroup` (and any other primitive that previously rendered inline SVGs) without visual regression
+- `src/components/ui/app-icons.tsx` no longer exists, or is reduced to typed re-exports from `Icon` / `Flag`
+- `CLAUDE.md`, `agent-ui-rules.md`, and `canonical-value-ownership-map-v1.md` carry the DS-first rule and the new library ownership entries
+- a manual cross-OS render check confirms flags display correctly on macOS, Windows, iOS, and Android
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- manual visual check on `/match`, `/settings`, `/tutors/[slug]` to confirm icon and flag rendering is unchanged
+- cross-platform flag render check (Windows is the regression-risk platform)
+
+**Required manual steps**
+
+- none beyond `pnpm install` after the dependency additions
+
+**Local testing checklist**
+
+- open `/match` and confirm subject icons and language flags render through the new wrappers
+- open `/settings` and confirm the preferred-language card group renders correctly
+- open `/tutors/[slug]` and confirm any flag rendering is unchanged
+
+## 9.35b `P1-DS-FOUND-001-B` DB-backed reference copy and fallback removal
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-FOUND-002`, `P1-DATA-003`
+
+**Goal**
+
+Move subject and focus-area description copy into the database, route it through the canonical reference loaders, and delete the page-local fallback constants so every consumer reads from one source of truth.
+
+**Required source docs**
+
+- `docs/data/reference-data-and-config-baseline-v1.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
+- `docs/design-system/agent-ui-rules.md`
+
+**Scope**
+
+- add a Supabase migration that introduces a `display_description` column on `reference_subjects` and any equivalent description column needed for `reference_subject_focus_areas`, then seeds the values currently hardcoded in `src/modules/lessons/match-flow-options.ts` (`subjectDescriptionsByCode`)
+- extend `src/modules/reference/schema.ts` and `src/modules/reference/catalog.ts` to expose the new description fields on the loaded rows
+- update `src/modules/reference/discovery.ts` to use the loaded descriptions and remove the `getSubjectDescription` import
+- delete `subjectDescriptionsByCode` and `previewMatchFlowOptions` from `src/modules/lessons/match-flow-options.ts`, along with the `buildPreviewLanguages` / `buildPreviewSubjects` fallbacks and the `try { … } catch { return previewMatchFlowOptions; }` block in `loadDiscoveryOptions`
+- update `src/modules/accounts/profile-settings.ts`, `src/app/(student)/match/match-flow-form.tsx`, and any other caller that depends on those constants to consume the loader output directly; let DB load failures surface as real errors rather than silent preview fallbacks
+
+**Out of scope**
+
+- icon/flag library work (covered by `-A`)
+- new DS primitives (covered by `-C`)
+- per-route refactors beyond rewiring callers of the deleted constants
+
+**Acceptance criteria**
+
+- `subjectDescriptionsByCode`, `previewMatchFlowOptions`, `buildPreviewLanguages`, and `buildPreviewSubjects` no longer exist in the repo
+- `loadDiscoveryOptions` does not return a fallback object on DB error; failures bubble up
+- subject descriptions and focus-area copy on `/match` come from the loaded rows
+- the new migration applies cleanly on a fresh Supabase init and on top of the prior baseline
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- run `supabase db reset` (or equivalent local migration command) and confirm the migration applies cleanly and seeds the expected description values
+
+**Required manual steps**
+
+- run the new Supabase migration locally and in any deployed environment after merge
+- confirm the seed for `reference_subjects.display_description` matches the previously hardcoded copy
+
+**Local testing checklist**
+
+- complete the `/match` flow end-to-end and confirm subject descriptions render the seeded copy
+- temporarily break the DB connection and confirm `/match` surfaces an error rather than silently falling back to preview options
+
+## 9.35c `P1-DS-FOUND-001-C` DS expansion and continuity-component naming reconciliation
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-A`, `P1-DS-FOUND-001-B`
+
+**Goal**
+
+Add the DS primitives that route-local CSS currently re-implements, reconcile the documented vs. actual naming of continuity components, and produce a drift inventory that subsequent route-family sub-tasks consume.
+
+**Required source docs**
+
+- `docs/design-system/design-system-spec-final-v1.md`
+- `docs/design-system/component-specs-core-v1.md`
+- `docs/design-system/component-specs-phase2-v1.md`
+- `docs/design-system/agent-ui-rules.md`
+
+**Scope**
+
+- run a drift inventory pass and record the per-route-family drift sites (route-local card CSS, route-local chip CSS, ad-hoc panel wrappers, inline subject/flag rendering, freeform field styling) so `-D1..D5` have a checklist to work from; persist the inventory at `docs/design-system/component-inventory-v1.md` (this file is created here in skeletal form and finalized in `-E`)
+- add the missing primitives that drift sites currently re-implement, only the variants needed by existing routes:
+  - a `Card` primitive with at least `select` (radio-style choice card) and `instant-submit` (single-action card) variants
+  - a single shared `Chip` primitive with the tones used today
+  - a `Section` primitive that replaces the bespoke panel/section CSS used by account, match, and tutor surfaces
+- reconcile the gap between `docs/design-system/component-specs-core-v1.md` (which names `LessonCard` and `ScheduleSurface`) and the current repo (which has `LessonSummary` and no `ScheduleSurface`): either rename the components or amend the spec, then apply the chosen name consistently in code and in the spec
+- ensure every new primitive lives under `src/components/ui/**` with a CSS module and a barrel export from `src/components/ui/index.ts`
+
+**Out of scope**
+
+- per-route refactors that would touch route-family files (covered by `-D1..D5`)
+- speculative DS variants that no current route consumes
+- final inventory polish and the tokens cheatsheet (covered by `-E`)
+
+**Acceptance criteria**
+
+- `Card`, `Chip`, and `Section` exist in `src/components/ui/**`, are exported from `src/components/ui/index.ts`, and render through DS tokens only
+- the `LessonCard` / `ScheduleSurface` naming gap is closed in both the repo and `component-specs-core-v1.md`
+- a skeletal `docs/design-system/component-inventory-v1.md` enumerates the new primitives and the per-route-family drift sites that `-D1..D5` are responsible for cleaning up
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- visual review of the new primitives in isolation (e.g., a temporary route or storybook page is acceptable but not required)
+
+**Required manual steps**
+
+- none
+
+**Local testing checklist**
+
+- confirm existing route families still build and render unchanged (the new primitives are not yet consumed at this stage)
+
+## 9.35d1 `P1-DS-FOUND-001-D1` Public route family DS adoption
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-A`, `P1-DS-FOUND-001-B`, `P1-DS-FOUND-001-C`
+
+**Goal**
+
+Remove per-page card / chip / panel / icon / flag implementations from the public route family and replace them with the DS primitives, including migrating home-page marketing copy to a TS module.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md`
+- `docs/design-system/component-specs-core-v1.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
+- the drift inventory section produced in `-C`
+
+**Scope**
+
+- routes covered: `/`, `/how-it-works`, `/trust-and-safety`, `/support`, `/become-a-tutor`, `/tutors/[slug]`
+- replace per-page card/chip/panel/icon/flag implementations with the DS components
+- migrate the home page to consume marketing copy (`pressurePoints`, `matchingSteps`, `reassurancePoints`, `sampleMatches`, `trustProof`) from a new `src/modules/marketing/home-content.ts` TS module instead of inlined arrays
+- replace the inline `.matchRow` / `.matchPerson` / `.matchActions` markup on the home page with the shared `MatchRow` continuity component
+- replace the one-off `<span className={styles.chip}>` language render in `src/app/(public)/tutors/[slug]/page.tsx` with the shared `Chip` and `Flag` primitives
+
+**Out of scope**
+
+- new public routes
+- copy or content rewrites beyond moving existing strings into the new TS module
+- changes to other route families
+
+**Acceptance criteria**
+
+- no `.module.css` file under `src/app/(public)/**` defines a `.card`, `.chip`, or `.panel`-style class for a pattern the DS already covers
+- the home page renders entirely from DS primitives plus continuity components, with copy sourced from `src/modules/marketing/home-content.ts`
+- `/tutors/[slug]` renders subject and language chips through `Chip` + `Icon` / `Flag`
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- manual visual diff against approved hi-fi for the home and tutor profile pages
+
+**Required manual steps**
+
+- none
+
+**Local testing checklist**
+
+- walk every public route and confirm rendering parity with the prior implementation
+- confirm sample-match prices, trust-proof items, and marketing sections still render the same content
+
+## 9.35d2 `P1-DS-FOUND-001-D2` Student route family DS adoption
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-A`, `P1-DS-FOUND-001-B`, `P1-DS-FOUND-001-C`
+
+**Goal**
+
+Remove per-page card / chip / panel / icon / flag implementations from the student route family and replace them with the DS primitives, moving route-local helpers into the appropriate `src/modules/**` files.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md`
+- `docs/design-system/component-specs-core-v1.md`
+- the drift inventory section produced in `-C`
+
+**Scope**
+
+- routes covered: `/match`, `/results`, `/book/[context]`, `/lessons`, `/messages`
+- replace per-page card/chip/panel/icon/flag implementations with the DS components
+- move the `getSubjectLegend` / `getCurrentStepQuestion` switches from `src/app/(student)/match/match-flow-form.tsx` into `src/modules/lessons/match-flow-copy.ts` (or DB-backed copy if `-B` already provides the rows)
+- ensure the lesson summary surface uses the reconciled name from `-C` (`LessonCard` or whatever was chosen)
+
+**Out of scope**
+
+- new student routes
+- changes to match domain logic, results ranking, or booking domain logic beyond the markup/CSS swap
+- changes to other route families
+
+**Acceptance criteria**
+
+- no `.module.css` file under `src/app/(student)/**` defines a `.card`, `.chip`, or `.panel`-style class for a pattern the DS already covers
+- match, results, booking, lessons, and messages routes consume DS primitives end-to-end
+- match-flow copy switches no longer live inside the form component
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- manual run of the match flow end-to-end and visual diff on results, lessons, and messages
+
+**Required manual steps**
+
+- none
+
+**Local testing checklist**
+
+- complete the match → results → tutor profile → booking path
+- open `/lessons` and confirm lesson summary and detail render correctly
+- open `/messages` and confirm the conversation list and thread render correctly
+
+## 9.35d3 `P1-DS-FOUND-001-D3` Tutor route family DS adoption
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-A`, `P1-DS-FOUND-001-B`, `P1-DS-FOUND-001-C`
+
+**Goal**
+
+Remove per-page card / chip / panel / icon / flag implementations from the tutor route family and replace them with the DS primitives.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md`
+- `docs/design-system/component-specs-core-v1.md`
+- the drift inventory section produced in `-C`
+
+**Scope**
+
+- routes covered: `/tutor/overview`, `/tutor/lessons`, `/tutor/schedule`, `/tutor/messages`, `/tutor/earnings`
+- replace per-page card/chip/panel/icon/flag implementations with the DS components
+- ensure the schedule surface uses the reconciled name from `-C` (`ScheduleSurface` or whatever was chosen)
+
+**Out of scope**
+
+- new tutor routes
+- changes to tutor domain logic, payout, or earnings logic beyond the markup/CSS swap
+- changes to other route families
+
+**Acceptance criteria**
+
+- no `.module.css` file under `src/app/(tutor)/**` (or wherever tutor routes live) defines a `.card`, `.chip`, or `.panel`-style class for a pattern the DS already covers
+- tutor overview, lessons, schedule, messages, and earnings consume DS primitives end-to-end
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- manual visual review of every tutor route
+
+**Required manual steps**
+
+- none
+
+**Local testing checklist**
+
+- walk every tutor route and confirm rendering parity with the prior implementation
+
+## 9.35d4 `P1-DS-FOUND-001-D4` Account and setup route family DS adoption
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-A`, `P1-DS-FOUND-001-B`, `P1-DS-FOUND-001-C`
+
+**Goal**
+
+Remove per-page card / chip / panel / icon / flag implementations from the account and setup route families and replace them with the DS primitives, moving route-local helpers into the appropriate `src/modules/**` files.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md`
+- `docs/design-system/component-specs-core-v1.md`
+- the drift inventory section produced in `-C`
+
+**Scope**
+
+- routes covered: `/settings`, `/legal`, `/setup/role`, other `/setup/*` routes that exist at task time
+- replace per-page card/chip/panel/icon/flag implementations with the DS components
+- move the inline `buildRoleBadges` / `getRoleTone` helpers from `src/app/(account)/settings/page.tsx` into `src/modules/accounts/role-badges.ts` (or equivalent) and consume them via DS primitives
+- replace the role-selection bespoke CSS in `src/app/setup/role/role-selection-form.tsx` with the `OptionCardGroup` (or `Card` `select` variant) instead of styled buttons
+
+**Out of scope**
+
+- new account or setup routes
+- changes to auth, role, or legal-notice domain logic beyond the markup/CSS swap
+- changes to other route families
+
+**Acceptance criteria**
+
+- no `.module.css` file under `src/app/(account)/**` or `src/app/setup/**` defines a `.card`, `.chip`, or `.panel`-style class for a pattern the DS already covers
+- role badges and role selection both render through DS primitives
+- inline page helpers in account and setup pages are moved to `src/modules/**`
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- manual visual review of `/settings`, `/legal`, `/setup/role`, and any other `/setup/*` route
+
+**Required manual steps**
+
+- none
+
+**Local testing checklist**
+
+- open `/settings` and confirm role badges and the profile form render correctly
+- open `/setup/role` and confirm role selection works through the DS card variant
+
+## 9.35d5 `P1-DS-FOUND-001-D5` Internal route family DS adoption
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-A`, `P1-DS-FOUND-001-B`, `P1-DS-FOUND-001-C`
+
+**Goal**
+
+Remove per-page card / chip / panel / icon / flag implementations from any internal/admin route family that exists at task time and replace them with the DS primitives.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md`
+- `docs/design-system/component-specs-core-v1.md`
+- the drift inventory section produced in `-C`
+
+**Scope**
+
+- routes covered: any internal/admin surface that exists at task time
+- replace per-page card/chip/panel/icon/flag implementations with the DS components
+- if no internal routes exist at task time, this sub-task is a no-op and should be marked `done` with a one-line note
+
+**Out of scope**
+
+- creating new internal routes
+- changes to other route families
+
+**Acceptance criteria**
+
+- no `.module.css` file under any internal/admin route family defines a `.card`, `.chip`, or `.panel`-style class for a pattern the DS already covers
+- if no internal routes exist, the sub-task report records that explicitly
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+
+**Required manual steps**
+
+- none
+
+**Local testing checklist**
+
+- walk every internal route and confirm rendering parity with the prior implementation
+
+## 9.35e `P1-DS-FOUND-001-E` Component inventory and tokens cheatsheet
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-D1`, `P1-DS-FOUND-001-D2`, `P1-DS-FOUND-001-D3`, `P1-DS-FOUND-001-D4`, `P1-DS-FOUND-001-D5`
+
+**Goal**
+
+Finalize the design-system component inventory and produce the token cheatsheet so future agents can see, in one place, what the DS contains and how its tokens are intended to be used.
+
+**Required source docs**
+
+- `docs/design-system/design-system-spec-final-v1.md`
+- `docs/design-system/component-specs-core-v1.md`
+- `docs/design-system/agent-ui-rules.md`
+- `src/styles/globals.css` (read-only reference for tokens)
+
+**Scope**
+
+- finalize `docs/design-system/component-inventory-v1.md`: list every DS primitive, the variants it supports, the route families that consume it, and the canonical import path
+- create `docs/design-system/tokens-cheatsheet-v1.md` summarizing the `globals.css` token groups (palette, spacing, radius, motion, state, focus-ring) with usage guidance and examples
+- run a final repo-wide audit that the parent acceptance criteria below all hold; record any leftover drift as follow-up issues rather than expanding scope
+
+Parent acceptance criteria verified at this sub-task:
+
+- `pnpm grep -r "<svg" src/app` (or equivalent) returns zero matches outside `src/components/ui/**`
+- no route-local module CSS file defines a `.card`, `.chip`, or `.panel`-style class for a pattern the DS already covers
+- `subjectDescriptionsByCode`, `previewMatchFlowOptions`, `buildPreviewLanguages`, and `buildPreviewSubjects` no longer exist in the repo
+- `loadDiscoveryOptions` does not return a fallback object on DB error
+- every subject card, language card, and flag chip across the product renders through `Icon` or `Flag` wrappers
+- the design-system component inventory and tokens cheatsheet exist and accurately describe what is in the repo
+- `agent-ui-rules.md` and `CLAUDE.md` carry the DS-first rule
+- no route family lost functionality during the refactor
+
+**Out of scope**
+
+- new DS primitives
+- further route refactors
+- new product surfaces
+
+**Acceptance criteria**
+
+- `docs/design-system/component-inventory-v1.md` and `docs/design-system/tokens-cheatsheet-v1.md` exist, are linked from `docs/README.md`, and accurately describe the current repo
+- the parent-level acceptance criteria above all hold; any leftover drift is captured as a follow-up issue rather than left undocumented
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- doc review of the inventory and cheatsheet against the actual repo
+
+**Required manual steps**
+
+- none
+
+**Local testing checklist**
+
+- spot-check that each route family still works end-to-end after the audit (no code changes are expected here, but the audit may reveal regressions)
+
+
 
 If one of the tasks above needs to be split further:
 

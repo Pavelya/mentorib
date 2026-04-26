@@ -1,14 +1,7 @@
 export { Avatar } from "./avatar";
 export { Button, getButtonClassName } from "./button";
-export {
-  CheckIcon,
-  ClockIcon,
-  MatchOptionVisual,
-  PauseIcon,
-  ReviewedIcon,
-  StudentRoleIcon,
-  TutorRoleIcon,
-} from "./app-icons";
+export { Flag, type FlagCode } from "./flag";
+export { Icon, type IconKey } from "./icon";
 export { InlineNotice } from "./inline-notice";
 export { OptionCardGroup } from "./option-card-group";
 export { Panel } from "./panel";

@@ -1,11 +1,11 @@
-import type { AppLanguageFlagCode, AppSubjectIconKey } from "./app-icons";
-import { MatchOptionVisual } from "./app-icons";
+import { Flag, type FlagCode } from "./flag";
+import { Icon, type IconKey } from "./icon";
 import styles from "./option-card-group.module.css";
 
 export type OptionCardGroupOption = {
   description?: string | null;
-  flagCode?: AppLanguageFlagCode | null;
-  iconKey?: AppSubjectIconKey | null;
+  flagCode?: FlagCode | null;
+  iconKey?: IconKey | null;
   label: string;
   value: string;
 };
@@ -82,7 +82,11 @@ export function OptionCardGroup({
                         .filter(Boolean)
                         .join(" ")}
                     >
-                      <MatchOptionVisual flagCode={option.flagCode} iconKey={option.iconKey} />
+                      {option.flagCode ? (
+                        <Flag code={option.flagCode} />
+                      ) : option.iconKey ? (
+                        <Icon name={option.iconKey} />
+                      ) : null}
                     </span>
                   ) : null}
                   <span className={styles.text}>

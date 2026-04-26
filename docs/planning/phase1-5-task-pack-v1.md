@@ -682,6 +682,7 @@ Run the Phase 1.5 verification pass across compare behavior, noindex posture, sh
 - noindex and sitemap exclusion checks for compare
 - shortlist and compare telemetry checks
 - tutor roster query performance review
+- DS adherence audit: confirm no route-local `.card`, `.chip`, or `.panel`-style CSS, no inline SVGs outside `src/components/ui/**`, no route-local copies of shared reference vocabularies, and no new `Intl.NumberFormat` or currency-code literals outside `src/modules/pricing/**`; if drift is found, raise a sub-task with an `-A` suffix on the offending feature task before marking the phase done
 
 **Out of scope**
 
@@ -694,6 +695,7 @@ Run the Phase 1.5 verification pass across compare behavior, noindex posture, sh
 - tutor students meets the relationship-first UX bar
 - telemetry and query-performance expectations are reviewed explicitly
 - unresolved Phase 1.5 blockers are named clearly rather than hidden
+- the DS adherence audit produced either a clean result or named follow-up sub-tasks against specific feature tasks
 
 **Verification**
 

@@ -49,6 +49,8 @@ This file is canonical project memory and must be treated as relevant context, n
 | Hosting | Vercel |
 | Validation | Zod |
 | Dates | `luxon` |
+| Icons | `lucide-react` (single icon library, accessed only through `src/components/ui/icon.tsx`) |
+| Country flags | `country-flag-icons` (single flag library, accessed only through `src/components/ui/flag.tsx`) |
 | Tests | Vitest + Testing Library + Playwright |
 
 Do not add by default:
@@ -180,6 +182,7 @@ If it cannot be resolved safely, report a blocker.
 - Do not create placeholders for future work unless the current task explicitly requires structural topology, layout scaffolding, or reserved route ownership.
 - Do not refactor unrelated code while doing feature work.
 - Do not implement `draft` or `planned` tasks unless the human explicitly asks for clarification work.
+- DS-first: if a needed pattern, primitive, icon, or flag is not in the design system, extend the design system before using it locally. Route-local card, chip, panel, icon, or flag CSS and inline SVGs are forbidden. Icons must come from `src/components/ui/icon.tsx`; country flags must come from `src/components/ui/flag.tsx`. Anything that adds a new DS primitive, variant, or token must update `docs/design-system/component-inventory-v1.md` and (if tokens changed) `docs/design-system/tokens-cheatsheet-v1.md` in the same commit.
 
 When in doubt, the work is out of scope.
 

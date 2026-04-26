@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { NeedSummaryBar } from "@/components/continuity";
 import {
   Button,
-  ClockIcon,
+  Icon,
   InlineNotice,
   OptionCardGroup,
   SelectField,
@@ -362,7 +362,7 @@ function StepFields({
           <div id={getFieldContainerId("timezone")}>
             <div className={styles.timezoneCard}>
               <div aria-hidden="true" className={styles.timezoneIcon}>
-                <ClockIcon />
+                <Icon name="clock" />
               </div>
               <div className={styles.timezoneCopy}>
                 <p className={styles.timezoneTitle}>

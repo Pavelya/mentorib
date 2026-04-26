@@ -1,12 +1,6 @@
 import Link from "next/link";
 
-import {
-  CheckIcon,
-  ClockIcon,
-  PauseIcon,
-  ReviewedIcon,
-  getButtonClassName,
-} from "@/components/ui";
+import { Icon, getButtonClassName } from "@/components/ui";
 
 import styles from "./tutor-profile.module.css";
 
@@ -54,19 +48,19 @@ export default function TutorProfileNotFound() {
             <ul className={styles.previewChecks}>
               <li>
                 <span aria-hidden="true" className={styles.previewCheckIcon}>
-                  <CheckIcon />
+                  <Icon name="check" />
                 </span>
                 <span>Public profile</span>
               </li>
               <li>
                 <span aria-hidden="true" className={styles.previewCheckIcon}>
-                  <CheckIcon />
+                  <Icon name="check" />
                 </span>
                 <span>Reviewed proof</span>
               </li>
               <li>
                 <span aria-hidden="true" className={styles.previewCheckIcon}>
-                  <CheckIcon />
+                  <Icon name="check" />
                 </span>
                 <span>Bookable times</span>
               </li>
@@ -95,7 +89,7 @@ export default function TutorProfileNotFound() {
         <div className={styles.trustGrid}>
           <article className={styles.trustItem}>
             <span aria-hidden="true" className={styles.reasonIcon}>
-              <PauseIcon />
+              <Icon name="pause" />
             </span>
             <h3>Paused by the tutor</h3>
             <p>
@@ -104,14 +98,14 @@ export default function TutorProfileNotFound() {
           </article>
           <article className={styles.trustItem}>
             <span aria-hidden="true" className={styles.reasonIcon}>
-              <ReviewedIcon />
+              <Icon name="reviewed" />
             </span>
             <h3>Not public yet</h3>
             <p>A profile stays hidden until the tutor review is finished.</p>
           </article>
           <article className={styles.trustItem}>
             <span aria-hidden="true" className={styles.reasonIcon}>
-              <ClockIcon />
+              <Icon name="clock" />
             </span>
             <h3>No clear booking path</h3>
             <p>

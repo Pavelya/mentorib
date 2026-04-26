@@ -1,5 +1,7 @@
+"use client";
+
 /* eslint-disable @next/next/no-img-element */
-import type { HTMLAttributes } from "react";
+import { useState, type HTMLAttributes } from "react";
 
 import styles from "./avatar.module.css";
 
@@ -28,16 +30,28 @@ export function Avatar({
   ...props
 }: AvatarProps) {
   const label = alt ?? name;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showImage = Boolean(src) && failedSrc !== src;
 
   return (
     <span
       {...props}
       aria-hidden={decorative || undefined}
-      aria-label={!decorative && !src ? label : undefined}
+      aria-label={!decorative && !showImage ? label : undefined}
       className={[styles.avatar, styles[size], className].filter(Boolean).join(" ")}
-      role={!decorative && !src ? "img" : undefined}
+      role={!decorative && !showImage ? "img" : undefined}
     >
-      {src ? <img alt={decorative ? "" : label} className={styles.image} src={src} /> : getInitials(name)}
+      {showImage ? (
+        <img
+          alt={decorative ? "" : label}
+          className={styles.image}
+          onError={() => setFailedSrc(src ?? null)}
+          referrerPolicy="no-referrer"
+          src={src}
+        />
+      ) : (
+        getInitials(name)
+      )}
     </span>
   );
 }

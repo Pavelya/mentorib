@@ -1,12 +1,10 @@
 import type { LearningNeedOptionGroup } from "@/modules/lessons/constants";
-import {
-  getSubjectDescription,
-  previewMatchFlowOptions,
-  type MatchFlowOptionsByField,
-  type MatchLanguageOption,
-  type MatchNeedTypeOption,
-  type MatchOption,
-  type MatchSubjectOption,
+import type {
+  MatchFlowOptionsByField,
+  MatchLanguageOption,
+  MatchNeedTypeOption,
+  MatchOption,
+  MatchSubjectOption,
 } from "@/modules/lessons/match-flow-options";
 
 import {
@@ -34,43 +32,28 @@ const EMPTY_OPTION_GROUPS: Record<LearningNeedOptionGroup, ReferenceLearningNeed
   };
 
 export async function loadDiscoveryOptions(): Promise<DiscoveryOptionsByField> {
-  try {
-    const [subjects, focusAreas, languages, optionRows] = await Promise.all([
-      loadActiveReferenceSubjects(),
-      loadActiveReferenceSubjectFocusAreas(),
-      loadActiveReferenceLanguages(),
-      loadActiveReferenceLearningNeedOptionValues(),
-    ]);
-    const focusAreaIdsByCode = new Map(
-      focusAreas.map((focusArea) => [focusArea.focusAreaCode, focusArea.id]),
-    );
-    const optionGroups = groupLearningNeedOptionRows(optionRows);
+  const [subjects, focusAreas, languages, optionRows] = await Promise.all([
+    loadActiveReferenceSubjects(),
+    loadActiveReferenceSubjectFocusAreas(),
+    loadActiveReferenceLanguages(),
+    loadActiveReferenceLearningNeedOptionValues(),
+  ]);
+  const focusAreaIdsByCode = new Map(
+    focusAreas.map((focusArea) => [focusArea.focusAreaCode, focusArea.id]),
+  );
+  const optionGroups = groupLearningNeedOptionRows(optionRows);
 
-    return {
-      languageCode:
-        languages.length > 0 ? buildLanguageOptions(languages) : buildPreviewLanguages(),
-      needType: buildNeedTypeOptions({
-        focusAreaIdsByCode,
-        optionRows: optionGroups.need_type,
-      }),
-      sessionFrequencyIntent: buildGenericOptions({
-        fallback: previewMatchFlowOptions.sessionFrequencyIntent,
-        optionRows: optionGroups.session_frequency_intent,
-      }),
-      subjectSlug:
-        subjects.length > 0 ? buildSubjectOptions(subjects) : buildPreviewSubjects(),
-      supportStyle: buildGenericOptions({
-        fallback: previewMatchFlowOptions.supportStyle,
-        optionRows: optionGroups.support_style,
-      }),
-      urgencyLevel: buildGenericOptions({
-        fallback: previewMatchFlowOptions.urgencyLevel,
-        optionRows: optionGroups.urgency_level,
-      }),
-    };
-  } catch {
-    return previewMatchFlowOptions;
-  }
+  return {
+    languageCode: buildLanguageOptions(languages),
+    needType: buildNeedTypeOptions({
+      focusAreaIdsByCode,
+      optionRows: optionGroups.need_type,
+    }),
+    sessionFrequencyIntent: buildGenericOptions(optionGroups.session_frequency_intent),
+    subjectSlug: buildSubjectOptions(subjects),
+    supportStyle: buildGenericOptions(optionGroups.support_style),
+    urgencyLevel: buildGenericOptions(optionGroups.urgency_level),
+  };
 }
 
 function groupLearningNeedOptionRows(rows: ReferenceLearningNeedOptionValue[]) {
@@ -91,7 +74,7 @@ function groupLearningNeedOptionRows(rows: ReferenceLearningNeedOptionValue[]) {
 
 function buildSubjectOptions(subjects: ReferenceSubject[]): MatchSubjectOption[] {
   return subjects.map((subject) => ({
-    description: getSubjectDescription(subject.subjectCode),
+    description: subject.displayDescription,
     iconKey: getReferenceSubjectIconKey(subject.subjectCode),
     label: subject.displayName,
     subjectCode: subject.subjectCode,
@@ -115,15 +98,6 @@ function buildNeedTypeOptions({
   focusAreaIdsByCode: Map<string, string>;
   optionRows: ReferenceLearningNeedOptionValue[];
 }): MatchNeedTypeOption[] {
-  const fallback = previewMatchFlowOptions.needType.map((option) => ({
-    ...option,
-    focusAreaId: focusAreaIdsByCode.get(option.focusAreaCode) ?? null,
-  }));
-
-  if (optionRows.length === 0) {
-    return fallback;
-  }
-
   const options: MatchNeedTypeOption[] = [];
 
   for (const optionRow of optionRows) {
@@ -149,31 +123,15 @@ function buildNeedTypeOptions({
     });
   }
 
-  return options.length > 0 ? options : fallback;
+  return options;
 }
 
-function buildGenericOptions({
-  fallback,
-  optionRows,
-}: {
-  fallback: readonly MatchOption[];
-  optionRows: ReferenceLearningNeedOptionValue[];
-}) {
-  if (optionRows.length === 0) {
-    return [...fallback];
-  }
-
+function buildGenericOptions(
+  optionRows: ReferenceLearningNeedOptionValue[],
+): MatchOption[] {
   return optionRows.map((optionRow) => ({
     description: optionRow.helperText,
     label: optionRow.displayLabel,
     value: optionRow.optionKey,
   }));
-}
-
-function buildPreviewLanguages() {
-  return [...previewMatchFlowOptions.languageCode];
-}
-
-function buildPreviewSubjects() {
-  return [...previewMatchFlowOptions.subjectSlug];
 }

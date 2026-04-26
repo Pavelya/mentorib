@@ -18,6 +18,7 @@ export const subjects = pgTable(
     subject_code: text("subject_code").notNull(),
     slug: text("slug").notNull(),
     display_name: text("display_name").notNull(),
+    display_description: text("display_description"),
     sort_order: integer("sort_order").notNull().default(0),
     is_active: boolean("is_active").notNull().default(true),
     created_at: timestamp("created_at", { withTimezone: true })

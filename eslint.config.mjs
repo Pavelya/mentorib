@@ -8,6 +8,18 @@ const ARCH_RESTRICTED_IMPORT_PATHS = [
     message:
       "Import icons through `@/components/ui/icon` (the canonical Icon wrapper). Direct lucide-react imports are reserved for `src/components/ui/icon.tsx`.",
   },
+  {
+    name: "@/modules/lessons/match-flow-options",
+    importNames: [
+      "previewMatchFlowOptions",
+      "subjectDescriptionsByCode",
+      "getSubjectDescription",
+      "buildPreviewLanguages",
+      "buildPreviewSubjects",
+    ],
+    message:
+      "Match-flow preview fallbacks were removed in P1-DS-FOUND-001-B. Read subject descriptions and other reference copy from `loadDiscoveryOptions` (DB-backed) instead.",
+  },
 ];
 
 const ARCH_RESTRICTED_IMPORT_PATTERNS = [

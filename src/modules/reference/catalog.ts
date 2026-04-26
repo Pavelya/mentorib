@@ -2,6 +2,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import type { LearningNeedOptionGroup } from "@/modules/lessons/constants";
 
 type SubjectRow = {
+  display_description: string | null;
   display_name: string;
   id: string;
   slug: string;
@@ -34,6 +35,7 @@ type LearningNeedOptionValueRow = {
 };
 
 export type ReferenceSubject = {
+  displayDescription: string | null;
   displayName: string;
   id: string;
   slug: string;
@@ -69,7 +71,7 @@ export async function loadActiveReferenceSubjects(): Promise<ReferenceSubject[]>
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("subjects")
-    .select("id, subject_code, slug, display_name, sort_order")
+    .select("id, subject_code, slug, display_name, display_description, sort_order")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .returns<SubjectRow[]>();
@@ -85,7 +87,7 @@ export async function loadReferenceSubjectById(subjectId: string) {
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("subjects")
-    .select("id, subject_code, slug, display_name, sort_order")
+    .select("id, subject_code, slug, display_name, display_description, sort_order")
     .eq("id", subjectId)
     .maybeSingle<SubjectRow>();
 
@@ -108,7 +110,7 @@ export async function loadReferenceSubjectsByIds(
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("subjects")
-    .select("id, subject_code, slug, display_name, sort_order")
+    .select("id, subject_code, slug, display_name, display_description, sort_order")
     .in("id", uniqueIds)
     .returns<SubjectRow[]>();
 
@@ -251,6 +253,7 @@ export async function loadActiveReferenceLearningNeedOptionValues(): Promise<
 
 function mapSubjectRow(row: SubjectRow): ReferenceSubject {
   return {
+    displayDescription: row.display_description,
     displayName: row.display_name,
     id: row.id,
     slug: row.slug,

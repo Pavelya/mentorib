@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { appUsers, studentProfiles } from "@/modules/accounts/schema";
+import { DEFAULT_PLATFORM_CURRENCY_CODE } from "@/modules/pricing/money";
 import {
   bookingOperationStatuses,
   bookingOperationTypes,
@@ -237,7 +238,9 @@ export const lessons = pgTable(
       .notNull()
       .default("external_video_call"),
     price_amount: integer("price_amount").notNull(),
-    currency_code: text("currency_code").notNull().default("USD"),
+    currency_code: text("currency_code")
+      .notNull()
+      .default(DEFAULT_PLATFORM_CURRENCY_CODE),
     is_trial: boolean("is_trial").notNull().default(false),
     subject_snapshot: jsonb("subject_snapshot")
       .$type<Record<string, unknown>>()
@@ -431,7 +434,9 @@ export const payments = pgTable(
       .notNull()
       .default("pending"),
     amount: integer("amount").notNull(),
-    currency_code: text("currency_code").notNull().default("USD"),
+    currency_code: text("currency_code")
+      .notNull()
+      .default(DEFAULT_PLATFORM_CURRENCY_CODE),
     authorized_at: timestamp("authorized_at", { withTimezone: true }),
     authorization_expires_at: timestamp("authorization_expires_at", {
       withTimezone: true,

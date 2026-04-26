@@ -231,6 +231,7 @@ Unless the task says otherwise, finish with:
 - `pnpm lint`
 - `pnpm typecheck`
 - `pnpm build`
+- `pnpm lint:arch` (architectural-rule lint plus the audit script in `scripts/audit-architectural-rules.ts` — see `docs/design-system/agent-ui-rules.md` and `docs/architecture/canonical-value-ownership-map-v1.md`)
 
 Add task-specific tests or manual checks when the task requires them.
 If any relevant verification could not be run, say exactly what was not run and why.

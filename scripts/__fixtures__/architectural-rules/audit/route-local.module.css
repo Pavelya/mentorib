@@ -1,0 +1,12 @@
+/* Fixture: bare .card / .chip / .panel class definitions must be flagged. */
+.card {
+  background: white;
+}
+
+.chip {
+  border-radius: 9999px;
+}
+
+.panel {
+  padding: 1rem;
+}

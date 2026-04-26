@@ -1,6 +1,7 @@
 export { Avatar } from "./avatar";
 export { Button, getButtonClassName } from "./button";
 export { Flag, type FlagCode } from "./flag";
+export { GoogleMark } from "./google-mark";
 export { Icon, type IconKey } from "./icon";
 export { InlineNotice } from "./inline-notice";
 export { OptionCardGroup } from "./option-card-group";

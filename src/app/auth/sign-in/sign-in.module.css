@@ -85,12 +85,6 @@
   min-height: 3.25rem;
 }
 
-.googleMark {
-  width: 1.125rem;
-  height: 1.125rem;
-  flex: none;
-}
-
 .divider {
   position: relative;
   text-align: center;

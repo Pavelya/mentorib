@@ -11,7 +11,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "lint:arch": "eslint . && tsx scripts/audit-architectural-rules.ts",
+    "lint:arch:test": "tsx scripts/test-architectural-rules.ts",
+    "typecheck": "tsc --noEmit",
+    "prepare": "simple-git-hooks || true"
   },
   "dependencies": {
     "@supabase/ssr": "0.10.2",
@@ -31,6 +34,15 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.4",
+    "lint-staged": "16.4.0",
+    "simple-git-hooks": "2.13.1",
+    "tsx": "4.21.0",
     "typescript": "5.9.3"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged && pnpm tsx scripts/audit-architectural-rules.ts"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": "eslint --max-warnings=0 --no-warn-ignored"
   }
 }

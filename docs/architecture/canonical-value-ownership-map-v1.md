@@ -193,3 +193,12 @@ Do not:
 - define a second icon or flag map for the same subject or language keys
 - introduce a new `DEFAULT_CURRENCY_CODE` outside `src/modules/pricing`
 - treat search, match, settings, and tutor surfaces as separate sources for the same core vocabulary
+
+## 7. Enforcement
+
+The mechanically-detectable parts of this ownership map are enforced by `pnpm lint:arch` (ESLint architectural rules + the audit script in `scripts/audit-architectural-rules.ts`). The pre-commit hook and CI workflow run the same command. See `docs/design-system/agent-ui-rules.md` §10 for the full list of rules; the rules tied to this document are:
+
+- icon and flag library ownership (no direct `lucide-react` / `country-flag-icons` imports outside the DS wrappers)
+- pricing currency ownership (no `Intl.NumberFormat` or currency-code literals outside `src/modules/pricing/**`)
+- typed env access (no `process.env.*` outside `src/lib/**/env.ts`)
+- shared reference vocabulary ownership (a soft review-only warning for route-local `{ value, label }` arrays that look like reference data)

@@ -174,6 +174,10 @@ Bad parallel examples:
 | 5 | `P1-PUBLIC-003` | `ready` | `P1` | 2 | Public tutor profile route and SEO surface |
 | 5 | `P1-MATCH-001` | `ready` | `P1` | 2 | Match flow route implementation |
 | 5 | `P1-ACCOUNT-001` | `ready` | `P1` | 2 | Shared account routes and legal-notice surfaces |
+| 5a | `P1-DS-FOUND-001-A` | `done` | `P1` | 4 | Icon/flag libraries and DS-first enforcement docs (foundation, run before remaining feature work) |
+| 5b | `P1-QUALITY-003` | `ready` | `P1` | 4 | Architectural-rule lint and pre-commit guardrails (foundation, protects all subsequent commits) |
+| 5c | `P1-DS-FOUND-001-B` | `ready` | `P1` | 4 | DB-backed reference copy and fallback removal (foundation, removes constants subsequent routes might consume) |
+| 5d | `P1-DS-FOUND-001-C` | `ready` | `P1` | 4 | DS expansion and continuity-component naming reconciliation (foundation, primitives subsequent routes will consume) |
 | 6 | `P1-MATCH-002` | `ready` | `P1` | 2 | Results route and match result cards |
 | 6 | `P1-BOOK-001` | `ready` | `P1` | 2 | Booking context route and booking request action |
 | 6 | `P1-ACCOUNT-002` | `ready` | `P1` | 2 | Account profile editing — name and preferred language |
@@ -190,16 +194,13 @@ Bad parallel examples:
 | 10 | `P1-TUTOR-004` | `ready` | `P1` | 4 | Tutor messages route using shared conversation system |
 | 10 | `P1-TUTOR-005` | `ready` | `P1` | 4 | Tutor earnings route and payout-readiness flow |
 | 11 | `P1-QUALITY-001` | `ready` | `P2` | 4 | Observability, analytics, and safe logging baseline |
-| 12 | `P1-DS-FOUND-001-A` | `ready` | `P1` | 4 | Icon/flag libraries and DS-first enforcement docs |
-| 12 | `P1-DS-FOUND-001-B` | `ready` | `P1` | 4 | DB-backed reference copy and fallback removal |
-| 13 | `P1-DS-FOUND-001-C` | `ready` | `P1` | 4 | DS expansion and continuity-component naming reconciliation |
-| 14 | `P1-DS-FOUND-001-D1` | `ready` | `P1` | 4 | Public route family DS adoption |
-| 14 | `P1-DS-FOUND-001-D2` | `ready` | `P1` | 4 | Student route family DS adoption |
-| 14 | `P1-DS-FOUND-001-D3` | `ready` | `P1` | 4 | Tutor route family DS adoption |
-| 14 | `P1-DS-FOUND-001-D4` | `ready` | `P1` | 4 | Account and setup route family DS adoption |
-| 14 | `P1-DS-FOUND-001-D5` | `ready` | `P1` | 4 | Internal route family DS adoption |
-| 15 | `P1-DS-FOUND-001-E` | `ready` | `P1` | 4 | Component inventory and tokens cheatsheet |
-| 16 | `P1-QUALITY-002` | `ready` | `P2` | 4 | Phase 1 release and verification checklist pass |
+| 12 | `P1-DS-FOUND-001-D1` | `ready` | `P1` | 4 | Public route family DS adoption (cleans up pre-rule routes) |
+| 12 | `P1-DS-FOUND-001-D2` | `ready` | `P1` | 4 | Student route family DS adoption (cleans up pre-rule routes) |
+| 12 | `P1-DS-FOUND-001-D3` | `ready` | `P1` | 4 | Tutor route family DS adoption (cleans up pre-rule routes) |
+| 12 | `P1-DS-FOUND-001-D4` | `ready` | `P1` | 4 | Account and setup route family DS adoption (cleans up pre-rule routes) |
+| 12 | `P1-DS-FOUND-001-D5` | `ready` | `P1` | 4 | Internal route family DS adoption (cleans up pre-rule routes) |
+| 13 | `P1-DS-FOUND-001-E` | `ready` | `P1` | 4 | Component inventory and tokens cheatsheet |
+| 14 | `P1-QUALITY-002` | `ready` | `P2` | 4 | Phase 1 release and verification checklist pass |
 
 ## 9. Detailed Tasks
 
@@ -1787,8 +1788,10 @@ Shared parent outcome (verified at `-E`):
 
 Sequencing note:
 
-- the cleanup sub-tasks do not depend on `P1-QUALITY-001`
-- `-D1..D5` heavily edit route files, so they should not run in parallel with `P1-QUALITY-001` (which is also expected to edit route files to add telemetry); sequence them in either order, but not concurrently
+- the foundation sub-tasks (`-A`, `-B`, `-C`) plus `P1-QUALITY-003` should land before remaining Phase 1 feature work (steps 6–11 of the task table) so new routes are built against the new DS, the new lint rules, and the DB-backed reference data from day one
+- the cleanup sub-tasks (`-D1..D5`) should land after the feature work in steps 6–11 because their job is to clean up routes that were built before the new rules existed; routes built during steps 6–11 are already protected by the lint introduced in `P1-QUALITY-003` and so should not need a `-D` pass
+- `-E` is last because its inventory and audit must reflect the final repo state
+- the cleanup sub-tasks do not depend on `P1-QUALITY-001`; however, `-D1..D5` heavily edit route files, so they should not run in parallel with `P1-QUALITY-001` (which is also expected to edit route files to add telemetry) — sequence them in either order, but not concurrently
 
 Shared required source docs (each sub-task may cite a tighter subset):
 
@@ -1884,6 +1887,7 @@ Move subject and focus-area description copy into the database, route it through
 - update `src/modules/reference/discovery.ts` to use the loaded descriptions and remove the `getSubjectDescription` import
 - delete `subjectDescriptionsByCode` and `previewMatchFlowOptions` from `src/modules/lessons/match-flow-options.ts`, along with the `buildPreviewLanguages` / `buildPreviewSubjects` fallbacks and the `try { … } catch { return previewMatchFlowOptions; }` block in `loadDiscoveryOptions`
 - update `src/modules/accounts/profile-settings.ts`, `src/app/(student)/match/match-flow-form.tsx`, and any other caller that depends on those constants to consume the loader output directly; let DB load failures surface as real errors rather than silent preview fallbacks
+- once the constants above are deleted, add the corresponding `no-restricted-imports` rule to the ESLint config introduced by `P1-QUALITY-003` so the deleted names cannot be re-added by future code; this rule must live in `-B`'s commit, not `P1-QUALITY-003`'s, because it is only valid after the deletion lands
 
 **Out of scope**
 
@@ -2286,7 +2290,81 @@ Parent acceptance criteria verified at this sub-task:
 
 - spot-check that each route family still works end-to-end after the audit (no code changes are expected here, but the audit may reveal regressions)
 
+## 9.36 `P1-QUALITY-003` Architectural-rule lint and pre-commit guardrails
 
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-DS-FOUND-001-A`
+
+**Goal**
+
+Make the DS-first rule, the canonical-ownership rules, and the no-hardcoding rules enforceable at commit time and in CI so they cannot silently rot during the rest of Phase 1, Phase 1.5, and Phase 2. Catch the mechanically-detectable 80% of architectural drift before it lands; leave the semantic 20% to the existing release-time QA audits.
+
+**Required source docs**
+
+- `CLAUDE.md`
+- `docs/design-system/agent-ui-rules.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
+- `docs/planning/engineering-guardrails-v1.md`
+
+**Scope**
+
+- ESLint custom config additions (using `no-restricted-syntax`, `no-restricted-imports`, and `no-restricted-globals`) covering at minimum:
+  - no `Intl.NumberFormat` outside `src/modules/pricing/**`
+  - no `process.env.*` reads outside `src/lib/env/**` (or whichever typed env module path is canonical at task time)
+  - no imports of `lucide-react` or `country-flag-icons` outside `src/components/ui/icon.tsx` and `src/components/ui/flag.tsx` (force consumption through the DS wrappers)
+- the additional `no-restricted-imports` rule that blocks re-adding `previewMatchFlowOptions`, `subjectDescriptionsByCode`, `getSubjectDescription`, `buildPreviewLanguages`, and `buildPreviewSubjects` is added as part of `P1-DS-FOUND-001-B`'s scope (in the same commit that deletes those constants), not here, to avoid breaking the build before `-B` lands
+- a small `scripts/audit-architectural-rules.ts` (run via `tsx`) covering the structural checks ESLint cannot express well:
+  - no `<svg` markup in any file under `src/app/**` or `src/modules/**` (icons must come through `Icon`/`Flag`)
+  - no `.card`, `.chip`, or `.panel` class definitions in any `*.module.css` under `src/app/**` (must extend the DS instead)
+  - no currency-code string literals (`"USD"`, `"EUR"`, `"GBP"`, `"CAD"`, `"AUD"`) outside `src/modules/pricing/**`
+  - no route-local literal arrays whose elements have the shape `{ value: string, label: string }` of length ≥ 4 (likely a hardcoded reference vocabulary) outside `src/modules/reference/**` and `src/modules/marketing/**` — flag for review rather than hard-fail to keep noise low
+- pre-commit hook via `simple-git-hooks` (preferred — single-package, no install step) running `lint-staged` (lint changed files only) plus the audit script (full repo, fast)
+- a single new `pnpm` script `pnpm lint:arch` that runs ESLint plus the audit script in one command, suitable for both pre-commit and CI
+- a CI workflow step (extend the existing GitHub Actions config if one exists, otherwise add `.github/workflows/architectural-lint.yml`) running `pnpm lint:arch` on every PR
+- update the **Verification standard** section of `CLAUDE.md` to add `pnpm lint:arch` to the default verification commands so future task agents run it before reporting
+- update `docs/design-system/agent-ui-rules.md` and `docs/architecture/canonical-value-ownership-map-v1.md` with a short "Enforcement" section linking to the new lint command and audit script
+
+**Out of scope**
+
+- semantic checks that require design judgment (near-duplicate component reimplementation, "is this copy useful" — those stay at the release QA audit)
+- prettier or formatting changes
+- changes to existing ESLint rules unrelated to architectural enforcement
+- pre-push or commit-msg hooks beyond the one pre-commit hook
+- a custom ESLint plugin published as its own package (custom rules can live inline in `eslint.config.*`)
+- per-developer setup beyond `pnpm install` (the hooks must self-install via `simple-git-hooks`'s `prepare` script convention)
+
+**Acceptance criteria**
+
+- `pnpm lint:arch` exists, runs in under 10 seconds on a clean repo, and exits non-zero when any rule is violated
+- the pre-commit hook runs `pnpm lint:arch` on staged changes and blocks commits that violate the rules
+- CI runs `pnpm lint:arch` on every PR and fails the build on violations
+- the rules listed in scope each have at least one positive test (a deliberately-violating fixture in `scripts/__fixtures__/` or equivalent that the script flags) so the rule cannot silently regress
+- `CLAUDE.md`, `agent-ui-rules.md`, and `canonical-value-ownership-map-v1.md` reference `pnpm lint:arch` as the canonical enforcement command
+- the current repo passes `pnpm lint:arch` on the first run after this task lands (any genuine drift surfaced by the new rules is fixed in the same task, since the volume should be small post `-A`)
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint:arch` (must pass on the current repo)
+- manual test: introduce a deliberate violation locally (e.g., add `const usd = "USD"` to a route file), confirm pre-commit hook blocks it, then revert
+- CI dry-run: open a draft PR with a deliberate violation and confirm the workflow fails
+
+**Required manual steps**
+
+- after merging, run `pnpm install` once locally to register the `simple-git-hooks` pre-commit hook (this is the standard one-time setup, not a recurring step)
+
+**Local testing checklist**
+
+- run `pnpm lint:arch` and confirm it exits 0
+- attempt to commit a file containing `<svg` under `src/app/**` and confirm the commit is blocked
+- attempt to commit a file containing `Intl.NumberFormat` outside `src/modules/pricing/**` and confirm the commit is blocked
+- confirm `pnpm lint`, `pnpm typecheck`, and `pnpm build` still pass after the new ESLint rules are in place
+
+## 10. Task Drafting Rules For Follow-Up
 
 If one of the tasks above needs to be split further:
 

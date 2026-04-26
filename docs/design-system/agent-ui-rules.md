@@ -139,3 +139,19 @@ Do not:
 - create route-local arrays for shared options that already have a canonical source
 - introduce separate student and tutor component families for the same object
 - mix account-row styling, freeform card styling, and ad hoc field styling in one settings panel without a reason
+
+## 10. Enforcement
+
+Mechanically-detectable parts of the DS-first rule are enforced by `pnpm lint:arch`, which combines ESLint (custom architectural rules in `eslint.config.mjs`) with the audit script in `scripts/audit-architectural-rules.ts`. The pre-commit hook (`simple-git-hooks` + `lint-staged`) and CI (`.github/workflows/architectural-lint.yml`) run the same command.
+
+Rules enforced today:
+
+- no `<svg>` markup in any file under `src/app/**` or `src/modules/**` — icons must come through `@/components/ui/icon`, country flags through `@/components/ui/flag`, and brand marks must be exposed as DS components (see `src/components/ui/google-mark.tsx` for the pattern)
+- no bare `.card`, `.chip`, or `.panel` class definitions in any `*.module.css` under `src/app/**` — extend the DS primitives instead
+- no direct imports of `lucide-react` or `country-flag-icons` outside `src/components/ui/icon.tsx` and `src/components/ui/flag.tsx`
+- no `Intl.NumberFormat` outside `src/modules/pricing/**`
+- no `process.env.*` reads outside typed env modules in `src/lib/**/env.ts` (with a small explicit allowlist for legacy env-reading helpers)
+- no currency-code string literals (`"USD"`, `"EUR"`, `"GBP"`, `"CAD"`, `"AUD"`) outside `src/modules/pricing/**`
+- a soft warning for route-local `{ value, label }` option arrays of length ≥ 4 (likely a hardcoded reference vocabulary that belongs in `src/modules/reference/**`)
+
+Run `pnpm lint:arch:test` to verify the enforcement fixtures still flag the rules they are supposed to flag.

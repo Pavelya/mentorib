@@ -1,11 +1,14 @@
 export { Avatar } from "./avatar";
 export { Button, getButtonClassName } from "./button";
+export { Card, type CardProps } from "./card";
+export { Chip, type ChipProps, type ChipTone } from "./chip";
 export { Flag, type FlagCode } from "./flag";
 export { GoogleMark } from "./google-mark";
 export { Icon, type IconKey } from "./icon";
 export { InlineNotice } from "./inline-notice";
 export { OptionCardGroup } from "./option-card-group";
 export { Panel } from "./panel";
+export { Section, type SectionProps } from "./section";
 export { SelectField } from "./select-field";
 export { StatusBadge } from "./status-badge";
 export { TabBar } from "./tab-bar";

@@ -86,15 +86,18 @@ Role wrappers are not a license to redesign the component.
 
 ### Rule 3
 
-The five highest-priority shared components in phase 1 are:
+The highest-priority shared components in phase 1 are:
 
 1. `NeedSummaryBar`
 2. `MatchRow`
 3. `PersonSummary`
-4. `LessonCard`
-5. `ScheduleSurface`
+4. `LessonSummary`
+5. `LessonCard`
+6. `ScheduleSurface`
 
-These five define the product grammar.
+These define the product grammar.
+
+> **Reconciliation note (P1-DS-FOUND-001-C):** `design-system-spec-final-v1.md` distinguishes the booking and continuity anchor (`LessonSummary`) from the broader lesson object card (`LessonCard`). The repo currently implements `LessonSummary` (under `src/components/continuity/`); `LessonCard` and `ScheduleSurface` remain to be built. The §10 and §11 specs below describe the full lesson and schedule grammars; the implemented `LessonSummary` is a sibling that anchors continuity inside booking, messages, and post-lesson contexts and reuses the same status language.
 
 ## 6. Component Spec Format
 
@@ -541,6 +544,8 @@ Mobile:
 
 ## 10. `LessonCard`
 
+> **Implementation status:** not yet built. The repo currently implements the sibling component `LessonSummary` (continuity anchor) at `src/components/continuity/continuity-primitives.tsx`. `LessonCard` covers the broader lesson-object grammar described below and will be added when student and tutor lesson lists adopt it.
+
 ### Purpose
 
 Represents a lesson consistently across student and tutor modes.
@@ -684,6 +689,8 @@ Actions should not wrap into a confusing cluster.
 ---
 
 ## 11. `ScheduleSurface`
+
+> **Implementation status:** not yet built. The booking, reschedule, and tutor schedule routes do not yet expose a canonical scheduling primitive. The grammar described below is the agreed-upon target; route-family adoption is tracked in the `P1-DS-FOUND-001-D*` cleanup tasks and follow-up scheduling work.
 
 ### Purpose
 
@@ -829,13 +836,13 @@ The need context must explain why the match exists.
 
 `MatchRow` uses tutor identity through the same person grammar as the rest of the system.
 
-### `PersonSummary` -> `LessonCard`
+### `PersonSummary` -> `LessonSummary` / `LessonCard`
 
-Lessons should rely on the same identity block, not invent their own header style.
+Lessons should rely on the same identity block, not invent their own header style. The continuity anchor (`LessonSummary`) and the broader lesson-object card (`LessonCard`) both compose `PersonSummary` rather than building a separate header.
 
-### `LessonCard` -> `ScheduleSurface`
+### `LessonSummary` / `LessonCard` -> `ScheduleSurface`
 
-Booking and rescheduling should preserve lesson context while using the same scheduling grammar.
+Booking and rescheduling should preserve lesson context while using the same scheduling grammar, regardless of whether the entry point is a continuity anchor or a full lesson card.
 
 ## 13. Phase 2 Queue
 

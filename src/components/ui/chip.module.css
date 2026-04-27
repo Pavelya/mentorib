@@ -1,0 +1,61 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border-support);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.74);
+  color: var(--ink-700);
+  font-size: var(--caption);
+  font-weight: 600;
+  line-height: var(--line-utility);
+}
+
+.compact {
+  min-height: 1.6rem;
+  padding: 0.2rem 0.55rem;
+}
+
+.default {
+  border-color: var(--border-support);
+  background: rgb(255 255 255 / 0.74);
+  color: var(--ink-700);
+}
+
+.positive {
+  border-color: var(--state-positive-border);
+  background: var(--state-positive-surface);
+  color: var(--success-500);
+}
+
+.warning {
+  border-color: var(--state-warning-border);
+  background: var(--state-warning-surface);
+  color: var(--warning-500);
+}
+
+.destructive {
+  border-color: var(--state-danger-border);
+  background: var(--state-danger-surface);
+  color: var(--danger-500);
+}
+
+.trust {
+  border-color: var(--state-trust-border);
+  background: var(--state-trust-surface);
+  color: var(--gold-500);
+}
+
+.info {
+  border-color: var(--state-info-border);
+  background: var(--state-info-surface);
+  color: var(--ink-700);
+}
+
+.support {
+  border-color: var(--border-subtle);
+  background: var(--surface-support);
+  color: var(--ink-500);
+}

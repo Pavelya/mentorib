@@ -1,0 +1,85 @@
+.card {
+  position: relative;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.76);
+  text-align: left;
+  color: var(--ink-900);
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.static {
+  cursor: default;
+}
+
+.select {
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: rgb(61 56 50 / 0.28);
+  transform: translateY(-1px);
+}
+
+.select:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    0 0 0 1px var(--focus-outline);
+}
+
+.selected {
+  border-color: var(--state-selected-border);
+  background: var(--state-selected-surface);
+}
+
+.instantSubmit {
+  display: grid;
+  place-items: center;
+  gap: var(--space-4);
+  min-height: 15rem;
+  padding: var(--space-8) var(--space-5);
+  border-color: var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  text-align: center;
+}
+
+.instantSubmit:hover:not(:disabled) {
+  border-color: rgb(23 60 52 / 0.28);
+  background: white;
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-2px);
+}
+
+.instantSubmit:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    0 0 0 1px var(--focus-outline),
+    var(--shadow-raised);
+}
+
+.instantSubmit:disabled {
+  cursor: progress;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .instantSubmit {
+    min-height: 11rem;
+    padding: var(--space-6) var(--space-4);
+  }
+}

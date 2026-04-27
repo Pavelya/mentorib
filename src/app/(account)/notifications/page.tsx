@@ -1,12 +1,16 @@
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
-import { InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import { Button, InlineNotice, Panel, StatusBadge } from "@/components/ui";
 import { formatUtcDateTime } from "@/lib/datetime/format";
 import {
   getSharedAccountRouteContext,
   listAccountNotifications,
 } from "@/modules/accounts/shared-account";
 
+import {
+  markAllNotificationsReadAction,
+  setNotificationStatusAction,
+} from "./actions";
 import styles from "../account-surfaces.module.css";
 
 export default async function NotificationsPage() {
@@ -86,6 +90,13 @@ export default async function NotificationsPage() {
         description="Notifications stay summarized and safe to render without exposing raw lesson or message payloads."
         title="Latest product updates"
       >
+        {unreadCount > 0 ? (
+          <form action={markAllNotificationsReadAction} className={styles.actions}>
+            <Button size="compact" type="submit" variant="secondary">
+              Mark all as read
+            </Button>
+          </form>
+        ) : null}
         {notifications.length > 0 ? (
           <ul className={styles.list}>
             {notifications.map((notification) => (
@@ -109,24 +120,62 @@ export default async function NotificationsPage() {
                     timezone: account.timezone,
                   })}
                 </p>
-                {notification.safeHref ? (
-                  <div className={styles.actions}>
+                <div className={styles.actions}>
+                  {notification.safeHref ? (
                     <a className={styles.inlineLink} href={notification.safeHref}>
                       Review related notice
                     </a>
-                  </div>
-                ) : null}
+                  ) : null}
+                  {notification.notificationStatus === "unread" ? (
+                    <form action={setNotificationStatusAction}>
+                      <input
+                        name="notificationId"
+                        type="hidden"
+                        value={notification.id}
+                      />
+                      <input name="nextStatus" type="hidden" value="read" />
+                      <Button size="compact" type="submit" variant="ghost">
+                        Mark as read
+                      </Button>
+                    </form>
+                  ) : null}
+                  {notification.notificationStatus !== "dismissed" ? (
+                    <form action={setNotificationStatusAction}>
+                      <input
+                        name="notificationId"
+                        type="hidden"
+                        value={notification.id}
+                      />
+                      <input name="nextStatus" type="hidden" value="dismissed" />
+                      <Button size="compact" type="submit" variant="ghost">
+                        Dismiss
+                      </Button>
+                    </form>
+                  ) : (
+                    <form action={setNotificationStatusAction}>
+                      <input
+                        name="notificationId"
+                        type="hidden"
+                        value={notification.id}
+                      />
+                      <input name="nextStatus" type="hidden" value="unread" />
+                      <Button size="compact" type="submit" variant="ghost">
+                        Restore
+                      </Button>
+                    </form>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
         ) : (
           <div className={styles.emptyState}>
             <p className={styles.bodyText}>
-              No bell-style product notifications have been generated for this account
-              yet.
+              No bell-style product updates yet — lifecycle and legal items will
+              appear here as soon as they happen.
             </p>
             <p className={styles.muted}>
-              Lifecycle and legal items will accumulate here as those flows ship.
+              The bell inbox stays separate from the Messages route by design.
             </p>
           </div>
         )}

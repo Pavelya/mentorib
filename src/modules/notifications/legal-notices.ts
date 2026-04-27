@@ -4,6 +4,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { siteConfig } from "@/lib/seo/site";
 import type { PolicyNoticeType } from "@/modules/notifications/constants";
+import { createPolicyNoticeNotification } from "@/modules/notifications/lifecycle";
 
 type PolicyNoticeRow = MentorIbDatabase["public"]["Tables"]["policy_notice_versions"]["Row"];
 type PolicyNoticeReceiptRow =
@@ -70,9 +71,39 @@ export async function listLegalNoticesForAccount(appUserId: string) {
 export async function getLatestPendingLegalNotice(appUserId: string) {
   const notices = await listLegalNoticesForAccount(appUserId);
 
-  return notices.find((notice) => {
+  const pending = notices.find((notice) => {
     return requiresLegalNoticeAction(notice);
-  }) ?? null;
+  });
+
+  if (!pending) {
+    return null;
+  }
+
+  await ensurePolicyNoticeNotificationsForUser(appUserId, notices);
+
+  return pending;
+}
+
+export async function ensurePolicyNoticeNotificationsForUser(
+  appUserId: string,
+  notices: readonly LegalNoticeDto[],
+) {
+  const pending = notices.filter((notice) => requiresLegalNoticeAction(notice));
+
+  if (pending.length === 0) {
+    return;
+  }
+
+  await Promise.all(
+    pending.map((notice) =>
+      createPolicyNoticeNotification({
+        appUserId,
+        policyNoticeVersionId: notice.id,
+        summary: notice.summary,
+        title: `${getLegalNoticeTypeLabel(notice.noticeType)} ready to review`,
+      }),
+    ),
+  );
 }
 
 export function requiresLegalNoticeAction(notice: LegalNoticeDto) {

@@ -19,6 +19,7 @@ import {
   type ReferenceSubjectFocusArea,
 } from "@/modules/reference/catalog";
 import { loadDiscoveryOptions } from "@/modules/reference/discovery";
+import { createLessonRequestSubmittedNotifications } from "@/modules/notifications/lifecycle";
 import {
   DEFAULT_PLATFORM_CURRENCY_CODE,
   formatCurrencyFromMinorUnits,
@@ -107,6 +108,7 @@ type MatchRunRecord = {
 };
 
 type TutorProfileRecord = {
+  app_user_id: string;
   best_for_summary: string | null;
   display_name: string | null;
   headline: string | null;
@@ -595,7 +597,7 @@ export async function startBookingRequestCheckout(
 }
 
 export async function finalizeBookingCheckoutReturn(
-  account: Pick<ResolvedAuthAccount, "id">,
+  account: Pick<ResolvedAuthAccount, "full_name" | "id" | "timezone">,
   context: string,
   operationKey: string,
   sessionId: string,
@@ -686,6 +688,12 @@ export async function finalizeBookingCheckoutReturn(
       "The booking request was authorized, but we couldn't refresh the final state.",
     );
   }
+
+  await emitLessonRequestSubmittedNotifications({
+    account,
+    lesson: finalBundle.lesson,
+    tutor: finalBundle.tutor,
+  });
 
   return buildBookingRequestOutcome(finalBundle.lesson, finalBundle.payment, finalBundle.tutor);
 }
@@ -910,7 +918,7 @@ async function resolvePublicTutorBookingContext(
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const { data: tutor, error: tutorError } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("id, display_name, public_slug, headline, best_for_summary, pricing_summary")
+    .select("app_user_id, id, display_name, public_slug, headline, best_for_summary, pricing_summary")
     .eq("public_slug", slug)
     .eq("application_status", "approved")
     .eq("profile_visibility_status", "public_visible")
@@ -1735,7 +1743,7 @@ async function loadExistingDraftBundle(
 
   const { data: tutor } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("id, display_name, public_slug, headline, best_for_summary, pricing_summary")
+    .select("app_user_id, id, display_name, public_slug, headline, best_for_summary, pricing_summary")
     .eq("id", lesson.tutor_profile_id)
     .maybeSingle<TutorProfileRecord>();
 
@@ -1851,7 +1859,7 @@ async function loadTutorProfileById(tutorProfileId: string) {
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const { data, error } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("id, display_name, public_slug, headline, best_for_summary, pricing_summary")
+    .select("app_user_id, id, display_name, public_slug, headline, best_for_summary, pricing_summary")
     .eq("id", tutorProfileId)
     .maybeSingle<TutorProfileRecord>();
 
@@ -2447,4 +2455,32 @@ function resolveExpandedPaymentIntent(
 
 function isUniqueViolation(error: { code?: string | null } | null) {
   return error?.code === "23505";
+}
+
+async function emitLessonRequestSubmittedNotifications({
+  account,
+  lesson,
+  tutor,
+}: {
+  account: Pick<ResolvedAuthAccount, "full_name" | "id" | "timezone">;
+  lesson: LessonRecord;
+  tutor: TutorProfileRecord;
+}) {
+  if (!tutor.app_user_id || tutor.app_user_id === account.id) {
+    return;
+  }
+
+  try {
+    await createLessonRequestSubmittedNotifications({
+      lessonId: lesson.id,
+      scheduledStartAt: lesson.scheduled_start_at,
+      studentAppUserId: account.id,
+      studentDisplayName: account.full_name,
+      timezone: resolveTimezone(account.timezone),
+      tutorAppUserId: tutor.app_user_id,
+      tutorDisplayName: tutor.display_name,
+    });
+  } catch {
+    // notification dispatch must not block the booking outcome
+  }
 }

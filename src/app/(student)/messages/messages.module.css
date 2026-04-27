@@ -1,0 +1,12 @@
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.notice {
+  margin-bottom: var(--space-3);
+}
+
+.emptyState {
+  margin-top: var(--space-2);
+}

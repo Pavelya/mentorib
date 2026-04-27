@@ -56,6 +56,10 @@ All entries are accessed through the barrel export `src/components/ui/index.ts`.
 | `LessonSummary` | `continuity-primitives.tsx` | implemented continuity-anchor sibling per `design-system-spec-final-v1.md` §9.1. The broader `LessonCard` and `ScheduleSurface` from `component-specs-core-v1.md` §10–§11 remain to be built. See the reconciliation note in `component-specs-core-v1.md` §5 Rule 3. |
 | `ContextChipRow` | `continuity-primitives.tsx` | uses the same tone vocabulary now exposed by `Chip`. Future cleanup: route-level chip rendering should compose `Chip` directly. |
 | `MatchRow` | `match-row.tsx` | implements `component-specs-core-v1.md` §8 |
+| `ConversationShell` | `conversation-shell.tsx` | implements `design-system-spec-final-v1.md` §9.1 `ConversationShell`. Composes `ConversationList`, `ConversationListItem`, and `ConversationThread` into the split-view-on-desktop, state-view-on-mobile messaging shell. Reused across `/messages` and the future `/tutor/messages` so role wrappers do not create a second messaging shell. |
+| `ConversationList` | `conversation-shell.tsx` | sidebar list surface within `ConversationShell`. |
+| `ConversationListItem` | `conversation-shell.tsx` | implements `design-system-spec-final-v1.md` §9.1 `ConversationListItem`. One thread-row grammar (counterpart identity + last message preview + timestamp + unread/mute/archive/block signals). |
+| `ConversationThread` | `conversation-shell.tsx` | thread surface within `ConversationShell`. Uses `PersonSummary` for the counterpart header, renders messages with role-aware bubbles, exposes `threadActions` for block/report entry points, and reserves a composer slot consumed by `P1-MSG-002`. |
 | `ScreenState` | `screen-state.tsx` | shared empty/loading/error state |
 
 ## 5. Naming reconciliation log

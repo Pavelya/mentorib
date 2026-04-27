@@ -27,6 +27,7 @@ type LessonSummaryStatus =
   | "pending"
   | "accepted"
   | "upcoming"
+  | "in_progress"
   | "completed"
   | "reviewed"
   | "declined"
@@ -100,6 +101,7 @@ const LESSON_STATUS_META: Record<LessonSummaryStatus, { label: string; tone: Sta
   cancelled: { label: "Cancelled", tone: "destructive" },
   completed: { label: "Completed", tone: "info" },
   declined: { label: "Declined", tone: "destructive" },
+  in_progress: { label: "In progress", tone: "positive" },
   pending: { label: "Pending", tone: "warning" },
   reviewed: { label: "Reviewed", tone: "trust" },
   upcoming: { label: "Upcoming", tone: "positive" },

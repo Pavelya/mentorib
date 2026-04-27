@@ -21,7 +21,6 @@ export const matchFlowStaticCopy = {
   subjectQuestion: "Which subject is this for?",
   subjectStepDescription: "Choose the subject so we can narrow the shortlist.",
   timezoneNoticeBody: "You do not need to change this. We use it to show lesson times correctly.",
-  timezoneNoticeTitlePrefix: "Your timezone",
 } as const;
 
 export function getMatchFlowGuidanceCopy(
@@ -91,9 +90,3 @@ export function getMatchFlowStepDescription(
   }
 }
 
-export function getMatchFlowTimezoneNoticeCopy(timezoneLabel: string) {
-  return {
-    body: matchFlowStaticCopy.timezoneNoticeBody,
-    title: `${matchFlowStaticCopy.timezoneNoticeTitlePrefix}: ${timezoneLabel}`,
-  };
-}

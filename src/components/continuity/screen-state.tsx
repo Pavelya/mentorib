@@ -1,10 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
-import { StatusBadge } from "@/components/ui";
-
 import styles from "./screen-state.module.css";
 
-type StatusTone = "positive" | "warning" | "destructive" | "trust" | "info";
 type ScreenStateKind = "empty" | "loading" | "error";
 
 type ScreenStateProps = HTMLAttributes<HTMLElement> & {
@@ -15,10 +12,10 @@ type ScreenStateProps = HTMLAttributes<HTMLElement> & {
   title: ReactNode;
 };
 
-const SCREEN_STATE_META: Record<ScreenStateKind, { label: string; role: "status" | "alert"; tone: StatusTone }> = {
-  empty: { label: "Empty", role: "status", tone: "info" },
-  error: { label: "Error", role: "alert", tone: "destructive" },
-  loading: { label: "Loading", role: "status", tone: "warning" },
+const SCREEN_STATE_ROLE: Record<ScreenStateKind, "status" | "alert"> = {
+  empty: "status",
+  error: "alert",
+  loading: "status",
 };
 
 function cx(...classNames: Array<string | false | null | undefined>) {
@@ -34,17 +31,14 @@ export function ScreenState({
   title,
   ...props
 }: ScreenStateProps) {
-  const meta = SCREEN_STATE_META[kind];
-
   return (
     <section
       {...props}
       aria-busy={kind === "loading" || undefined}
       className={cx(styles.state, styles[kind], className)}
-      role={meta.role}
+      role={SCREEN_STATE_ROLE[kind]}
     >
       <div className={styles.header}>
-        <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge>
         <h3 className={styles.title}>{title}</h3>
         <p className={styles.description}>{description}</p>
       </div>

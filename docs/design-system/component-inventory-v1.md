@@ -53,14 +53,15 @@ All entries are accessed through the barrel export `src/components/ui/index.ts`.
 |---|---|---|
 | `NeedSummaryBar` | `continuity-primitives.tsx` | implements `component-specs-core-v1.md` §7 |
 | `PersonSummary` | `continuity-primitives.tsx` | implements `component-specs-core-v1.md` §9 |
-| `LessonSummary` | `continuity-primitives.tsx` | implemented continuity-anchor sibling per `design-system-spec-final-v1.md` §9.1. The broader `LessonCard` and `ScheduleSurface` from `component-specs-core-v1.md` §10–§11 remain to be built. See the reconciliation note in `component-specs-core-v1.md` §5 Rule 3. |
+| `LessonSummary` | `continuity-primitives.tsx` | implemented continuity-anchor sibling per `design-system-spec-final-v1.md` §9.1. Status variants: `pending`, `accepted`, `upcoming`, `in_progress`, `completed`, `reviewed`, `declined`, `cancelled` (the `in_progress` variant was added in `P1-LESS-001` to render the participant-visible mid-lesson state). The broader `LessonCard` and `ScheduleSurface` from `component-specs-core-v1.md` §10–§11 remain to be built. See the reconciliation note in `component-specs-core-v1.md` §5 Rule 3. |
 | `ContextChipRow` | `continuity-primitives.tsx` | uses the same tone vocabulary now exposed by `Chip`. Future cleanup: route-level chip rendering should compose `Chip` directly. |
 | `MatchRow` | `match-row.tsx` | implements `component-specs-core-v1.md` §8 |
 | `ConversationShell` | `conversation-shell.tsx` | implements `design-system-spec-final-v1.md` §9.1 `ConversationShell`. Composes `ConversationList`, `ConversationListItem`, and `ConversationThread` into the split-view-on-desktop, state-view-on-mobile messaging shell. Reused across `/messages` and the future `/tutor/messages` so role wrappers do not create a second messaging shell. |
 | `ConversationList` | `conversation-shell.tsx` | sidebar list surface within `ConversationShell`. |
 | `ConversationListItem` | `conversation-shell.tsx` | implements `design-system-spec-final-v1.md` §9.1 `ConversationListItem`. One thread-row grammar (counterpart identity + last message preview + timestamp + unread/mute/archive/block signals). |
 | `ConversationThread` | `conversation-shell.tsx` | thread surface within `ConversationShell`. Uses `PersonSummary` for the counterpart header, renders messages with role-aware bubbles, exposes `threadActions` for block/report entry points, and reserves a composer slot consumed by `P1-MSG-002`. |
-| `ScreenState` | `screen-state.tsx` | shared empty/loading/error state |
+| `ScreenState` | `screen-state.tsx` | shared empty/loading/error state. The redundant "Empty" / "Loading" / "Error" `StatusBadge` was removed in `P1-LESS-001` polish — the visual treatment, role attribute, and title already convey the state. Hints render as a clean bulleted list rather than pill chips. |
+| `TimezoneNotice` | `src/components/datetime/timezone-notice.tsx` | one shared timezone surface across student and tutor routes (match, results, lessons, book, tutor schedule, tutor lessons). Renders the clock icon, the resolved timezone label, and a configurable body line. The match flow's previous bespoke `.timezoneCard` was removed and now consumes this primitive. |
 
 ## 5. Naming reconciliation log
 

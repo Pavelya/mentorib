@@ -158,56 +158,6 @@
   display: grid;
   gap: var(--space-3);
 }
-.timezoneCard {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px solid var(--state-info-border);
-  border-radius: var(--radius-md);
-  background: var(--state-info-surface);
-}
-
-.timezoneIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 0.74);
-  color: var(--ink-700);
-}
-
-.timezoneIcon svg {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.timezoneCopy {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.timezoneTitle,
-.timezoneBody {
-  margin: 0;
-}
-
-.timezoneTitle {
-  color: var(--ink-900);
-  font-size: var(--body-md);
-  font-weight: 600;
-  line-height: var(--line-utility);
-}
-
-.timezoneBody {
-  color: var(--ink-700);
-  font-size: var(--body-sm);
-  line-height: var(--line-body);
-}
-
 .actionRow {
   display: flex;
   justify-content: space-between;

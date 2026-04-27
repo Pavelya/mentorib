@@ -5,9 +5,9 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import { NeedSummaryBar } from "@/components/continuity";
+import { TimezoneNotice } from "@/components/datetime";
 import {
   Button,
-  Icon,
   InlineNotice,
   OptionCardGroup,
   SelectField,
@@ -29,7 +29,6 @@ import {
 import {
   getMatchFlowGuidanceCopy,
   getMatchFlowStepDescription,
-  getMatchFlowTimezoneNoticeCopy,
   matchFlowStaticCopy,
   type MatchFlowStepId,
 } from "@/modules/lessons/match-flow-copy";
@@ -360,19 +359,10 @@ function StepFields({
             value={values.languageCode}
           />
           <div id={getFieldContainerId("timezone")}>
-            <div className={styles.timezoneCard}>
-              <div aria-hidden="true" className={styles.timezoneIcon}>
-                <Icon name="clock" />
-              </div>
-              <div className={styles.timezoneCopy}>
-                <p className={styles.timezoneTitle}>
-                  {getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).title}
-                </p>
-                <p className={styles.timezoneBody}>
-                  {getMatchFlowTimezoneNoticeCopy(getTimezoneLabel(values.timezone)).body}
-                </p>
-              </div>
-            </div>
+            <TimezoneNotice
+              body={matchFlowStaticCopy.timezoneNoticeBody}
+              timezone={values.timezone}
+            />
           </div>
           <div id={getFieldContainerId("freeTextNote")}>
             <Textarea

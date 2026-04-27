@@ -5,7 +5,6 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
-  Avatar,
   Button,
   InlineNotice,
   OptionCardGroup,
@@ -18,6 +17,7 @@ import {
 } from "@/modules/accounts/profile-settings";
 import type { MatchLanguageOption } from "@/modules/lessons/match-flow-options";
 
+import { AccountAvatarUpload } from "./account-avatar-upload";
 import { updateAccountProfileAction, type AccountProfileActionState } from "./actions";
 import styles from "../account-surfaces.module.css";
 
@@ -112,30 +112,29 @@ function SettingsProfileFormBody({
         </InlineNotice>
       ) : null}
 
-      <div className={styles.identityRow}>
-        <Avatar
-          className={styles.profileAvatar}
-          name={displayName}
-          size="lg"
-          src={avatarUrl}
-        />
-        <div className={styles.identityCopy}>
-          <div className={styles.identityHeadingRow}>
-            <h2 className={styles.detailValue}>{displayName}</h2>
-            {roleBadges.length > 0 ? (
-              <div className={styles.identityBadges}>
-                {roleBadges.map((badge) => (
-                  <StatusBadge key={badge.label} tone={badge.tone}>
-                    {badge.label}
-                  </StatusBadge>
-                ))}
-              </div>
-            ) : null}
+      <div className={styles.identityHeadingRow}>
+        <h2 className={styles.detailValue}>{displayName}</h2>
+        {roleBadges.length > 0 ? (
+          <div className={styles.identityBadges}>
+            {roleBadges.map((badge) => (
+              <StatusBadge key={badge.label} tone={badge.tone}>
+                {badge.label}
+              </StatusBadge>
+            ))}
           </div>
-        </div>
+        ) : null}
       </div>
 
       <div className={styles.profileSectionList}>
+        <SettingsSection label="Profile photo">
+          <div className={styles.profileSectionContent}>
+            <AccountAvatarUpload
+              avatarName={displayName}
+              initialAvatarUrl={avatarUrl ?? null}
+            />
+          </div>
+        </SettingsSection>
+
         <SettingsSection label="Full name">
           <div className={styles.profileSectionContent}>
             <TextField

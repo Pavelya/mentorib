@@ -331,12 +331,12 @@ function normalizeProfileFromUser(user: User) {
 }
 
 function buildAccountUpdates(
-  account: Pick<AppUserRecord, "avatar_url" | "email" | "full_name" | "timezone">,
+  account: Pick<AppUserRecord, "email" | "full_name" | "timezone">,
   profile: ReturnType<typeof normalizeProfileFromUser>,
   detectedTimezone: string | null,
 ) {
   const updates: Partial<
-    Pick<AppUserRecord, "avatar_url" | "email" | "full_name" | "timezone">
+    Pick<AppUserRecord, "email" | "full_name" | "timezone">
   > = {};
 
   if (account.email !== profile.email) {
@@ -345,10 +345,6 @@ function buildAccountUpdates(
 
   if (!account.full_name && profile.fullName) {
     updates.full_name = profile.fullName;
-  }
-
-  if (!account.avatar_url && profile.avatarUrl) {
-    updates.avatar_url = profile.avatarUrl;
   }
 
   if (detectedTimezone && account.timezone !== detectedTimezone) {

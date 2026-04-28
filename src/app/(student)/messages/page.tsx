@@ -30,6 +30,8 @@ import {
   type MessageThreadDto,
 } from "@/modules/messages/conversations";
 
+import { ConversationComposer } from "./conversation-composer";
+import { MarkConversationRead } from "./mark-conversation-read";
 import styles from "./messages.module.css";
 
 type MessagesPageProps = {
@@ -150,7 +152,9 @@ function renderMessagesPage({
           conversations={list.conversations}
           emptyState={<EmptyListNotice />}
           selectedConversationId={selectedId}
-          thread={thread ? renderThread(thread) : <SelectThreadHint />}
+          thread={
+            thread ? renderThread(thread, { isPreview: previewNotice }) : <SelectThreadHint />
+          }
         />
       ) : (
         <ScreenState
@@ -172,12 +176,69 @@ function renderMessagesPage({
   );
 }
 
-function renderThread(thread: MessageThreadDto) {
+function renderThread(thread: MessageThreadDto, options: { isPreview: boolean }) {
+  const composerSlot = options.isPreview
+    ? undefined
+    : renderComposerSlot(thread);
+
   return (
-    <ConversationThread
-      formatTimestamp={formatThreadTimestamp}
-      thread={thread}
-      threadActions={<ThreadSafetyActions thread={thread} />}
+    <>
+      {options.isPreview ? null : (
+        <MarkConversationRead
+          conversationId={thread.conversation.id}
+          unreadCount={thread.conversation.unreadCount}
+        />
+      )}
+      <ConversationThread
+        composerSlot={composerSlot}
+        formatTimestamp={formatThreadTimestamp}
+        thread={thread}
+        threadActions={<ThreadSafetyActions thread={thread} />}
+      />
+    </>
+  );
+}
+
+function renderComposerSlot(thread: MessageThreadDto) {
+  const counterpartName = thread.conversation.counterpart.displayName;
+
+  if (thread.blockState === "blocked_by_me") {
+    return (
+      <ConversationComposer
+        conversationId={thread.conversation.id}
+        counterpartName={counterpartName}
+        disabled
+        disabledReason="Unblock this participant from the safety menu to continue messaging."
+      />
+    );
+  }
+
+  if (thread.blockState === "blocked_by_counterpart") {
+    return (
+      <ConversationComposer
+        conversationId={thread.conversation.id}
+        counterpartName={counterpartName}
+        disabled
+        disabledReason="This participant has blocked further messages."
+      />
+    );
+  }
+
+  if (thread.conversation.status !== "active") {
+    return (
+      <ConversationComposer
+        conversationId={thread.conversation.id}
+        counterpartName={counterpartName}
+        disabled
+        disabledReason="This conversation is not accepting new messages right now."
+      />
+    );
+  }
+
+  return (
+    <ConversationComposer
+      conversationId={thread.conversation.id}
+      counterpartName={counterpartName}
     />
   );
 }

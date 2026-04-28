@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound, redirect } from "next/navigation";
@@ -32,6 +34,14 @@ import {
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
 import {
+  buildLessonCalendarLinks,
+  type LessonCalendarSnapshot,
+} from "@/modules/lessons/calendar";
+import {
+  buildStudentCancellationPolicy,
+  type CancellationPolicyView,
+} from "@/modules/lessons/lesson-actions";
+import {
   buildPreviewStudentLessonDetail,
   getStudentLessonDetail,
   type StudentLessonDetailDto,
@@ -46,32 +56,31 @@ import {
   MEETING_METHOD_LABELS,
   mapLessonStatusToSummary,
 } from "../lesson-presentation";
+import {
+  CancelLessonForm,
+  ReportIssueForm,
+  RescheduleLessonForm,
+  STUDENT_ISSUE_TYPE_OPTIONS,
+} from "./lesson-actions-client";
 import styles from "./lesson-detail.module.css";
 
 const LESSONS_BASE_PATH = "/lessons" as const;
-const REPORT_ACTION = "report";
 
 type LessonDetailPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function StudentLessonDetailPage({
   params,
-  searchParams,
 }: LessonDetailPageProps) {
   const { id } = await params;
-  const resolvedSearchParams = await searchParams;
-  const requestedAction = getSingleValue(resolvedSearchParams.action);
   const timezone = await getCurrentUserTimezone();
   const detailHref = `${LESSONS_BASE_PATH}/${id}`;
 
   if (!isSupabaseAuthConfigured()) {
     return renderDetailPage({
       detail: buildPreviewStudentLessonDetail(),
-      detailHref,
       previewNotice: true,
-      requestedAction,
       timezone,
     });
   }
@@ -131,24 +140,18 @@ export default async function StudentLessonDetailPage({
 
   return renderDetailPage({
     detail,
-    detailHref,
     previewNotice: false,
-    requestedAction,
     timezone,
   });
 }
 
 function renderDetailPage({
   detail,
-  detailHref,
   previewNotice,
-  requestedAction,
   timezone,
 }: {
   detail: StudentLessonDetailDto;
-  detailHref: string;
   previewNotice: boolean;
-  requestedAction: string | undefined;
   timezone: string;
 }) {
   const subjectLabel = detail.context.subject?.label ?? "Mentor IB lesson";
@@ -159,8 +162,20 @@ function renderDetailPage({
     timezone,
   );
   const timezoneLabel = getTimezoneLabel(timezone);
-  const reportRequested =
-    requestedAction === REPORT_ACTION && detail.isIssueEntryEligible;
+  const calendarSnapshot: LessonCalendarSnapshot = {
+    endAtUtc: detail.schedule.endAt,
+    focusLabel,
+    joinUrl: detail.meeting?.meetingUrl ?? null,
+    lessonId: detail.id,
+    startAtUtc: detail.schedule.startAt,
+    subjectLabel,
+  };
+  const calendarLinks = buildLessonCalendarLinks(calendarSnapshot);
+  const cancellationPolicy = buildStudentCancellationPolicy({
+    cancelled_at: null,
+    lesson_status: detail.lessonStatus,
+    scheduled_start_at: detail.schedule.startAt,
+  });
 
   return (
     <article className={styles.page}>
@@ -215,10 +230,28 @@ function renderDetailPage({
 
       <MeetingAccessSection meeting={detail.meeting} />
 
+      <CalendarSection
+        googleCalendarUrl={calendarLinks.googleCalendarUrl}
+        icsHref={calendarLinks.icsHref}
+        previewNotice={previewNotice}
+      />
+
+      <CancellationSection
+        lessonId={detail.id}
+        policy={cancellationPolicy}
+        previewNotice={previewNotice}
+      />
+
+      <RescheduleSection
+        lessonId={detail.id}
+        policy={cancellationPolicy}
+        previewNotice={previewNotice}
+        rebookHref={resolveRebookHref(detail)}
+      />
+
       <IssueSection
         detail={detail}
-        detailHref={detailHref}
-        reportRequested={reportRequested}
+        previewNotice={previewNotice}
       />
     </article>
   );
@@ -311,45 +344,210 @@ function MeetingAccessSection({
   );
 }
 
+function CalendarSection({
+  googleCalendarUrl,
+  icsHref,
+  previewNotice,
+}: {
+  googleCalendarUrl: string;
+  icsHref: string;
+  previewNotice: boolean;
+}) {
+  return (
+    <Panel eyebrow="Add to calendar" title="Keep this lesson visible">
+      <Section density="compact">
+        <p className={styles.bodyText}>
+          Add this lesson to the calendar you already use. The export reflects the
+          lesson snapshot in UTC and includes the join link when one is ready.
+        </p>
+
+        <div className={styles.actionRow}>
+          <a
+            className={getButtonClassName({ size: "compact", variant: "secondary" })}
+            href={googleCalendarUrl}
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            Add to Google Calendar
+          </a>
+          {previewNotice ? (
+            <span className={getButtonClassName({ size: "compact", variant: "ghost" })} aria-disabled>
+              Download .ics (preview)
+            </span>
+          ) : (
+            <a
+              className={getButtonClassName({ size: "compact", variant: "ghost" })}
+              href={icsHref}
+            >
+              Download .ics
+            </a>
+          )}
+        </div>
+      </Section>
+    </Panel>
+  );
+}
+
+function CancellationSection({
+  lessonId,
+  policy,
+  previewNotice,
+}: {
+  lessonId: string;
+  policy: CancellationPolicyView;
+  previewNotice: boolean;
+}) {
+  if (!policy.cancellable) {
+    return (
+      <Panel eyebrow="Cancellation" title="Cancellation closed">
+        <p className={styles.bodyText}>{policy.reason}</p>
+      </Panel>
+    );
+  }
+
+  const outcomeLabel = cancellationOutcomeLabel(policy);
+  const outcomeTone = cancellationOutcomeTone(policy);
+
+  return (
+    <Panel eyebrow="Cancellation" title="Cancel this lesson">
+      <Section density="compact">
+        {previewNotice ? (
+          <InlineNotice tone="info" title="Cancellation preview">
+            <p>
+              Cancellation respects the platform policy: full refund 2+ hours before
+              start, no refund inside that window. Live cancellation connects once
+              Supabase auth and Stripe are configured.
+            </p>
+          </InlineNotice>
+        ) : (
+          <CancelLessonForm
+            cancelOperationKey={`lesson-cancel:${lessonId}:${randomUUID()}`}
+            lessonId={lessonId}
+            outcomeLabel={outcomeLabel}
+            outcomeReason={policy.reason}
+            outcomeTone={outcomeTone}
+          />
+        )}
+      </Section>
+    </Panel>
+  );
+}
+
+function RescheduleSection({
+  lessonId,
+  policy,
+  previewNotice,
+  rebookHref,
+}: {
+  lessonId: string;
+  policy: CancellationPolicyView;
+  previewNotice: boolean;
+  rebookHref: string;
+}) {
+  if (!policy.cancellable) {
+    return null;
+  }
+
+  const outcomeLabel = cancellationOutcomeLabel(policy);
+
+  return (
+    <Panel eyebrow="Reschedule" title="Move this lesson to a new time">
+      <Section density="compact">
+        <p className={styles.bodyText}>
+          A reschedule is treated as cancelling this lesson plus a new booking
+          request. The same cancellation policy applies to the original lesson.
+        </p>
+
+        {previewNotice ? (
+          <InlineNotice tone="info" title="Reschedule preview">
+            <p>
+              Reschedule connects once Supabase auth and Stripe are configured. The
+              flow cancels this lesson under the platform policy and routes you to a
+              new booking surface with the same tutor when possible.
+            </p>
+          </InlineNotice>
+        ) : (
+          <RescheduleLessonForm
+            lessonId={lessonId}
+            outcomeLabel={outcomeLabel}
+            rebookHref={rebookHref}
+            rescheduleOperationKey={`lesson-cancel:${lessonId}:${randomUUID()}`}
+          />
+        )}
+      </Section>
+    </Panel>
+  );
+}
+
+function resolveRebookHref(detail: StudentLessonDetailDto) {
+  if (detail.tutor.profileHref?.startsWith("/tutors/")) {
+    const slug = detail.tutor.profileHref.slice("/tutors/".length);
+
+    if (slug.length > 0 && /^[a-z0-9-]+$/.test(slug)) {
+      return `/book/${slug}`;
+    }
+  }
+
+  return "/match";
+}
+
+function cancellationOutcomeLabel(policy: CancellationPolicyView) {
+  switch (policy.outcome) {
+    case "authorization_released":
+      return "Authorization released";
+    case "refund_issued":
+      return "Full refund";
+    case "no_refund":
+      return "No refund";
+  }
+}
+
+function cancellationOutcomeTone(
+  policy: CancellationPolicyView,
+): "positive" | "info" | "warning" {
+  switch (policy.outcome) {
+    case "authorization_released":
+      return "info";
+    case "refund_issued":
+      return "positive";
+    case "no_refund":
+      return "warning";
+  }
+}
+
 function IssueSection({
   detail,
-  detailHref,
-  reportRequested,
+  previewNotice,
 }: {
   detail: StudentLessonDetailDto;
-  detailHref: string;
-  reportRequested: boolean;
+  previewNotice: boolean;
 }) {
   const { issue, isIssueEntryEligible } = detail;
-  const reportHref = `${detailHref}?action=${REPORT_ACTION}`;
 
   return (
     <Panel eyebrow="Lesson issues" title="Report a problem">
       <Section density="compact">
         {issue ? <IssueStatus issue={issue} /> : null}
 
-        {reportRequested ? (
-          <InlineNotice tone="info" title="Report flow ships next">
+        {!isIssueEntryEligible ? (
+          <p className={styles.bodyText}>
+            Issue reporting opens after the tutor accepts and stays available through
+            the 24-hour window after the lesson ends. Use this surface — not the chat
+            thread — when something goes wrong with a session.
+          </p>
+        ) : previewNotice ? (
+          <InlineNotice tone="info" title="Issue reporting preview">
             <p>
-              Structured issue reporting lands in a follow-up task. Until then, you can
-              still flag a lesson problem so the platform tracks the entry intent.
+              Structured lesson-issue reporting connects once Supabase auth is
+              configured. Pick from tutor absent, student absent, wrong meeting link,
+              technical problem, or partial delivery.
             </p>
           </InlineNotice>
-        ) : null}
-
-        {isIssueEntryEligible ? (
-          <Link
-            className={getButtonClassName({ variant: "secondary" })}
-            href={reportHref as Route}
-          >
-            {issue ? "Update issue report" : "Report issue"}
-          </Link>
         ) : (
-          <p className={styles.bodyText}>
-            Issue reporting opens once the lesson is accepted and stays available through
-            the lesson window. Use this surface — not the chat thread — when something
-            goes wrong with a session.
-          </p>
+          <ReportIssueForm
+            allowedIssueTypes={STUDENT_ISSUE_TYPE_OPTIONS}
+            lessonId={detail.id}
+          />
         )}
       </Section>
     </Panel>
@@ -393,8 +591,4 @@ function buildLessonDetails(detail: StudentLessonDetailDto): string[] {
   details.push(MEETING_METHOD_LABELS[detail.meeting?.meetingMethod ?? "external_video_call"]);
 
   return details;
-}
-
-function getSingleValue(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
 }

@@ -63,3 +63,21 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+.actionRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.actionForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.policyHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

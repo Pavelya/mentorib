@@ -1,0 +1,110 @@
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.notice {
+  margin-bottom: var(--space-3);
+}
+
+.metricRow {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metricItem {
+  display: grid;
+  gap: var(--space-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.42);
+  padding: var(--space-4);
+}
+
+.metricValue {
+  margin: 0;
+  font-size: var(--title-lg);
+  line-height: var(--line-tight);
+  color: var(--ink-900);
+}
+
+.metricLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.lessonList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lessonItem {
+  display: contents;
+}
+
+.issueList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.issueItem {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.42);
+  padding: var(--space-4);
+}
+
+.issueHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.issueTitle {
+  margin: 0;
+  font-size: var(--body-md);
+  font-weight: 600;
+  line-height: var(--line-tight);
+  color: var(--ink-900);
+}
+
+.issueMeta {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.expiryNote {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+@media (max-width: 767px) {
+  .metricRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .issueHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

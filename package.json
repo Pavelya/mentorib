@@ -17,6 +17,8 @@
     "prepare": "simple-git-hooks || true"
   },
   "dependencies": {
+    "@react-email/components": "1.0.12",
+    "@react-email/render": "2.0.8",
     "@supabase/ssr": "0.10.2",
     "@supabase/supabase-js": "2.104.0",
     "country-flag-icons": "^1.6.16",
@@ -25,6 +27,7 @@
     "next": "16.2.4",
     "react": "19.2.5",
     "react-dom": "19.2.5",
+    "resend": "4.5.1",
     "stripe": "22.0.2"
   },
   "devDependencies": {

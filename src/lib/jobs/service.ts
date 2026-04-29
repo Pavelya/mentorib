@@ -11,6 +11,7 @@ import {
   type JobType,
   type StripeWebhookEventType,
 } from "@/modules/jobs/constants";
+import { deliverNotificationEmail } from "@/modules/notifications/email-delivery";
 import type { StripeWebhookEnvelope } from "@/lib/jobs/stripe";
 
 type JsonValue =
@@ -544,14 +545,84 @@ async function handleBookingAuthorizationExpiryScan(job: JobRunRecord): Promise<
 }
 
 async function handleNotificationDelivery(job: JobRunRecord): Promise<JobHandlerResult> {
-  return {
-    result: {
-      delivery: "notification",
-      handled_at: new Date().toISOString(),
-      job_id: job.id,
-      status: "infrastructure_ready",
+  const payload = normalizeJsonObject(job.payload);
+  const channel = typeof payload.channel === "string" ? payload.channel : null;
+  const notificationId =
+    typeof payload.notification_id === "string" ? payload.notification_id : null;
+  const attemptNumber = Math.max(1, job.attempt_number);
+
+  if (!notificationId) {
+    throw new TerminalJobError(
+      "missing_notification_reference",
+      "The notification_delivery job is missing a notification_id payload.",
+    );
+  }
+
+  if (channel !== "email") {
+    return {
+      outcome: "ignored",
+      result: {
+        channel,
+        ignored_reason: "unsupported_channel",
+        job_id: job.id,
+        notification_id: notificationId,
+      },
+    };
+  }
+
+  const outcome = await deliverNotificationEmail({
+    attemptNumber,
+    jobRunId: job.id,
+    notificationId,
+  });
+
+  if (outcome.status === "sent") {
+    return {
+      result: {
+        delivery_id: outcome.deliveryId,
+        job_id: job.id,
+        notification_id: notificationId,
+        status: "sent",
+      },
+    };
+  }
+
+  if (outcome.status === "skipped") {
+    return {
+      outcome: "ignored",
+      result: {
+        delivery_id: outcome.deliveryId,
+        ignored_reason: outcome.reason ?? "skipped",
+        job_id: job.id,
+        notification_id: notificationId,
+        status: "skipped",
+      },
+    };
+  }
+
+  if (outcome.retryable) {
+    throw new RetryableJobError(
+      outcome.reason ?? "notification_email_failed",
+      "The notification email send failed; scheduling another attempt.",
+      {
+        details: {
+          delivery_id: outcome.deliveryId,
+          notification_id: notificationId,
+        },
+      },
+    );
+  }
+
+  throw new TerminalJobError(
+    outcome.reason ?? "notification_email_failed_terminal",
+    "The notification email send failed and is not retryable.",
+    {
+      details: {
+        delivery_id: outcome.deliveryId,
+        notification_id: notificationId,
+      },
     },
-  };
+  );
 }
 
 async function handlePayoutProcessing(job: JobRunRecord): Promise<JobHandlerResult> {

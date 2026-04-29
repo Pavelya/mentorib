@@ -1,8 +1,30 @@
 import { formatUtcDateTime } from "@/lib/datetime/format";
+import { logEmailEvent } from "@/lib/email/logging";
+
+import { scheduleNotificationEmailDelivery } from "@/modules/notifications/email-delivery";
 import {
   NOTIFICATION_OBJECT_TYPES,
   createNotification,
 } from "@/modules/notifications/service";
+
+type CreatedNotification = Awaited<ReturnType<typeof createNotification>>;
+
+async function dispatchNotificationEmail(notification: CreatedNotification) {
+  if (!notification) {
+    return;
+  }
+
+  try {
+    await scheduleNotificationEmailDelivery({ notification });
+  } catch (error) {
+    logEmailEvent("error", "notification_email_schedule_failed", {
+      error_message:
+        error instanceof Error ? error.message : "Unknown scheduling error",
+      notification_id: notification.id,
+      notification_type: notification.notification_type,
+    });
+  }
+}
 
 const SUMMARY_MAX_LENGTH = 240;
 
@@ -25,7 +47,7 @@ export async function createLessonRequestSubmittedNotifications(
     timezone: input.timezone,
   });
 
-  await Promise.all([
+  const created = await Promise.all([
     createNotification({
       appUserId: input.studentAppUserId,
       bodySummary: truncate(
@@ -47,6 +69,8 @@ export async function createLessonRequestSubmittedNotifications(
       title: `New lesson request from ${studentLabel}`,
     }),
   ]);
+
+  await Promise.all(created.map(dispatchNotificationEmail));
 }
 
 type LessonAcceptedNotificationInput = {
@@ -65,7 +89,7 @@ export async function createLessonAcceptedNotification(
     timezone: input.timezone,
   });
 
-  return createNotification({
+  const notification = await createNotification({
     appUserId: input.studentAppUserId,
     bodySummary: truncate(
       `${tutorLabel} accepted your lesson on ${startLabel}. The hold on your card has been captured for this booking.`,
@@ -75,6 +99,10 @@ export async function createLessonAcceptedNotification(
     objectType: NOTIFICATION_OBJECT_TYPES.lesson,
     title: "Lesson confirmed",
   });
+
+  await dispatchNotificationEmail(notification);
+
+  return notification;
 }
 
 type LessonDeclinedNotificationInput = {
@@ -92,29 +120,32 @@ export async function createLessonDeclinedOrExpiredNotification(
     timezone: input.timezone,
   });
 
-  if (input.reason === "expired") {
-    return createNotification({
-      appUserId: input.studentAppUserId,
-      bodySummary: truncate(
-        `Your request for ${startLabel} expired before the tutor responded. The authorization on your card has been released.`,
-      ),
-      notificationType: "lesson_request_expired",
-      objectId: input.lessonId,
-      objectType: NOTIFICATION_OBJECT_TYPES.lesson,
-      title: "Lesson request expired",
-    });
-  }
+  const notification =
+    input.reason === "expired"
+      ? await createNotification({
+          appUserId: input.studentAppUserId,
+          bodySummary: truncate(
+            `Your request for ${startLabel} expired before the tutor responded. The authorization on your card has been released.`,
+          ),
+          notificationType: "lesson_request_expired",
+          objectId: input.lessonId,
+          objectType: NOTIFICATION_OBJECT_TYPES.lesson,
+          title: "Lesson request expired",
+        })
+      : await createNotification({
+          appUserId: input.studentAppUserId,
+          bodySummary: truncate(
+            `Your request for ${startLabel} was declined. The authorization on your card has been released.`,
+          ),
+          notificationType: "lesson_declined",
+          objectId: input.lessonId,
+          objectType: NOTIFICATION_OBJECT_TYPES.lesson,
+          title: "Lesson request declined",
+        });
 
-  return createNotification({
-    appUserId: input.studentAppUserId,
-    bodySummary: truncate(
-      `Your request for ${startLabel} was declined. The authorization on your card has been released.`,
-    ),
-    notificationType: "lesson_declined",
-    objectId: input.lessonId,
-    objectType: NOTIFICATION_OBJECT_TYPES.lesson,
-    title: "Lesson request declined",
-  });
+  await dispatchNotificationEmail(notification);
+
+  return notification;
 }
 
 type LessonUpdatedNotificationInput = {
@@ -138,7 +169,7 @@ export async function createLessonUpdatedNotifications(
       ? `The lesson on ${startLabel} has been cancelled. Any related payment will follow the cancellation policy.`
       : `The lesson previously on ${startLabel} has been rescheduled. Open the lesson detail to confirm the new time.`;
 
-  await Promise.all(
+  const created = await Promise.all(
     uniqueAppUserIds(input.appUserIds).map((appUserId) =>
       createNotification({
         appUserId,
@@ -150,6 +181,8 @@ export async function createLessonUpdatedNotifications(
       }),
     ),
   );
+
+  await Promise.all(created.map(dispatchNotificationEmail));
 }
 
 type UpcomingLessonReminderInput = {
@@ -166,7 +199,7 @@ export async function createUpcomingLessonReminderNotification(
     timezone: input.timezone,
   });
 
-  return createNotification({
+  const notification = await createNotification({
     appUserId: input.appUserId,
     bodySummary: truncate(
       `Your lesson is coming up on ${startLabel}. Open the lesson detail for the meeting link and prep notes.`,
@@ -176,6 +209,10 @@ export async function createUpcomingLessonReminderNotification(
     objectType: NOTIFICATION_OBJECT_TYPES.lesson,
     title: `Lesson reminder · ${startLabel}`,
   });
+
+  await dispatchNotificationEmail(notification);
+
+  return notification;
 }
 
 type LessonIssueAcknowledgementInput = {
@@ -187,7 +224,7 @@ type LessonIssueAcknowledgementInput = {
 export async function createLessonIssueAcknowledgementNotification(
   input: LessonIssueAcknowledgementInput,
 ) {
-  return createNotification({
+  const notification = await createNotification({
     appUserId: input.appUserId,
     bodySummary: truncate(
       "We received your lesson issue report. Our team will follow up before the counterparty deadline.",
@@ -197,6 +234,10 @@ export async function createLessonIssueAcknowledgementNotification(
     objectType: NOTIFICATION_OBJECT_TYPES.lessonIssueCase,
     title: "Issue report received",
   });
+
+  await dispatchNotificationEmail(notification);
+
+  return notification;
 }
 
 type LessonIssueResolutionInput = {
@@ -213,7 +254,7 @@ export async function createLessonIssueResolutionNotifications(
       ? "The lesson issue has been resolved. Any required adjustments will be reflected in your billing or payout summary."
       : "The lesson issue has been closed without further action. Reach out to support if you have new information to share.";
 
-  await Promise.all(
+  const created = await Promise.all(
     uniqueAppUserIds(input.appUserIds).map((appUserId) =>
       createNotification({
         appUserId,
@@ -225,6 +266,8 @@ export async function createLessonIssueResolutionNotifications(
       }),
     ),
   );
+
+  await Promise.all(created.map(dispatchNotificationEmail));
 }
 
 type PayoutNotificationInput = {
@@ -234,7 +277,7 @@ type PayoutNotificationInput = {
 };
 
 export async function createPayoutNotification(input: PayoutNotificationInput) {
-  return createNotification({
+  const notification = await createNotification({
     appUserId: input.appUserId,
     bodySummary: truncate(
       input.outcome === "ready"
@@ -247,6 +290,10 @@ export async function createPayoutNotification(input: PayoutNotificationInput) {
     title:
       input.outcome === "ready" ? "Payout processed" : "Payout requires action",
   });
+
+  await dispatchNotificationEmail(notification);
+
+  return notification;
 }
 
 type PolicyNoticeNotificationInput = {
@@ -259,7 +306,7 @@ type PolicyNoticeNotificationInput = {
 export async function createPolicyNoticeNotification(
   input: PolicyNoticeNotificationInput,
 ) {
-  return createNotification({
+  const notification = await createNotification({
     appUserId: input.appUserId,
     bodySummary: truncate(input.summary),
     notificationType: "policy_notice_updated",
@@ -267,6 +314,10 @@ export async function createPolicyNoticeNotification(
     objectType: NOTIFICATION_OBJECT_TYPES.policyNoticeVersion,
     title: input.title,
   });
+
+  await dispatchNotificationEmail(notification);
+
+  return notification;
 }
 
 function trimOrFallback(value: string | null, fallback: string) {

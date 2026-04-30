@@ -2,6 +2,8 @@ import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import { createStripeServerClient, isStripeCheckoutConfigured } from "@/lib/stripe/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import {
+  createLessonAcceptedNotification,
+  createLessonDeclinedOrExpiredNotification,
   createLessonIssueAcknowledgementNotification,
   createLessonUpdatedNotifications,
 } from "@/modules/notifications/lifecycle";
@@ -68,6 +70,7 @@ type LessonRow = {
   cancelled_at: string | null;
   id: string;
   lesson_status: LessonStatus;
+  request_expires_at: string;
   scheduled_end_at: string;
   scheduled_start_at: string;
   student_profile_id: string;
@@ -480,7 +483,7 @@ async function loadLessonForParticipant(
   const { data, error } = await supabase
     .from("lessons")
     .select(
-      "cancelled_at, id, lesson_status, scheduled_end_at, scheduled_start_at, student_profile_id, tutor_profile_id",
+      "cancelled_at, id, lesson_status, request_expires_at, scheduled_end_at, scheduled_start_at, student_profile_id, tutor_profile_id",
     )
     .eq("id", lessonId)
     .eq(filterColumn, profileId)
@@ -942,4 +945,424 @@ function normalizeIssueSummary(value: string): string | null {
 
 function minutesBetween(from: Date, to: Date) {
   return (to.getTime() - from.getTime()) / 60000;
+}
+
+export type TutorRequestDecision = "accepted" | "declined";
+
+export type TutorRequestResolutionInput = {
+  account: Pick<ResolvedAuthAccount, "id" | "timezone">;
+  lessonId: string;
+  operationKey: string;
+};
+
+export async function acceptTutorLessonRequest(
+  input: TutorRequestResolutionInput,
+): Promise<TutorRequestDecision> {
+  return resolveTutorLessonRequest({ ...input, decision: "accepted" });
+}
+
+export async function declineTutorLessonRequest(
+  input: TutorRequestResolutionInput,
+): Promise<TutorRequestDecision> {
+  return resolveTutorLessonRequest({ ...input, decision: "declined" });
+}
+
+async function resolveTutorLessonRequest({
+  account,
+  decision,
+  lessonId,
+  operationKey,
+}: TutorRequestResolutionInput & { decision: TutorRequestDecision }) {
+  const trimmedKey = operationKey.trim();
+
+  if (!trimmedKey) {
+    throw new LessonActionError(
+      "missing_operation_key",
+      "We couldn't secure this request. Refresh the page and try again.",
+    );
+  }
+
+  const lesson = await loadLessonForParticipant("tutor", account.id, lessonId);
+
+  if (!lesson) {
+    throw new LessonActionError(
+      "not_found",
+      "We couldn't find this lesson on your account.",
+    );
+  }
+
+  const operationType =
+    decision === "accepted" ? "lesson_accept" : "lesson_decline";
+  const operation = await ensureRequestDecisionOperation({
+    actorAppUserId: account.id,
+    lessonId: lesson.id,
+    operationKey: trimmedKey,
+    operationType,
+  });
+  const payment = await loadPaymentForLesson(lesson.id);
+
+  if (operation.operation_status === "succeeded") {
+    return decision;
+  }
+
+  if (lesson.lesson_status === decision) {
+    await markOperationStatus(operation.id, "succeeded");
+    return decision;
+  }
+
+  if (lesson.lesson_status !== "pending") {
+    throw new LessonActionError(
+      "request_not_pending",
+      "This request can no longer be accepted or declined.",
+    );
+  }
+
+  if (Date.now() >= new Date(lesson.request_expires_at).getTime()) {
+    throw new LessonActionError(
+      "request_expired",
+      "This request has expired. The student's payment authorization will be released automatically.",
+    );
+  }
+
+  if (!isStripeCheckoutConfigured()) {
+    throw new LessonActionError(
+      "stripe_unconfigured",
+      "Accepting or declining a request is unavailable until Stripe is configured on the server.",
+    );
+  }
+
+  await applyStripeDecisionSideEffect(decision, payment);
+
+  const decidedAt = new Date().toISOString();
+
+  if (decision === "accepted") {
+    await applyAcceptUpdates({
+      actorAppUserId: account.id,
+      decidedAt,
+      lesson,
+      operation,
+      payment,
+    });
+  } else {
+    await applyDeclineUpdates({
+      actorAppUserId: account.id,
+      decidedAt,
+      lesson,
+      operation,
+      payment,
+    });
+  }
+
+  await markOperationStatus(operation.id, "succeeded");
+
+  await notifyLessonDecision({
+    decision,
+    lesson,
+    timezone: account.timezone,
+  });
+
+  return decision;
+}
+
+async function ensureRequestDecisionOperation({
+  actorAppUserId,
+  lessonId,
+  operationKey,
+  operationType,
+}: {
+  actorAppUserId: string;
+  lessonId: string;
+  operationKey: string;
+  operationType: "lesson_accept" | "lesson_decline";
+}) {
+  const supabase = createSupabaseServiceRoleClient();
+  const fingerprint = `${operationType}:${lessonId}`;
+
+  const { data: inserted, error: insertError } = await supabase
+    .from("booking_operations")
+    .insert({
+      actor_app_user_id: actorAppUserId,
+      operation_key: operationKey,
+      operation_status: "started",
+      operation_type: operationType,
+      request_fingerprint: fingerprint,
+    })
+    .select("id, request_fingerprint, operation_status, operation_type")
+    .single<{
+      id: string;
+      operation_status: string;
+      operation_type: string;
+      request_fingerprint: string;
+    }>();
+
+  if (!insertError && inserted) {
+    return inserted;
+  }
+
+  if (insertError && insertError.code !== "23505") {
+    throw new LessonActionError(
+      "operation_create_failed",
+      "We couldn't secure this attempt. Please try again.",
+    );
+  }
+
+  const { data: existing, error: lookupError } = await supabase
+    .from("booking_operations")
+    .select("id, request_fingerprint, operation_status, operation_type")
+    .eq("actor_app_user_id", actorAppUserId)
+    .eq("operation_key", operationKey)
+    .maybeSingle<{
+      id: string;
+      operation_status: string;
+      operation_type: string;
+      request_fingerprint: string;
+    }>();
+
+  if (lookupError || !existing) {
+    throw new LessonActionError(
+      "operation_lookup_failed",
+      "We couldn't recover this attempt safely. Please try again.",
+    );
+  }
+
+  if (
+    existing.operation_type !== operationType ||
+    existing.request_fingerprint !== fingerprint
+  ) {
+    throw new LessonActionError(
+      "operation_key_reused",
+      "This request changed mid-flight. Refresh the page and try again.",
+    );
+  }
+
+  return existing;
+}
+
+async function applyStripeDecisionSideEffect(
+  decision: TutorRequestDecision,
+  payment: PaymentRow | null,
+) {
+  if (!payment?.stripe_payment_intent_id) {
+    return;
+  }
+
+  const stripe = createStripeServerClient();
+
+  if (decision === "accepted") {
+    if (payment.payment_status === "authorized") {
+      await stripe.paymentIntents.capture(payment.stripe_payment_intent_id);
+    }
+    return;
+  }
+
+  if (
+    payment.payment_status === "authorized" ||
+    payment.payment_status === "pending"
+  ) {
+    await stripe.paymentIntents.cancel(payment.stripe_payment_intent_id);
+  }
+}
+
+async function applyAcceptUpdates({
+  actorAppUserId,
+  decidedAt,
+  lesson,
+  operation,
+  payment,
+}: {
+  actorAppUserId: string;
+  decidedAt: string;
+  lesson: LessonRow;
+  operation: { id: string };
+  payment: PaymentRow | null;
+}) {
+  const supabase = createSupabaseServiceRoleClient();
+
+  const { error: lessonError } = await supabase
+    .from("lessons")
+    .update({
+      accepted_at: decidedAt,
+      lesson_status: "accepted",
+    })
+    .eq("id", lesson.id);
+
+  if (lessonError) {
+    throw new LessonActionError(
+      "lesson_update_failed",
+      "We couldn't update the lesson after capture.",
+    );
+  }
+
+  if (payment) {
+    const { error: paymentError } = await supabase
+      .from("payments")
+      .update({
+        capture_operation_id: operation.id,
+        captured_at: decidedAt,
+        payment_status: "paid",
+      })
+      .eq("id", payment.id);
+
+    if (paymentError) {
+      throw new LessonActionError(
+        "payment_update_failed",
+        "We couldn't update the payment record after capture.",
+      );
+    }
+  }
+
+  await insertLessonStatusHistoryEntry({
+    bookingOperationId: operation.id,
+    fromStatus: lesson.lesson_status,
+    lessonId: lesson.id,
+    reason: "tutor_accepted_request",
+    toStatus: "accepted",
+    userId: actorAppUserId,
+  });
+}
+
+async function applyDeclineUpdates({
+  actorAppUserId,
+  decidedAt,
+  lesson,
+  operation,
+  payment,
+}: {
+  actorAppUserId: string;
+  decidedAt: string;
+  lesson: LessonRow;
+  operation: { id: string };
+  payment: PaymentRow | null;
+}) {
+  const supabase = createSupabaseServiceRoleClient();
+
+  const { error: lessonError } = await supabase
+    .from("lessons")
+    .update({
+      declined_at: decidedAt,
+      lesson_status: "declined",
+    })
+    .eq("id", lesson.id);
+
+  if (lessonError) {
+    throw new LessonActionError(
+      "lesson_update_failed",
+      "We couldn't update the lesson after declining the request.",
+    );
+  }
+
+  if (payment) {
+    const { error: paymentError } = await supabase
+      .from("payments")
+      .update({
+        capture_cancelled_at: decidedAt,
+        payment_status: "cancelled",
+      })
+      .eq("id", payment.id);
+
+    if (paymentError) {
+      throw new LessonActionError(
+        "payment_update_failed",
+        "We couldn't update the payment record after release.",
+      );
+    }
+  }
+
+  await insertLessonStatusHistoryEntry({
+    bookingOperationId: operation.id,
+    fromStatus: lesson.lesson_status,
+    lessonId: lesson.id,
+    reason: "tutor_declined_request",
+    toStatus: "declined",
+    userId: actorAppUserId,
+  });
+}
+
+async function insertLessonStatusHistoryEntry({
+  bookingOperationId,
+  fromStatus,
+  lessonId,
+  reason,
+  toStatus,
+  userId,
+}: {
+  bookingOperationId: string;
+  fromStatus: LessonStatus;
+  lessonId: string;
+  reason: string;
+  toStatus: LessonStatus;
+  userId: string;
+}) {
+  const supabase = createSupabaseServiceRoleClient();
+  const { error } = await supabase.from("lesson_status_history").upsert(
+    {
+      booking_operation_id: bookingOperationId,
+      change_reason: reason,
+      changed_by_app_user_id: userId,
+      from_status: fromStatus,
+      lesson_id: lessonId,
+      to_status: toStatus,
+    },
+    { onConflict: "booking_operation_id" },
+  );
+
+  if (error) {
+    throw new LessonActionError(
+      "history_update_failed",
+      "We couldn't record this change in the lesson history.",
+    );
+  }
+}
+
+async function notifyLessonDecision({
+  decision,
+  lesson,
+  timezone,
+}: {
+  decision: TutorRequestDecision;
+  lesson: LessonRow;
+  timezone: string;
+}) {
+  const studentAppUserId = await loadStudentAppUserId(lesson.student_profile_id);
+
+  if (!studentAppUserId) {
+    return;
+  }
+
+  try {
+    if (decision === "accepted") {
+      const tutorDisplayName = await loadTutorDisplayName(lesson.tutor_profile_id);
+
+      await createLessonAcceptedNotification({
+        lessonId: lesson.id,
+        scheduledStartAt: lesson.scheduled_start_at,
+        studentAppUserId,
+        timezone,
+        tutorDisplayName,
+      });
+    } else {
+      await createLessonDeclinedOrExpiredNotification({
+        lessonId: lesson.id,
+        reason: "declined",
+        scheduledStartAt: lesson.scheduled_start_at,
+        studentAppUserId,
+        timezone,
+      });
+    }
+  } catch {
+    // notification dispatch must not block the decision outcome
+  }
+}
+
+async function loadTutorDisplayName(
+  tutorProfileId: string,
+): Promise<string | null> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data } = await supabase
+    .from("tutor_profiles")
+    .select("display_name, id")
+    .eq("id", tutorProfileId)
+    .maybeSingle<{ display_name: string | null; id: string }>();
+
+  return data?.display_name ?? null;
 }

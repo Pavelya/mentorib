@@ -34,6 +34,12 @@ type LearningNeedOptionValueRow = {
   subject_focus_area_code: string | null;
 };
 
+type MeetingProviderRow = {
+  display_name: string;
+  provider_key: string;
+  sort_order: number;
+};
+
 export type ReferenceSubject = {
   displayDescription: string | null;
   displayName: string;
@@ -54,6 +60,12 @@ export type ReferenceSubjectFocusArea = {
 export type ReferenceLanguage = {
   displayName: string;
   languageCode: string;
+  sortOrder: number;
+};
+
+export type ReferenceMeetingProvider = {
+  displayName: string;
+  providerKey: string;
   sortOrder: number;
 };
 
@@ -249,6 +261,32 @@ export async function loadActiveReferenceLearningNeedOptionValues(): Promise<
   }
 
   return (data ?? []).map(mapLearningNeedOptionValueRow);
+}
+
+export async function loadActiveReferenceMeetingProviders(): Promise<
+  ReferenceMeetingProvider[]
+> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("meeting_providers")
+    .select("provider_key, display_name, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .returns<MeetingProviderRow[]>();
+
+  if (error) {
+    throw new Error("Could not load active meeting providers.");
+  }
+
+  return (data ?? []).map(mapMeetingProviderRow);
+}
+
+function mapMeetingProviderRow(row: MeetingProviderRow): ReferenceMeetingProvider {
+  return {
+    displayName: row.display_name,
+    providerKey: row.provider_key,
+    sortOrder: row.sort_order,
+  };
 }
 
 function mapSubjectRow(row: SubjectRow): ReferenceSubject {

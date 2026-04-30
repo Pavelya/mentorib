@@ -254,6 +254,18 @@ type AvailabilityOverrideRow = {
   updated_at: string;
 };
 
+type TutorMeetingPreferenceRow = {
+  created_at: string;
+  default_meeting_url: string | null;
+  display_label: string | null;
+  id: string;
+  is_active: boolean;
+  last_validated_at: string | null;
+  preferred_provider: string | null;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
 type ConversationRow = {
   conversation_status: ConversationStatus;
   created_at: string;
@@ -1171,6 +1183,23 @@ export type MentorIbDatabase = {
           Omit<
             TutorLanguageCapabilityRow,
             "created_at" | "id" | "language_code" | "tutor_profile_id" | "updated_at"
+          >
+        >;
+      };
+      tutor_meeting_preferences: {
+        Insert: Pick<TutorMeetingPreferenceRow, "tutor_profile_id"> & {
+          default_meeting_url?: string | null;
+          display_label?: string | null;
+          is_active?: boolean;
+          last_validated_at?: string | null;
+          preferred_provider?: string | null;
+        };
+        Relationships: [];
+        Row: TutorMeetingPreferenceRow;
+        Update: Partial<
+          Omit<
+            TutorMeetingPreferenceRow,
+            "created_at" | "id" | "tutor_profile_id" | "updated_at"
           >
         >;
       };

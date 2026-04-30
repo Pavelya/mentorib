@@ -14,6 +14,7 @@ import {
 import { appUsers } from "@/modules/accounts/schema";
 import {
   languages,
+  meetingProviders,
   subjectFocusAreas,
   subjects,
   videoMediaProviders,
@@ -248,6 +249,34 @@ export const availabilityRules = pgTable(
       table.tutor_profile_id,
       table.day_of_week,
       table.visibility_status,
+    ),
+  ],
+);
+
+export const tutorMeetingPreferences = pgTable(
+  "tutor_meeting_preferences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tutor_profile_id: uuid("tutor_profile_id")
+      .notNull()
+      .references(() => tutorProfiles.id, { onDelete: "cascade" }),
+    preferred_provider: text("preferred_provider").references(
+      () => meetingProviders.provider_key,
+    ),
+    default_meeting_url: text("default_meeting_url"),
+    display_label: text("display_label"),
+    is_active: boolean("is_active").notNull().default(true),
+    last_validated_at: timestamp("last_validated_at", { withTimezone: true }),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("tutor_meeting_preferences_tutor_profile_id_key").on(
+      table.tutor_profile_id,
     ),
   ],
 );

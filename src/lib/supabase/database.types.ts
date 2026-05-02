@@ -174,11 +174,17 @@ type TutorProfileRow = {
   intro_video_external_id: string | null;
   intro_video_provider: string | null;
   intro_video_url: string | null;
+  payout_account_country: string | null;
+  payout_onboarding_completed_at: string | null;
+  payout_onboarding_started_at: string | null;
   payout_readiness_status: PayoutReadinessStatus;
+  payout_requirements_summary: Record<string, unknown> | null;
+  payout_status_synced_at: string | null;
   pricing_summary: string | null;
   profile_visibility_status: TutorProfileVisibilityStatus;
   public_listing_status: TutorPublicListingStatus;
   public_slug: string | null;
+  stripe_account_id: string | null;
   teaching_style_summary: string | null;
   updated_at: string;
 };

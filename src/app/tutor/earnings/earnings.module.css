@@ -1,0 +1,146 @@
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.notice {
+  margin-bottom: var(--space-3);
+}
+
+.summaryRow {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summaryItem {
+  display: grid;
+  gap: var(--space-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.42);
+  padding: var(--space-4);
+}
+
+.summaryLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.summaryValue {
+  margin: 0;
+  font-size: var(--title-lg);
+  line-height: var(--line-tight);
+  color: var(--ink-900);
+}
+
+.statusHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.checklistItem {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.42);
+}
+
+.checklistHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  justify-content: space-between;
+}
+
+.checklistTitle {
+  margin: 0;
+  font-size: var(--body-md);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.checklistDescription {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.requirementsList {
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.payoutForm {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.monthList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.monthItem {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 0.42);
+}
+
+.monthLabel {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--body-md);
+  color: var(--ink-900);
+}
+
+.monthDetail {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.helperText {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+@media (max-width: 767px) {
+  .summaryRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .checklistHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

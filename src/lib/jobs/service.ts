@@ -687,7 +687,7 @@ async function handleStripeWebhookProcess(job: JobRunRecord): Promise<JobHandler
     processing_status: "processing",
   });
 
-  const dispatchResult = dispatchStripeWebhook(webhookEvent);
+  const dispatchResult = await dispatchStripeWebhook(webhookEvent);
 
   await updateWebhookEventState(webhookEvent.id, {
     error_code: null,
@@ -702,7 +702,7 @@ async function handleStripeWebhookProcess(job: JobRunRecord): Promise<JobHandler
   };
 }
 
-function dispatchStripeWebhook(webhookEvent: WebhookEventRecord) {
+async function dispatchStripeWebhook(webhookEvent: WebhookEventRecord) {
   if (!isSupportedStripeWebhookEventType(webhookEvent.event_type)) {
     return {
       processingStatus: "ignored" as const,
@@ -711,6 +711,21 @@ function dispatchStripeWebhook(webhookEvent: WebhookEventRecord) {
         event_type: webhookEvent.event_type,
         ignored_reason: "unsupported_event_type",
         provider: webhookEvent.provider,
+      }),
+    };
+  }
+
+  if (webhookEvent.event_type === "account.updated") {
+    const outcome = await processConnectAccountUpdatedWebhook(webhookEvent);
+
+    return {
+      processingStatus: "processed" as const,
+      result: toJsonObject({
+        domain_action: supportedStripeWebhookActions[webhookEvent.event_type],
+        event_id: webhookEvent.provider_event_id,
+        event_type: webhookEvent.event_type,
+        provider: webhookEvent.provider,
+        ...outcome,
       }),
     };
   }
@@ -724,6 +739,91 @@ function dispatchStripeWebhook(webhookEvent: WebhookEventRecord) {
       infrastructure_only: true,
       provider: webhookEvent.provider,
     }),
+  };
+}
+
+async function processConnectAccountUpdatedWebhook(
+  webhookEvent: WebhookEventRecord,
+): Promise<JsonObject> {
+  const { applyConnectAccountSnapshot, loadTutorPayoutProfileByStripeAccountId } =
+    await import("@/modules/payouts/service");
+  const { mapAccountToReadinessSnapshot } = await import(
+    "@/modules/payouts/connect"
+  );
+
+  const payload = normalizeJsonObject(webhookEvent.payload as JsonValue | null);
+  const data = payload.data && typeof payload.data === "object" && !Array.isArray(payload.data)
+    ? (payload.data as JsonObject)
+    : null;
+  const account =
+    data?.object && typeof data.object === "object" && !Array.isArray(data.object)
+      ? (data.object as JsonObject)
+      : null;
+  const accountId = typeof account?.id === "string" ? account.id : null;
+
+  if (!accountId) {
+    return { skipped_reason: "missing_account_id" };
+  }
+
+  const profile = await loadTutorPayoutProfileByStripeAccountId(accountId);
+
+  if (!profile) {
+    return { account_id: accountId, skipped_reason: "no_matching_tutor_profile" };
+  }
+
+  const snapshot = mapAccountToReadinessSnapshot({
+    charges_enabled: account?.charges_enabled === true,
+    details_submitted: account?.details_submitted === true,
+    payouts_enabled: account?.payouts_enabled === true,
+    requirements: normalizeRequirementsFromPayload(account?.requirements),
+  });
+
+  const result = await applyConnectAccountSnapshot({
+    accountId,
+    profile,
+    snapshot,
+  });
+
+  return {
+    account_id: accountId,
+    listing_status: result.profile.public_listing_status,
+    listing_status_changed: result.listingStatusChanged,
+    payout_status: result.profile.payout_readiness_status,
+    payout_status_changed: result.payoutStatusChanged,
+  };
+}
+
+function normalizeRequirementsFromPayload(
+  requirements: unknown,
+): {
+  currently_due: string[];
+  disabled_reason: string | null;
+  past_due: string[];
+} {
+  if (!requirements || typeof requirements !== "object" || Array.isArray(requirements)) {
+    return { currently_due: [], disabled_reason: null, past_due: [] };
+  }
+
+  const requirementsObject = requirements as Record<string, unknown>;
+  const currentlyDue = Array.isArray(requirementsObject.currently_due)
+    ? requirementsObject.currently_due.filter(
+        (entry): entry is string => typeof entry === "string",
+      )
+    : [];
+  const pastDue = Array.isArray(requirementsObject.past_due)
+    ? requirementsObject.past_due.filter(
+        (entry): entry is string => typeof entry === "string",
+      )
+    : [];
+  const disabledReason =
+    typeof requirementsObject.disabled_reason === "string"
+      ? requirementsObject.disabled_reason
+      : null;
+
+  return {
+    currently_due: currentlyDue,
+    disabled_reason: disabledReason,
+    past_due: pastDue,
   };
 }
 

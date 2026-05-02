@@ -173,6 +173,37 @@ function renderOverviewPage({
 
       <ContextChipRow items={readinessChips} label="Readiness" />
 
+      {overview.readiness.applicationStatus === "approved" &&
+      overview.readiness.payoutReadinessStatus !== "enabled" ? (
+        <InlineNotice
+          title={
+            overview.readiness.payoutReadinessStatus === "restricted"
+              ? "Payout setup needs attention"
+              : "Finish payout setup to go live"
+          }
+          tone={
+            overview.readiness.payoutReadinessStatus === "restricted"
+              ? "actionNeeded"
+              : "warning"
+          }
+        >
+          <p>
+            Set up Stripe Connect Express to start receiving lesson payments.
+          </p>
+          <p className={styles.actionRow}>
+            <Link
+              className={getButtonClassName({
+                size: "compact",
+                variant: "secondary",
+              })}
+              href={"/tutor/earnings" as Route}
+            >
+              Open earnings
+            </Link>
+          </p>
+        </InlineNotice>
+      ) : null}
+
       <ul className={styles.metricRow}>
         <MetricItem
           label="Pending requests"

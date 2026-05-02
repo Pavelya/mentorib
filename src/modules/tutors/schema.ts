@@ -3,6 +3,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   time,
@@ -68,6 +69,18 @@ export const tutorProfiles = pgTable(
     ),
     intro_video_external_id: text("intro_video_external_id"),
     intro_video_url: text("intro_video_url"),
+    stripe_account_id: text("stripe_account_id"),
+    payout_account_country: text("payout_account_country"),
+    payout_onboarding_started_at: timestamp("payout_onboarding_started_at", {
+      withTimezone: true,
+    }),
+    payout_onboarding_completed_at: timestamp("payout_onboarding_completed_at", {
+      withTimezone: true,
+    }),
+    payout_requirements_summary: jsonb("payout_requirements_summary"),
+    payout_status_synced_at: timestamp("payout_status_synced_at", {
+      withTimezone: true,
+    }),
     created_at: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -78,11 +91,13 @@ export const tutorProfiles = pgTable(
   (table) => [
     uniqueIndex("tutor_profiles_app_user_id_key").on(table.app_user_id),
     uniqueIndex("tutor_profiles_public_slug_key").on(table.public_slug),
+    uniqueIndex("tutor_profiles_stripe_account_id_key").on(table.stripe_account_id),
     index("tutor_profiles_application_status_idx").on(table.application_status),
     index("tutor_profiles_public_listing_visibility_idx").on(
       table.public_listing_status,
       table.profile_visibility_status,
     ),
+    index("tutor_profiles_stripe_account_id_idx").on(table.stripe_account_id),
   ],
 );
 

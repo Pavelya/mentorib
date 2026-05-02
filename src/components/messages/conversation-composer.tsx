@@ -4,12 +4,12 @@ import { useActionState, useEffect, useRef } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button, InlineNotice, Textarea } from "@/components/ui";
-
+import { sendMessageAction } from "@/modules/messages/actions";
 import {
   initialSendMessageActionState,
   type SendMessageActionState,
-} from "./actions-state";
-import { sendMessageAction } from "./actions";
+} from "@/modules/messages/actions-state";
+
 import styles from "./messages.module.css";
 
 const BODY_FIELD_ID = "conversation-composer-body";

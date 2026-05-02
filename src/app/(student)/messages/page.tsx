@@ -7,6 +7,11 @@ import {
   ConversationThread,
   ScreenState,
 } from "@/components/continuity";
+import {
+  ConversationComposer,
+  MarkConversationRead,
+} from "@/components/messages";
+import styles from "@/components/messages/messages.module.css";
 import { InlineNotice, getButtonClassName } from "@/components/ui";
 import {
   buildPostSignInRedirect,
@@ -24,15 +29,11 @@ import {
 import {
   buildPreviewConversationList,
   buildPreviewConversationThread,
-  getStudentConversationList,
-  getStudentConversationThread,
+  getConversationListForActor,
+  getConversationThreadForActor,
   type ConversationListDto,
   type MessageThreadDto,
 } from "@/modules/messages/conversations";
-
-import { ConversationComposer } from "./conversation-composer";
-import { MarkConversationRead } from "./mark-conversation-read";
-import styles from "./messages.module.css";
 
 type MessagesPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -103,12 +104,12 @@ export default async function StudentMessagesPage({ searchParams }: MessagesPage
     redirect(buildPostSignInRedirect(account, MESSAGES_BASE_PATH) as Route);
   }
 
-  const list = await getStudentConversationList(account);
+  const list = await getConversationListForActor(account);
 
   let thread: MessageThreadDto | null = null;
 
   if (requestedConversationId) {
-    thread = await getStudentConversationThread(account, requestedConversationId);
+    thread = await getConversationThreadForActor(account, requestedConversationId);
 
     if (!thread) {
       notFound();
@@ -193,7 +194,7 @@ function renderThread(thread: MessageThreadDto, options: { isPreview: boolean })
         composerSlot={composerSlot}
         formatTimestamp={formatThreadTimestamp}
         thread={thread}
-        threadActions={<ThreadSafetyActions thread={thread} />}
+        threadActions={<ThreadSafetyActions thread={thread} basePath={MESSAGES_BASE_PATH} />}
       />
     </>
   );
@@ -243,20 +244,26 @@ function renderComposerSlot(thread: MessageThreadDto) {
   );
 }
 
-function ThreadSafetyActions({ thread }: { thread: MessageThreadDto }) {
+function ThreadSafetyActions({
+  thread,
+  basePath,
+}: {
+  thread: MessageThreadDto;
+  basePath: string;
+}) {
   const counterpartId = thread.conversation.counterpart.appUserId;
 
   return (
     <>
       <Link
         className={getButtonClassName({ size: "compact", variant: "secondary" })}
-        href={`/messages?c=${thread.conversation.id}&action=block&user=${counterpartId}` as Route}
+        href={`${basePath}?c=${thread.conversation.id}&action=block&user=${counterpartId}` as Route}
       >
         {thread.blockState === "blocked_by_me" ? "Manage block" : "Block"}
       </Link>
       <Link
         className={getButtonClassName({ size: "compact", variant: "ghost" })}
-        href={`/messages?c=${thread.conversation.id}&action=report&user=${counterpartId}` as Route}
+        href={`${basePath}?c=${thread.conversation.id}&action=report&user=${counterpartId}` as Route}
       >
         Report
       </Link>

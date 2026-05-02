@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { markConversationReadAction } from "./actions";
+import { markConversationReadAction } from "@/modules/messages/actions";
 
 type MarkConversationReadProps = {
   conversationId: string;

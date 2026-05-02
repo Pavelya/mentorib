@@ -111,7 +111,7 @@ export type MessageThreadDto = {
   reachedStart: boolean;
 };
 
-export async function getStudentConversationList(
+export async function getConversationListForActor(
   account: Pick<ResolvedAuthAccount, "id">,
 ): Promise<ConversationListDto> {
   const supabase = createSupabaseServiceRoleClient();
@@ -216,7 +216,7 @@ export async function getStudentConversationList(
   return { conversations: items, state: "ready" };
 }
 
-export async function getStudentConversationThread(
+export async function getConversationThreadForActor(
   account: Pick<ResolvedAuthAccount, "id">,
   conversationId: string,
 ): Promise<MessageThreadDto | null> {

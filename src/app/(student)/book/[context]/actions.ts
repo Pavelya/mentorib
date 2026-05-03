@@ -3,6 +3,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
+import { captureServerEvent } from "@/lib/analytics/server";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
@@ -113,6 +114,15 @@ export async function submitBookingRequestAction(
       operationKey: values.operationKey,
       origin,
       slotStartAt: values.slotStartAt,
+    });
+
+    captureServerEvent({
+      name: "booking_request_submitted",
+      distinctId: account.id,
+      properties: {
+        context_source: values.context,
+        outcome: bookingResult.kind === "success_redirect" ? "redirect" : "checkout_handoff",
+      },
     });
 
     if (bookingResult.kind === "success_redirect") {

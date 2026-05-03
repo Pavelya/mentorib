@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans, Instrument_Serif } from "next/font/google
 import type { ReactNode } from "react";
 
 import { TimezoneSync } from "@/components/datetime";
+import { AnalyticsProvider } from "@/lib/analytics/client";
 import { buildRootMetadata } from "@/lib/seo/metadata/defaults";
 import "@/styles/globals.css";
 
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body>
         <TimezoneSync />
         {children}
+        <AnalyticsProvider />
       </body>
     </html>
   );

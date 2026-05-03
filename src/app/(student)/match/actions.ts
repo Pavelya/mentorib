@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { captureServerEvent } from "@/lib/analytics/server";
 import { ensureAuthAccount } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import { normalizeTimezone } from "@/lib/datetime";
@@ -76,6 +77,18 @@ export async function submitMatchFlowAction(
         redirectPath = routeFamilies.setup.defaultHref;
       } else {
         await submitLearningNeedForMatching(account, values);
+        captureServerEvent({
+          name: "match_submitted",
+          distinctId: account.id,
+          properties: {
+            language_code: values.languageCode,
+            need_type: values.needType,
+            session_frequency_intent: values.sessionFrequencyIntent || null,
+            subject_slug: values.subjectSlug,
+            support_style: values.supportStyle || null,
+            urgency_level: values.urgencyLevel || null,
+          },
+        });
         revalidatePath("/match");
         revalidatePath("/results");
         redirectPath = "/results";

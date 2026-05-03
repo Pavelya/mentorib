@@ -4,6 +4,7 @@ import type { CookieOptions } from "@supabase/ssr";
 import type { User } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
+import { captureServerEvent } from "@/lib/analytics/server";
 import { ensureAuthAccount, resolvePostSignInRedirect } from "@/lib/auth/account-service";
 import {
   buildAuthVerifyPath,
@@ -91,6 +92,14 @@ export async function GET(request: Request) {
     }
 
     const account = await ensureAuthAccount(user, timezone);
+    captureServerEvent({
+      name: "auth_completed",
+      distinctId: account.id,
+      properties: {
+        is_new_account: account.isNewAccount,
+        primary_role_context: account.primary_role_context,
+      },
+    });
     const redirectResponse = NextResponse.redirect(
       new URL(await resolvePostSignInRedirect(account, nextPath), request.url),
     );

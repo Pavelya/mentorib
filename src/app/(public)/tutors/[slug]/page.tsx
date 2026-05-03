@@ -14,7 +14,17 @@ import {
   getPublicTutorProfileBySlug,
   type PublicTutorProfileDto,
 } from "@/modules/tutors/public-profile";
-import { Avatar, StatusBadge, getButtonClassName } from "@/components/ui";
+import { getReferenceLanguageFlagCode } from "@/modules/reference/visuals";
+import {
+  Avatar,
+  Card,
+  Chip,
+  Flag,
+  Panel,
+  Section,
+  StatusBadge,
+  getButtonClassName,
+} from "@/components/ui";
 
 import styles from "./tutor-profile.module.css";
 
@@ -96,7 +106,7 @@ export default async function TutorProfilePage({
       />
 
       <article className={styles.page}>
-        <section aria-labelledby="profile-title" className={styles.hero}>
+        <section aria-label={`${profile.displayName} profile hero`} className={styles.hero}>
           <div className={styles.heroCopy}>
             <div className={styles.identityRow}>
               <Avatar
@@ -108,7 +118,7 @@ export default async function TutorProfilePage({
               />
               <div className={styles.identityText}>
                 <p className={styles.eyebrow}>Public tutor profile</p>
-                <h1 id="profile-title">{profile.displayName}</h1>
+                <h1>{profile.displayName}</h1>
               </div>
             </div>
 
@@ -180,30 +190,31 @@ export default async function TutorProfilePage({
           </aside>
         </section>
 
-        <section aria-labelledby="fit-title" className={styles.detailGrid}>
-          <div className={styles.panel}>
-            <p className={styles.sectionEyebrow}>Fit guidance</p>
-            <h2 id="fit-title">Where this tutor is strongest</h2>
-            <p>
-              {profile.bestForSummary ??
-                "Use the subject and focus areas below to decide whether this tutor fits the current IB need."}
-            </p>
-
+        <div className={styles.detailGrid}>
+          <Panel
+            eyebrow="Fit guidance"
+            title="Where this tutor is strongest"
+            description={
+              profile.bestForSummary ??
+              "Use the subject and focus areas below to decide whether this tutor fits the current IB need."
+            }
+          >
             {profile.subjects.length > 0 ? (
               <div className={styles.capabilityList}>
                 {profile.subjects.map((capability) => (
-                  <article
-                    className={styles.capability}
+                  <Card
+                    as="article"
                     key={`${capability.subjectSlug}-${capability.focusAreaSlug}`}
+                    variant="static"
                   >
-                    <div>
+                    <div className={styles.capabilityHeader}>
                       <h3>{capability.subject}</h3>
-                      <p>{capability.focusArea}</p>
+                      <p className={styles.capabilityFocus}>{capability.focusArea}</p>
                     </div>
                     {capability.experienceSummary ? (
-                      <p>{capability.experienceSummary}</p>
+                      <p className={styles.capabilityBody}>{capability.experienceSummary}</p>
                     ) : null}
-                  </article>
+                  </Card>
                 ))}
               </div>
             ) : (
@@ -211,45 +222,56 @@ export default async function TutorProfilePage({
                 Subject coverage is confirmed during the matching flow.
               </p>
             )}
-          </div>
+          </Panel>
 
-          <div className={[styles.panel, styles.warmPanel].join(" ")}>
-            <p className={styles.sectionEyebrow}>Teaching style</p>
-            <h2>How lessons tend to feel</h2>
-            <p>
-              {profile.teachingStyleSummary ??
-                "This tutor has not added a teaching-style note yet."}
-            </p>
-
+          <Panel
+            eyebrow="Teaching style"
+            title="How lessons tend to feel"
+            description={
+              profile.teachingStyleSummary ??
+              "This tutor has not added a teaching-style note yet."
+            }
+            tone="warm"
+          >
             {profile.languages.length > 0 ? (
               <div className={styles.languageBlock}>
                 <p className={styles.microLabel}>Languages</p>
-                <div className={styles.chipRow}>
-                  {profile.languages.map((language) => (
-                    <span className={styles.chip} key={language}>
-                      {language}
-                    </span>
-                  ))}
+                <div className={styles.languageChipRow}>
+                  {profile.languages.map((language) => {
+                    const flagCode = getReferenceLanguageFlagCode(language.code);
+                    return (
+                      <Chip key={language.code}>
+                        {flagCode ? (
+                          <span aria-hidden="true" className={styles.languageFlag}>
+                            <Flag code={flagCode} />
+                          </span>
+                        ) : null}
+                        {language.displayName}
+                      </Chip>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
-          </div>
-        </section>
+          </Panel>
+        </div>
 
-        <section aria-labelledby="trust-title" className={styles.trustSection}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <p className={styles.sectionEyebrow}>Trust proof</p>
-              <h2 id="trust-title">Public proof without private files.</h2>
-            </div>
+        <Section
+          action={
             <Link
               className={getButtonClassName({ size: "compact", variant: "secondary" })}
               href="/trust-and-safety"
             >
               Trust standards
             </Link>
-          </div>
-
+          }
+          aria-label="Trust proof"
+          className={styles.trustSection}
+          density="spacious"
+          eyebrow="Trust proof"
+          title="Public proof without private files."
+          titleAs="h2"
+        >
           <div className={styles.trustGrid}>
             {profile.trustProofs.map((proof, index) => (
               <article className={styles.trustItem} key={`${proof.title}-${index}`}>
@@ -258,14 +280,14 @@ export default async function TutorProfilePage({
               </article>
             ))}
           </div>
-        </section>
+        </Section>
 
         {profile.introVideo ? <IntroVideoSection profile={profile} /> : null}
 
-        <section className={styles.finalCta} aria-labelledby="profile-next-step-title">
+        <section className={styles.finalCta} aria-label="Booking call to action">
           <div>
             <p className={styles.darkEyebrow}>Ready to decide?</p>
-            <h2 id="profile-next-step-title">Book a lesson with this tutor.</h2>
+            <h2>Book a lesson with this tutor.</h2>
             <p>
               Review available times and confirm the lesson details on the next screen.
             </p>
@@ -300,12 +322,8 @@ function IntroVideoSection({ profile }: { profile: PublicTutorProfileDto }) {
   }
 
   return (
-    <section aria-labelledby="intro-video-title" className={styles.videoSection}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <p className={styles.sectionEyebrow}>Intro video</p>
-          <h2 id="intro-video-title">Meet {profile.displayName} before booking.</h2>
-        </div>
+    <Section
+      action={
         <a
           className={getButtonClassName({ size: "compact", variant: "secondary" })}
           href={profile.introVideo.watchUrl}
@@ -314,8 +332,14 @@ function IntroVideoSection({ profile }: { profile: PublicTutorProfileDto }) {
         >
           Watch on {profile.introVideo.provider}
         </a>
-      </div>
-
+      }
+      aria-label={`Intro video — ${profile.displayName}`}
+      className={styles.videoSection}
+      density="spacious"
+      eyebrow="Intro video"
+      title={`Meet ${profile.displayName} before booking.`}
+      titleAs="h2"
+    >
       <div className={styles.videoFrame}>
         <iframe
           allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -326,6 +350,6 @@ function IntroVideoSection({ profile }: { profile: PublicTutorProfileDto }) {
           title={profile.introVideo.title}
         />
       </div>
-    </section>
+    </Section>
   );
 }

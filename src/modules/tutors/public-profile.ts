@@ -82,6 +82,11 @@ export type PublicTutorVideoReferenceDto = {
   watchUrl: string;
 };
 
+export type PublicTutorLanguageDto = {
+  code: string;
+  displayName: string;
+};
+
 export type PublicTutorProfileDto = {
   availability: {
     acceptingNewStudents: boolean;
@@ -94,7 +99,7 @@ export type PublicTutorProfileDto = {
   displayName: string;
   headline: string | null;
   introVideo: PublicTutorVideoReferenceDto | null;
-  languages: string[];
+  languages: PublicTutorLanguageDto[];
   pricingSummary: string | null;
   primaryImage: {
     alt: string;
@@ -508,14 +513,20 @@ function buildSubjectCapabilities({
 function buildLanguages({
   languages,
   languageRows,
-}: Pick<RelatedPublicTutorProfileRecords, "languages" | "languageRows">) {
+}: Pick<RelatedPublicTutorProfileRecords, "languages" | "languageRows">): PublicTutorLanguageDto[] {
   const languageRowsByCode = new Map(
     languageRows.map((language) => [language.languageCode, language]),
   );
 
   return languages
-    .map((language) => languageRowsByCode.get(language.language_code)?.displayName)
-    .filter((language): language is string => Boolean(language));
+    .map((language) => {
+      const row = languageRowsByCode.get(language.language_code);
+      if (!row) {
+        return null;
+      }
+      return { code: row.languageCode, displayName: row.displayName };
+    })
+    .filter((language): language is PublicTutorLanguageDto => Boolean(language));
 }
 
 function buildTrustProofs({

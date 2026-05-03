@@ -29,7 +29,6 @@ const SKIP_DIR_NAMES = new Set([
 // definitions until the matching `P1-DS-FOUND-001-D*` cleanup task lands.
 // Each entry must reference the cleanup task that will remove it.
 const CARD_CHIP_PANEL_ALLOWLIST = new Set<string>([
-  "src/app/(public)/tutors/[slug]/tutor-profile.module.css", // remove with P1-DS-FOUND-001-D1
   "src/app/(student)/results/loading.module.css", // remove with P1-DS-FOUND-001-D2
 ]);
 

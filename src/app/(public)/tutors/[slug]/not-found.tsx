@@ -1,17 +1,17 @@
 import Link from "next/link";
 
-import { Icon, getButtonClassName } from "@/components/ui";
+import { Icon, Section, getButtonClassName } from "@/components/ui";
 
 import styles from "./tutor-profile.module.css";
 
 export default function TutorProfileNotFound() {
   return (
     <article className={styles.page}>
-      <section aria-labelledby="profile-unavailable-title" className={styles.hero}>
+      <section aria-label="Tutor profile unavailable" className={styles.hero}>
         <div className={styles.heroCopy}>
           <div className={styles.identityText}>
             <p className={styles.eyebrow}>Tutor profile</p>
-            <h1 id="profile-unavailable-title">This tutor profile is not available.</h1>
+            <h1>This tutor profile is not available.</h1>
           </div>
 
           <p className={styles.bio}>
@@ -78,14 +78,14 @@ export default function TutorProfileNotFound() {
         </aside>
       </section>
 
-      <section aria-labelledby="profile-help-title" className={styles.trustSection}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <p className={styles.sectionEyebrow}>What happened</p>
-            <h2 id="profile-help-title">Why a tutor profile might be missing</h2>
-          </div>
-        </div>
-
+      <Section
+        aria-label="Why a tutor profile might be missing"
+        className={styles.trustSection}
+        density="spacious"
+        eyebrow="What happened"
+        title="Why a tutor profile might be missing"
+        titleAs="h2"
+      >
         <div className={styles.trustGrid}>
           <article className={styles.trustItem}>
             <span aria-hidden="true" className={styles.reasonIcon}>
@@ -113,7 +113,7 @@ export default function TutorProfileNotFound() {
             </p>
           </article>
         </div>
-      </section>
+      </Section>
     </article>
   );
 }

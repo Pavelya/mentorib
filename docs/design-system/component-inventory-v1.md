@@ -76,15 +76,13 @@ This is the working checklist `P1-DS-FOUND-001-D1..D5` consume. Each entry names
 
 ### 6.1 `D1` — Public route family (`src/app/(public)/**`, `src/app/auth/**`)
 
-- `src/app/(public)/tutors/[slug]/tutor-profile.module.css`
-  - bare `.panel`, `.panel h2`, `.panel p` selectors → migrate to `Panel` + `Section`
-  - bare `.chip`, `.chipRow` selectors → migrate to `Chip` + flex container
-  - `.sectionEyebrow`, `.sectionHeader`, `.sectionHeader > div` → migrate to `Section`
-  - `.capability`, `.capabilityList`, `.capability div`, `.capability h3`, `.capability div p` → migrate to `Card` (`static` variant) + tone-aware label
-- `src/app/(public)/home.module.css`
-  - `.sectionEyebrow`, `.sectionHeader`, `.sectionHeader > div` → migrate to `Section`
 - `src/app/auth/sign-in/sign-in.module.css`
-  - `.cardTop` → reconcile against `Panel` / `Section` once the sign-in surface is reviewed (verify whether it is simply a panel header or a distinct card)
+  - `.cardTop` → reconcile against `Panel` / `Section` once the sign-in surface is reviewed (verify whether it is simply a panel header or a distinct card). Out of scope for `P1-DS-FOUND-001-D1`; tracked here for the next auth surface review.
+
+Cleared in `P1-DS-FOUND-001-D1`:
+
+- `src/app/(public)/tutors/[slug]/tutor-profile.module.css` — bare `.panel`, `.chip`, `.chipRow`, `.capability*`, `.sectionEyebrow`, `.sectionHeader` rules removed; tutor profile now consumes `Panel`, `Section`, `Card` (`static`), `Chip`, and `Flag` (allowlist entry in `scripts/audit-architectural-rules.ts` removed)
+- `src/app/(public)/home.module.css` — `.sectionEyebrow`/`.sectionHeader*` rules removed; home consumes `Section` for eyebrow/title rhythm and `Chip` for the pressure-point list; `.matchRow`/`.matchPerson`/`.matchActions` markup replaced with the shared `MatchRow` continuity component fed from `src/modules/marketing/home-content.ts`
 
 ### 6.2 `D2` — Student route family (`src/app/(student)/**`)
 

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { Button, InlineNotice, SelectField, Textarea } from "@/components/ui";
+import { Button, Card, InlineNotice, SelectField, Textarea } from "@/components/ui";
 import type { BookingSlotOption } from "@/modules/lessons/booking";
 
 import {
@@ -75,12 +75,12 @@ export function BookingForm({
       </SelectField>
 
       {activeSlot ? (
-        <div className={styles.slotPreview} aria-live="polite">
+        <Card aria-live="polite" className={styles.slotPreview}>
           <p className={styles.slotPreviewLabel}>Selected slot</p>
           <strong>{activeSlot.label}</strong>
           <p>{activeSlot.secondaryLabel}</p>
           <p>Request expires at {activeSlot.requestExpiresLabel}.</p>
-        </div>
+        </Card>
       ) : null}
 
       <Textarea
@@ -94,7 +94,7 @@ export function BookingForm({
         rows={5}
       />
 
-      <div className={styles.checkoutSummary}>
+      <Card className={styles.checkoutSummary}>
         <div>
           <p className={styles.summaryLabel}>Authorization hold</p>
           <p className={styles.summaryValue}>{priceLabel}</p>
@@ -102,7 +102,7 @@ export function BookingForm({
         <p className={styles.summaryCopy}>
           Stripe places a hold now and only captures it if the tutor accepts inside the request window.
         </p>
-      </div>
+      </Card>
 
       <div className={styles.formActions}>
         <SubmitButton />

@@ -1,3 +1,5 @@
+import { Panel } from "@/components/ui";
+
 import styles from "./loading.module.css";
 
 const skeletonRows = [0, 1, 2];
@@ -7,35 +9,35 @@ export default function ResultsLoading() {
     <article aria-busy="true" className={styles.page}>
       <p className={styles.srOnly}>Loading tutor results</p>
 
-      <section className={styles.summaryShell}>
+      <Panel as="section">
         <span className={[styles.skeleton, styles.statePill].join(" ")} />
         <span className={[styles.skeleton, styles.summaryTitle].join(" ")} />
-        <div className={styles.chipRow}>
-          <span className={[styles.skeleton, styles.chip].join(" ")} />
-          <span className={[styles.skeleton, styles.chip].join(" ")} />
-          <span className={[styles.skeleton, styles.chipWide].join(" ")} />
+        <div className={styles.skeletonChipRow}>
+          <span className={[styles.skeleton, styles.skeletonChip].join(" ")} />
+          <span className={[styles.skeleton, styles.skeletonChip].join(" ")} />
+          <span className={[styles.skeleton, styles.skeletonChipWide].join(" ")} />
         </div>
-      </section>
+      </Panel>
 
       <section className={styles.headerGrid}>
-        <section className={styles.panelShell}>
+        <Panel as="section">
           <span className={[styles.skeleton, styles.kicker].join(" ")} />
           <span className={[styles.skeleton, styles.panelTitle].join(" ")} />
           <span className={[styles.skeleton, styles.panelLine].join(" ")} />
           <span className={[styles.skeleton, styles.panelLineShort].join(" ")} />
-        </section>
+        </Panel>
 
-        <section className={styles.panelShell}>
+        <Panel as="section">
           <span className={[styles.skeleton, styles.kicker].join(" ")} />
           <span className={[styles.skeleton, styles.panelTitleShort].join(" ")} />
           <span className={[styles.skeleton, styles.panelLine].join(" ")} />
           <span className={[styles.skeleton, styles.panelLineShort].join(" ")} />
-        </section>
+        </Panel>
       </section>
 
       <section className={styles.list} aria-hidden="true">
         {skeletonRows.map((row) => (
-          <article className={styles.resultCard} key={row}>
+          <Panel as="article" key={row}>
             <div className={styles.resultHeader}>
               <span className={[styles.skeleton, styles.avatar].join(" ")} />
               <div className={styles.resultTitleBlock}>
@@ -50,12 +52,12 @@ export default function ResultsLoading() {
               <span className={[styles.skeleton, styles.resultLineShort].join(" ")} />
             </div>
 
-            <div className={styles.resultChipRow}>
-              <span className={[styles.skeleton, styles.resultChip].join(" ")} />
-              <span className={[styles.skeleton, styles.resultChip].join(" ")} />
-              <span className={[styles.skeleton, styles.resultChipWide].join(" ")} />
+            <div className={styles.skeletonChipRow}>
+              <span className={[styles.skeleton, styles.skeletonChip].join(" ")} />
+              <span className={[styles.skeleton, styles.skeletonChip].join(" ")} />
+              <span className={[styles.skeleton, styles.skeletonChipWide].join(" ")} />
             </div>
-          </article>
+          </Panel>
         ))}
       </section>
     </article>

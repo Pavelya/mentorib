@@ -86,14 +86,12 @@ Cleared in `P1-DS-FOUND-001-D1`:
 
 ### 6.2 `D2` — Student route family (`src/app/(student)/**`)
 
-- `src/app/(student)/results/loading.module.css`
-  - bare `.panel*`, `.chip`, `.chipWide`, `.chipRow` skeleton selectors → re-express skeletons against `Panel` / `Chip` shapes (allowlisted today via `scripts/audit-architectural-rules.ts`; allowlist entry is removed when this drift is cleaned up)
-- `src/app/(student)/match/match-flow.module.css`
-  - audit for choice-card and chip rhythm that should consume `Card` (`select`) and `Chip`
-- `src/app/(student)/results/results.module.css`
-  - audit for filter chip and result-card patterns that should consume `Chip` and `Card` (`select` / `static`)
-- `src/app/(student)/book/[context]/booking.module.css`
-  - `.metricCard`, `.surfaceGrid` → migrate to `Card` (`static`) and `Section` once the booking surface adopts `LessonSummary` and the future `ScheduleSurface`
+Cleared in `P1-DS-FOUND-001-D2`:
+
+- `src/app/(student)/results/loading.module.css` — bare `.panel*`, `.chip`, `.chipWide`, `.chipRow` skeleton selectors removed; the loading skeleton now wraps each surface in `Panel` and renames the chip-shaped placeholders to `.skeletonChip*` (allowlist entry in `scripts/audit-architectural-rules.ts` removed)
+- `src/app/(student)/match/match-flow.module.css` — `.progressCard`, `.questionPanel`, `.helperPanel`, `.pendingCard` rules removed; the match flow form now consumes `Panel` (default and soft) for the progress, question, helper, and pending overlay surfaces. The route-local `getSubjectLegend`/`getCurrentStepQuestion` switches were moved into `src/modules/lessons/match-flow-copy.ts` as `getMatchFlowSubjectLegend` and `getMatchFlowSubjectQuestion`.
+- `src/app/(student)/results/results.module.css` — `.controls` surface chrome removed; the filter/sort controls now render inside `Panel`, and the no-matches suggestion list consumes `Chip`
+- `src/app/(student)/book/[context]/booking.module.css` — `.hero` surface chrome and `.metricCard` / `.slotPreview` / `.checkoutSummary` borders removed; the booking page hero renders through `Panel`, the booking summary metrics consume `Card`, and the booking form's selected-slot and checkout summary consume `Card`
 
 ### 6.3 `D3` — Tutor route family (`src/app/tutor/**`)
 

@@ -10,6 +10,7 @@ import {
   Button,
   InlineNotice,
   OptionCardGroup,
+  Panel,
   SelectField,
   Textarea,
   getButtonClassName,
@@ -29,6 +30,8 @@ import {
 import {
   getMatchFlowGuidanceCopy,
   getMatchFlowStepDescription,
+  getMatchFlowSubjectLegend,
+  getMatchFlowSubjectQuestion,
   matchFlowStaticCopy,
   type MatchFlowStepId,
 } from "@/modules/lessons/match-flow-copy";
@@ -201,7 +204,7 @@ export function MatchFlowForm({
         </InlineNotice>
       ) : null}
 
-      <div className={styles.progressCard} aria-label="Match flow progress">
+      <Panel aria-label="Match flow progress">
         <div className={styles.progressTopline}>
           <div className={styles.progressIntro}>
             <p className={styles.eyebrow}>Quick match</p>
@@ -238,7 +241,7 @@ export function MatchFlowForm({
             </li>
           ))}
         </ol>
-      </div>
+      </Panel>
 
       <NeedSummaryBar
         className={styles.summaryBar}
@@ -255,7 +258,7 @@ export function MatchFlowForm({
         <HiddenMatchInputs values={values} />
 
         <div className={styles.formGrid}>
-          <section className={styles.questionPanel} aria-labelledby="match-flow-title">
+          <Panel as="section" aria-labelledby="match-flow-title">
             {currentStepErrorMessage ? (
               <InlineNotice title="Complete this step" tone="actionNeeded">
                 <p>{currentStepErrorMessage}</p>
@@ -269,12 +272,16 @@ export function MatchFlowForm({
               updateValue={updateValue}
               values={values}
             />
-          </section>
+          </Panel>
 
-          <aside className={styles.helperPanel} aria-label="Helpful context">
-            <p className={styles.stepEyebrow}>Why we ask</p>
-            <h3>{getGuidanceTitle(currentStep.id, values, optionsByField, timezoneLabel)}</h3>
-            <p>{getGuidanceBody(currentStep.id, values, optionsByField, timezoneLabel)}</p>
+          <aside aria-label="Helpful context">
+            <Panel
+              description={getGuidanceBody(currentStep.id, values, optionsByField, timezoneLabel)}
+              eyebrow="Why we ask"
+              title={getGuidanceTitle(currentStep.id, values, optionsByField, timezoneLabel)}
+              titleAs="h3"
+              tone="soft"
+            />
           </aside>
         </div>
 
@@ -420,7 +427,7 @@ function SubjectGroup({
       <OptionCardGroup
         error={error}
         id={getFieldContainerId("subjectSlug")}
-        legend={getSubjectLegend(selectedNeedType?.focusAreaCode)}
+        legend={getMatchFlowSubjectLegend(selectedNeedType?.focusAreaCode)}
         name="subjectSlug-choice"
         onChange={(nextValue) => updateValue("subjectSlug", nextValue)}
         options={cardSubjects}
@@ -486,18 +493,19 @@ function FormPendingOverlay() {
       className={styles.pendingOverlay}
       role="status"
     >
-      <div className={styles.pendingCard}>
-        <p className={styles.pendingEyebrow}>Opening results</p>
-        <h2 className={styles.pendingTitle}>We&apos;re getting your tutor matches ready.</h2>
-        <p className={styles.pendingDescription}>
-          You&apos;ll land on the results screen as soon as your request is saved.
-        </p>
+      <Panel
+        className={styles.pendingPanel}
+        description="You'll land on the results screen as soon as your request is saved."
+        eyebrow="Opening results"
+        title="We're getting your tutor matches ready."
+        tone="warm"
+      >
         <div aria-hidden="true" className={styles.pendingPreview}>
           <span className={[styles.pendingBar, styles.pendingBarStrong].join(" ")} />
           <span className={styles.pendingBar} />
           <span className={[styles.pendingBar, styles.pendingBarShort].join(" ")} />
         </div>
-      </div>
+      </Panel>
     </div>
   );
 }
@@ -670,19 +678,7 @@ function getCurrentStepQuestion(
   }
 
   const selectedNeedType = getNeedTypeOption(values.needType, optionsByField);
-
-  switch (selectedNeedType?.focusAreaCode) {
-    case "extended_essay":
-      return "Which subject is your extended essay in?";
-    case "ia_feedback":
-      return "Which subject is the coursework for?";
-    case "oral_practice":
-      return "Which subject is the oral for?";
-    case "tok_essay":
-      return "This help is for TOK";
-    default:
-      return step.question;
-  }
+  return getMatchFlowSubjectQuestion(selectedNeedType?.focusAreaCode, step.question);
 }
 
 function getCurrentStepDescription(
@@ -696,17 +692,4 @@ function getCurrentStepDescription(
     focusAreaCode: selectedNeedType?.focusAreaCode,
     subjectCount: compatibleSubjectOptions.length,
   });
-}
-
-function getSubjectLegend(focusAreaCode?: string) {
-  switch (focusAreaCode) {
-    case "extended_essay":
-      return "EE subject";
-    case "ia_feedback":
-      return "Coursework subject";
-    case "oral_practice":
-      return "Oral subject";
-    default:
-      return "Subject";
-  }
 }

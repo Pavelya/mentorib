@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { NeedSummaryBar, PersonSummary } from "@/components/continuity";
 import { TimezoneNotice } from "@/components/datetime";
-import { InlineNotice, Panel, getButtonClassName } from "@/components/ui";
+import { Card, InlineNotice, Panel, Section, getButtonClassName } from "@/components/ui";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
@@ -87,14 +87,14 @@ export default async function BookingPage({
   return (
     <article className={styles.page}>
       <header className={styles.pageHeader}>
-        <section className={styles.hero}>
-          <p className={styles.eyebrow}>Booking handoff</p>
-          <h1 className={styles.title}>Confirm the lesson request before Stripe takes over.</h1>
-          <p className={styles.description}>
-            The tutor, need, schedule rules, and request expiry stay attached here so the
-            payment authorization step does not feel like a restart.
-          </p>
-        </section>
+        <Panel
+          className={styles.hero}
+          description="The tutor, need, schedule rules, and request expiry stay attached here so the payment authorization step does not feel like a restart."
+          eyebrow="Booking handoff"
+          title="Confirm the lesson request before Stripe takes over."
+          titleAs="h1"
+          titleClassName={styles.heroTitle}
+        />
 
         {bookingContext.need ? (
           <NeedSummaryBar
@@ -265,24 +265,24 @@ export default async function BookingPage({
             title="Booking summary"
             tone="raised"
           >
-            <div className={styles.summaryCard}>
+            <Section density="compact">
               <div className={styles.metricGrid}>
-                <div className={styles.metricCard}>
+                <Card>
                   <p className={styles.metricLabel}>Lesson length</p>
                   <p className={styles.metricValue}>
                     {bookingContext.sessionDurationMinutes} minutes
                   </p>
-                </div>
-                <div className={styles.metricCard}>
+                </Card>
+                <Card>
                   <p className={styles.metricLabel}>Authorization</p>
                   <p className={styles.metricValue}>
                     {bookingContext.priceLabel ?? "Pricing not ready"}
                   </p>
-                </div>
-                <div className={styles.metricCard}>
+                </Card>
+                <Card>
                   <p className={styles.metricLabel}>Current slot count</p>
                   <p className={styles.metricValue}>{bookingContext.slotOptions.length}</p>
-                </div>
+                </Card>
               </div>
 
               <ul className={styles.policyList}>
@@ -290,7 +290,7 @@ export default async function BookingPage({
                   <li key={line}>{line}</li>
                 ))}
               </ul>
-            </div>
+            </Section>
           </Panel>
 
           {bookingContext.tutor?.bestForSummary ? (

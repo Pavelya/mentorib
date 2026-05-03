@@ -30,7 +30,7 @@ import {
   type MatchResultCardDto,
   type MatchResultsPageDto,
 } from "@/modules/lessons/match-results";
-import { Panel, TabBar, getButtonClassName, InlineNotice } from "@/components/ui";
+import { Chip, Panel, TabBar, getButtonClassName, InlineNotice } from "@/components/ui";
 
 import styles from "./results.module.css";
 import { QueuedResultsRefresh } from "./queued-results-refresh";
@@ -210,7 +210,7 @@ function renderResultsPage({
       {results.state === "ready" || results.state === "preview" ? (
         <>
           {!hasNoMatchesState ? (
-            <section aria-label="Results controls" className={styles.controls}>
+            <Panel aria-label="Results controls" as="section" contentClassName={styles.controlsContent}>
               <div className={styles.controlGroup}>
                 <p className={styles.controlLabel}>Filter</p>
                 <TabBar
@@ -251,7 +251,7 @@ function renderResultsPage({
                   ]}
                 />
               </div>
-            </section>
+            </Panel>
           ) : null}
 
           {visibleMatches.length > 0 ? (
@@ -356,7 +356,9 @@ function NoMatchesState({ results }: { results: MatchResultsPageDto }) {
 
           <ul className={styles.noMatchesChips}>
             {copy.suggestions.map((suggestion) => (
-              <li key={suggestion}>{suggestion}</li>
+              <li key={suggestion}>
+                <Chip>{suggestion}</Chip>
+              </li>
             ))}
           </ul>
         </div>

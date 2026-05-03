@@ -3,59 +3,14 @@
   gap: var(--space-4);
 }
 
-.progressCard,
-.questionPanel,
-.helperPanel {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.92), rgb(252 250 244 / 0.9)),
-    var(--surface-panel);
-  box-shadow: var(--shadow-soft);
-}
-
-.eyebrow,
-.stepEyebrow {
+.eyebrow {
   margin: 0;
   color: var(--ink-500);
   font-family: var(--font-mono);
   font-size: var(--caption);
+  letter-spacing: 0.08em;
   line-height: var(--line-utility);
   text-transform: uppercase;
-}
-
-.eyebrow {
-  letter-spacing: 0.08em;
-}
-
-.progressCard,
-.questionPanel,
-.helperPanel {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5);
-}
-
-.questionPanel {
-  gap: var(--space-5);
-  padding: var(--space-6);
-}
-
-.progressCard h1,
-.helperPanel h3 {
-  margin: 0;
-  font-size: var(--title-lg);
-  line-height: var(--line-tight);
-}
-
-.helperPanel h3 {
-  font-size: var(--title-md);
-}
-
-.progressDescription,
-.helperPanel p {
-  margin: 0;
-  color: var(--ink-700);
 }
 
 .progressTopline {
@@ -78,6 +33,11 @@
   font-size: var(--body-sm);
   font-weight: 600;
   white-space: nowrap;
+}
+
+.progressDescription {
+  margin: 0;
+  color: var(--ink-700);
 }
 
 .progressTrack {
@@ -140,24 +100,13 @@
   align-items: start;
 }
 
-.helperPanel {
-  background:
-    linear-gradient(180deg, rgb(247 242 232 / 0.94), rgb(252 249 243 / 0.9)),
-    var(--surface-panel-soft);
-  gap: var(--space-3);
-}
-
-.helperNote {
-  color: var(--ink-500);
-  font-size: var(--body-sm);
-}
-
 .detailsGrid,
 .stackedGroups,
 .subjectStack {
   display: grid;
   gap: var(--space-3);
 }
+
 .actionRow {
   display: flex;
   justify-content: space-between;
@@ -180,42 +129,8 @@
   backdrop-filter: blur(6px);
 }
 
-.pendingCard {
-  display: grid;
-  gap: var(--space-3);
+.pendingPanel {
   width: min(100%, 32rem);
-  padding: var(--space-5);
-  border: 1px solid var(--state-warning-border);
-  border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgb(255 250 240 / 0.97), rgb(249 244 233 / 0.95)),
-    var(--surface-panel-soft);
-  box-shadow: var(--shadow-raised);
-}
-
-.pendingEyebrow {
-  margin: 0;
-  color: var(--ink-500);
-  font-family: var(--font-mono);
-  font-size: var(--caption);
-  letter-spacing: 0.08em;
-  line-height: var(--line-utility);
-  text-transform: uppercase;
-}
-
-.pendingTitle,
-.pendingDescription {
-  margin: 0;
-}
-
-.pendingTitle {
-  font-size: var(--title-md);
-  line-height: var(--line-tight);
-}
-
-.pendingDescription {
-  color: var(--ink-700);
-  line-height: var(--line-body);
 }
 
 .pendingPreview {
@@ -250,16 +165,6 @@
 }
 
 @media (max-width: 767px) {
-  .progressCard,
-  .helperPanel {
-    padding: var(--space-4);
-  }
-
-  .questionPanel {
-    gap: var(--space-4);
-    padding: var(--space-5) var(--space-4);
-  }
-
   .progressStepLabel {
     white-space: normal;
   }

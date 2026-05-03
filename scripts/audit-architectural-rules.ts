@@ -28,9 +28,7 @@ const SKIP_DIR_NAMES = new Set([
 // Pre-DS-cleanup files allowed to retain `.card` / `.chip` / `.panel` class
 // definitions until the matching `P1-DS-FOUND-001-D*` cleanup task lands.
 // Each entry must reference the cleanup task that will remove it.
-const CARD_CHIP_PANEL_ALLOWLIST = new Set<string>([
-  "src/app/(student)/results/loading.module.css", // remove with P1-DS-FOUND-001-D2
-]);
+const CARD_CHIP_PANEL_ALLOWLIST = new Set<string>([]);
 
 const CURRENCY_LITERAL_REGEX = /["'](USD|EUR|GBP|CAD|AUD)["']/;
 const SVG_REGEX = /<svg[\s>]/;

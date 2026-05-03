@@ -7,6 +7,37 @@ type MatchFlowCopyContext = {
   timezoneLabel?: string;
 };
 
+export function getMatchFlowSubjectLegend(focusAreaCode?: string) {
+  switch (focusAreaCode) {
+    case "extended_essay":
+      return "EE subject";
+    case "ia_feedback":
+      return "Coursework subject";
+    case "oral_practice":
+      return "Oral subject";
+    default:
+      return "Subject";
+  }
+}
+
+export function getMatchFlowSubjectQuestion(
+  focusAreaCode: string | undefined,
+  fallbackQuestion: string,
+) {
+  switch (focusAreaCode) {
+    case "extended_essay":
+      return "Which subject is your extended essay in?";
+    case "ia_feedback":
+      return "Which subject is the coursework for?";
+    case "oral_practice":
+      return "Which subject is the oral for?";
+    case "tok_essay":
+      return "This help is for TOK";
+    default:
+      return fallbackQuestion;
+  }
+}
+
 export const matchFlowStaticCopy = {
   detailsLabel: "Details",
   detailsQuestion: "What language should lessons use?",

@@ -13,15 +13,6 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.metricItem {
-  display: grid;
-  gap: var(--space-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 0.42);
-  padding: var(--space-4);
-}
-
 .metricValue {
   margin: 0;
   font-size: var(--title-lg);
@@ -50,18 +41,6 @@
 .issueList {
   display: grid;
   gap: var(--space-3);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.issueItem {
-  display: grid;
-  gap: var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 0.42);
-  padding: var(--space-4);
 }
 
 .issueHeader {

@@ -6,6 +6,7 @@ import {
   PersonSummary,
 } from "@/components/continuity";
 import {
+  Card,
   InlineNotice,
   Panel,
   StatusBadge,
@@ -281,58 +282,56 @@ function EarningsView({
         title={headline}
         description={description}
       >
-        <ul className={styles.checklist}>
-          <li className={styles.checklistItem}>
-            <div className={styles.checklistHeader}>
-              <p className={styles.checklistTitle}>Stripe Connect Express</p>
-              <StatusBadge tone={getChecklistStatusTone(checklistStatus)}>
-                {getChecklistStatusLabel(checklistStatus)}
-              </StatusBadge>
-            </div>
-            <p className={styles.checklistDescription}>
-              We pre-fill your name and email ({accountEmail}) when we create
-              your Stripe Connect Express account. Stripe collects only the
-              verification documents and bank account or debit card it needs
-              for your country.
+        <Card>
+          <div className={styles.checklistHeader}>
+            <p className={styles.checklistTitle}>Stripe Connect Express</p>
+            <StatusBadge tone={getChecklistStatusTone(checklistStatus)}>
+              {getChecklistStatusLabel(checklistStatus)}
+            </StatusBadge>
+          </div>
+          <p className={styles.checklistDescription}>
+            We pre-fill your name and email ({accountEmail}) when we create
+            your Stripe Connect Express account. Stripe collects only the
+            verification documents and bank account or debit card it needs
+            for your country.
+          </p>
+          {countryDisplayName ? (
+            <p className={styles.helperText}>
+              Payout country on file · {countryDisplayName}
             </p>
-            {countryDisplayName ? (
-              <p className={styles.helperText}>
-                Payout country on file · {countryDisplayName}
-              </p>
-            ) : null}
-            {earnings.payoutStatusSyncedAt ? (
-              <p className={styles.helperText}>
-                Last status sync · {formatUtcDateTime(earnings.payoutStatusSyncedAt)}
-              </p>
-            ) : null}
-            {requirements.length > 0 ? (
-              <ul className={styles.requirementsList}>
-                {requirements.map((requirement) => (
-                  <li key={requirement}>{describeRequirement(requirement)}</li>
-                ))}
-              </ul>
-            ) : null}
+          ) : null}
+          {earnings.payoutStatusSyncedAt ? (
+            <p className={styles.helperText}>
+              Last status sync · {formatUtcDateTime(earnings.payoutStatusSyncedAt)}
+            </p>
+          ) : null}
+          {requirements.length > 0 ? (
+            <ul className={styles.requirementsList}>
+              {requirements.map((requirement) => (
+                <li key={requirement}>{describeRequirement(requirement)}</li>
+              ))}
+            </ul>
+          ) : null}
 
-            {showStartForm ? (
-              <StartPayoutOnboardingForm
-                countryOptions={payoutSupportedCountries}
-                defaultCountry=""
-                disabled={setupBlocked}
-              />
-            ) : null}
+          {showStartForm ? (
+            <StartPayoutOnboardingForm
+              countryOptions={payoutSupportedCountries}
+              defaultCountry=""
+              disabled={setupBlocked}
+            />
+          ) : null}
 
-            {showResumeForm ? (
-              <ResumePayoutOnboardingForm
-                ctaLabel={
-                  earnings.payoutReadinessStatus === "restricted"
-                    ? "Resolve in Stripe"
-                    : "Continue Stripe setup"
-                }
-                disabled={setupBlocked}
-              />
-            ) : null}
-          </li>
-        </ul>
+          {showResumeForm ? (
+            <ResumePayoutOnboardingForm
+              ctaLabel={
+                earnings.payoutReadinessStatus === "restricted"
+                  ? "Resolve in Stripe"
+                  : "Continue Stripe setup"
+              }
+              disabled={setupBlocked}
+            />
+          ) : null}
+        </Card>
       </Panel>
 
       <Panel
@@ -340,37 +339,37 @@ function EarningsView({
         title="Captured lesson payments"
         description="Each cycle reflects lessons that were completed and captured. Stripe Connect Express pays out on the rolling default schedule for your country once your account is enabled."
       >
-        <ul className={styles.summaryRow}>
-          <li className={styles.summaryItem}>
+        <div className={styles.summaryRow}>
+          <Card>
             <p className={styles.summaryLabel}>Captured lessons</p>
             <p className={styles.summaryValue}>{earnings.totalLessonCount}</p>
-          </li>
-          <li className={styles.summaryItem}>
+          </Card>
+          <Card>
             <p className={styles.summaryLabel}>Lifetime captured</p>
             <p className={styles.summaryValue}>
               {earnings.totalEarningsLabel.length > 0
                 ? earnings.totalEarningsLabel
                 : "—"}
             </p>
-          </li>
-        </ul>
+          </Card>
+        </div>
 
         {earnings.monthlySummary.length === 0 ? (
           <p className={styles.helperText}>
             Earnings appear here once a captured lesson is completed.
           </p>
         ) : (
-          <ul className={styles.monthList}>
+          <div className={styles.monthList}>
             {earnings.monthlySummary.map((bucket) => (
-              <li className={styles.monthItem} key={bucket.monthStartIso}>
+              <Card key={bucket.monthStartIso}>
                 <p className={styles.monthLabel}>{bucket.monthLabel}</p>
                 <p className={styles.monthDetail}>
                   {bucket.lessonCount} captured lesson
                   {bucket.lessonCount === 1 ? "" : "s"} · {bucket.earningsLabel}
                 </p>
-              </li>
+              </Card>
             ))}
-          </ul>
+          </div>
         )}
       </Panel>
     </article>

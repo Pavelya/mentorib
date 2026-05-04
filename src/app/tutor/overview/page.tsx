@@ -10,6 +10,7 @@ import {
 } from "@/components/continuity";
 import { TimezoneNotice } from "@/components/datetime";
 import {
+  Card,
   InlineNotice,
   StatusBadge,
   getButtonClassName,
@@ -204,7 +205,7 @@ function renderOverviewPage({
         </InlineNotice>
       ) : null}
 
-      <ul className={styles.metricRow}>
+      <div className={styles.metricRow}>
         <MetricItem
           label="Pending requests"
           value={overview.metrics.pendingRequestCount}
@@ -217,7 +218,7 @@ function renderOverviewPage({
           label="Open issues"
           value={overview.metrics.openIssueCount}
         />
-      </ul>
+      </div>
 
       <PendingRequestsSection
         lessons={overview.pendingRequests}
@@ -236,10 +237,10 @@ function renderOverviewPage({
 
 function MetricItem({ label, value }: { label: string; value: number }) {
   return (
-    <li className={styles.metricItem}>
+    <Card>
       <p className={styles.metricValue}>{value}</p>
       <p className={styles.metricLabel}>{label}</p>
-    </li>
+    </Card>
   );
 }
 
@@ -438,14 +439,10 @@ function OpenIssuesSection({
   }
 
   return (
-    <section>
-      <ul className={styles.issueList}>
-        {issues.map((issue) => (
-          <li className={styles.issueItem} key={issue.id}>
-            <OpenIssueRow issue={issue} timezone={timezone} />
-          </li>
-        ))}
-      </ul>
+    <section className={styles.issueList}>
+      {issues.map((issue) => (
+        <OpenIssueRow issue={issue} key={issue.id} timezone={timezone} />
+      ))}
     </section>
   );
 }
@@ -463,7 +460,7 @@ function OpenIssueRow({
   });
 
   return (
-    <>
+    <Card>
       <div className={styles.issueHeader}>
         <p className={styles.issueTitle}>{getIssueTypeLabel(issue.issueType)}</p>
         <StatusBadge tone="warning">
@@ -488,6 +485,6 @@ function OpenIssueRow({
           Open lesson
         </Link>
       </div>
-    </>
+    </Card>
   );
 }

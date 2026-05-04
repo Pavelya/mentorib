@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { LessonSummary, PersonSummary, ScreenState } from "@/components/continuity";
 import { TimezoneNotice } from "@/components/datetime";
-import { InlineNotice, getButtonClassName } from "@/components/ui";
+import { InlineNotice, Section, getButtonClassName } from "@/components/ui";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
@@ -211,24 +211,14 @@ function LessonGroup({
     }
 
     return (
-      <section className={styles.group}>
-        <header className={styles.groupHeader}>
-          <h2 className={styles.groupTitle}>{title}</h2>
-          <p className={styles.groupSubtitle}>{subtitle}</p>
-        </header>
-
+      <Section description={subtitle} title={title}>
         <ScreenState description={emptyDescription} kind="empty" title={emptyTitle} />
-      </section>
+      </Section>
     );
   }
 
   return (
-    <section className={styles.group}>
-      <header className={styles.groupHeader}>
-        <h2 className={styles.groupTitle}>{title}</h2>
-        <p className={styles.groupSubtitle}>{subtitle}</p>
-      </header>
-
+    <Section description={subtitle} title={title}>
       <ul className={styles.lessonList}>
         {lessons.map((lesson) => (
           <li className={styles.lessonItem} key={lesson.id}>
@@ -240,7 +230,7 @@ function LessonGroup({
           </li>
         ))}
       </ul>
-    </section>
+    </Section>
   );
 }
 

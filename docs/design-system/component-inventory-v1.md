@@ -95,7 +95,14 @@ Cleared in `P1-DS-FOUND-001-D2`:
 
 ### 6.3 `D3` — Tutor route family (`src/app/tutor/**`)
 
-- audit each tutor route for repeated card / chip / panel patterns; route-local CSS modules in this family are currently slim, but adoption of `Card`, `Chip`, and `Section` should be enforced as new tutor surfaces fill in (`tutor/lessons`, `tutor/schedule`, `tutor/students`, `tutor/earnings`, `tutor/overview`, `tutor/messages`).
+Cleared in `P1-DS-FOUND-001-D3`:
+
+- `src/app/tutor/overview/overview.module.css` — `.metricItem` and `.issueItem` bordered surfaces removed; the overview page now renders the metric tiles and open-issue rows through `Card`
+- `src/app/tutor/lessons/lessons.module.css` — `.group`, `.groupHeader`, `.groupTitle`, `.groupSubtitle` rules removed; the lesson groups (Pending requests, Upcoming lessons, Past lessons) now use `Section` with `title`/`description` for header rhythm
+- `src/app/tutor/schedule/schedule.module.css` — `.ruleItem` border + radius + background and `.addRuleForm` dashed-border surface chrome removed; weekly availability rows render through `Card` and the add-rule form is wrapped in `Card`
+- `src/app/tutor/earnings/earnings.module.css` — `.summaryItem`, `.checklistItem`, `.monthItem` bordered surfaces removed; the earnings summary tiles, payout-readiness checklist row, and monthly earnings list now consume `Card`
+- `/tutor/lessons/[id]` and `/tutor/messages` already consumed `Panel`, `Section`, `Chip`, `StatusBadge`, and `ConversationShell` end-to-end at task entry, so no markup migration was needed
+- `/tutor/students` is a `RoutePlaceholder` reserved for Phase 1.5 and ships no route-local CSS
 
 ### 6.4 `D4` — Account and setup route families (`src/app/(account)/**`, `src/app/setup/**`)
 

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { Button, InlineNotice, SelectField, TextField } from "@/components/ui";
+import { Button, Card, InlineNotice, SelectField, TextField } from "@/components/ui";
 import {
   getDayOfWeekLabel,
   type TutorScheduleAvailabilityRuleDto,
@@ -42,9 +42,9 @@ export function AvailabilityRulesEditor({
           lesson requests.
         </p>
       ) : (
-        <ul className={styles.ruleList}>
+        <div className={styles.ruleList}>
           {rules.map((rule) => (
-            <li className={styles.ruleItem} key={rule.id}>
+            <Card className={styles.ruleItem} key={rule.id}>
               <div className={styles.ruleHeader}>
                 <p className={styles.ruleDay}>
                   {getDayOfWeekLabel(rule.dayOfWeek)}
@@ -60,9 +60,9 @@ export function AvailabilityRulesEditor({
                 <input name="ruleId" type="hidden" value={rule.id} />
                 <RemoveButton disabled={disabled} />
               </form>
-            </li>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
 
       <AddRuleForm disabled={disabled} />
@@ -105,78 +105,80 @@ function AddRuleFormBody({
   const [values, setValues] = useState(state.values);
 
   return (
-    <form action={action} className={styles.addRuleForm}>
-      {state.message ? (
-        <InlineNotice
-          title={
-            state.code === "success" ? "Window added" : "Please review the form"
-          }
-          tone={state.code === "success" ? "success" : "actionNeeded"}
-        >
-          <p>{state.message}</p>
-        </InlineNotice>
-      ) : null}
+    <Card>
+      <form action={action} className={styles.addRuleForm}>
+        {state.message ? (
+          <InlineNotice
+            title={
+              state.code === "success" ? "Window added" : "Please review the form"
+            }
+            tone={state.code === "success" ? "success" : "actionNeeded"}
+          >
+            <p>{state.message}</p>
+          </InlineNotice>
+        ) : null}
 
-      <div className={styles.addRuleFields}>
-        <SelectField
-          disabled={disabled}
-          error={state.fieldErrors.dayOfWeek}
-          label="Day"
-          name="dayOfWeek"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              dayOfWeek: event.target.value,
-            }))
-          }
-          required
-          value={values.dayOfWeek}
-        >
-          <option value="">Select day</option>
-          {DAY_OPTIONS.map((day) => (
-            <option key={day} value={day}>
-              {getDayOfWeekLabel(day)}
-            </option>
-          ))}
-        </SelectField>
+        <div className={styles.addRuleFields}>
+          <SelectField
+            disabled={disabled}
+            error={state.fieldErrors.dayOfWeek}
+            label="Day"
+            name="dayOfWeek"
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                dayOfWeek: event.target.value,
+              }))
+            }
+            required
+            value={values.dayOfWeek}
+          >
+            <option value="">Select day</option>
+            {DAY_OPTIONS.map((day) => (
+              <option key={day} value={day}>
+                {getDayOfWeekLabel(day)}
+              </option>
+            ))}
+          </SelectField>
 
-        <TextField
-          disabled={disabled}
-          error={state.fieldErrors.startLocalTime}
-          label="Start"
-          name="startLocalTime"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              startLocalTime: event.target.value,
-            }))
-          }
-          required
-          type="time"
-          value={values.startLocalTime}
-        />
+          <TextField
+            disabled={disabled}
+            error={state.fieldErrors.startLocalTime}
+            label="Start"
+            name="startLocalTime"
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                startLocalTime: event.target.value,
+              }))
+            }
+            required
+            type="time"
+            value={values.startLocalTime}
+          />
 
-        <TextField
-          disabled={disabled}
-          error={state.fieldErrors.endLocalTime}
-          label="End"
-          name="endLocalTime"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              endLocalTime: event.target.value,
-            }))
-          }
-          required
-          type="time"
-          value={values.endLocalTime}
-        />
-      </div>
+          <TextField
+            disabled={disabled}
+            error={state.fieldErrors.endLocalTime}
+            label="End"
+            name="endLocalTime"
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                endLocalTime: event.target.value,
+              }))
+            }
+            required
+            type="time"
+            value={values.endLocalTime}
+          />
+        </div>
 
-      <div className={styles.formActions}>
-        <AddButton disabled={disabled} />
-      </div>
-    </form>
+        <div className={styles.formActions}>
+          <AddButton disabled={disabled} />
+        </div>
+      </form>
+    </Card>
   );
 }
 

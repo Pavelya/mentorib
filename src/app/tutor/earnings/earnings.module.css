@@ -13,15 +13,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.summaryItem {
-  display: grid;
-  gap: var(--space-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 0.42);
-  padding: var(--space-4);
-}
-
 .summaryLabel {
   margin: 0;
   color: var(--ink-500);
@@ -40,23 +31,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-3);
-}
-
-.checklist {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-3);
-}
-
-.checklistItem {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 0.42);
 }
 
 .checklistHeader {
@@ -99,20 +73,8 @@
 }
 
 .monthList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: grid;
   gap: var(--space-2);
-}
-
-.monthItem {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 0.42);
 }
 
 .monthLabel {

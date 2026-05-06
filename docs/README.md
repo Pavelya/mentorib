@@ -106,6 +106,8 @@ If you want the shortest path through the pack:
 - `docs/design-system/component-specs-phase2-v1.md`
 - `docs/design-system/design-system-spec-final-v1.md`
 - `docs/design-system/design-system-spec-final-review-guide-v1.md`
+- `docs/design-system/component-inventory-v1.md`
+- `docs/design-system/tokens-cheatsheet-v1.md`
 
 ### Hi-fi visual work
 

@@ -1,6 +1,6 @@
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
-import { Button, InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import { Button, Card, InlineNotice, Panel, StatusBadge } from "@/components/ui";
 import { formatUtcDateTime } from "@/lib/datetime/format";
 import {
   getSharedAccountRouteContext,
@@ -54,18 +54,18 @@ export default async function NotificationsPage() {
           tone="raised"
         >
           <div className={styles.metricGrid}>
-            <div className={styles.metricCard}>
+            <Card>
               <p className={styles.metricValue}>{notifications.length}</p>
               <p className={styles.metricLabel}>Visible product updates</p>
-            </div>
-            <div className={styles.metricCard}>
+            </Card>
+            <Card>
               <p className={styles.metricValue}>{unreadCount}</p>
               <p className={styles.metricLabel}>Unread updates</p>
-            </div>
-            <div className={styles.metricCard}>
+            </Card>
+            <Card>
               <p className={styles.metricValue}>{legalUpdateCount}</p>
               <p className={styles.metricLabel}>Legal notices retained here</p>
-            </div>
+            </Card>
           </div>
         </Panel>
 
@@ -98,9 +98,9 @@ export default async function NotificationsPage() {
           </form>
         ) : null}
         {notifications.length > 0 ? (
-          <ul className={styles.list}>
+          <div className={styles.list}>
             {notifications.map((notification) => (
-              <li className={styles.listItem} key={notification.id}>
+              <Card key={notification.id}>
                 <div className={styles.itemHeader}>
                   <div className={styles.itemCopy}>
                     <h3 className={styles.itemTitle}>{notification.title}</h3>
@@ -165,9 +165,9 @@ export default async function NotificationsPage() {
                     </form>
                   )}
                 </div>
-              </li>
+              </Card>
             ))}
-          </ul>
+          </div>
         ) : (
           <div className={styles.emptyState}>
             <p className={styles.bodyText}>

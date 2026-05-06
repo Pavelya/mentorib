@@ -7,11 +7,7 @@ import {
   selectSetupRoleAction,
   type RoleSelectionActionState,
 } from "@/app/setup/role/actions";
-import {
-  Icon,
-  InlineNotice,
-  getButtonClassName,
-} from "@/components/ui";
+import { Card, Icon, InlineNotice } from "@/components/ui";
 import type { SetupRoleSelection } from "@/lib/auth/account-service";
 
 import styles from "./role-selection.module.css";
@@ -82,7 +78,7 @@ function RoleOptionForm({ action, isSelected, option }: RoleOptionFormProps) {
   return (
     <form action={action}>
       <input name="role" type="hidden" value={option.role} />
-      <RoleSubmitButton
+      <RoleSubmitTile
         isSelected={isSelected}
         label={option.title}
         role={option.role}
@@ -91,7 +87,7 @@ function RoleOptionForm({ action, isSelected, option }: RoleOptionFormProps) {
   );
 }
 
-function RoleSubmitButton({
+function RoleSubmitTile({
   isSelected,
   label,
   role,
@@ -103,29 +99,23 @@ function RoleSubmitButton({
   const { pending } = useFormStatus();
 
   return (
-    <button
+    <Card
       aria-busy={pending}
       aria-label={label}
-      className={getButtonClassName({
-        className: [styles.roleOption, isSelected ? styles.selected : ""]
-          .filter(Boolean)
-          .join(" "),
-        fullWidth: true,
-        variant: "secondary",
-      })}
+      as="button"
       disabled={pending}
+      fullWidth
+      selected={isSelected}
       type="submit"
+      variant="instantSubmit"
     >
-      <RoleIcon role={role} />
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function RoleIcon({ role }: { role: SetupRoleSelection }) {
-  return (
-    <span aria-hidden="true" className={styles.optionIcon}>
-      <Icon name={role === "student" ? "studentRole" : "tutorRole"} />
-    </span>
+      <span aria-hidden="true" className={styles.roleIcon}>
+        <Icon
+          name={role === "student" ? "studentRole" : "tutorRole"}
+          size={68}
+        />
+      </span>
+      <span className={styles.roleLabel}>{label}</span>
+    </Card>
   );
 }

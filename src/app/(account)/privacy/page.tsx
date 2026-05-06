@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
-import { getButtonClassName, InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import { Card, getButtonClassName, InlineNotice, Panel, StatusBadge } from "@/components/ui";
 import { getSafeRedirectPath } from "@/lib/auth/allowed-redirects";
 import { formatUtcDate, formatUtcDateTime } from "@/lib/datetime/format";
 import { getSharedAccountRouteContext } from "@/modules/accounts/shared-account";
@@ -133,26 +133,26 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
           tone="mist"
         >
           <div className={styles.detailGrid}>
-            <div className={styles.detailCard}>
+            <Card>
               <p className={styles.detailLabel}>Account email</p>
               <p className={styles.detailValue}>{context.account.email}</p>
-            </div>
-            <div className={styles.detailCard}>
+            </Card>
+            <Card>
               <p className={styles.detailLabel}>Local timezone</p>
               <p className={styles.detailValue}>{context.account.timezone}</p>
-            </div>
-            <div className={styles.detailCard}>
+            </Card>
+            <Card>
               <p className={styles.detailLabel}>Legal updates</p>
               <p className={styles.detailValue}>
                 Terms and privacy broadcasts stay visible here and in Notifications.
               </p>
-            </div>
-            <div className={styles.detailCard}>
+            </Card>
+            <Card>
               <p className={styles.detailLabel}>Deferred controls</p>
               <p className={styles.detailValue}>
                 Delete-account, export, and advanced preferences ship in later phases.
               </p>
-            </div>
+            </Card>
           </div>
         </Panel>
 
@@ -161,18 +161,18 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
           title="Current notice state"
         >
           <div className={styles.metricGrid}>
-            <div className={styles.metricCard}>
+            <Card>
               <p className={styles.metricValue}>{notices.length}</p>
               <p className={styles.metricLabel}>Published legal notices</p>
-            </div>
-            <div className={styles.metricCard}>
+            </Card>
+            <Card>
               <p className={styles.metricValue}>{pendingCount}</p>
               <p className={styles.metricLabel}>Updates still needing review</p>
-            </div>
-            <div className={styles.metricCard}>
+            </Card>
+            <Card>
               <p className={styles.metricValue}>{acknowledgementCount}</p>
               <p className={styles.metricLabel}>Notices with acknowledgement tracking</p>
-            </div>
+            </Card>
           </div>
         </Panel>
       </section>
@@ -182,16 +182,11 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
         title="Published legal notice history"
       >
         {notices.length > 0 ? (
-          <ul className={styles.list}>
+          <div className={styles.list}>
             {notices.map((notice) => (
-              <li
-                className={[
-                  styles.listItem,
-                  highlightedNotice?.id === notice.id ? styles.selectedItem : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+              <Card
                 key={notice.id}
+                selected={highlightedNotice?.id === notice.id}
               >
                 <div className={styles.itemHeader}>
                   <div className={styles.itemCopy}>
@@ -230,9 +225,9 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
                     Open document
                   </a>
                 </div>
-              </li>
+              </Card>
             ))}
-          </ul>
+          </div>
         ) : (
           <div className={styles.emptyState}>
             <p className={styles.bodyText}>

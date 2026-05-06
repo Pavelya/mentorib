@@ -1,6 +1,6 @@
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
-import { InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import { Card, InlineNotice, Panel, StatusBadge } from "@/components/ui";
 import { formatUtcDateTime } from "@/lib/datetime/format";
 import {
   getSharedAccountRouteContext,
@@ -56,7 +56,7 @@ export default async function BillingPage() {
           tone="raised"
         >
           <div className={styles.metricGrid}>
-            <div className={styles.metricCard}>
+            <Card>
               <p className={styles.metricValue}>
                 {formatCurrency(
                   capturedTotal,
@@ -64,15 +64,15 @@ export default async function BillingPage() {
                 )}
               </p>
               <p className={styles.metricLabel}>Captured or refunded value</p>
-            </div>
-            <div className={styles.metricCard}>
+            </Card>
+            <Card>
               <p className={styles.metricValue}>{authorizedCount}</p>
               <p className={styles.metricLabel}>Authorizations awaiting capture</p>
-            </div>
-            <div className={styles.metricCard}>
+            </Card>
+            <Card>
               <p className={styles.metricValue}>{refundedCount}</p>
               <p className={styles.metricLabel}>Refunded payments</p>
-            </div>
+            </Card>
           </div>
         </Panel>
 
@@ -98,9 +98,9 @@ export default async function BillingPage() {
         title="Recent billing activity"
       >
         {billingEntries.length > 0 ? (
-          <ul className={styles.list}>
+          <div className={styles.list}>
             {billingEntries.map((entry) => (
-              <li className={styles.listItem} key={entry.id}>
+              <Card key={entry.id}>
                 <div className={styles.itemHeader}>
                   <div className={styles.itemCopy}>
                     <h3 className={styles.itemTitle}>Lesson payment</h3>
@@ -136,9 +136,9 @@ export default async function BillingPage() {
                     })}
                   </p>
                 ) : null}
-              </li>
+              </Card>
             ))}
-          </ul>
+          </div>
         ) : (
           <div className={styles.emptyState}>
             <p className={styles.bodyText}>

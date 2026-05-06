@@ -106,12 +106,11 @@ Cleared in `P1-DS-FOUND-001-D3`:
 
 ### 6.4 `D4` — Account and setup route families (`src/app/(account)/**`, `src/app/setup/**`)
 
-- `src/app/(account)/account-surfaces.module.css`
-  - `.panelGrid`, `.summaryGrid`, `.metricGrid` → keep as layout grids; verify each consumes `Panel`/`Section`/`Card` rather than ad-hoc bordered boxes
-  - `.detailCard`, `.metricCard`, `.listItem`, `.routeItem` → migrate to `Card` (`static`) variant
-  - `.profileSectionList`, `.profileSectionRow`, `.profileSectionHeader`, `.profileSectionContent`, `.sectionNote` → migrate to `Section` with `divider="bottom"` rhythm
-- `src/app/setup/role/role-selection.module.css`
-  - `.roleOption` (button-shaped tile with hover and selected states) → migrate to `Card` (`instantSubmit`) with `as="button"`
+Cleared in `P1-DS-FOUND-001-D4`:
+
+- `src/app/(account)/account-surfaces.module.css` — `.detailCard`, `.metricCard`, `.listItem`, `.routeItem`, `.selectedItem` bordered surfaces removed; the billing snapshot, notification summary, privacy snapshot, billing/notification/privacy lists, and notice history now consume `Card` (`static`). `.profileSectionList`, `.profileSectionRow`, `.profileSectionHeader`, `.profileSectionContent` row pattern removed; the settings profile form now uses `Section` with `divider="bottom"` rhythm. Unused row helpers (`.shortcutList`, `.shortcutItem`, `.statusList`, `.statusRow`, `.routeList`, `.routeItem`, `.primaryStack`, `.sideStack`, `.panelGrid`, `.identityRow`, `.identityCopy`, `.eyebrow`, `.settingLabel`) dropped at the same time.
+- `src/app/(account)/settings/page.tsx` — inline `buildRoleBadges` / `getRoleTone` helpers moved to `src/modules/accounts/role-badges.ts` as `buildAccountRoleBadges`, exposing typed `AccountRoleBadge` shapes consumed by the settings profile form.
+- `src/app/setup/role/role-selection.module.css` — `.roleOption`, `.selected`, and `.optionIcon` route-local card chrome removed; the role-selection tiles now render through `Card` (`instantSubmit`) with `as="button"` and `selected`.
 
 ### 6.5 `D5` — Internal route family (`src/app/internal/**`)
 

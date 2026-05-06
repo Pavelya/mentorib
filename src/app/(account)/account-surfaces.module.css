@@ -43,32 +43,18 @@
   max-width: 48rem;
 }
 
-.primaryStack,
-.sideStack {
-  display: grid;
-  gap: var(--space-6);
-}
-
 .summaryGrid,
-.panelGrid,
 .metricGrid {
   display: grid;
   gap: var(--space-6);
 }
 
-.summaryGrid,
-.panelGrid {
+.summaryGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .metricGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.identityRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
 }
 
 .profileAvatar {
@@ -94,12 +80,6 @@
   gap: var(--space-2);
 }
 
-.identityCopy {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
 .identityHeadingRow {
   display: flex;
   flex-wrap: wrap;
@@ -118,105 +98,11 @@
   border-top: 1px solid var(--border-subtle);
 }
 
-.profileSectionRow {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.profileSectionHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-3);
-}
-
-.profileSectionContent {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.shortcutList,
-.statusList {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.shortcutList {
-  border-top: 1px solid var(--border-subtle);
-}
-
-.shortcutItem,
-.statusRow {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4) 0;
-}
-
-.shortcutItem {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.statusRow + .statusRow {
-  border-top: 1px solid var(--border-subtle);
-}
-
-.shortcutCopy,
-.statusCopy {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.settingLabel,
-.statusLabel {
-  margin: 0;
-  color: var(--ink-500);
-  font-size: var(--caption);
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
-  line-height: var(--line-utility);
-  text-transform: uppercase;
-}
-
 .settingValue {
   margin: 0;
   font-size: var(--body-md);
   font-weight: 600;
   line-height: var(--line-tight);
-}
-
-.shortcutDescription,
-.statusHint {
-  margin: 0;
-  color: var(--ink-500);
-  font-size: var(--body-sm);
-}
-
-.shortcutTitle,
-.statusValue {
-  margin: 0;
-  font-size: var(--body-md);
-  font-weight: 600;
-  line-height: var(--line-tight);
-}
-
-.shortcutLink {
-  color: var(--forest-600);
-  font-size: var(--body-sm);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.shortcutLink:hover,
-.inlineLink:hover {
-  color: var(--forest-700);
 }
 
 .sectionNote {
@@ -230,16 +116,6 @@
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-3);
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--ink-500);
-  font-family: var(--font-mono);
-  font-size: var(--caption);
-  letter-spacing: 0.08em;
-  line-height: var(--line-utility);
-  text-transform: uppercase;
 }
 
 .bodyText,
@@ -271,26 +147,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.detailCard,
-.metricCard,
-.listItem,
-.routeItem {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 0.42);
-}
-
-.detailCard,
-.metricCard,
-.routeItem {
-  padding: var(--space-4);
-}
-
-.detailCard {
-  display: grid;
-  gap: var(--space-2);
-}
-
 .detailLabel {
   margin: 0;
   color: var(--ink-500);
@@ -302,8 +158,7 @@
 
 .detailValue,
 .metricValue,
-.itemTitle,
-.routeTitle {
+.itemTitle {
   margin: 0;
   color: var(--ink-900);
 }
@@ -311,11 +166,6 @@
 .detailValue {
   font-size: var(--body-md);
   line-height: var(--line-body);
-}
-
-.metricCard {
-  display: grid;
-  gap: var(--space-2);
 }
 
 .metricValue {
@@ -329,24 +179,12 @@
   font-size: var(--body-sm);
 }
 
-.list,
-.routeList {
+.list {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
   gap: var(--space-3);
-}
-
-.listItem {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
-}
-
-.selectedItem {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-soft);
 }
 
 .itemHeader {
@@ -361,25 +199,18 @@
   gap: var(--space-2);
 }
 
-.itemTitle,
-.routeTitle {
+.itemTitle {
   font-size: var(--body-md);
   line-height: var(--line-tight);
-}
-
-.routeItem {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.routeDescription {
-  margin: 0;
-  color: var(--ink-700);
 }
 
 .inlineLink {
   color: var(--forest-600);
   font-weight: 600;
+}
+
+.inlineLink:hover {
+  color: var(--forest-700);
 }
 
 .emptyState {
@@ -389,14 +220,12 @@
 
 @media (max-width: 767px) {
   .summaryGrid,
-  .panelGrid,
   .metricGrid,
   .detailGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .itemHeader,
-  .identityRow {
+  .itemHeader {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -404,10 +233,6 @@
   .profileAvatar {
     width: 4.5rem;
     height: 4.5rem;
-  }
-
-  .shortcutItem {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .formActions {

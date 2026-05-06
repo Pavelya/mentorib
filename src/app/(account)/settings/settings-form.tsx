@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -8,6 +7,7 @@ import {
   Button,
   InlineNotice,
   OptionCardGroup,
+  Section,
   StatusBadge,
   TextField,
 } from "@/components/ui";
@@ -15,6 +15,7 @@ import {
   emptyAccountProfileFormValues,
   type AccountProfileFormValues,
 } from "@/modules/accounts/profile-settings";
+import type { AccountRoleBadge } from "@/modules/accounts/role-badges";
 import type { MatchLanguageOption } from "@/modules/lessons/match-flow-options";
 
 import { AccountAvatarUpload } from "./account-avatar-upload";
@@ -27,10 +28,7 @@ type SettingsProfileFormProps = {
   initialFullName: string;
   initialPreferredLanguageCode: string;
   languageOptions: readonly MatchLanguageOption[];
-  roleBadges: readonly {
-    label: string;
-    tone: React.ComponentProps<typeof StatusBadge>["tone"];
-  }[];
+  roleBadges: readonly AccountRoleBadge[];
   timezone: string;
 };
 
@@ -126,66 +124,56 @@ function SettingsProfileFormBody({
       </div>
 
       <div className={styles.profileSectionList}>
-        <SettingsSection label="Profile photo">
-          <div className={styles.profileSectionContent}>
-            <AccountAvatarUpload
-              avatarName={displayName}
-              initialAvatarUrl={avatarUrl ?? null}
-            />
-          </div>
-        </SettingsSection>
+        <Section divider="bottom" eyebrow="Profile photo">
+          <AccountAvatarUpload
+            avatarName={displayName}
+            initialAvatarUrl={avatarUrl ?? null}
+          />
+        </Section>
 
-        <SettingsSection label="Full name">
-          <div className={styles.profileSectionContent}>
-            <TextField
-              autoComplete="name"
-              error={serverState.fieldErrors.fullName}
-              label={<span className={styles.srOnly}>Full name</span>}
-              maxLength={120}
-              name="fullName"
-              onChange={(event) =>
-                setValues((currentValues) => ({
-                  ...currentValues,
-                  fullName: event.target.value,
-                }))
-              }
-              placeholder="Enter your full name"
-              required
-              value={values.fullName}
-            />
-          </div>
-        </SettingsSection>
+        <Section divider="bottom" eyebrow="Full name">
+          <TextField
+            autoComplete="name"
+            error={serverState.fieldErrors.fullName}
+            label={<span className={styles.srOnly}>Full name</span>}
+            maxLength={120}
+            name="fullName"
+            onChange={(event) =>
+              setValues((currentValues) => ({
+                ...currentValues,
+                fullName: event.target.value,
+              }))
+            }
+            placeholder="Enter your full name"
+            required
+            value={values.fullName}
+          />
+        </Section>
 
-        <SettingsSection label="Email">
-          <div className={styles.profileSectionContent}>
-            <p className={styles.settingValue}>{email}</p>
-          </div>
-        </SettingsSection>
+        <Section divider="bottom" eyebrow="Email">
+          <p className={styles.settingValue}>{email}</p>
+        </Section>
 
-        <SettingsSection label="Preferred lesson language">
-          <div className={styles.profileSectionContent}>
-            <OptionCardGroup
-              error={serverState.fieldErrors.preferredLanguageCode}
-              hideLegend
-              legend="Preferred lesson language"
-              name="preferredLanguageCode"
-              onChange={(preferredLanguageCode) =>
-                setValues((currentValues) => ({
-                  ...currentValues,
-                  preferredLanguageCode,
-                }))
-              }
-              options={languageOptions}
-              value={values.preferredLanguageCode}
-            />
-          </div>
-        </SettingsSection>
+        <Section divider="bottom" eyebrow="Preferred lesson language">
+          <OptionCardGroup
+            error={serverState.fieldErrors.preferredLanguageCode}
+            hideLegend
+            legend="Preferred lesson language"
+            name="preferredLanguageCode"
+            onChange={(preferredLanguageCode) =>
+              setValues((currentValues) => ({
+                ...currentValues,
+                preferredLanguageCode,
+              }))
+            }
+            options={languageOptions}
+            value={values.preferredLanguageCode}
+          />
+        </Section>
 
-        <SettingsSection label="Timezone">
-          <div className={styles.profileSectionContent}>
-            <p className={styles.settingValue}>{timezone}</p>
-          </div>
-        </SettingsSection>
+        <Section divider="bottom" eyebrow="Timezone">
+          <p className={styles.settingValue}>{timezone}</p>
+        </Section>
       </div>
 
       <div className={styles.formActions}>
@@ -202,23 +190,6 @@ function SaveButton() {
     <Button disabled={pending} type="submit">
       {pending ? "Saving changes" : "Save changes"}
     </Button>
-  );
-}
-
-function SettingsSection({
-  children,
-  label,
-}: {
-  children: ReactNode;
-  label: string;
-}) {
-  return (
-    <section className={styles.profileSectionRow}>
-      <div className={styles.profileSectionHeader}>
-        <p className={styles.settingLabel}>{label}</p>
-      </div>
-      {children}
-    </section>
   );
 }
 

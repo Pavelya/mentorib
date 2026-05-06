@@ -1,6 +1,7 @@
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
 import { Panel } from "@/components/ui";
+import { buildAccountRoleBadges } from "@/modules/accounts/role-badges";
 import { getSharedAccountRouteContext } from "@/modules/accounts/shared-account";
 import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
@@ -15,7 +16,7 @@ export default async function SettingsPage() {
   }
 
   const { account, pendingLegalNotice } = context;
-  const roleBadges = buildRoleBadges(account);
+  const roleBadges = buildAccountRoleBadges(account);
   const optionsByField = await loadDiscoveryOptions();
   const languageOptions = optionsByField.languageCode;
   const initialPreferredLanguageCode = resolveInitialPreferredLanguageCode(
@@ -49,63 +50,6 @@ export default async function SettingsPage() {
       </section>
     </div>
   );
-}
-
-function buildRoleBadges(account: {
-  primary_role_context: "admin" | "student" | "tutor" | null;
-  roles: readonly {
-    role: "admin" | "student" | "tutor";
-    role_status: "active" | "pending" | "revoked" | "suspended";
-  }[];
-}) {
-  const visibleRoles = account.roles.filter((role) => role.role_status !== "revoked");
-
-  if (visibleRoles.length === 0) {
-    if (account.primary_role_context === "student") {
-      return [{ label: "Student", tone: "info" }] as const;
-    }
-
-    if (account.primary_role_context === "tutor") {
-      return [{ label: "Tutor", tone: "info" }] as const;
-    }
-
-    return [] as const;
-  }
-
-  return visibleRoles.map((role) => {
-    if (role.role === "student") {
-      return {
-        label: role.role_status === "pending" ? "Student setup" : "Student",
-        tone: getRoleTone(role.role_status),
-      } as const;
-    }
-
-    if (role.role === "tutor") {
-      return {
-        label: role.role_status === "pending" ? "Tutor application" : "Tutor",
-        tone: getRoleTone(role.role_status),
-      } as const;
-    }
-
-    return {
-      label: "Admin",
-      tone: getRoleTone(role.role_status),
-    } as const;
-  });
-}
-
-function getRoleTone(
-  roleStatus: "active" | "pending" | "revoked" | "suspended",
-) {
-  switch (roleStatus) {
-    case "active":
-      return "trust";
-    case "pending":
-      return "warning";
-    case "revoked":
-    case "suspended":
-      return "destructive";
-  }
 }
 
 function resolveInitialPreferredLanguageCode(

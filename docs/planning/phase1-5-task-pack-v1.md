@@ -163,6 +163,8 @@ Bad parallel examples:
 | Step | Task id | Status | Priority | Wave | Short title |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `P15-DATA-001` | `ready` | `P1` | 1 | Shortlist and compare state baseline |
+| 1 | `P15-FOUND-001` | `ready` | `P2` | 4 | Brand icon and favicon assets |
+| 1 | `P15-QUALITY-002` | `ready` | `P1` | 4 | Verification stack baseline (Vitest, Playwright, CI) |
 | 1 | `P15-SEO-001` | `ready` | `P1` | 2 | Subject and service SEO landing pages |
 | 1 | `P15-STUD-001` | `ready` | `P1` | 3 | Tutor students roster DTO and query path |
 | 2 | `P15-COMP-001` | `ready` | `P1` | 1 | Compare entry affordances on student surfaces |
@@ -172,6 +174,7 @@ Bad parallel examples:
 | 3 | `P15-STUD-003` | `draft` | `P1` | 3 | Tutor student relationship detail surface |
 | 4 | `P15-PUBLIC-001` | `draft` | `P2` | 4 | Public landing page visual enrichment |
 | 4 | `P15-PUBLIC-002` | `draft` | `P2` | 4 | Home route visual enrichment |
+| 4 | `P15-PUBLIC-003` | `ready` | `P1` | 4 | Public privacy-policy and terms routes |
 | 5 | `P15-QUALITY-001` | `ready` | `P2` | 4 | Phase 1.5 verification and hardening pass |
 
 ## 10. Detailed Tasks
@@ -700,6 +703,194 @@ Run the Phase 1.5 verification pass across compare behavior, noindex posture, sh
 **Verification**
 
 - checklist-driven review across the named source docs
+
+## 10.12 `P15-QUALITY-002` Verification stack baseline (Vitest, Playwright, CI)
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** none
+
+**Goal**
+
+Stand up the Phase 1 testing and CI stack the codebase already commits to in `CLAUDE.md` and `docs/architecture/testing-and-release-architecture-v1.md` so subsequent tasks can ship with executable regression coverage and so the MVP cutover is gated by something other than `pnpm lint:arch`. This task was deferred from `P1-QUALITY-002`, where the absence of any test runner, E2E harness, or CI workflow beyond `architectural-lint.yml` was named as release blocker B2 (see `docs/planning/phase1-release-readiness-v1.md` §2 B2).
+
+**Required source docs**
+
+- `CLAUDE.md`
+- `docs/architecture/testing-and-release-architecture-v1.md`
+- `docs/planning/phase1-release-readiness-v1.md`
+- `docs/planning/engineering-guardrails-v1.md`
+
+**Scope**
+
+- install Vitest, Testing Library, jsdom, and `@vitest/ui`; add `vitest.config.ts` and a `pnpm test` script; co-locate tests under `src/test/**` per the existing repo shape
+- write a small but real first batch of unit tests against pure helpers (e.g. `getSafeRedirectPath` in `src/lib/auth/allowed-redirects.ts`, `normalizeTimezone` in `src/lib/datetime`, `redactObject`-style helpers in `src/lib/observability/redaction.ts`, `isPreviewDeployment` in `src/lib/seo/site.ts`) so the harness is provably wired up rather than empty
+- install `@playwright/test`; add `playwright.config.ts`; add `pnpm test:e2e` and `pnpm test:e2e:install` scripts
+- write a logged-out smoke E2E suite covering the public route family and the auth entry: `/`, `/how-it-works`, `/trust-and-safety`, `/support`, `/become-a-tutor`, `/auth/sign-in`. Each test asserts the page renders with the expected title, no console error, and the expected metadata posture (e.g. canonical/robots header) where mechanically checkable
+- add a CI workflow at `.github/workflows/ci.yml` running, on every PR and on pushes to `main`: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`. Run Playwright in the same workflow against `pnpm start` after `pnpm build`, scoped to the logged-out smoke suite (no Supabase fixtures required)
+- update `CLAUDE.md` **Verification standard** so future task agents run `pnpm test` before reporting
+
+**Out of scope**
+
+- authenticated critical-path E2E coverage (match wizard, booking, lessons, messages, earnings) — those need Supabase test fixtures and should land as a separate sub-task once the harness is in place
+- a fixture / seed strategy for Supabase under tests
+- preview-environment Playwright runs against Vercel preview URLs
+- visual-regression / snapshot testing
+- migrating existing manual smoke checklist items into automated tests beyond the public + auth-entry surface
+
+**Acceptance criteria**
+
+- `pnpm test` runs Vitest, finds the unit tests, and passes
+- `pnpm test:e2e` runs Playwright against a locally built app and passes the logged-out smoke suite
+- `.github/workflows/ci.yml` exists and runs `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`, and the Playwright smoke suite on every PR
+- `CLAUDE.md` **Verification standard** lists `pnpm test` (and notes when the E2E suite must also run)
+- the unit-test files exist as real tests, not placeholder asserts
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint:arch`
+- `pnpm test`
+- `pnpm test:e2e` against a local production build
+
+**Required manual steps**
+
+- run `pnpm test:e2e:install` once locally (and once in CI on first run) to download Playwright browsers
+- if the GitHub Actions runner needs additional environment variables for `pnpm build` to succeed, supply dummy values for `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_SITE_URL` in the workflow `env:` block; do not put real secrets in workflow files
+
+**Local testing checklist**
+
+- run `pnpm test` and confirm the unit tests pass
+- run `pnpm build && pnpm start` in one terminal, then `pnpm test:e2e` in another; confirm the smoke suite is green against the live local build
+- confirm CI green on a no-op PR before merging the workflow into `main`
+
+## 10.13 `P15-PUBLIC-003` Public privacy-policy and terms routes
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 4
+**Depends on:** `P1-PUBLIC-002`, `P1-PUBLIC-003`
+
+**Goal**
+
+Add the publicly indexable legal surfaces (`/privacy-policy` and `/terms`) so auth, sign-up, payment-consent, and marketing flows have canonical URLs to link to and so the product satisfies the basic legal-discoverability expectation external listings, app-store submissions, and review processes assume. This task was deferred from `P1-QUALITY-002` as release blocker B3 (see `docs/planning/phase1-release-readiness-v1.md` §2 B3). Note that the existing `/privacy` route is the authenticated `(account)` privacy snapshot and is intentionally non-indexable; the legal page is a different surface.
+
+**Required source docs**
+
+- `docs/architecture/seo-page-inventory-v1.md`
+- `docs/architecture/seo-and-ai-discoverability-v1.md`
+- `docs/architecture/privacy-and-data-retention-architecture-v1.md`
+- `docs/architecture/compliance-and-regulatory-posture-v1.md`
+- `docs/planning/public-route-seo-acceptance-checklist-v1.md`
+- `docs/architecture/metadata-matrix-v1.md`
+
+**Scope**
+
+- add `src/app/(public)/privacy-policy/page.tsx` and `src/app/(public)/terms/page.tsx` consuming `buildStaticPublicRouteMetadata` and the shared `JsonLd`/`StructuredData` pattern used by the other Class A pages
+- register both routes in `src/lib/seo/public-routes.ts` so `sitemap.ts` includes them
+- author the legal copy in shared modules (`src/modules/legal/**` or equivalent) rather than inlining 1000-line strings in the route file; treat the copy itself as a content artifact reviewed by the human, not an architectural decision
+- update `src/app/robots.ts` if either path needs an explicit allow rule (it should not — `robots.ts` only disallows; the default is allow)
+- add navigation references to the legal pages from auth flows (sign-in, sign-up consent), the booking-checkout consent surface, the public footer, and the account `/privacy` snapshot ("see the public Privacy Policy")
+- ensure both routes carry `LegalDocument` or appropriate `WebPage` JSON-LD per the structured-data map
+
+**Out of scope**
+
+- the *content* of the legal copy (this task wires up the surface and inserts placeholder copy with clear `TODO(legal)` markers; the human owns the actual policy text and signs off before merging)
+- region-specific variants (GDPR-vs-CCPA-vs-other) — Phase 1.5 ships one canonical page each
+- consent-management UI (cookie banner, granular consent) — separate task
+- DSAR / data-subject-request automation (already covered by `docs/data/data-subject-request-workflow-v1.md`)
+
+**Acceptance criteria**
+
+- `/privacy-policy` and `/terms` are reachable, server-rendered, indexable, and emit valid JSON-LD
+- both routes appear in `sitemap.xml` and are not disallowed by `robots.txt`
+- both routes pass every item in `docs/planning/public-route-seo-acceptance-checklist-v1.md` §7
+- footer / auth / booking-consent surfaces link to both routes
+- the authenticated `(account)/privacy` route links out to the public `/privacy-policy` so users can find the canonical legal text from inside the product
+- legal copy is sourced from a shared content module, not duplicated in route files
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint:arch`
+- public-route SEO checklist pass for both new routes
+- manual verification that footer / auth / booking-consent links land on the right pages
+
+**Required manual steps**
+
+- the human supplies the actual legal copy (or signs off on placeholder copy explicitly marked as draft) before merging; do not ship to production with `Lorem ipsum` content
+
+**Local testing checklist**
+
+- `/privacy-policy` and `/terms` render at `http://localhost:3000`
+- view-source confirms `<script type="application/ld+json">` blocks are present and valid JSON
+- `/sitemap.xml` lists both URLs
+- `/robots.txt` does not disallow either path
+- the public footer and the authenticated `/privacy` snapshot link to `/privacy-policy`
+
+## 10.14 `P15-FOUND-001` Brand icon and favicon assets
+
+**Status:** `ready`
+**Priority:** `P2`
+**Wave:** 4
+**Depends on:** none
+
+**Goal**
+
+Add the Mentor IB icon and favicon assets so browsers, mobile devices, search results, and home-screen installs render the brand mark instead of falling back to a 404 favicon or a generic glyph. This task was deferred from `P1-QUALITY-002` as release blocker B4 (see `docs/planning/phase1-release-readiness-v1.md` §2 B4).
+
+**Required source docs**
+
+- `docs/visual-design/hi-fi-direction-boards-v1.md`
+- `docs/architecture/seo-and-ai-discoverability-v1.md`
+- Next.js metadata-files convention (icons, app icons, favicons)
+
+**Scope**
+
+- add `src/app/icon.png` (default app icon, square, recommended 512×512 source rendered by Next.js into multiple sizes)
+- add `src/app/apple-icon.png` (Apple touch icon, square, 180×180)
+- add `src/app/favicon.ico` (legacy favicon, 32×32)
+- if a dark-mode variant is needed, follow the Next.js `icon-dark.png` convention rather than inlining `<link>` tags in `layout.tsx`
+- regenerate or confirm the existing `src/app/opengraph-image.tsx` produces a brand-correct OG image
+
+**Out of scope**
+
+- redesigning the brand mark itself (use the approved mark from `docs/visual-design`)
+- splash screens for native app installs
+- multiple icon variants per route family
+- a logo component in `src/components/ui/**` (separate concern)
+
+**Acceptance criteria**
+
+- the four icon assets exist at the canonical Next.js paths
+- a freshly built app serves favicon, app icon, and apple icon at the expected URLs (`/favicon.ico`, `/icon`, `/apple-icon`)
+- the home page rendered in a browser shows the brand favicon in the tab and bookmark
+- `pnpm build` output references the new icon files
+- `opengraph-image.tsx` continues to render correctly and uses the brand palette
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint:arch`
+- manual verification in Chrome, Safari, and one mobile browser that the favicon and apple icon render
+
+**Required manual steps**
+
+- the human supplies the source PNG / ICO files (or signs off on a generated set) before merging
+- confirm the icons are exported at the correct dimensions; do not commit an oversized source as `favicon.ico`
+
+**Local testing checklist**
+
+- `/favicon.ico`, `/icon`, `/apple-icon` are reachable and return the expected file types
+- the browser tab on `http://localhost:3000` shows the Mentor IB mark
+- iOS Safari "Add to Home Screen" preview shows the apple-icon mark, not a generic glyph
 
 ## 11. Task Drafting Rules For Follow-Up
 

@@ -202,6 +202,7 @@ If you want the shortest path through the pack:
 - `docs/planning/seo-foundation-task-pack-v1.md`
 - `docs/planning/public-route-seo-acceptance-checklist-v1.md`
 - `docs/planning/phase1-class-a-route-seo-task-pack-v1.md`
+- `docs/planning/phase1-release-readiness-v1.md`
 
 ## Canonical Rule
 

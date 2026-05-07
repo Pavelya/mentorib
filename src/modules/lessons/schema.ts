@@ -176,6 +176,8 @@ export const matchCandidates = pgTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default(sql`'{}'::jsonb`),
+    shortlisted_at: timestamp("shortlisted_at", { withTimezone: true }),
+    compared_at: timestamp("compared_at", { withTimezone: true }),
     created_at: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -232,6 +232,8 @@ Unless the task says otherwise, finish with:
 - `pnpm typecheck`
 - `pnpm build`
 - `pnpm lint:arch` (architectural-rule lint plus the audit script in `scripts/audit-architectural-rules.ts` — see `docs/design-system/agent-ui-rules.md` and `docs/architecture/canonical-value-ownership-map-v1.md`)
+- `pnpm test` (Vitest unit + light integration suite under `src/test/**`)
+- `pnpm test:e2e` is required when the task touches public route rendering, the auth entry, `robots.ts`, `sitemap.ts`, or anything else covered by the logged-out Playwright smoke suite under `tests/e2e/**`. Run against a local production build: `pnpm build && pnpm start` in one terminal, `pnpm test:e2e` in another. On first run, install browsers with `pnpm test:e2e:install`.
 
 Add task-specific tests or manual checks when the task requires them.
 If any relevant verification could not be run, say exactly what was not run and why.

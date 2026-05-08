@@ -14,6 +14,10 @@
     "lint:arch": "eslint . && tsx scripts/audit-architectural-rules.ts",
     "lint:arch:test": "tsx scripts/test-architectural-rules.ts",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps",
     "prepare": "simple-git-hooks || true"
   },
   "dependencies": {
@@ -35,16 +39,24 @@
     "stripe": "22.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "24.12.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/ui": "^4.1.5",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.4",
+    "jsdom": "^29.1.1",
     "lint-staged": "16.4.0",
     "simple-git-hooks": "2.13.1",
     "tsx": "4.21.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^4.1.5"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm lint-staged && pnpm tsx scripts/audit-architectural-rules.ts"

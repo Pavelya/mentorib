@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -15,6 +15,10 @@ import {
   type PublicTutorProfileDto,
 } from "@/modules/tutors/public-profile";
 import { getReferenceLanguageFlagCode } from "@/modules/reference/visuals";
+import {
+  listAuthoredServiceSlugs,
+  listAuthoredSubjectSlugs,
+} from "@/modules/marketing/seo-landing/authored-content";
 import {
   Avatar,
   Card,
@@ -284,6 +288,8 @@ export default async function TutorProfilePage({
 
         {profile.introVideo ? <IntroVideoSection profile={profile} /> : null}
 
+        <SeoLandingLinkSection profile={profile} />
+
         <section className={styles.finalCta} aria-label="Booking call to action">
           <div>
             <p className={styles.darkEyebrow}>Ready to decide?</p>
@@ -314,6 +320,84 @@ export default async function TutorProfilePage({
       </article>
     </>
   );
+}
+
+function SeoLandingLinkSection({ profile }: { profile: PublicTutorProfileDto }) {
+  const authoredSubjects = new Set(listAuthoredSubjectSlugs());
+  const authoredServices = new Set(listAuthoredServiceSlugs());
+
+  const subjectLinks = uniqueLinkValues(
+    profile.subjects
+      .filter((capability) => authoredSubjects.has(capability.subjectSlug))
+      .map((capability) => ({
+        href: `/subjects/${capability.subjectSlug}` as Route,
+        label: capability.subject,
+        slug: capability.subjectSlug,
+      })),
+  );
+  const serviceLinks = uniqueLinkValues(
+    profile.subjects
+      .filter((capability) => authoredServices.has(capability.focusAreaSlug))
+      .map((capability) => ({
+        href: `/services/${capability.focusAreaSlug}` as Route,
+        label: capability.focusArea,
+        slug: capability.focusAreaSlug,
+      })),
+  );
+
+  if (subjectLinks.length === 0 && serviceLinks.length === 0) {
+    return null;
+  }
+
+  return (
+    <Section
+      aria-label="Related subject and service pages"
+      density="spacious"
+      eyebrow="Related pages"
+      title="Browse the IB pages this tutor supports."
+      titleAs="h2"
+    >
+      <div className={styles.relatedLinkGrid}>
+        {subjectLinks.length > 0 ? (
+          <div>
+            <p className={styles.microLabel}>Subjects</p>
+            <ul className={styles.relatedLinkList}>
+              {subjectLinks.map((link) => (
+                <li key={`subject-${link.slug}`}>
+                  <Link href={link.href}>{link.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {serviceLinks.length > 0 ? (
+          <div>
+            <p className={styles.microLabel}>Services</p>
+            <ul className={styles.relatedLinkList}>
+              {serviceLinks.map((link) => (
+                <li key={`service-${link.slug}`}>
+                  <Link href={link.href}>{link.label}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+    </Section>
+  );
+}
+
+function uniqueLinkValues<T extends { slug: string }>(values: T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const value of values) {
+    if (seen.has(value.slug)) {
+      continue;
+    }
+    seen.add(value.slug);
+    out.push(value);
+  }
+  return out;
 }
 
 function IntroVideoSection({ profile }: { profile: PublicTutorProfileDto }) {

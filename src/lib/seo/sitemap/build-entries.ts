@@ -3,6 +3,11 @@ import type { MetadataRoute } from "next";
 import { staticPublicRoutes } from "@/lib/seo/public-routes";
 import { shouldIncludeStaticRouteInSitemap } from "@/lib/seo/sitemap/include-route";
 import { buildAbsoluteUrl } from "@/lib/seo/site";
+import {
+  listPublishedComboSeoPairs,
+  listPublishedServiceSeoSlugs,
+  listPublishedSubjectSeoSlugs,
+} from "@/modules/marketing/seo-landing/page-data";
 import { listPublicTutorProfileSitemapEntries } from "@/modules/tutors/public-profile";
 
 async function buildTutorProfileSitemapEntries(): Promise<MetadataRoute.Sitemap> {
@@ -14,6 +19,39 @@ async function buildTutorProfileSitemapEntries(): Promise<MetadataRoute.Sitemap>
     priority: 0.6,
     url: buildAbsoluteUrl(profile.pathname).toString(),
   }));
+}
+
+async function buildSeoLandingSitemapEntries(): Promise<MetadataRoute.Sitemap> {
+  const [subjectSlugs, serviceSlugs, comboPairs] = await Promise.all([
+    listPublishedSubjectSeoSlugs(),
+    listPublishedServiceSeoSlugs(),
+    listPublishedComboSeoPairs(),
+  ]);
+
+  const lastModified = new Date();
+
+  const subjectEntries = subjectSlugs.map((slug) => ({
+    changeFrequency: "weekly" as const,
+    lastModified,
+    priority: 0.65,
+    url: buildAbsoluteUrl(`/subjects/${slug}`).toString(),
+  }));
+  const serviceEntries = serviceSlugs.map((slug) => ({
+    changeFrequency: "weekly" as const,
+    lastModified,
+    priority: 0.65,
+    url: buildAbsoluteUrl(`/services/${slug}`).toString(),
+  }));
+  const comboEntries = comboPairs.map((pair) => ({
+    changeFrequency: "weekly" as const,
+    lastModified,
+    priority: 0.6,
+    url: buildAbsoluteUrl(
+      `/subjects/${pair.subjectSlug}/${pair.needSlug}`,
+    ).toString(),
+  }));
+
+  return [...subjectEntries, ...serviceEntries, ...comboEntries];
 }
 
 export async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
@@ -28,7 +66,10 @@ export async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
       url: buildAbsoluteUrl(route.pathname).toString(),
     }));
 
-  const tutorProfileEntries = await buildTutorProfileSitemapEntries();
+  const [tutorProfileEntries, seoLandingEntries] = await Promise.all([
+    buildTutorProfileSitemapEntries(),
+    buildSeoLandingSitemapEntries(),
+  ]);
 
-  return [...staticEntries, ...tutorProfileEntries];
+  return [...staticEntries, ...tutorProfileEntries, ...seoLandingEntries];
 }

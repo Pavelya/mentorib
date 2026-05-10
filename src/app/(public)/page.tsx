@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Route } from "next";
 import Link from "next/link";
 
 import { MatchRow } from "@/components/continuity";
@@ -20,6 +21,15 @@ import {
   sampleMatches,
   trustProof,
 } from "@/modules/marketing/home-content";
+import {
+  listPublishedComboSeoPairs,
+  listPublishedServiceSeoSlugs,
+  listPublishedSubjectSeoSlugs,
+} from "@/modules/marketing/seo-landing/page-data";
+import {
+  loadActiveReferenceSubjectFocusAreas,
+  loadActiveReferenceSubjects,
+} from "@/modules/reference/catalog";
 
 import styles from "./home.module.css";
 
@@ -32,7 +42,10 @@ type StudentContinuation = {
 };
 
 export default async function HomePage() {
-  const studentContinuation = await getStudentContinuation();
+  const [studentContinuation, seoBrowse] = await Promise.all([
+    getStudentContinuation(),
+    getSeoBrowseLinks(),
+  ]);
 
   return (
     <>
@@ -194,6 +207,71 @@ export default async function HomePage() {
           </div>
         </Section>
 
+        {seoBrowse.subjects.length > 0 ||
+        seoBrowse.services.length > 0 ||
+        seoBrowse.combos.length > 0 ? (
+          <Section
+            aria-label="Browse curated IB tutoring pages"
+            density="spacious"
+            eyebrow="Browse"
+            title="Find help by subject or pressure point."
+            titleAs="h2"
+          >
+            <div className={styles.browseGrid}>
+              {seoBrowse.subjects.length > 0 ? (
+                <div>
+                  <p className={styles.eyebrow}>Subjects</p>
+                  <ul className={styles.browseList}>
+                    {seoBrowse.subjects.map((subject) => (
+                      <li key={`subject-${subject.slug}`}>
+                        <Link
+                          href={`/subjects/${subject.slug}` as Route}
+                        >
+                          {subject.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {seoBrowse.services.length > 0 ? (
+                <div>
+                  <p className={styles.eyebrow}>Services</p>
+                  <ul className={styles.browseList}>
+                    {seoBrowse.services.map((service) => (
+                      <li key={`service-${service.slug}`}>
+                        <Link
+                          href={`/services/${service.slug}` as Route}
+                        >
+                          {service.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {seoBrowse.combos.length > 0 ? (
+                <div>
+                  <p className={styles.eyebrow}>Curated combinations</p>
+                  <ul className={styles.browseList}>
+                    {seoBrowse.combos.map((combo) => (
+                      <li key={`combo-${combo.subjectSlug}-${combo.needSlug}`}>
+                        <Link
+                          href={
+                            `/subjects/${combo.subjectSlug}/${combo.needSlug}` as Route
+                          }
+                        >
+                          {combo.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          </Section>
+        ) : null}
+
         <section className={styles.finalCta} aria-label="Begin matching">
           <div>
             <p className={styles.darkEyebrow}>Start with the situation</p>
@@ -210,6 +288,60 @@ export default async function HomePage() {
       </article>
     </>
   );
+}
+
+type SeoBrowseLink = { slug: string; title: string };
+type SeoBrowseComboLink = {
+  needSlug: string;
+  subjectSlug: string;
+  title: string;
+};
+
+async function getSeoBrowseLinks(): Promise<{
+  combos: SeoBrowseComboLink[];
+  services: SeoBrowseLink[];
+  subjects: SeoBrowseLink[];
+}> {
+  try {
+    const [subjectSlugs, serviceSlugs, comboPairs, subjects, focusAreas] =
+      await Promise.all([
+        listPublishedSubjectSeoSlugs(),
+        listPublishedServiceSeoSlugs(),
+        listPublishedComboSeoPairs(),
+        loadActiveReferenceSubjects(),
+        loadActiveReferenceSubjectFocusAreas(),
+      ]);
+
+    const subjectsBySlug = new Map(subjects.map((row) => [row.slug, row]));
+    const focusAreasBySlug = new Map(focusAreas.map((row) => [row.slug, row]));
+
+    return {
+      subjects: subjectSlugs.flatMap((slug) => {
+        const ref = subjectsBySlug.get(slug);
+        return ref ? [{ slug: ref.slug, title: ref.displayName }] : [];
+      }),
+      services: serviceSlugs.flatMap((slug) => {
+        const ref = focusAreasBySlug.get(slug);
+        return ref ? [{ slug: ref.slug, title: ref.displayName }] : [];
+      }),
+      combos: comboPairs.flatMap((pair) => {
+        const subject = subjectsBySlug.get(pair.subjectSlug);
+        const focusArea = focusAreasBySlug.get(pair.needSlug);
+        if (!subject || !focusArea) {
+          return [];
+        }
+        return [
+          {
+            needSlug: pair.needSlug,
+            subjectSlug: pair.subjectSlug,
+            title: `${subject.displayName} × ${focusArea.displayName}`,
+          },
+        ];
+      }),
+    };
+  } catch {
+    return { combos: [], services: [], subjects: [] };
+  }
 }
 
 async function getStudentContinuation(): Promise<StudentContinuation | null> {

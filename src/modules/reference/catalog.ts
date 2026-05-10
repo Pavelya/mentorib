@@ -110,6 +110,22 @@ export async function loadReferenceSubjectById(subjectId: string) {
   return data ? mapSubjectRow(data) : null;
 }
 
+export async function loadReferenceSubjectBySlug(slug: string) {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("subjects")
+    .select("id, subject_code, slug, display_name, display_description, sort_order")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle<SubjectRow>();
+
+  if (error) {
+    throw new Error("Could not load subject by slug.");
+  }
+
+  return data ? mapSubjectRow(data) : null;
+}
+
 export async function loadReferenceSubjectsByIds(
   subjectIds: readonly string[],
 ): Promise<ReferenceSubject[]> {
@@ -161,6 +177,22 @@ export async function loadReferenceSubjectFocusAreaById(focusAreaId: string) {
 
   if (error) {
     throw new Error("Could not load subject focus area.");
+  }
+
+  return data ? mapSubjectFocusAreaRow(data) : null;
+}
+
+export async function loadReferenceSubjectFocusAreaBySlug(slug: string) {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("subject_focus_areas")
+    .select("id, focus_area_code, slug, display_name, sort_order")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle<SubjectFocusAreaRow>();
+
+  if (error) {
+    throw new Error("Could not load subject focus area by slug.");
   }
 
   return data ? mapSubjectFocusAreaRow(data) : null;

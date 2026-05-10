@@ -92,6 +92,7 @@ export const authReturnPathPolicy = [
   { family: "account", kind: "exact", path: "/notifications" },
   { family: "account", kind: "exact", path: "/privacy" },
   { family: "student", kind: "exact", path: "/results" },
+  { family: "student", kind: "exact", path: "/saved" },
   { family: "account", kind: "exact", path: "/settings" },
   { family: "setup", kind: "exact", path: "/setup/role" },
   { family: "public", kind: "exact", path: "/support" },

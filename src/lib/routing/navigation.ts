@@ -30,7 +30,7 @@ export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
   student: [
     { href: "/match", label: "Match" },
     { href: "/results", label: "Results" },
-    { href: "/compare", label: "Compare" },
+    { href: "/saved", label: "Saved" },
     { href: "/messages", label: "Messages" },
     { href: "/lessons", label: "Lessons" },
   ],

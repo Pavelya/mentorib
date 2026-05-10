@@ -14,6 +14,7 @@ const PRIVATE_ROUTE_DISALLOWS = [
   "/notifications",
   "/privacy",
   "/results",
+  "/saved",
   "/settings",
   "/setup/",
   "/tutor/",

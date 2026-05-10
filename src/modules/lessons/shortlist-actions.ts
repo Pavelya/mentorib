@@ -16,7 +16,7 @@ import {
   ShortlistMutationError,
 } from "@/modules/lessons/shortlist";
 
-const REVALIDATE_PATHS = ["/results", "/compare"];
+const REVALIDATE_PATHS = ["/results", "/compare", "/saved"];
 
 export async function toggleShortlistAction(formData: FormData) {
   await runShortlistMutation(formData, "shortlist");

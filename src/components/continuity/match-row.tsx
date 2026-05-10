@@ -19,10 +19,11 @@ export type MatchRowShortlistState = {
 
 type MatchRowProps = {
   match: MatchResultCardDto;
+  returnTo?: string;
   shortlistState?: MatchRowShortlistState | null;
 };
 
-export function MatchRow({ match, shortlistState }: MatchRowProps) {
+export function MatchRow({ match, returnTo = "/results", shortlistState }: MatchRowProps) {
   const availabilityTone = match.tutor.acceptingNewStudents ? "positive" : "warning";
   const statusLabel = match.tutor.acceptingNewStudents
     ? "Open for booking"
@@ -143,6 +144,7 @@ export function MatchRow({ match, shortlistState }: MatchRowProps) {
               <ShortlistToggleForm
                 candidateId={match.candidateId}
                 isShortlisted={isShortlisted}
+                returnTo={returnTo}
                 tutorName={match.tutor.displayName}
               />
             ) : null}
@@ -152,6 +154,7 @@ export function MatchRow({ match, shortlistState }: MatchRowProps) {
                 candidateId={match.candidateId}
                 isCompared={isCompared}
                 isCompareInteractive={isCompareInteractive}
+                returnTo={returnTo}
                 tutorName={match.tutor.displayName}
               />
             ) : (
@@ -172,10 +175,12 @@ export function MatchRow({ match, shortlistState }: MatchRowProps) {
 function ShortlistToggleForm({
   candidateId,
   isShortlisted,
+  returnTo,
   tutorName,
 }: {
   candidateId: string;
   isShortlisted: boolean;
+  returnTo: string;
   tutorName: string;
 }) {
   return (
@@ -186,7 +191,7 @@ function ShortlistToggleForm({
         type="hidden"
         value={isShortlisted ? "remove" : "add"}
       />
-      <input name="returnTo" type="hidden" value="/results" />
+      <input name="returnTo" type="hidden" value={returnTo} />
       <button
         aria-label={
           isShortlisted
@@ -210,11 +215,13 @@ function CompareToggleForm({
   candidateId,
   isCompared,
   isCompareInteractive,
+  returnTo,
   tutorName,
 }: {
   candidateId: string;
   isCompared: boolean;
   isCompareInteractive: boolean;
+  returnTo: string;
   tutorName: string;
 }) {
   if (!isCompared && !isCompareInteractive) {
@@ -239,7 +246,7 @@ function CompareToggleForm({
         type="hidden"
         value={isCompared ? "remove" : "add"}
       />
-      <input name="returnTo" type="hidden" value="/results" />
+      <input name="returnTo" type="hidden" value={returnTo} />
       <button
         aria-label={
           isCompared

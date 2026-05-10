@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>P15-SEO-001 · Landing page templates · Mentor IB</title>
+  <link rel="stylesheet" href="colors_and_type.css" />
+  <style>
+    body { padding: 48px 32px; max-width: 1080px; margin: 0 auto; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    a.card {
+      display: grid; gap: 10px; padding: 24px;
+      border-radius: 22px; border: 1px solid var(--border-subtle);
+      background: var(--surface-panel); box-shadow: var(--shadow-soft);
+      text-decoration: none; color: var(--ink-900);
+      transition: transform 140ms ease, box-shadow 140ms ease;
+    }
+    a.card:hover { transform: translateY(-2px); box-shadow: var(--shadow-raised); }
+    .eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--ink-500); }
+    h1 { font-size: var(--display-lg); margin: 0 0 8px; letter-spacing: -0.01em; }
+    .lede { color: var(--ink-700); font-size: 18px; line-height: 1.55; max-width: 720px; margin: 0 0 32px; }
+    .meta { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill { font-family: var(--font-mono); font-size: 11px; letter-spacing: .04em;
+      text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+      background: var(--state-trust-surface); color: var(--gold-500); border: 1px solid var(--state-trust-border); }
+    .slug { font-family: var(--font-mono); font-size: 13px; color: var(--ink-500); }
+    .serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; }
+  </style>
+</head>
+<body>
+  <p class="eyebrow">P15-SEO-001 · Phase 1.5 · Wave 2</p>
+  <h1>Landing-page templates for <span class="serif">match-first</span> SEO.</h1>
+  <p class="lede">Three template families, each one a real publishable page. Acceptance criteria from the task pack: every page answers what it is, who it's for, when support matters, what tutor fits, and what comes next; pages are server-rendered with unique copy; structured data matches what's visible.</p>
+
+  <div class="grid">
+    <a class="card" href="services-tok-essay-help.html">
+      <div class="meta">
+        <span class="pill">Service · /services/[need-slug]</span>
+        <span class="pill">P1 · most important</span>
+      </div>
+      <h2 style="margin:0;font-size:24px;font-weight:600;">TOK essay help</h2>
+      <span class="slug">/services/tok-essay-help</span>
+      <p style="margin:0;color:var(--ink-700);font-size:15px;line-height:1.55;">Problem-led page for the highest-traffic TOK pressure point — the canonical service template.</p>
+    </a>
+
+    <a class="card" href="subjects-biology-hl.html">
+      <div class="meta"><span class="pill">Subject · /subjects/[slug]</span></div>
+      <h2 style="margin:0;font-size:24px;font-weight:600;">Biology HL</h2>
+      <span class="slug">/subjects/biology-hl</span>
+      <p style="margin:0;color:var(--ink-700);font-size:15px;line-height:1.55;">Subject-led page with a strand rail (May 2025 syllabus), tutor coverage by strand, and curated pairings into the service templates.</p>
+    </a>
+
+    <a class="card" href="subjects-english-a-tok-essay-help.html">
+      <div class="meta"><span class="pill">Combination · /subjects/[s]/[n]</span><span class="pill">curated only</span></div>
+      <h2 style="margin:0;font-size:24px;font-weight:600;">English A × TOK essay help</h2>
+      <span class="slug">/subjects/english-a-lang-and-lit/tok-essay-help</span>
+      <p style="margin:0;color:var(--ink-700);font-size:15px;line-height:1.55;">Curated combination — only published with real tutor coverage. Demonstrates the "we don't generate every slug" rule.</p>
+    </a>
+  </div>
+</body>
+</html>

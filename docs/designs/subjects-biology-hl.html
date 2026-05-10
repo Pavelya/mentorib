@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Biology HL tutors — IA, exam rescue, syllabus strands · Mentor IB</title>
+  <meta name="description" content="Match-first Biology HL tutoring. IB-trained tutors and examiners ready for IA recovery, the genetics unit, and 60-day exam rescue against the May 2025 syllabus." />
+  <link rel="canonical" href="https://mentorib.com/subjects/biology-hl" />
+  <link rel="stylesheet" href="colors_and_type.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": "Biology HL · IB Diploma Programme",
+    "description": "Higher Level IB Biology tutoring matched to the May 2025 syllabus and your specific pressure point.",
+    "provider": { "@type": "Organization", "name": "Mentor IB" },
+    "courseMode": "online"
+  }
+  </script>
+
+  <style>
+    html, body { background: var(--surface-page); }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; border-radius: 14px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="Primitives.jsx"></script>
+  <script type="text/babel" src="icons.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="SharedChrome.jsx"></script>
+  <script type="text/babel" src="SubjectBiologyHLData.jsx"></script>
+  <script type="text/babel" src="SubjectBiologyHLPage.jsx"></script>
+  <script type="text/babel">
+    ReactDOM.createRoot(document.getElementById("root")).render(<BioPage />);
+  </script>
+</body>
+</html>

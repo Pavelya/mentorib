@@ -1,0 +1,187 @@
+/* Mentor IB — Foundations
+ * Source of truth: src/styles/globals.css and docs/design-system/design-system-foundations-v3.md
+ * Editorial academic guidance with operational clarity. Calm, sharp, intelligent.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");
+
+:root {
+  color-scheme: light;
+
+  /* ── Type families ─────────────────────────────────────────── */
+  --font-ui-sans: "IBM Plex Sans";
+  --font-ui-serif: "Instrument Serif";
+  --font-ui-mono: "IBM Plex Mono";
+  --font-sans: var(--font-ui-sans), system-ui, sans-serif;
+  --font-serif: var(--font-ui-serif), "Times New Roman", serif;
+  --font-mono: var(--font-ui-mono), "SFMono-Regular", monospace;
+
+  /* ── Type scale (fluid; matches src/styles/globals.css) ────── */
+  --display-xl: clamp(2.125rem, 2.45vw + 1.575rem, 3.5rem);   /* ~56px */
+  --display-lg: clamp(1.875rem, 1.55vw + 1.525rem, 2.75rem);  /* ~44px */
+  --title-xl:   clamp(1.625rem, 0.9vw + 1.425rem, 2.125rem);  /* ~34px */
+  --title-lg:   clamp(1.375rem, 0.65vw + 1.225rem, 1.75rem);  /* ~28px */
+  --title-md:   clamp(1.125rem, 0.4vw + 1.025rem, 1.375rem);  /* ~22px */
+  --body-lg:    clamp(1rem, 0.2vw + 0.955rem, 1.125rem);      /* ~18px */
+  --body-md:    1rem;                                          /* 16px  */
+  --body-sm:    0.875rem;                                      /* 14px  */
+  --caption:    0.75rem;                                       /* 12px  */
+  --utility-sm: 0.8125rem;                                     /* 13px  */
+
+  --line-tight:   1.15;
+  --line-body:    1.65;
+  --line-utility: 1.45;
+
+  /* ── Color: Paper neutrals (warm bone) ─────────────────────── */
+  --paper-0: #fcfaf4;  /* page background  */
+  --paper-1: #f6f1e7;  /* secondary bg     */
+  --paper-2: #ede4d4;  /* warm divider     */
+
+  /* ── Color: Ink ────────────────────────────────────────────── */
+  --ink-900: #1e1b18;  /* high-emphasis text */
+  --ink-700: #3d3832;  /* default body       */
+  --ink-500: #6a625a;  /* secondary text     */
+  --ink-300: #b4aa9c;  /* disabled, borders  */
+
+  /* ── Color: Forest (primary brand) ─────────────────────────── */
+  --forest-700: #173c34;
+  --forest-600: #215347;
+  --forest-500: #2c6a59;
+  --forest-100: #dcebe4;
+  --forest-50:  #eff6f1;
+
+  /* ── Color: Clay (warm accent) ─────────────────────────────── */
+  --clay-600: #b4573e;
+  --clay-500: #c56a50;
+  --clay-100: #f3ded7;
+
+  /* ── Color: Gold (merit / proof) ───────────────────────────── */
+  --gold-500: #b8913d;
+  --gold-100: #f2e8c8;
+
+  /* ── Color: Mist (cool data utility) ───────────────────────── */
+  --mist-100: #e7eef0;
+  --mist-300: #b7c7cc;
+
+  /* ── Color: Semantic feedback ──────────────────────────────── */
+  --success-500: #2f7a58;
+  --warning-500: #a8762a;
+  --danger-500:  #b2473b;
+
+  /* ── Surfaces ──────────────────────────────────────────────── */
+  --surface-page:       var(--paper-0);
+  --surface-section:    var(--paper-1);
+  --surface-panel:      rgb(255 255 255 / 0.72);
+  --surface-panel-soft: rgb(255 255 255 / 0.58);
+  --surface-raised:     rgb(255 255 255 / 0.84);
+  --surface-support:    rgb(231 238 240 / 0.78);
+  --surface-overlay:    rgb(252 250 244 / 0.96);
+
+  --panel-warm:   linear-gradient(180deg, rgb(243 222 215 / 0.88), rgb(252 250 244 / 0.92));
+  --panel-forest: linear-gradient(160deg, var(--forest-700), var(--forest-500));
+
+  /* ── Borders ───────────────────────────────────────────────── */
+  --border-subtle:  rgb(61 56 50 / 0.12);
+  --border-strong:  rgb(61 56 50 / 0.20);
+  --border-support: rgb(183 199 204 / 0.58);
+
+  /* ── Radii ─────────────────────────────────────────────────── */
+  --radius-xl: 1.75rem;   /* 28 */
+  --radius-lg: 1.375rem;  /* 22 */
+  --radius-md: 1rem;      /* 16 */
+  --radius-sm: 0.75rem;   /* 12 */
+
+  /* ── Shadows ───────────────────────────────────────────────── */
+  --shadow-soft:   0 18px 50px rgb(26 23 17 / 0.09);
+  --shadow-raised: 0 28px 90px rgb(26 23 17 / 0.12);
+  --shadow-action: 0 18px 50px rgb(23 60 52 / 0.22);
+
+  /* ── Spacing scale (token: rem; px in comments) ────────────── */
+  --space-1:  0.25rem;  /*  4 */
+  --space-2:  0.5rem;   /*  8 */
+  --space-3:  0.75rem;  /* 12 */
+  --space-4:  1rem;     /* 16 */
+  --space-5:  1.25rem;  /* 20 */
+  --space-6:  1.5rem;   /* 24 */
+  --space-8:  2rem;     /* 32 */
+  --space-10: 2.5rem;   /* 40 */
+  --space-12: 3rem;     /* 48 */
+  --space-16: 4rem;     /* 64 */
+  --space-20: 5rem;     /* 80 */
+
+  /* ── Motion ────────────────────────────────────────────────── */
+  --motion-fast:    140ms;
+  --motion-default: 200ms;
+  --motion-panel:   260ms;
+
+  /* ── Focus ─────────────────────────────────────────────────── */
+  --focus-outline: rgb(23 60 52 / 0.42);
+  --focus-ring:    0 0 0 3px rgb(23 60 52 / 0.18);
+
+  /* ── State surfaces (subtle tinted backgrounds) ────────────── */
+  --state-disabled-surface: rgb(180 170 156 / 0.18);
+  --state-disabled-border:  rgb(180 170 156 / 0.28);
+  --state-disabled-text:    var(--ink-300);
+  --state-selected-surface: var(--forest-100);
+  --state-selected-border:  rgb(23 60 52 / 0.18);
+  --state-info-surface:     rgb(231 238 240 / 0.88);
+  --state-info-border:      rgb(183 199 204 / 0.72);
+  --state-positive-surface: rgb(220 235 228 / 0.92);
+  --state-positive-border:  rgb(47 122 88 / 0.24);
+  --state-warning-surface:  rgb(242 232 200 / 0.92);
+  --state-warning-border:   rgb(168 118 42 / 0.24);
+  --state-danger-surface:   rgb(243 222 215 / 0.92);
+  --state-danger-border:    rgb(178 71 59 / 0.24);
+  --state-trust-surface:    rgb(242 232 200 / 0.78);
+  --state-trust-border:     rgb(184 145 61 / 0.28);
+}
+
+/* ── Element-level defaults ──────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--surface-page);
+  color: var(--ink-900);
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: var(--font-sans);
+  font-size: var(--body-md);
+  line-height: var(--line-body);
+  background: var(--surface-page);
+  color: var(--ink-900);
+}
+
+/* ── Semantic type roles ─────────────────────────────────────── */
+h1, .h1 { font-size: var(--title-xl); line-height: var(--line-tight); margin: 0; font-weight: 600; }
+h2, .h2 { font-size: var(--title-lg); line-height: var(--line-tight); margin: 0; font-weight: 600; }
+h3, .h3 { font-size: var(--title-md); line-height: var(--line-tight); margin: 0; font-weight: 600; }
+.display-xl { font-size: var(--display-xl); line-height: var(--line-tight); font-weight: 600; }
+.display-lg { font-size: var(--display-lg); line-height: var(--line-tight); font-weight: 600; }
+.body-lg    { font-size: var(--body-lg); line-height: var(--line-body); color: var(--ink-700); }
+.body       { font-size: var(--body-md); line-height: var(--line-body); color: var(--ink-700); }
+.body-sm    { font-size: var(--body-sm); line-height: var(--line-body); color: var(--ink-700); }
+.caption    { font-size: var(--caption); line-height: var(--line-utility); color: var(--ink-500); }
+
+/* Editorial serif emphasis — used inside headlines for selected nouns. */
+.serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Mono utility — time, timezone, status, dense labels. */
+.mono, .eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.04em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+  color: var(--ink-500);
+}
+
+::placeholder { color: var(--ink-500); opacity: 1; }
+::selection   { background: rgb(23 60 52 / 0.15); }

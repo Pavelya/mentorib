@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { appUsers } from "@/modules/accounts/schema";
+import { DEFAULT_PLATFORM_CURRENCY_CODE } from "@/modules/pricing/money";
 import {
   languages,
   meetingProviders,
@@ -44,6 +45,11 @@ export const tutorProfiles = pgTable(
     teaching_style_summary: text("teaching_style_summary"),
     best_for_summary: text("best_for_summary"),
     pricing_summary: text("pricing_summary"),
+    trial_price_minor: integer("trial_price_minor"),
+    hourly_rate_minor: integer("hourly_rate_minor"),
+    currency_code: text("currency_code")
+      .notNull()
+      .default(DEFAULT_PLATFORM_CURRENCY_CODE),
     profile_visibility_status: text("profile_visibility_status", {
       enum: tutorProfileVisibilityStatuses,
     })

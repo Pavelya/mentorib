@@ -14,6 +14,12 @@ import {
   type ReferenceSubject,
   type ReferenceSubjectFocusArea,
 } from "@/modules/reference/catalog";
+import { normalizeCurrencyCode } from "@/modules/pricing/money";
+import {
+  buildTutorPriceRangeLabel,
+  formatHourlyRate,
+  formatTrialPrice,
+} from "@/modules/pricing/tutor-pricing";
 
 const PUBLIC_TUTOR_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -28,6 +34,9 @@ type PublicTutorProfileRecord = {
   intro_video_provider: string | null;
   intro_video_url: string | null;
   pricing_summary: string | null;
+  trial_price_minor: number | null;
+  hourly_rate_minor: number | null;
+  currency_code: string | null;
   profile_visibility_status: string;
   public_listing_status: string;
   public_slug: string | null;
@@ -101,6 +110,12 @@ export type PublicTutorProfileDto = {
   introVideo: PublicTutorVideoReferenceDto | null;
   languages: PublicTutorLanguageDto[];
   pricingSummary: string | null;
+  trialPriceMinor: number | null;
+  hourlyRateMinor: number | null;
+  currencyCode: string;
+  trialPriceLabel: string | null;
+  hourlyRateLabel: string | null;
+  priceRangeLabel: string | null;
   primaryImage: {
     alt: string;
     url: string;
@@ -154,6 +169,9 @@ export async function getPublicTutorProfileBySlug(
         "teaching_style_summary",
         "best_for_summary",
         "pricing_summary",
+        "trial_price_minor",
+        "hourly_rate_minor",
+        "currency_code",
         "profile_visibility_status",
         "application_status",
         "public_listing_status",
@@ -202,6 +220,9 @@ export async function listPublicTutorProfileSitemapEntries(): Promise<
         "teaching_style_summary",
         "best_for_summary",
         "pricing_summary",
+        "trial_price_minor",
+        "hourly_rate_minor",
+        "currency_code",
         "profile_visibility_status",
         "application_status",
         "public_listing_status",
@@ -461,6 +482,28 @@ function buildPublicTutorProfileDto(
     introVideo,
     languages,
     pricingSummary: normalizeOptionalText(profile.pricing_summary),
+    trialPriceMinor:
+      typeof profile.trial_price_minor === "number"
+        ? profile.trial_price_minor
+        : null,
+    hourlyRateMinor:
+      typeof profile.hourly_rate_minor === "number"
+        ? profile.hourly_rate_minor
+        : null,
+    currencyCode: normalizeCurrencyCode(profile.currency_code),
+    trialPriceLabel: formatTrialPrice({
+      trialPriceMinor: profile.trial_price_minor,
+      currencyCode: profile.currency_code,
+    }),
+    hourlyRateLabel: formatHourlyRate({
+      hourlyRateMinor: profile.hourly_rate_minor,
+      currencyCode: profile.currency_code,
+    }),
+    priceRangeLabel: buildTutorPriceRangeLabel({
+      trialPriceMinor: profile.trial_price_minor,
+      hourlyRateMinor: profile.hourly_rate_minor,
+      currencyCode: profile.currency_code,
+    }),
     primaryImage,
     seo: buildSeoSummary({
       bio: profile.bio ?? "",

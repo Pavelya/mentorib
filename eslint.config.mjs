@@ -72,6 +72,7 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "next-env.d.ts",
     "scripts/__fixtures__/**",
+    "docs/**",
   ]),
   {
     files: ["src/**/*.{ts,tsx,js,jsx,mjs,cjs}"],

@@ -181,6 +181,9 @@ type TutorProfileRow = {
   payout_requirements_summary: Record<string, unknown> | null;
   payout_status_synced_at: string | null;
   pricing_summary: string | null;
+  trial_price_minor: number | null;
+  hourly_rate_minor: number | null;
+  currency_code: string;
   profile_visibility_status: TutorProfileVisibilityStatus;
   public_listing_status: TutorPublicListingStatus;
   public_slug: string | null;
@@ -1221,6 +1224,9 @@ export type MentorIbDatabase = {
           intro_video_url?: string | null;
           payout_readiness_status?: PayoutReadinessStatus;
           pricing_summary?: string | null;
+          trial_price_minor?: number | null;
+          hourly_rate_minor?: number | null;
+          currency_code?: string;
           profile_visibility_status?: TutorProfileVisibilityStatus;
           public_listing_status?: TutorPublicListingStatus;
           public_slug?: string | null;

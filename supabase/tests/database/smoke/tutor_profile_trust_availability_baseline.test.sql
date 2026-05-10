@@ -1,6 +1,6 @@
 begin;
 
-select plan(24);
+select plan(28);
 
 select has_table('public', 'subjects', 'subjects exists');
 select has_table('public', 'subject_focus_areas', 'subject_focus_areas exists');
@@ -133,6 +133,33 @@ select ok(
     where conname = 'tutor_profiles_intro_video_provider_fkey'
   ),
   'tutor_profiles intro_video_provider references video_media_providers'
+);
+
+select has_column(
+  'public',
+  'tutor_profiles',
+  'trial_price_minor',
+  'tutor_profiles exposes structured trial_price_minor'
+);
+select has_column(
+  'public',
+  'tutor_profiles',
+  'hourly_rate_minor',
+  'tutor_profiles exposes structured hourly_rate_minor'
+);
+select has_column(
+  'public',
+  'tutor_profiles',
+  'currency_code',
+  'tutor_profiles exposes structured currency_code'
+);
+select ok(
+  exists (
+    select 1
+    from pg_constraint
+    where conname = 'tutor_profiles_hourly_rate_minor_positive_chk'
+  ),
+  'tutor_profiles requires hourly_rate_minor to be positive when set'
 );
 
 select * from finish();

@@ -89,6 +89,17 @@ export type StudentCompareViewDto = {
   matchRunId: string | null;
 };
 
+export type TutorShortlistContextDto = {
+  candidateId: string;
+  comparedCount: number;
+  compareCap: number;
+  isCompared: boolean;
+  isCompareFull: boolean;
+  isShortlisted: boolean;
+  learningNeedId: string;
+  matchRunId: string;
+};
+
 export async function addToShortlist(
   input: ShortlistMutationInput,
 ): Promise<ShortlistCandidateState> {
@@ -234,6 +245,100 @@ export async function getShortlistStateForLearningNeed(
     learningNeedId,
     matchRunId: matchRunRow.id,
     shortlistedCandidateIds,
+  };
+}
+
+export async function getTutorShortlistContext(
+  account: Pick<ResolvedAuthAccount, "id">,
+  tutorProfileId: string,
+): Promise<TutorShortlistContextDto | null> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data: studentProfile, error: studentProfileError } = await supabase
+    .from("student_profiles")
+    .select("id")
+    .eq("app_user_id", account.id)
+    .maybeSingle<{ id: string }>();
+
+  if (studentProfileError) {
+    throw new ShortlistMutationError(
+      "state_lookup_failed",
+      "Could not resolve the student profile for shortlist context.",
+    );
+  }
+
+  if (!studentProfile) {
+    return null;
+  }
+
+  const { data: learningNeed, error: learningNeedError } = await supabase
+    .from("learning_needs")
+    .select("id")
+    .eq("student_profile_id", studentProfile.id)
+    .in("need_status", ["active", "matched", "booked", "draft"])
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+
+  if (learningNeedError) {
+    throw new ShortlistMutationError(
+      "state_lookup_failed",
+      "Could not load the current learning need for shortlist context.",
+    );
+  }
+
+  if (!learningNeed) {
+    return null;
+  }
+
+  const { data: matchRunRow, error: matchRunError } = await supabase
+    .from("match_runs")
+    .select("id")
+    .eq("learning_need_id", learningNeed.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+
+  if (matchRunError) {
+    throw new ShortlistMutationError(
+      "state_lookup_failed",
+      "Could not load the latest match run for shortlist context.",
+    );
+  }
+
+  if (!matchRunRow) {
+    return null;
+  }
+
+  const { data: candidateRow, error: candidateError } = await supabase
+    .from("match_candidates")
+    .select("id, match_run_id, tutor_profile_id, shortlisted_at, compared_at")
+    .eq("match_run_id", matchRunRow.id)
+    .eq("tutor_profile_id", tutorProfileId)
+    .maybeSingle<AuthorizedCandidateRow>();
+
+  if (candidateError) {
+    throw new ShortlistMutationError(
+      "state_lookup_failed",
+      "Could not load shortlist context for this tutor.",
+    );
+  }
+
+  if (!candidateRow) {
+    return null;
+  }
+
+  const comparedCount = await countComparedCandidates(matchRunRow.id);
+  const isCompared = Boolean(candidateRow.compared_at);
+
+  return {
+    candidateId: candidateRow.id,
+    comparedCount,
+    compareCap: COMPARE_CAP,
+    isCompared,
+    isCompareFull: !isCompared && comparedCount >= COMPARE_CAP,
+    isShortlisted: Boolean(candidateRow.shortlisted_at),
+    learningNeedId: learningNeed.id,
+    matchRunId: matchRunRow.id,
   };
 }
 

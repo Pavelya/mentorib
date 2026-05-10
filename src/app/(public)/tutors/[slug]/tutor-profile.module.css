@@ -99,6 +99,17 @@
   gap: var(--space-3);
 }
 
+.shortlistNotice {
+  margin-top: var(--space-4);
+}
+
+.shortlistActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
 .languageChipRow {
   gap: var(--space-2);
 }

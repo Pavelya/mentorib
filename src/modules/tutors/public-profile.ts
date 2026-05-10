@@ -110,6 +110,7 @@ export type PublicTutorProfileDto = {
   displayName: string;
   examinerBadges: ExaminerBadge[];
   headline: string | null;
+  id: string;
   introVideo: PublicTutorVideoReferenceDto | null;
   languages: PublicTutorLanguageDto[];
   pricingSummary: string | null;
@@ -486,6 +487,7 @@ function buildPublicTutorProfileDto(
     displayName: profile.display_name?.trim() ?? "Mentor IB tutor",
     examinerBadges: relatedRecords.examinerBadges,
     headline: normalizeOptionalText(profile.headline),
+    id: profile.id,
     introVideo,
     languages,
     pricingSummary: normalizeOptionalText(profile.pricing_summary),

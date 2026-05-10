@@ -2,20 +2,37 @@ import Link from "next/link";
 import type { Route } from "next";
 
 import { getButtonClassName, StatusBadge } from "@/components/ui";
+import {
+  toggleCompareAction,
+  toggleShortlistAction,
+} from "@/modules/lessons/shortlist-actions";
 
 import { PersonSummary } from "./continuity-primitives";
 import type { MatchResultCardDto } from "@/modules/lessons/match-results";
 import styles from "./match-row.module.css";
 
-type MatchRowProps = {
-  match: MatchResultCardDto;
+export type MatchRowShortlistState = {
+  isCompared: boolean;
+  isCompareFull: boolean;
+  isShortlisted: boolean;
 };
 
-export function MatchRow({ match }: MatchRowProps) {
+type MatchRowProps = {
+  match: MatchResultCardDto;
+  shortlistState?: MatchRowShortlistState | null;
+};
+
+export function MatchRow({ match, shortlistState }: MatchRowProps) {
   const availabilityTone = match.tutor.acceptingNewStudents ? "positive" : "warning";
   const statusLabel = match.tutor.acceptingNewStudents
     ? "Open for booking"
     : "Limited availability";
+  const isShortlisted = shortlistState?.isShortlisted ?? false;
+  const isCompared = shortlistState?.isCompared ?? false;
+  const isCompareFull = shortlistState?.isCompareFull ?? false;
+  const isShortlistInteractive = Boolean(shortlistState);
+  const isCompareInteractive =
+    isShortlistInteractive && (isCompared || !isCompareFull);
 
   return (
     <article
@@ -39,6 +56,12 @@ export function MatchRow({ match }: MatchRowProps) {
             <StatusBadge tone="trust">{match.confidenceLabel}</StatusBadge>
           ) : null}
           <StatusBadge tone={availabilityTone}>{statusLabel}</StatusBadge>
+          {isShortlisted ? (
+            <StatusBadge tone="info">Saved</StatusBadge>
+          ) : null}
+          {isCompared ? (
+            <StatusBadge tone="trust">Comparing</StatusBadge>
+          ) : null}
         </div>
       </div>
 
@@ -116,15 +139,122 @@ export function MatchRow({ match }: MatchRowProps) {
               </span>
             )}
 
-            <Link
-              className={getButtonClassName({ size: "compact", variant: "ghost" })}
-              href={match.compareHref as Route}
-            >
-              Compare later
-            </Link>
+            {isShortlistInteractive ? (
+              <ShortlistToggleForm
+                candidateId={match.candidateId}
+                isShortlisted={isShortlisted}
+                tutorName={match.tutor.displayName}
+              />
+            ) : null}
+
+            {isShortlistInteractive ? (
+              <CompareToggleForm
+                candidateId={match.candidateId}
+                isCompared={isCompared}
+                isCompareInteractive={isCompareInteractive}
+                tutorName={match.tutor.displayName}
+              />
+            ) : (
+              <Link
+                className={getButtonClassName({ size: "compact", variant: "ghost" })}
+                href={match.compareHref as Route}
+              >
+                Compare later
+              </Link>
+            )}
           </div>
         </aside>
       </div>
     </article>
+  );
+}
+
+function ShortlistToggleForm({
+  candidateId,
+  isShortlisted,
+  tutorName,
+}: {
+  candidateId: string;
+  isShortlisted: boolean;
+  tutorName: string;
+}) {
+  return (
+    <form action={toggleShortlistAction} className={styles.toggleForm}>
+      <input name="candidateId" type="hidden" value={candidateId} />
+      <input
+        name="intent"
+        type="hidden"
+        value={isShortlisted ? "remove" : "add"}
+      />
+      <input name="returnTo" type="hidden" value="/results" />
+      <button
+        aria-label={
+          isShortlisted
+            ? `Remove ${tutorName} from your shortlist`
+            : `Save ${tutorName} to your shortlist`
+        }
+        aria-pressed={isShortlisted}
+        className={getButtonClassName({
+          size: "compact",
+          variant: isShortlisted ? "secondary" : "ghost",
+        })}
+        type="submit"
+      >
+        {isShortlisted ? "Saved" : "Save"}
+      </button>
+    </form>
+  );
+}
+
+function CompareToggleForm({
+  candidateId,
+  isCompared,
+  isCompareInteractive,
+  tutorName,
+}: {
+  candidateId: string;
+  isCompared: boolean;
+  isCompareInteractive: boolean;
+  tutorName: string;
+}) {
+  if (!isCompared && !isCompareInteractive) {
+    return (
+      <button
+        aria-disabled="true"
+        aria-label={`Compare is full — remove a tutor before adding ${tutorName}`}
+        className={getButtonClassName({ size: "compact", variant: "ghost" })}
+        disabled
+        type="button"
+      >
+        Compare full
+      </button>
+    );
+  }
+
+  return (
+    <form action={toggleCompareAction} className={styles.toggleForm}>
+      <input name="candidateId" type="hidden" value={candidateId} />
+      <input
+        name="intent"
+        type="hidden"
+        value={isCompared ? "remove" : "add"}
+      />
+      <input name="returnTo" type="hidden" value="/results" />
+      <button
+        aria-label={
+          isCompared
+            ? `Remove ${tutorName} from compare`
+            : `Add ${tutorName} to compare`
+        }
+        aria-pressed={isCompared}
+        className={getButtonClassName({
+          size: "compact",
+          variant: isCompared ? "secondary" : "ghost",
+        })}
+        type="submit"
+      >
+        {isCompared ? "In compare" : "Compare"}
+      </button>
+    </form>
   );
 }

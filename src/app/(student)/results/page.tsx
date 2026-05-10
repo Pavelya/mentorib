@@ -7,6 +7,7 @@ import {
   MatchRow,
   NeedSummaryBar,
   ScreenState,
+  type MatchRowShortlistState,
 } from "@/components/continuity";
 import { TimezoneNotice } from "@/components/datetime";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
@@ -30,6 +31,10 @@ import {
   type MatchResultCardDto,
   type MatchResultsPageDto,
 } from "@/modules/lessons/match-results";
+import {
+  getShortlistStateForLearningNeed,
+  type ShortlistStateDto,
+} from "@/modules/lessons/shortlist";
 import { Chip, Panel, TabBar, getButtonClassName, InlineNotice } from "@/components/ui";
 
 import styles from "./results.module.css";
@@ -116,17 +121,33 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   }
 
   const results = await getStudentMatchResults(account);
+  const shortlistState = results.currentNeed
+    ? await safeGetShortlistState(account, results.currentNeed.id)
+    : null;
 
-  return renderResultsPage({ filter, results, sort });
+  return renderResultsPage({ filter, results, shortlistState, sort });
+}
+
+async function safeGetShortlistState(
+  account: Awaited<ReturnType<typeof ensureAuthAccount>>,
+  learningNeedId: string,
+) {
+  try {
+    return await getShortlistStateForLearningNeed(account, learningNeedId);
+  } catch {
+    return null;
+  }
 }
 
 function renderResultsPage({
   filter,
   results,
+  shortlistState,
   sort,
 }: {
   filter: ResultsFilter;
   results: MatchResultsPageDto;
+  shortlistState?: ShortlistStateDto | null;
   sort: ResultsSort;
 }) {
   const visibleMatches = sortMatches(filterMatches(results.matches, filter), sort);
@@ -207,6 +228,10 @@ function renderResultsPage({
         </div>
       )}
 
+      {results.state === "ready" && shortlistState && !hasNoMatchesState ? (
+        <CompareSummary state={shortlistState} />
+      ) : null}
+
       {results.state === "ready" || results.state === "preview" ? (
         <>
           {!hasNoMatchesState ? (
@@ -257,7 +282,11 @@ function renderResultsPage({
           {visibleMatches.length > 0 ? (
             <section aria-label="Tutor match results" className={styles.resultList}>
               {visibleMatches.map((match) => (
-                <MatchRow key={match.candidateId} match={match} />
+                <MatchRow
+                  key={match.candidateId}
+                  match={match}
+                  shortlistState={resolveRowShortlistState(shortlistState, match.candidateId)}
+                />
               ))}
             </section>
           ) : !hasNoMatchesState ? (
@@ -533,4 +562,60 @@ function buildSummaryTitle(results: MatchResultsPageDto, countLabel: string) {
     default:
       return countLabel;
   }
+}
+
+function resolveRowShortlistState(
+  state: ShortlistStateDto | null | undefined,
+  candidateId: string,
+): MatchRowShortlistState | null {
+  if (!state) {
+    return null;
+  }
+
+  const entry = state.candidates.find(
+    (candidate) => candidate.candidateId === candidateId,
+  );
+
+  return {
+    isCompared: entry?.isCompared ?? false,
+    isCompareFull: state.isCompareFull,
+    isShortlisted: entry?.isShortlisted ?? false,
+  };
+}
+
+function CompareSummary({ state }: { state: ShortlistStateDto }) {
+  const compareCount = state.comparedCandidateIds.length;
+  const hasComparing = compareCount > 0;
+  const tone = state.isCompareFull ? "warning" : hasComparing ? "success" : "info";
+  const title = state.isCompareFull
+    ? `Compare is full · ${compareCount} of ${state.compareCap}`
+    : hasComparing
+      ? `Comparing ${compareCount} of ${state.compareCap} tutors`
+      : `Pick up to ${state.compareCap} tutors to compare`;
+
+  return (
+    <InlineNotice
+      aria-live="polite"
+      className={styles.notice}
+      showToneLabel={false}
+      title={title}
+      tone={tone}
+    >
+      <p>
+        {state.isCompareFull
+          ? "Remove a tutor from compare before adding another. Saved tutors stay on this page."
+          : hasComparing
+            ? "Open compare to see them side by side, or keep refining your shortlist here."
+            : "Use Save to keep tutors on this page, or Compare to line a few up side by side."}
+      </p>
+      <div className={styles.noticeActions}>
+        <Link
+          className={getButtonClassName({ size: "compact", variant: "secondary" })}
+          href="/compare"
+        >
+          {hasComparing ? "Open compare" : "View compare"}
+        </Link>
+      </div>
+    </InlineNotice>
+  );
 }

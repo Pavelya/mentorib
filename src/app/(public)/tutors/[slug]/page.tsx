@@ -24,11 +24,23 @@ import {
   Card,
   Chip,
   Flag,
+  InlineNotice,
   Panel,
   Section,
   StatusBadge,
   getButtonClassName,
 } from "@/components/ui";
+import { ensureAuthAccount } from "@/lib/auth/account-service";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getTutorShortlistContext,
+  type TutorShortlistContextDto,
+} from "@/modules/lessons/shortlist";
+import {
+  toggleCompareAction,
+  toggleShortlistAction,
+} from "@/modules/lessons/shortlist-actions";
 
 import styles from "./tutor-profile.module.css";
 
@@ -77,6 +89,7 @@ export default async function TutorProfilePage({
     notFound();
   }
 
+  const shortlistContext = await loadViewerShortlistContext(profile.id);
   const pathname = `/tutors/${profile.slug}`;
   const qualityGate = evaluateTutorProfileIndexability(
     buildTutorProfileIndexabilityInput(profile),
@@ -152,6 +165,14 @@ export default async function TutorProfilePage({
                 Start matching
               </Link>
             </div>
+
+            {shortlistContext ? (
+              <ShortlistContextPanel
+                context={shortlistContext}
+                profileSlug={profile.slug}
+                tutorName={profile.displayName}
+              />
+            ) : null}
           </div>
 
           <aside
@@ -319,6 +340,131 @@ export default async function TutorProfilePage({
         </section>
       </article>
     </>
+  );
+}
+
+async function loadViewerShortlistContext(
+  tutorProfileId: string,
+): Promise<TutorShortlistContextDto | null> {
+  if (!isSupabaseAuthConfigured()) {
+    return null;
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email?.trim()) {
+      return null;
+    }
+
+    const account = await ensureAuthAccount(user);
+
+    return await getTutorShortlistContext(account, tutorProfileId);
+  } catch {
+    return null;
+  }
+}
+
+function ShortlistContextPanel({
+  context,
+  profileSlug,
+  tutorName,
+}: {
+  context: TutorShortlistContextDto;
+  profileSlug: string;
+  tutorName: string;
+}) {
+  const compareDisabled = !context.isCompared && context.isCompareFull;
+  const tone = context.isCompared
+    ? "success"
+    : context.isShortlisted
+      ? "info"
+      : "info";
+  const title = context.isCompared
+    ? `${tutorName} is in your compare list`
+    : context.isShortlisted
+      ? `${tutorName} is saved on your shortlist`
+      : "Save or compare this tutor";
+  const summary = context.isCompareFull
+    ? `Compare is full at ${context.compareCap} tutors. Remove one before adding ${tutorName}.`
+    : `You can compare up to ${context.compareCap} tutors at a time. Currently comparing ${context.comparedCount}.`;
+  const returnTo = `/tutors/${profileSlug}`;
+
+  return (
+    <InlineNotice
+      aria-live="polite"
+      className={styles.shortlistNotice}
+      showToneLabel={false}
+      title={title}
+      tone={tone}
+    >
+      <p>{summary}</p>
+      <div className={styles.shortlistActions}>
+        <form action={toggleShortlistAction}>
+          <input name="candidateId" type="hidden" value={context.candidateId} />
+          <input
+            name="intent"
+            type="hidden"
+            value={context.isShortlisted ? "remove" : "add"}
+          />
+          <input name="profileSlug" type="hidden" value={profileSlug} />
+          <input name="returnTo" type="hidden" value={returnTo} />
+          <button
+            aria-pressed={context.isShortlisted}
+            className={getButtonClassName({
+              size: "compact",
+              variant: context.isShortlisted ? "secondary" : "primary",
+            })}
+            type="submit"
+          >
+            {context.isShortlisted ? "Saved" : "Save tutor"}
+          </button>
+        </form>
+
+        {compareDisabled ? (
+          <button
+            aria-disabled="true"
+            className={getButtonClassName({ size: "compact", variant: "ghost" })}
+            disabled
+            type="button"
+          >
+            Compare full
+          </button>
+        ) : (
+          <form action={toggleCompareAction}>
+            <input name="candidateId" type="hidden" value={context.candidateId} />
+            <input
+              name="intent"
+              type="hidden"
+              value={context.isCompared ? "remove" : "add"}
+            />
+            <input name="profileSlug" type="hidden" value={profileSlug} />
+            <input name="returnTo" type="hidden" value={returnTo} />
+            <button
+              aria-pressed={context.isCompared}
+              className={getButtonClassName({
+                size: "compact",
+                variant: context.isCompared ? "secondary" : "primary",
+              })}
+              type="submit"
+            >
+              {context.isCompared ? "In compare" : "Add to compare"}
+            </button>
+          </form>
+        )}
+
+        <Link
+          className={getButtonClassName({ size: "compact", variant: "ghost" })}
+          href="/compare"
+        >
+          Open compare
+        </Link>
+      </div>
+    </InlineNotice>
   );
 }
 

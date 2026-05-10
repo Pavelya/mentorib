@@ -1,6 +1,6 @@
 begin;
 
-select plan(28);
+select plan(33);
 
 select has_table('public', 'subjects', 'subjects exists');
 select has_table('public', 'subject_focus_areas', 'subject_focus_areas exists');
@@ -160,6 +160,43 @@ select ok(
     where conname = 'tutor_profiles_hourly_rate_minor_positive_chk'
   ),
   'tutor_profiles requires hourly_rate_minor to be positive when set'
+);
+
+select has_column(
+  'public',
+  'tutor_credentials',
+  'credential_subject_id',
+  'tutor_credentials exposes credential_subject_id'
+);
+select has_column(
+  'public',
+  'tutor_credentials',
+  'credential_subject_focus_area_id',
+  'tutor_credentials exposes credential_subject_focus_area_id'
+);
+select ok(
+  exists (
+    select 1
+    from pg_constraint
+    where conname = 'tutor_credentials_credential_type_chk'
+  ),
+  'tutor_credentials constrains credential_type to the canonical taxonomy'
+);
+select ok(
+  exists (
+    select 1
+    from pg_constraint
+    where conname = 'tutor_credentials_examiner_scope_chk'
+  ),
+  'tutor_credentials requires examiner rows to scope subject or focus area'
+);
+select ok(
+  not exists (
+    select 1
+    from pg_constraint
+    where conname = 'tutor_credentials_credential_type_not_blank_chk'
+  ),
+  'tutor_credentials drops the legacy free-text credential_type guard'
 );
 
 select * from finish();

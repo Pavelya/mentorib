@@ -52,6 +52,21 @@ export const tutorCredentialReviewStatuses = [
 export type TutorCredentialReviewStatus =
   (typeof tutorCredentialReviewStatuses)[number];
 
+export const tutorCredentialTypes = [
+  "examiner",
+  "teaching_qualification",
+  "degree",
+  "professional_certification",
+  "language_certification",
+] as const;
+
+export type TutorCredentialType = (typeof tutorCredentialTypes)[number];
+
+export const FALLBACK_TUTOR_CREDENTIAL_TYPE: TutorCredentialType =
+  "professional_certification";
+
+export const EXAMINER_TUTOR_CREDENTIAL_TYPE: TutorCredentialType = "examiner";
+
 export const availabilityRuleVisibilityStatuses = [
   "active",
   "hidden",

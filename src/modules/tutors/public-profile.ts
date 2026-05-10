@@ -20,6 +20,8 @@ import {
   formatHourlyRate,
   formatTrialPrice,
 } from "@/modules/pricing/tutor-pricing";
+import { loadExaminerBadgesForTutor } from "@/modules/tutors/examiner-credentials";
+import type { ExaminerBadge } from "@/modules/tutors/examiner-credentials-builder";
 
 const PUBLIC_TUTOR_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -106,6 +108,7 @@ export type PublicTutorProfileDto = {
   bio: string;
   bookingHref: Route | null;
   displayName: string;
+  examinerBadges: ExaminerBadge[];
   headline: string | null;
   introVideo: PublicTutorVideoReferenceDto | null;
   languages: PublicTutorLanguageDto[];
@@ -294,6 +297,7 @@ export function buildTutorProfileIndexabilityInput(
 
 type RelatedPublicTutorProfileRecords = {
   credentials: TutorCredentialRecord[];
+  examinerBadges: ExaminerBadge[];
   languages: TutorLanguageCapabilityRecord[];
   languageRows: ReferenceLanguage[];
   schedule: SchedulePolicyRecord | null;
@@ -348,14 +352,16 @@ async function loadPublicTutorProfileRelatedRecords(
 
   const subjectCapabilities = subjectCapabilitiesResult.data ?? [];
   const languageCapabilities = languagesResult.data ?? [];
-  const [subjects, subjectFocusAreas, languageRows] = await Promise.all([
+  const [subjects, subjectFocusAreas, languageRows, examinerBadges] = await Promise.all([
     loadSubjects(subjectCapabilities.map((row) => row.subject_id)),
     loadSubjectFocusAreas(subjectCapabilities.map((row) => row.subject_focus_area_id)),
     loadLanguages(languageCapabilities.map((row) => row.language_code)),
+    loadExaminerBadgesForTutor(tutorProfileId),
   ]);
 
   return {
     credentials: credentialsResult.data ?? [],
+    examinerBadges,
     languages: languageCapabilities,
     languageRows,
     schedule: scheduleResult.data ?? null,
@@ -478,6 +484,7 @@ function buildPublicTutorProfileDto(
       ? (`/book/${profile.public_slug}` as Route)
       : null,
     displayName: profile.display_name?.trim() ?? "Mentor IB tutor",
+    examinerBadges: relatedRecords.examinerBadges,
     headline: normalizeOptionalText(profile.headline),
     introVideo,
     languages,

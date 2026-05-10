@@ -27,6 +27,7 @@ import {
   payoutReadinessStatuses,
   tutorApplicationStatuses,
   tutorCredentialReviewStatuses,
+  tutorCredentialTypes,
   tutorProfileVisibilityStatuses,
   tutorPublicListingStatuses,
 } from "@/modules/tutors/constants";
@@ -181,7 +182,9 @@ export const tutorCredentials = pgTable(
     tutor_profile_id: uuid("tutor_profile_id")
       .notNull()
       .references(() => tutorProfiles.id, { onDelete: "cascade" }),
-    credential_type: text("credential_type").notNull(),
+    credential_type: text("credential_type", {
+      enum: tutorCredentialTypes,
+    }).notNull(),
     title: text("title").notNull(),
     issuing_body: text("issuing_body"),
     storage_object_path: text("storage_object_path").notNull(),
@@ -194,6 +197,12 @@ export const tutorCredentials = pgTable(
     public_display_preference: boolean("public_display_preference")
       .notNull()
       .default(false),
+    credential_subject_id: uuid("credential_subject_id").references(
+      () => subjects.id,
+    ),
+    credential_subject_focus_area_id: uuid(
+      "credential_subject_focus_area_id",
+    ).references(() => subjectFocusAreas.id),
     created_at: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -205,6 +214,12 @@ export const tutorCredentials = pgTable(
     index("tutor_credentials_tutor_profile_id_review_status_idx").on(
       table.tutor_profile_id,
       table.review_status,
+    ),
+    index("tutor_credentials_examiner_subject_idx").on(
+      table.credential_subject_id,
+    ),
+    index("tutor_credentials_examiner_focus_area_idx").on(
+      table.credential_subject_focus_area_id,
     ),
   ],
 );

@@ -51,6 +51,7 @@ import type {
   PayoutReadinessStatus,
   TutorApplicationStatus,
   TutorCredentialReviewStatus,
+  TutorCredentialType,
   TutorProfileVisibilityStatus,
   TutorPublicListingStatus,
 } from "@/modules/tutors/constants";
@@ -214,7 +215,9 @@ type TutorLanguageCapabilityRow = {
 
 type TutorCredentialRow = {
   created_at: string;
-  credential_type: string;
+  credential_subject_focus_area_id: string | null;
+  credential_subject_id: string | null;
+  credential_type: TutorCredentialType;
   id: string;
   issuing_body: string | null;
   public_display_preference: boolean;
@@ -1168,6 +1171,8 @@ export type MentorIbDatabase = {
           TutorCredentialRow,
           "credential_type" | "storage_object_path" | "title" | "tutor_profile_id"
         > & {
+          credential_subject_focus_area_id?: string | null;
+          credential_subject_id?: string | null;
           issuing_body?: string | null;
           public_display_preference?: boolean;
           review_status?: TutorCredentialReviewStatus;
@@ -1178,7 +1183,7 @@ export type MentorIbDatabase = {
         Update: Partial<
           Omit<
             TutorCredentialRow,
-            "created_at" | "credential_type" | "id" | "storage_object_path" | "title" | "tutor_profile_id" | "updated_at"
+            "created_at" | "id" | "storage_object_path" | "title" | "tutor_profile_id" | "updated_at"
           >
         >;
       };

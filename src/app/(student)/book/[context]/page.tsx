@@ -290,6 +290,12 @@ export default async function BookingPage({
                   <li key={line}>{line}</li>
                 ))}
               </ul>
+
+              <p className={styles.consentNote}>
+                Requesting this lesson confirms you agree to the Mentor IB{" "}
+                <Link href="/terms">terms</Link> and{" "}
+                <Link href="/privacy-policy">privacy policy</Link>.
+              </p>
             </Section>
           </Panel>
 

@@ -143,6 +143,18 @@ export function SignInForm({
           </Link>
         </div>
       </div>
+
+      <p className={styles.consentNote}>
+        By continuing you agree to the Mentor IB{" "}
+        <Link className={styles.utilityLink} href="/terms">
+          terms
+        </Link>{" "}
+        and{" "}
+        <Link className={styles.utilityLink} href="/privacy-policy">
+          privacy policy
+        </Link>
+        .
+      </p>
     </Panel>
   );
 }

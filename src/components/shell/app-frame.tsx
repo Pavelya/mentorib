@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -6,10 +7,16 @@ import type { NavItem } from "@/lib/routing/navigation";
 
 import styles from "./app-frame.module.css";
 
+export type AppFrameFooterLink = {
+  href: Route;
+  label: string;
+};
+
 type AppFrameProps = {
   eyebrow: string;
   title: string;
   description: string;
+  footerLinks?: AppFrameFooterLink[];
   footerNote?: string;
   navItems?: NavItem[];
   children: ReactNode;
@@ -21,6 +28,7 @@ export function AppFrame({
   eyebrow,
   title,
   description,
+  footerLinks = [],
   footerNote = "",
   navItems = [],
   children,
@@ -80,9 +88,22 @@ export function AppFrame({
         </div>
       </main>
 
-      {footerNote ? (
+      {footerNote || footerLinks.length > 0 ? (
         <footer className={styles.footer}>
-          {footerNote}
+          {footerNote ? <p className={styles.footerNote}>{footerNote}</p> : null}
+          {footerLinks.length > 0 ? (
+            <nav aria-label="Legal and policy" className={styles.footerLinks}>
+              {footerLinks.map((link) => (
+                <Link
+                  className={styles.footerLink}
+                  href={link.href}
+                  key={`${link.href}-${link.label}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
         </footer>
       ) : null}
     </div>

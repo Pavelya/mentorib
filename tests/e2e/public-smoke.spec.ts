@@ -6,6 +6,8 @@ const PUBLIC_ROUTES: Array<{ path: string; titlePattern: RegExp }> = [
   { path: "/trust-and-safety", titlePattern: /Mentor IB/i },
   { path: "/support", titlePattern: /Mentor IB/i },
   { path: "/become-a-tutor", titlePattern: /Mentor IB/i },
+  { path: "/privacy-policy", titlePattern: /Mentor IB/i },
+  { path: "/terms", titlePattern: /Mentor IB/i },
 ];
 
 const AUTH_ENTRY = { path: "/auth/sign-in", titlePattern: /Mentor IB/i };

@@ -5,7 +5,9 @@ export type StaticPublicRouteKey =
   | "howItWorks"
   | "trustAndSafety"
   | "support"
-  | "becomeATutor";
+  | "becomeATutor"
+  | "privacyPolicy"
+  | "terms";
 
 export type StaticPublicRouteDefinition = {
   breadcrumbLabel?: string;
@@ -54,6 +56,28 @@ export const staticPublicRouteDefinitions: Record<
     routeClass: "A",
     searchReady: true,
     title: "How Mentor IB Matching Works for Students and Parents",
+  },
+  privacyPolicy: {
+    breadcrumbLabel: "Privacy policy",
+    description:
+      "Read how Mentor IB collects, uses, shares, and retains personal data across matching, bookings, lessons, payments, and support.",
+    key: "privacyPolicy",
+    openGraphType: "article",
+    pathname: "/privacy-policy",
+    routeClass: "A",
+    searchReady: true,
+    title: "Mentor IB Privacy Policy",
+  },
+  terms: {
+    breadcrumbLabel: "Terms",
+    description:
+      "Read the terms of service that govern student, parent, and tutor use of Mentor IB matching, booking, payment, and lesson features.",
+    key: "terms",
+    openGraphType: "article",
+    pathname: "/terms",
+    routeClass: "A",
+    searchReady: true,
+    title: "Mentor IB Terms of Service",
   },
   support: {
     breadcrumbLabel: "Support",

@@ -16,6 +16,11 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     <AppFrame
       description="Shared public chrome for discovery, trust framing, and the problem-first entry into the product."
       eyebrow="IB tutor matching"
+      footerLinks={[
+        { href: "/privacy-policy", label: "Privacy policy" },
+        { href: "/terms", label: "Terms" },
+        { href: "/support", label: "Support" },
+      ]}
       footerNote="Mentor IB helps students and parents move from a specific IB need to a tutor who fits."
       navItems={navigationByFamily.public}
       showHero={false}

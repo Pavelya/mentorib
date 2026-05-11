@@ -12,7 +12,10 @@ const PRIVATE_ROUTE_DISALLOWS = [
   "/match",
   "/messages",
   "/notifications",
-  "/privacy",
+  // The authenticated account snapshot is `/privacy` exactly. Use the `$`
+  // end-of-URL terminator so the public `/privacy-policy` legal surface is
+  // not also blocked by a prefix match.
+  "/privacy$",
   "/results",
   "/saved",
   "/settings",

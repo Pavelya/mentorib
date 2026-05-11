@@ -50,6 +50,15 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
         <h1 className={styles.pageTitle}>Privacy &amp; legal</h1>
         <p className={styles.pageDescription}>
           Review required policy updates and see the basics of your account privacy surface.
+          See the public{" "}
+          <a className={styles.inlineLink} href="/privacy-policy">
+            Privacy Policy
+          </a>{" "}
+          and{" "}
+          <a className={styles.inlineLink} href="/terms">
+            Terms
+          </a>{" "}
+          for the canonical legal text.
         </p>
       </header>
 

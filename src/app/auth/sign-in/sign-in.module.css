@@ -138,6 +138,13 @@
   text-decoration: underline;
 }
 
+.consentNote {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+  line-height: var(--line-body);
+}
+
 @media (max-width: 640px) {
   .title {
     font-size: clamp(1.8rem, 5vw + 0.9rem, 2.2rem);

@@ -436,6 +436,14 @@ function StudentRosterCard({
           <Link
             className={getButtonClassName({
               size: "compact",
+            })}
+            href={`/tutor/students/${item.studentProfileId}` as Route}
+          >
+            Open student
+          </Link>
+          <Link
+            className={getButtonClassName({
+              size: "compact",
               variant: "secondary",
             })}
             href={"/tutor/lessons" as Route}

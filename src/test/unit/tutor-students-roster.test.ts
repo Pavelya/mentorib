@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   aggregateLessonsByStudent,
   applyRosterFilter,
+  buildPreviewTutorStudentRelationship,
+  buildPreviewTutorStudentsRoster,
+  buildRecentLessons,
   deriveRelationshipState,
   type LessonRosterRecord,
   type TutorStudentsRosterItemDto,
@@ -239,5 +242,108 @@ describe("applyRosterFilter", () => {
 
   it("returns the full set when no filters are provided", () => {
     expect(applyRosterFilter(items, {}).length).toBe(items.length);
+  });
+});
+
+describe("buildRecentLessons", () => {
+  it("sorts lessons by start time desc and caps to five entries", () => {
+    const lessons: LessonRosterRecord[] = [
+      makeLesson({
+        id: "l1",
+        lesson_status: "completed",
+        scheduled_start_at: isoDaysFromNow(-10),
+      }),
+      makeLesson({
+        id: "l2",
+        lesson_status: "completed",
+        scheduled_start_at: isoDaysFromNow(-2),
+      }),
+      makeLesson({
+        id: "l3",
+        lesson_status: "accepted",
+        scheduled_start_at: isoDaysFromNow(4),
+      }),
+      makeLesson({
+        id: "l4",
+        lesson_status: "completed",
+        scheduled_start_at: isoDaysFromNow(-1),
+      }),
+      makeLesson({
+        id: "l5",
+        lesson_status: "completed",
+        scheduled_start_at: isoDaysFromNow(-30),
+      }),
+      makeLesson({
+        id: "l6",
+        lesson_status: "reviewed",
+        scheduled_start_at: isoDaysFromNow(-40),
+      }),
+    ];
+
+    const result = buildRecentLessons(lessons);
+
+    expect(result.map((lesson) => lesson.id)).toEqual([
+      "l3",
+      "l4",
+      "l2",
+      "l1",
+      "l5",
+    ]);
+    expect(result[0]?.subject).toEqual({
+      id: "subject-bio",
+      label: "Biology HL",
+    });
+  });
+
+  it("preserves subject and focus snapshots when present", () => {
+    const result = buildRecentLessons([
+      makeLesson({
+        focus_snapshot: { id: "focus-tok-essay", label: "TOK essay" },
+        id: "l1",
+        scheduled_start_at: isoDaysFromNow(-1),
+        subject_snapshot: { id: "subject-bio", label: "Biology HL" },
+      }),
+    ]);
+
+    expect(result[0]?.focus).toEqual({
+      id: "focus-tok-essay",
+      label: "TOK essay",
+    });
+    expect(result[0]?.subject).toEqual({
+      id: "subject-bio",
+      label: "Biology HL",
+    });
+  });
+});
+
+describe("buildPreviewTutorStudentRelationship", () => {
+  const preview = buildPreviewTutorStudentsRoster();
+
+  it("returns a preview relationship for a known preview student", () => {
+    const [previewItem] = preview.items;
+    if (!previewItem) {
+      throw new Error("Expected preview roster to include items");
+    }
+
+    const result = buildPreviewTutorStudentRelationship(
+      previewItem.studentProfileId,
+    );
+
+    expect(result.state).toBe("preview");
+    expect(result.relationship?.studentProfileId).toBe(
+      previewItem.studentProfileId,
+    );
+    expect(
+      (result.relationship?.recentLessons.length ?? 0) > 0,
+    ).toBe(true);
+  });
+
+  it("returns not_found for an unknown preview student", () => {
+    const result = buildPreviewTutorStudentRelationship(
+      "preview-student-profile-unknown",
+    );
+
+    expect(result.state).toBe("not_found");
+    expect(result.relationship).toBeNull();
   });
 });

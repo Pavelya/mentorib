@@ -173,7 +173,7 @@ Bad parallel examples:
 | 2 | `P15-SAVED-001` | `ready` | `P1` | 1 | Saved tutors persistent surface |
 | 2 | `P15-STUD-002` | `ready` | `P1` | 3 | Tutor students route and roster surface |
 | 3 | `P15-COMP-002` | `ready` | `P1` | 2 | Compare route and decision surface |
-| 3 | `P15-STUD-003` | `draft` | `P1` | 3 | Tutor student relationship detail surface |
+| 3 | `P15-STUD-003` | `ready` | `P1` | 3 | Tutor student relationship detail surface |
 | 4 | `P15-PUBLIC-001` | `draft` | `P2` | 4 | Public landing page visual enrichment |
 | 4 | `P15-PUBLIC-002` | `draft` | `P2` | 4 | Home route visual enrichment |
 | 4 | `P15-PUBLIC-003` | `ready` | `P1` | 4 | Public privacy-policy and terms routes |
@@ -415,7 +415,7 @@ Implement the tutor students route as a lightweight relationship surface that he
 
 ## 10.6 `P15-STUD-003` Tutor student relationship detail surface
 
-**Status:** `draft`
+**Status:** `ready`
 **Priority:** `P1`
 **Wave:** 3
 **Depends on:** `P15-STUD-002`
@@ -431,11 +431,20 @@ Add the first tutor student relationship detail surface so a tutor can open one 
 - `docs/foundations/ux-object-model.md`
 - `docs/design-system/design-system-spec-final-v1.md`
 
+**Interaction model**
+
+- the detail surface lives at the child route `/tutor/students/[studentProfileId]`, reusing the existing `tutor` route family layout
+- the detail page is overview-only and does not introduce tabs; notes, reports, and file management remain out of scope per the explicit non-goals below
+- roster cards on `/tutor/students` add an "Open student" link that navigates to the detail route while preserving the roster's `q` / `relationship` / `subject` query params on the back link
+- the detail page links into the existing `/tutor/lessons` and `/tutor/messages` hubs as-is; per-student filters on those hubs are deliberately deferred to keep this task bounded
+- authorization is enforced server-side by scoping the DTO query to lessons owned by the current tutor's profile; missing or unauthorized relationships return 404 rather than leak existence
+
 **Scope**
 
-- selected-student detail view within `/tutor/students` by default
-- overview of active relationship context
-- clear connection to lessons and messages
+- selected-student detail view at `/tutor/students/[studentProfileId]`
+- overview of active relationship context (relationship state badge, subjects shared, completed-lesson count, pending-request count, next-lesson and last-lesson timestamps)
+- a short recent-lessons list (≤ 5) reusing the shared `LessonSummary` pattern, each linking to the matching `/tutor/lessons/[id]` detail
+- clear next-action affordances into lessons and messages
 - reuse of shared person and lesson-summary patterns
 
 **Out of scope**
@@ -444,6 +453,7 @@ Add the first tutor student relationship detail surface so a tutor can open one 
 - report authoring
 - file management
 - a brand-new route family unless the route architecture is explicitly revised
+- per-student filter parameters on `/tutor/lessons` or `/tutor/messages`
 
 **Acceptance criteria**
 

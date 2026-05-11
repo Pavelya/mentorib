@@ -78,6 +78,36 @@ export type TutorStudentsRosterDto = {
   state: "ready" | "preview" | "no_profile";
 };
 
+export type TutorStudentRelationshipLessonDto = {
+  endAt: string;
+  focus: TutorStudentsRosterSubjectDto | null;
+  id: string;
+  lessonStatus: LessonStatus;
+  startAt: string;
+  subject: TutorStudentsRosterSubjectDto | null;
+};
+
+export type TutorStudentRelationshipDto = {
+  appUserId: string;
+  avatarUrl: string | null;
+  completedLessonCount: number;
+  displayName: string;
+  lastLessonAt: string | null;
+  pendingRequestCount: number;
+  recentLessons: TutorStudentRelationshipLessonDto[];
+  relationshipState: TutorStudentsRelationshipState;
+  studentProfileId: string;
+  subjects: TutorStudentsRosterSubjectDto[];
+  timezone: string;
+  upcomingLessonAt: string | null;
+};
+
+export type TutorStudentRelationshipResult =
+  | { relationship: TutorStudentRelationshipDto; state: "ready" | "preview" }
+  | { relationship: null; state: "no_profile" | "not_found" };
+
+const RELATIONSHIP_RECENT_LESSONS_LIMIT = 5;
+
 export type LessonRosterRecord = {
   focus_snapshot: unknown;
   id: string;
@@ -172,6 +202,130 @@ export async function getTutorStudentsRoster(
     items: filteredItems,
     state: "ready",
   };
+}
+
+export async function getTutorStudentRelationship(
+  account: Pick<ResolvedAuthAccount, "id">,
+  studentProfileId: string,
+): Promise<TutorStudentRelationshipResult> {
+  const trimmedId = studentProfileId.trim();
+
+  if (trimmedId.length === 0) {
+    return { relationship: null, state: "not_found" };
+  }
+
+  const tutorProfile = await loadTutorProfile(account.id);
+
+  if (!tutorProfile) {
+    return { relationship: null, state: "no_profile" };
+  }
+
+  const lessons = await loadRelationshipLessons(tutorProfile.id, trimmedId);
+
+  if (lessons.length === 0) {
+    return { relationship: null, state: "not_found" };
+  }
+
+  const aggregateByStudent = aggregateLessonsByStudent(lessons);
+  const aggregate = aggregateByStudent.get(trimmedId);
+
+  if (!aggregate) {
+    return { relationship: null, state: "not_found" };
+  }
+
+  const studentLookup = await loadStudentLookup([trimmedId]);
+  const student = studentLookup.get(trimmedId);
+
+  if (!student) {
+    return { relationship: null, state: "not_found" };
+  }
+
+  const rosterItem = buildRosterItem(aggregate, student);
+
+  return {
+    relationship: {
+      ...rosterItem,
+      recentLessons: buildRecentLessons(lessons),
+    },
+    state: "ready",
+  };
+}
+
+export function buildPreviewTutorStudentRelationship(
+  studentProfileId: string,
+): TutorStudentRelationshipResult {
+  const preview = buildPreviewTutorStudentsRoster();
+  const item = preview.items.find(
+    (candidate) => candidate.studentProfileId === studentProfileId,
+  );
+
+  if (!item) {
+    return { relationship: null, state: "not_found" };
+  }
+
+  const now = Date.now();
+  const upcomingLessonAt = item.upcomingLessonAt;
+  const recentLessons: TutorStudentRelationshipLessonDto[] = [];
+
+  if (upcomingLessonAt) {
+    const startMs = new Date(upcomingLessonAt).getTime();
+    recentLessons.push({
+      endAt: new Date(startMs + 60 * 60 * 1000).toISOString(),
+      focus: null,
+      id: `${item.studentProfileId}-upcoming`,
+      lessonStatus: "accepted",
+      startAt: upcomingLessonAt,
+      subject: item.subjects[0] ?? null,
+    });
+  }
+
+  if (item.lastLessonAt) {
+    const startMs = new Date(item.lastLessonAt).getTime();
+    recentLessons.push({
+      endAt: new Date(startMs + 60 * 60 * 1000).toISOString(),
+      focus: null,
+      id: `${item.studentProfileId}-recent`,
+      lessonStatus: "completed",
+      startAt: item.lastLessonAt,
+      subject: item.subjects[0] ?? null,
+    });
+  }
+
+  if (recentLessons.length === 0) {
+    recentLessons.push({
+      endAt: new Date(now).toISOString(),
+      focus: null,
+      id: `${item.studentProfileId}-placeholder`,
+      lessonStatus: "pending",
+      startAt: new Date(now).toISOString(),
+      subject: item.subjects[0] ?? null,
+    });
+  }
+
+  return {
+    relationship: { ...item, recentLessons },
+    state: "preview",
+  };
+}
+
+export function buildRecentLessons(
+  lessons: readonly LessonRosterRecord[],
+): TutorStudentRelationshipLessonDto[] {
+  return [...lessons]
+    .sort(
+      (left, right) =>
+        new Date(right.scheduled_start_at).getTime() -
+        new Date(left.scheduled_start_at).getTime(),
+    )
+    .slice(0, RELATIONSHIP_RECENT_LESSONS_LIMIT)
+    .map((lesson) => ({
+      endAt: lesson.scheduled_end_at,
+      focus: parseSnapshotLabel(lesson.focus_snapshot),
+      id: lesson.id,
+      lessonStatus: lesson.lesson_status,
+      startAt: lesson.scheduled_start_at,
+      subject: parseSnapshotLabel(lesson.subject_snapshot),
+    }));
 }
 
 export function buildPreviewTutorStudentsRoster(): TutorStudentsRosterDto {
@@ -366,6 +520,30 @@ async function loadRosterLessons(
 
   if (error) {
     throw new Error("Could not load tutor students roster lessons.");
+  }
+
+  return data ?? [];
+}
+
+async function loadRelationshipLessons(
+  tutorProfileId: string,
+  studentProfileId: string,
+): Promise<LessonRosterRecord[]> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select(
+      "focus_snapshot, id, lesson_status, request_expires_at, scheduled_end_at, scheduled_start_at, student_profile_id, subject_snapshot",
+    )
+    .eq("tutor_profile_id", tutorProfileId)
+    .eq("student_profile_id", studentProfileId)
+    .in("lesson_status", [...ROSTER_LESSON_STATUSES])
+    .order("scheduled_start_at", { ascending: false })
+    .limit(TUTOR_STUDENTS_LESSON_SCAN_LIMIT)
+    .returns<LessonRosterRecord[]>();
+
+  if (error) {
+    throw new Error("Could not load tutor student relationship lessons.");
   }
 
   return data ?? [];

@@ -1,0 +1,91 @@
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.notice {
+  margin-bottom: var(--space-3);
+}
+
+.controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+.searchField {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.searchActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filterGroup {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.filterLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+  font-weight: 600;
+}
+
+.rosterList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rosterItem {
+  display: contents;
+}
+
+.studentCard {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.detailList {
+  display: grid;
+  gap: var(--space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.detailItem {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .searchRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchActions {
+    flex-direction: row;
+  }
+}

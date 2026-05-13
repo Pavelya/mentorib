@@ -10,29 +10,43 @@ export type OptionCardGroupOption = {
   value: string;
 };
 
-type OptionCardGroupProps = {
+type SingleSelectProps = {
+  mode?: "single";
+  onChange: (value: string) => void;
+  value: string;
+};
+
+type MultiSelectProps = {
+  mode: "multi";
+  onToggle: (value: string) => void;
+  values: readonly string[];
+};
+
+type OptionCardGroupBaseProps = {
   error?: string;
   hideLegend?: boolean;
   id?: string;
   legend: string;
   name: string;
-  onChange: (value: string) => void;
   options: readonly OptionCardGroupOption[];
   showDescriptions?: boolean;
-  value: string;
 };
 
-export function OptionCardGroup({
-  error,
-  hideLegend = false,
-  id,
-  legend,
-  name,
-  onChange,
-  options,
-  showDescriptions = false,
-  value,
-}: OptionCardGroupProps) {
+type OptionCardGroupProps = OptionCardGroupBaseProps &
+  (SingleSelectProps | MultiSelectProps);
+
+export function OptionCardGroup(props: OptionCardGroupProps) {
+  const {
+    error,
+    hideLegend = false,
+    id,
+    legend,
+    name,
+    options,
+    showDescriptions = false,
+  } = props;
+  const isMulti = props.mode === "multi";
+
   return (
     <fieldset
       aria-invalid={error ? true : undefined}
@@ -48,7 +62,9 @@ export function OptionCardGroup({
       </legend>
       <div className={styles.grid}>
         {options.map((option) => {
-          const isSelected = value === option.value;
+          const isSelected = isMulti
+            ? props.values.includes(option.value)
+            : props.value === option.value;
           const inputId = `${name}-${option.value}`;
 
           return (
@@ -57,9 +73,13 @@ export function OptionCardGroup({
                 checked={isSelected}
                 className={styles.input}
                 id={inputId}
-                name={name}
-                onChange={() => onChange(option.value)}
-                type="radio"
+                name={isMulti ? `${name}[]` : name}
+                onChange={() =>
+                  isMulti
+                    ? props.onToggle(option.value)
+                    : props.onChange(option.value)
+                }
+                type={isMulti ? "checkbox" : "radio"}
                 value={option.value}
               />
               <label

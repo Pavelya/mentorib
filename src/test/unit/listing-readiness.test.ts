@@ -3,11 +3,10 @@ import { describe, expect, it } from "vitest";
 import { evaluateTutorProfileMinimum } from "@/modules/tutors/listing-readiness";
 
 const completeInput = {
-  bestForSummary: "Higher-level Biology IA students",
+  bio: "Higher-level Biology IA students; structured, exam-aware coaching.",
   displayName: "Maya Chen",
   headline: "Biology HL Examiner",
   hourlyRateMinor: 6000,
-  teachingStyleSummary: "Structured, exam-aware coaching",
   timezone: "Europe/London",
 };
 
@@ -48,5 +47,14 @@ describe("evaluateTutorProfileMinimum", () => {
     expect(result.missing).toEqual(
       expect.arrayContaining(["displayName", "headline"]),
     );
+  });
+
+  it("requires the consolidated bio", () => {
+    const result = evaluateTutorProfileMinimum({
+      ...completeInput,
+      bio: "   ",
+    });
+    expect(result.passes).toBe(false);
+    expect(result.missing).toContain("bio");
   });
 });

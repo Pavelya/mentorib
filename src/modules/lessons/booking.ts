@@ -8,6 +8,7 @@ import { createStripeServerClient, isStripeCheckoutConfigured } from "@/lib/stri
 import type { MentorIbDatabase } from "@/lib/supabase/database.types";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { hasRole, isRestrictedAccount } from "@/modules/accounts/account-state";
+import { STANDARD_LESSON_DURATION_MINUTES } from "@/modules/lessons/constants";
 import { getMatchOptionLabel } from "@/modules/lessons/match-flow-options";
 import {
   loadReferenceLanguageByCode,
@@ -33,7 +34,6 @@ const DEFAULT_BOOKING_LEAD_TIME_MINUTES = 480;
 const DEFAULT_BUFFER_AFTER_MINUTES = 0;
 const DEFAULT_BUFFER_BEFORE_MINUTES = 0;
 const DEFAULT_BOOKING_REQUEST_EXPIRY_BUFFER_MINUTES = 120;
-const DEFAULT_LESSON_DURATION_MINUTES = 48;
 const MAX_BOOKING_ADVANCE_DAYS = 6;
 const MAX_BOOKING_SLOTS = 12;
 const PUBLIC_TUTOR_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -109,7 +109,7 @@ type MatchRunRecord = {
 
 type TutorProfileRecord = {
   app_user_id: string;
-  best_for_summary: string | null;
+  bio: string | null;
   display_name: string | null;
   headline: string | null;
   id: string;
@@ -236,7 +236,7 @@ export type BookingSlotOption = {
 
 type BookingTutorSummaryDto = {
   acceptingNewStudents: boolean;
-  bestForSummary: string | null;
+  bio: string | null;
   displayName: string;
   headline: string | null;
   languages: string[];
@@ -794,7 +794,7 @@ function buildEmptyBookingContext(
     currencyCode: DEFAULT_PLATFORM_CURRENCY_CODE,
     notePrefill: "",
     priceLabel: null,
-    sessionDurationMinutes: DEFAULT_LESSON_DURATION_MINUTES,
+    sessionDurationMinutes: STANDARD_LESSON_DURATION_MINUTES,
     slotOptions: [],
     source: null,
     status,
@@ -918,7 +918,7 @@ async function resolvePublicTutorBookingContext(
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const { data: tutor, error: tutorError } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("app_user_id, id, display_name, public_slug, headline, best_for_summary, pricing_summary")
+    .select("app_user_id, id, display_name, public_slug, headline, bio, pricing_summary")
     .eq("public_slug", slug)
     .eq("application_status", "approved")
     .eq("profile_visibility_status", "public_visible")
@@ -1069,7 +1069,7 @@ function buildBookingContextDto(
       currencyCode: resolvedContext.currencyCode,
       notePrefill: resolvedContext.notePrefill,
       priceLabel: resolvedContext.priceLabel,
-      sessionDurationMinutes: DEFAULT_LESSON_DURATION_MINUTES,
+      sessionDurationMinutes: STANDARD_LESSON_DURATION_MINUTES,
       slotOptions: [],
       source: resolvedContext.source,
       status: "not_accepting_requests",
@@ -1087,7 +1087,7 @@ function buildBookingContextDto(
       currencyCode: resolvedContext.currencyCode,
       notePrefill: resolvedContext.notePrefill,
       priceLabel: resolvedContext.priceLabel,
-      sessionDurationMinutes: DEFAULT_LESSON_DURATION_MINUTES,
+      sessionDurationMinutes: STANDARD_LESSON_DURATION_MINUTES,
       slotOptions: resolvedContext.slotOptions,
       source: resolvedContext.source,
       status: "pricing_unavailable",
@@ -1104,7 +1104,7 @@ function buildBookingContextDto(
     currencyCode: resolvedContext.currencyCode,
     notePrefill: resolvedContext.notePrefill,
     priceLabel: resolvedContext.priceLabel,
-    sessionDurationMinutes: DEFAULT_LESSON_DURATION_MINUTES,
+    sessionDurationMinutes: STANDARD_LESSON_DURATION_MINUTES,
     slotOptions: resolvedContext.slotOptions.map((slot) => ({
       ...slot,
       label: slot.label,
@@ -1127,7 +1127,7 @@ function buildTutorSummaryDto(
 ): BookingTutorSummaryDto {
   return {
     acceptingNewStudents: schedulePolicy.is_accepting_new_students,
-    bestForSummary: normalizeOptionalText(tutor.best_for_summary, 240),
+    bio: normalizeOptionalText(tutor.bio, 240),
     displayName: tutor.display_name?.trim() ?? "Mentor IB tutor",
     headline: normalizeOptionalText(tutor.headline, 160),
     languages: tutorLanguages,
@@ -1743,7 +1743,7 @@ async function loadExistingDraftBundle(
 
   const { data: tutor } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("app_user_id, id, display_name, public_slug, headline, best_for_summary, pricing_summary")
+    .select("app_user_id, id, display_name, public_slug, headline, bio, pricing_summary")
     .eq("id", lesson.tutor_profile_id)
     .maybeSingle<TutorProfileRecord>();
 
@@ -1859,7 +1859,7 @@ async function loadTutorProfileById(tutorProfileId: string) {
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const { data, error } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("app_user_id, id, display_name, public_slug, headline, best_for_summary, pricing_summary")
+    .select("app_user_id, id, display_name, public_slug, headline, bio, pricing_summary")
     .eq("id", tutorProfileId)
     .maybeSingle<TutorProfileRecord>();
 
@@ -2096,7 +2096,7 @@ function generateBookableSlots({
     cursor <= bookingRange.end && slotOptions.length < MAX_BOOKING_SLOTS;
     cursor = addMinutes(cursor, DEFAULT_BOOKING_INCREMENT_MINUTES)
   ) {
-    const endAt = addMinutes(cursor, DEFAULT_LESSON_DURATION_MINUTES);
+    const endAt = addMinutes(cursor, STANDARD_LESSON_DURATION_MINUTES);
 
     if (
       !isSlotAvailable({

@@ -32,7 +32,7 @@ export type SeoCuratedTutorLanguageDto = {
 };
 
 export type SeoCuratedTutorCardDto = {
-  bestForSummary: string | null;
+  bio: string | null;
   currencyCode: string;
   displayName: string;
   examinerBadgeForScope: boolean;
@@ -41,7 +41,6 @@ export type SeoCuratedTutorCardDto = {
   languages: readonly SeoCuratedTutorLanguageDto[];
   profileHref: Route;
   publicSlug: string;
-  teachingStyleSummary: string | null;
   trialPriceLabel: string | null;
   tutorProfileId: string;
 };
@@ -64,7 +63,7 @@ type ScheduleRow = {
 };
 
 type ProfileRow = {
-  best_for_summary: string | null;
+  bio: string | null;
   created_at: string;
   currency_code: string | null;
   display_name: string | null;
@@ -72,7 +71,6 @@ type ProfileRow = {
   hourly_rate_minor: number | null;
   id: string;
   public_slug: string | null;
-  teaching_style_summary: string | null;
   trial_price_minor: number | null;
   updated_at: string;
 };
@@ -154,7 +152,7 @@ export async function getSeoCuratedTutorsForScope(
 
     return [
       {
-        bestForSummary: normalizeOptionalText(profile.best_for_summary),
+        bio: normalizeOptionalText(profile.bio),
         currencyCode: normalizeCurrencyCode(profile.currency_code),
         displayName: profile.display_name,
         examinerBadgeForScope: scored.hasExaminerCredentialForScope,
@@ -166,7 +164,6 @@ export async function getSeoCuratedTutorsForScope(
         languages: languagesByTutor.get(profile.id) ?? [],
         profileHref: `/tutors/${profile.public_slug}` as Route,
         publicSlug: profile.public_slug,
-        teachingStyleSummary: normalizeOptionalText(profile.teaching_style_summary),
         trialPriceLabel: formatTrialPrice({
           currencyCode: profile.currency_code,
           trialPriceMinor: profile.trial_price_minor,
@@ -233,8 +230,7 @@ async function loadListedTutorProfiles(
         "public_slug",
         "display_name",
         "headline",
-        "best_for_summary",
-        "teaching_style_summary",
+        "bio",
         "trial_price_minor",
         "hourly_rate_minor",
         "currency_code",

@@ -200,10 +200,6 @@ export default async function TutorProfilePage({
 
             <dl className={styles.summaryList}>
               <div>
-                <dt>Best for</dt>
-                <dd>{profile.bestForSummary ?? "Students reviewing fit in matching."}</dd>
-              </div>
-              <div>
                 <dt>Availability</dt>
                 <dd>{profile.availability.summary}</dd>
               </div>
@@ -220,7 +216,7 @@ export default async function TutorProfilePage({
             eyebrow="Fit guidance"
             title="Where this tutor is strongest"
             description={
-              profile.bestForSummary ??
+              profile.bio ||
               "Use the subject and focus areas below to decide whether this tutor fits the current IB need."
             }
           >
@@ -250,11 +246,11 @@ export default async function TutorProfilePage({
           </Panel>
 
           <Panel
-            eyebrow="Teaching style"
+            eyebrow="About this tutor"
             title="How lessons tend to feel"
             description={
-              profile.teachingStyleSummary ??
-              "This tutor has not added a teaching-style note yet."
+              profile.bio ||
+              "This tutor has not added a bio yet."
             }
             tone="warm"
           >

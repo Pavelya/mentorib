@@ -167,7 +167,7 @@ function LessonRowCard({
     timezone,
   );
   const timezoneLabel = getTimezoneLabel(timezone);
-  const detailDescription = lesson.tutor.headline ?? lesson.tutor.bestForSummary ?? "Mentor IB tutor";
+  const detailDescription = lesson.tutor.headline ?? lesson.tutor.bio ?? "Mentor IB tutor";
   const details = buildSummaryDetails(lesson);
 
   return (

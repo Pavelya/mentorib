@@ -1,0 +1,361 @@
+.page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--display-sm);
+}
+
+.description {
+  margin: 0;
+  color: var(--ink-700);
+  max-width: 60ch;
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.actionGroupRight {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.statusLine {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.statusMeta {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.splitGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.receivedList,
+.improveList {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  color: var(--ink-700);
+}
+
+.readinessList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.readinessRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.readinessText {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.readinessLabel {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.readinessDescription {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.withdrawForm {
+  margin: 0;
+}
+
+.withdrawButton {
+  padding: 0;
+  font-size: var(--body-sm);
+}
+
+.formSection {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.errorList {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.progressTopline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.progressIntro {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.progressStepLabel {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.progressDescription {
+  margin: 0;
+  color: var(--ink-700);
+}
+
+.progressTrack {
+  overflow: hidden;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgb(61 56 50 / 0.08);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--forest-700), var(--forest-500));
+}
+
+.stepList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepItem {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  color: var(--ink-500);
+  background: rgb(61 56 50 / 0.04);
+  font-size: var(--body-sm);
+  font-weight: 500;
+}
+
+.activeStep {
+  color: var(--forest-700);
+  background: var(--state-positive-surface);
+}
+
+.completedStep {
+  color: var(--ink-700);
+}
+
+.summaryBar {
+  margin-top: var(--space-1);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(15rem, 0.72fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.fieldStack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.saveExitButton {
+  font-size: var(--body-sm);
+}
+
+.submitWrap {
+  display: inline-flex;
+}
+
+.reviewStack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.reviewHeadline {
+  margin: 0;
+  color: var(--forest-700);
+  font-weight: 600;
+  font-size: var(--body-lg);
+}
+
+.reviewBio {
+  margin: 0;
+  color: var(--ink-900);
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.factGrid {
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.factRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.45fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.factLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.06em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.factValue {
+  margin: 0;
+  color: var(--ink-900);
+  font-size: var(--body-md);
+}
+
+.factStrong {
+  font-weight: 600;
+  font-size: var(--body-lg);
+}
+
+.factEmpty {
+  color: var(--ink-500);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.chipIcon {
+  display: inline-flex;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-right: 0.45rem;
+  color: var(--forest-700);
+}
+
+.chipIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.chipFlag {
+  display: inline-flex;
+  width: 1.25rem;
+  height: 0.9rem;
+  margin-right: 0.45rem;
+  border-radius: 0.2rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
+}
+
+.chipFlag svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@media (max-width: 980px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .splitGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .factRow {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .progressStepLabel {
+    white-space: normal;
+  }
+
+  .actionRow {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .actionGroupRight {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .actionGroupRight > * {
+    flex: 1 1 auto;
+  }
+
+  .saveExitButton {
+    align-self: flex-start;
+  }
+}

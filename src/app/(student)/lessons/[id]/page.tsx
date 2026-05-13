@@ -214,7 +214,7 @@ function renderDetailPage({
         person={
           <PersonSummary
             avatarSrc={detail.tutor.avatarUrl ?? undefined}
-            descriptor={detail.tutor.headline ?? detail.tutor.bestForSummary ?? "Mentor IB tutor"}
+            descriptor={detail.tutor.headline ?? detail.tutor.bio ?? "Mentor IB tutor"}
             eyebrow="Tutor"
             name={detail.tutor.displayName}
             variant="standard"

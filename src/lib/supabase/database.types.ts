@@ -166,7 +166,6 @@ type MeetingProviderRow = {
 type TutorProfileRow = {
   app_user_id: string;
   application_status: TutorApplicationStatus;
-  best_for_summary: string | null;
   bio: string | null;
   created_at: string;
   display_name: string | null;
@@ -189,7 +188,6 @@ type TutorProfileRow = {
   public_listing_status: TutorPublicListingStatus;
   public_slug: string | null;
   stripe_account_id: string | null;
-  teaching_style_summary: string | null;
   updated_at: string;
 };
 
@@ -1220,7 +1218,6 @@ export type MentorIbDatabase = {
       tutor_profiles: {
         Insert: Pick<TutorProfileRow, "app_user_id"> & {
           application_status?: TutorApplicationStatus;
-          best_for_summary?: string | null;
           bio?: string | null;
           display_name?: string | null;
           headline?: string | null;
@@ -1235,7 +1232,6 @@ export type MentorIbDatabase = {
           profile_visibility_status?: TutorProfileVisibilityStatus;
           public_listing_status?: TutorPublicListingStatus;
           public_slug?: string | null;
-          teaching_style_summary?: string | null;
         };
         Relationships: [];
         Row: TutorProfileRow;

@@ -181,7 +181,7 @@ export default async function BookingPage({
               ]}
               descriptor={
                 bookingContext.tutor.headline ??
-                bookingContext.tutor.bestForSummary ??
+                bookingContext.tutor.bio ??
                 "Tutor summary stays visible during booking."
               }
               eyebrow="Tutor"
@@ -299,13 +299,13 @@ export default async function BookingPage({
             </Section>
           </Panel>
 
-          {bookingContext.tutor?.bestForSummary ? (
+          {bookingContext.tutor?.bio ? (
             <Panel
               description="This stays visible during booking so fit still leads the decision."
-              title="Best for"
+              title="About this tutor"
               tone="mist"
             >
-              <p className={styles.muted}>{bookingContext.tutor.bestForSummary}</p>
+              <p className={styles.muted}>{bookingContext.tutor.bio}</p>
             </Panel>
           ) : null}
         </aside>

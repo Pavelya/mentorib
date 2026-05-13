@@ -269,13 +269,8 @@ function CuratedTutorCard({
       </div>
       <div className={styles.tutorFitColumn}>
         <p className={styles.tutorFitText}>
-          {tutor.bestForSummary ?? "Reviews fit before booking."}
+          {tutor.bio ?? "Reviews fit before booking."}
         </p>
-        {tutor.teachingStyleSummary ? (
-          <ul className={styles.tutorBullets}>
-            <li>{tutor.teachingStyleSummary}</li>
-          </ul>
-        ) : null}
       </div>
       <div className={styles.tutorMetricsColumn}>
         <div className={styles.tutorMetrics}>

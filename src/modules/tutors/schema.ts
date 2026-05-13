@@ -43,8 +43,6 @@ export const tutorProfiles = pgTable(
     public_slug: text("public_slug"),
     headline: text("headline"),
     bio: text("bio"),
-    teaching_style_summary: text("teaching_style_summary"),
-    best_for_summary: text("best_for_summary"),
     pricing_summary: text("pricing_summary"),
     trial_price_minor: integer("trial_price_minor"),
     hourly_rate_minor: integer("hourly_rate_minor"),

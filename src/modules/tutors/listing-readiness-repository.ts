@@ -10,16 +10,13 @@ export async function loadTutorProfileMinimumGateInput(
 
   const { data, error } = await supabase
     .from("tutor_profiles")
-    .select(
-      "best_for_summary, display_name, headline, hourly_rate_minor, teaching_style_summary",
-    )
+    .select("bio, display_name, headline, hourly_rate_minor")
     .eq("id", tutorProfileId)
     .maybeSingle<{
-      best_for_summary: string | null;
+      bio: string | null;
       display_name: string | null;
       headline: string | null;
       hourly_rate_minor: number | null;
-      teaching_style_summary: string | null;
     }>();
 
   if (error) {
@@ -41,11 +38,10 @@ export async function loadTutorProfileMinimumGateInput(
   }
 
   return {
-    bestForSummary: data.best_for_summary,
+    bio: data.bio,
     displayName: data.display_name,
     headline: data.headline,
     hourlyRateMinor: data.hourly_rate_minor,
-    teachingStyleSummary: data.teaching_style_summary,
     timezone: schedule?.timezone ?? null,
   };
 }

@@ -17,10 +17,11 @@ type TutorLayoutProps = {
 export default function TutorLayout({ children }: TutorLayoutProps) {
   return (
     <AppFrame
-      description="Tutor-mode shell for operations, schedule visibility, and continuity with students."
-      eyebrow="Tutor routes"
+      description="Tutor-mode operational routes."
+      eyebrow="Tutor"
       navItems={navigationByFamily.tutor}
-      title="Tutor operations in the same ecosystem"
+      showHero={false}
+      title="Tutor"
     >
       {children}
     </AppFrame>

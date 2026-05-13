@@ -54,7 +54,7 @@ type MatchCandidateRecord = {
 
 type TutorProfileRecord = {
   application_status: string;
-  best_for_summary: string | null;
+  bio: string | null;
   display_name: string | null;
   headline: string | null;
   id: string;
@@ -492,7 +492,7 @@ async function loadTutorProfilesByIds(tutorProfileIds: string[]) {
         "display_name",
         "public_slug",
         "headline",
-        "best_for_summary",
+        "bio",
         "pricing_summary",
         "application_status",
         "profile_visibility_status",

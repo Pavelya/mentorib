@@ -27,7 +27,6 @@ const PUBLIC_TUTOR_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 type PublicTutorProfileRecord = {
   application_status: string;
-  best_for_summary: string | null;
   bio: string | null;
   display_name: string | null;
   headline: string | null;
@@ -42,7 +41,6 @@ type PublicTutorProfileRecord = {
   profile_visibility_status: string;
   public_listing_status: string;
   public_slug: string | null;
-  teaching_style_summary: string | null;
   updated_at: string;
 };
 
@@ -104,7 +102,6 @@ export type PublicTutorProfileDto = {
     summary: string;
     timezone: string | null;
   };
-  bestForSummary: string | null;
   bio: string;
   bookingHref: Route | null;
   displayName: string;
@@ -131,7 +128,6 @@ export type PublicTutorProfileDto = {
   };
   slug: string;
   subjects: PublicTutorCapabilityDto[];
-  teachingStyleSummary: string | null;
   trustProofs: PublicTutorTrustProofDto[];
   updatedAt: string;
 };
@@ -170,8 +166,6 @@ export async function getPublicTutorProfileBySlug(
         "display_name",
         "headline",
         "bio",
-        "teaching_style_summary",
-        "best_for_summary",
         "pricing_summary",
         "trial_price_minor",
         "hourly_rate_minor",
@@ -221,8 +215,6 @@ export async function listPublicTutorProfileSitemapEntries(): Promise<
         "display_name",
         "headline",
         "bio",
-        "teaching_style_summary",
-        "best_for_summary",
         "pricing_summary",
         "trial_price_minor",
         "hourly_rate_minor",
@@ -479,7 +471,6 @@ function buildPublicTutorProfileDto(
 
   return {
     availability,
-    bestForSummary: normalizeOptionalText(profile.best_for_summary),
     bio: profile.bio?.trim() ?? "",
     bookingHref: availability.acceptingNewStudents
       ? (`/book/${profile.public_slug}` as Route)
@@ -523,7 +514,6 @@ function buildPublicTutorProfileDto(
     }),
     slug: profile.public_slug ?? "",
     subjects,
-    teachingStyleSummary: normalizeOptionalText(profile.teaching_style_summary),
     trustProofs,
     updatedAt: profile.updated_at,
   };

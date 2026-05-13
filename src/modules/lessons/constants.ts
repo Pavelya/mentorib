@@ -1,3 +1,15 @@
+// Lesson billing and scheduling units.
+//
+// `STANDARD_LESSON_DURATION_MINUTES` is the canonical lesson length used by
+// booking-slot generation, lesson end-time calculation, and price math.
+// `RATE_BASIS_MINUTES` is the unit a tutor's `hourly_rate_minor` is quoted
+// against (1 hour = 60 minutes). The two are deliberately separate: lessons
+// can run shorter than an hour while the rate is still expressed per hour.
+// Anything that needs to talk about lesson length or rate basis must read
+// from here so student-facing and tutor-facing surfaces stay consistent.
+export const STANDARD_LESSON_DURATION_MINUTES = 48 as const;
+export const RATE_BASIS_MINUTES = 60 as const;
+
 export const bookingOperationTypes = [
   "lesson_request_create",
   "lesson_accept",

@@ -178,6 +178,7 @@ Bad parallel examples:
 | 4 | `P15-PUBLIC-002` | `draft` | `P2` | 4 | Home route visual enrichment |
 | 4 | `P15-PUBLIC-003` | `ready` | `P1` | 4 | Public privacy-policy and terms routes |
 | 5 | `P15-QUALITY-001` | `ready` | `P2` | 4 | Phase 1.5 verification and hardening pass |
+| 6 | `P15-DATA-001-A` | `ready` | `P2` | 4 | Shortlist and compare discovery telemetry events |
 
 ## 10. Detailed Tasks
 
@@ -1079,6 +1080,68 @@ Add the Mentor IB icon and favicon assets so browsers, mobile devices, search re
 - `/favicon.ico`, `/icon`, `/apple-icon` are reachable and return the expected file types
 - the browser tab on `http://localhost:3000` shows the Mentor IB mark
 - iOS Safari "Add to Home Screen" preview shows the apple-icon mark, not a generic glyph
+
+## 10.15 `P15-DATA-001-A` Shortlist and compare discovery telemetry events
+
+**Status:** `ready`
+**Priority:** `P2`
+**Wave:** 4
+**Depends on:** `P15-DATA-001`, `P15-COMP-001`, `P15-COMP-002`
+
+**Goal**
+
+Wire the discovery-family telemetry events the analytics architecture lists for shortlist and compare so the Phase 1.5 surfaces produce the signal the product expects them to produce. This sub-task was raised by the `P15-QUALITY-001` verification pass: the compare and saved surfaces ship without any `result_shortlisted` or `compare_opened` instrumentation, even though both events are part of the canonical matching/discovery family in `docs/architecture/analytics-and-product-telemetry-architecture-v1.md` §11.3.
+
+**Required source docs**
+
+- `docs/architecture/analytics-and-product-telemetry-architecture-v1.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md`
+- `docs/data/data-dto-and-query-boundary-map-v1.md`
+
+**Scope**
+
+- extend the `ProductEvent` union in `src/lib/analytics/events.ts` with `result_shortlisted` and `compare_opened`, following the same safe-context property discipline already used for `match_submitted` and `booking_request_submitted`
+- emit `result_shortlisted` from the shortlist mutation boundary (`src/modules/lessons/shortlist-actions.ts`) on the `add` path only, with safe context properties such as `surface_source` (results, saved, profile), a stable `learning_need_id`/`match_run_id` reference, and an `intent_outcome` for success vs cap-rejection
+- emit `compare_opened` as a client event on `/compare` mount with `compare_count`, `compare_cap`, and `has_learning_need` — keeping it on the client side per §10.4 of the analytics architecture (pure UI exploration)
+- ensure both events route through the existing analytics client/server modules; do not introduce a second emission path
+- update or add unit tests under `src/test/**` that assert the event names, the property shapes, and the safe-context redaction rules (no raw learning-need text, no tutor display names, no message bodies)
+
+**Out of scope**
+
+- compare/shortlist *interaction* events beyond add and open (e.g. `compare_column_removed`, `compare_booking_clicked`) — those belong to a later iteration
+- the broader booking, lessons, and messaging event families
+- a generalized event-emission framework or queueing layer
+- PostHog dashboard or funnel configuration on the destination side
+- back-filling historical shortlist/compare activity
+
+**Acceptance criteria**
+
+- `result_shortlisted` fires exactly once per successful shortlist add, with no payload from free-text fields
+- `compare_opened` fires on `/compare` mount and is debounced/guarded against double-fire on client navigations
+- both events appear in the `ProductEvent` union and pass typecheck against the existing safe-context discipline
+- the redaction tests under `src/test/**` cover the new properties so future drift is caught at unit-test time
+- the audit script and `pnpm lint:arch` remain clean
+- the analytics architecture doc is referenced (not modified) in the event names and property choices
+
+**Verification**
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint:arch`
+- `pnpm test`
+- manual: trigger a shortlist add and a `/compare` visit locally with `NEXT_PUBLIC_POSTHOG_*` set to a development project and confirm the events arrive with the expected property shape
+
+**Required manual steps**
+
+- the human confirms the destination PostHog project before merging so the new event names register against the correct environment
+
+**Local testing checklist**
+
+- shortlist a tutor from results and confirm `result_shortlisted` is sent with `surface_source: "results"`
+- shortlist a tutor from a public tutor profile and confirm `surface_source: "tutor_profile"`
+- visit `/compare` with and without an active learning need and confirm `compare_opened` fires once per visit with the expected `compare_count`/`compare_cap`
+- run `pnpm test` and confirm the new redaction assertions pass
 
 ## 11. Task Drafting Rules For Follow-Up
 

@@ -77,7 +77,7 @@ type StudentProfileRecord = {
 
 type TutorProfileRecord = {
   app_user_id: string;
-  best_for_summary: string | null;
+  bio: string | null;
   display_name: string | null;
   headline: string | null;
   id: string;
@@ -114,7 +114,7 @@ type IssueCaseRecord = {
 export type StudentLessonTutorDto = {
   appUserId: string;
   avatarUrl: string | null;
-  bestForSummary: string | null;
+  bio: string | null;
   displayName: string;
   headline: string | null;
   profileHref: `/tutors/${string}` | null;
@@ -322,7 +322,7 @@ export function buildPreviewStudentLessonList(): StudentLessonListDto {
         tutor: {
           appUserId: "preview-tutor",
           avatarUrl: null,
-          bestForSummary: "DP History HL students preparing for Paper 2.",
+          bio: "DP History HL students preparing for Paper 2.",
           displayName: "Maya Chen",
           headline: "IB History HL Examiner",
           profileHref: null,
@@ -389,7 +389,7 @@ async function loadTutorLookup(
 
   const { data: tutorRows, error: tutorError } = await supabase
     .from("tutor_profiles")
-    .select("app_user_id, best_for_summary, display_name, headline, id, public_slug")
+    .select("app_user_id, bio, display_name, headline, id, public_slug")
     .in("id", uniqueIds)
     .returns<TutorProfileRecord[]>();
 
@@ -544,7 +544,7 @@ function buildTutorDto(
   return {
     appUserId: tutor.app_user_id,
     avatarUrl: tutor.user?.avatar_url ?? null,
-    bestForSummary: trimToNull(tutor.best_for_summary),
+    bio: trimToNull(tutor.bio),
     displayName,
     headline: trimToNull(tutor.headline),
     profileHref: tutor.public_slug

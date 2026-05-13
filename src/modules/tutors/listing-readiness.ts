@@ -1,9 +1,8 @@
 export type TutorProfileMinimumInput = {
-  bestForSummary: string | null;
+  bio: string | null;
   displayName: string | null;
   headline: string | null;
   hourlyRateMinor: number | null;
-  teachingStyleSummary: string | null;
   timezone: string | null;
 };
 
@@ -15,14 +14,15 @@ export type ProfileMinimumGateResult = {
 export type ProfileMinimumField =
   | "displayName"
   | "headline"
-  | "bestForSummary"
-  | "teachingStyleSummary"
+  | "bio"
   | "timezone"
   | "hourlyRate";
 
 // Listing-readiness Gate 2 ("profile minimum complete") per
 // docs/data/tutor-listing-readiness-model-v1.md §4.2. Reads structured pricing
-// (`hourly_rate_minor`) instead of free-text presence on `pricing_summary`.
+// (`hourly_rate_minor`) instead of free-text presence on `pricing_summary` and
+// requires a single consolidated `bio` (the application flow no longer
+// separates "best for" and "teaching style").
 export function evaluateTutorProfileMinimum(
   input: TutorProfileMinimumInput,
 ): ProfileMinimumGateResult {
@@ -34,11 +34,8 @@ export function evaluateTutorProfileMinimum(
   if (!isNonBlank(input.headline)) {
     missing.push("headline");
   }
-  if (!isNonBlank(input.bestForSummary)) {
-    missing.push("bestForSummary");
-  }
-  if (!isNonBlank(input.teachingStyleSummary)) {
-    missing.push("teachingStyleSummary");
+  if (!isNonBlank(input.bio)) {
+    missing.push("bio");
   }
   if (!isNonBlank(input.timezone)) {
     missing.push("timezone");

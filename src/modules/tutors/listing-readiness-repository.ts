@@ -10,11 +10,11 @@ export async function loadTutorProfileMinimumGateInput(
 
   const { data, error } = await supabase
     .from("tutor_profiles")
-    .select("bio, display_name, headline, hourly_rate_minor")
+    .select("app_user_id, bio, headline, hourly_rate_minor")
     .eq("id", tutorProfileId)
     .maybeSingle<{
+      app_user_id: string;
       bio: string | null;
-      display_name: string | null;
       headline: string | null;
       hourly_rate_minor: number | null;
     }>();
@@ -27,21 +27,32 @@ export async function loadTutorProfileMinimumGateInput(
     return null;
   }
 
-  const { data: schedule, error: scheduleError } = await supabase
-    .from("schedule_policies")
-    .select("timezone")
-    .eq("tutor_profile_id", tutorProfileId)
-    .maybeSingle<{ timezone: string | null }>();
+  const [scheduleResult, accountResult] = await Promise.all([
+    supabase
+      .from("schedule_policies")
+      .select("timezone")
+      .eq("tutor_profile_id", tutorProfileId)
+      .maybeSingle<{ timezone: string | null }>(),
+    supabase
+      .from("app_users")
+      .select("full_name")
+      .eq("id", data.app_user_id)
+      .maybeSingle<{ full_name: string | null }>(),
+  ]);
 
-  if (scheduleError) {
+  if (scheduleResult.error) {
     throw new Error("Could not load tutor schedule timezone.");
+  }
+
+  if (accountResult.error) {
+    throw new Error("Could not load tutor account name.");
   }
 
   return {
     bio: data.bio,
-    displayName: data.display_name,
+    displayName: accountResult.data?.full_name ?? null,
     headline: data.headline,
     hourlyRateMinor: data.hourly_rate_minor,
-    timezone: schedule?.timezone ?? null,
+    timezone: scheduleResult.data?.timezone ?? null,
   };
 }

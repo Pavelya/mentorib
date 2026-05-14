@@ -135,7 +135,6 @@ export async function applySetupRoleSelection(
   const roleStatus: RoleStatus = selectedRole === "student" ? "active" : "pending";
   const onboardingState: OnboardingState =
     selectedRole === "student" ? "student_setup" : "tutor_application_started";
-  const displayName = normalizeOptionalText(account.full_name);
 
   const { error: roleError } = await serviceRoleClient.from("user_roles").upsert(
     {
@@ -157,7 +156,6 @@ export async function applySetupRoleSelection(
       .upsert(
         {
           app_user_id: account.id,
-          display_name: displayName,
         },
         { ignoreDuplicates: true, onConflict: "app_user_id" },
       );
@@ -359,8 +357,3 @@ function getStringMetadata(user: User, key: string) {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
 }
 
-function normalizeOptionalText(value: string | null) {
-  const trimmedValue = value?.trim();
-
-  return trimmedValue && trimmedValue.length > 0 ? trimmedValue : null;
-}

@@ -54,11 +54,6 @@ type CounterpartRecord = {
   full_name: string | null;
 };
 
-type StudentProfileLookup = {
-  app_user_id: string;
-  id: string;
-};
-
 export type ConversationListItemDto = {
   blockState: "blocked_by_me" | "blocked_by_counterpart" | "active";
   counterpart: {
@@ -509,42 +504,23 @@ async function buildCounterpartLookup(
 
   const supabase = createSupabaseServiceRoleClient();
 
-  const [usersResult, studentResult] = await Promise.all([
-    supabase
-      .from("app_users")
-      .select("avatar_url, full_name, id")
-      .in("id", uniqueIds)
-      .returns<Array<{ avatar_url: string | null; full_name: string | null; id: string }>>(),
-    supabase
-      .from("student_profiles")
-      .select("app_user_id, display_name, id")
-      .in("app_user_id", uniqueIds)
-      .returns<Array<StudentProfileLookup & { display_name: string | null }>>(),
-  ]);
+  const { data: users, error: usersError } = await supabase
+    .from("app_users")
+    .select("avatar_url, full_name, id")
+    .in("id", uniqueIds)
+    .returns<Array<{ avatar_url: string | null; full_name: string | null; id: string }>>();
 
-  if (usersResult.error || studentResult.error) {
+  if (usersError) {
     throw new Error("Could not load conversation counterpart profiles.");
   }
 
-  const userById = new Map(
-    (usersResult.data ?? []).map((row) => [row.id, row]),
-  );
-  const studentDisplayByUser = new Map(
-    (studentResult.data ?? []).map((row) => [row.app_user_id, row.display_name]),
-  );
-
   const lookup = new Map<string, CounterpartRecord>();
 
-  for (const id of uniqueIds) {
-    const user = userById.get(id);
-    if (!user) {
-      continue;
-    }
-
-    lookup.set(id, {
-      app_user_id: id,
+  for (const user of users ?? []) {
+    lookup.set(user.id, {
+      app_user_id: user.id,
       avatar_url: user.avatar_url,
-      display_name: studentDisplayByUser.get(id) ?? null,
+      display_name: user.full_name,
       full_name: user.full_name,
     });
   }

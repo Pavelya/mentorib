@@ -97,7 +97,6 @@ export const studentProfiles = pgTable(
     app_user_id: uuid("app_user_id")
       .notNull()
       .references(() => appUsers.id, { onDelete: "cascade" }),
-    display_name: text("display_name"),
     current_stage_summary: text("current_stage_summary"),
     notes_visibility_preference: text("notes_visibility_preference"),
     created_at: timestamp("created_at", { withTimezone: true })

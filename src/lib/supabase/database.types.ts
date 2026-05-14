@@ -94,7 +94,6 @@ type StudentProfileRow = {
   app_user_id: string;
   created_at: string;
   current_stage_summary: string | null;
-  display_name: string | null;
   id: string;
   notes_visibility_preference: string | null;
   updated_at: string;
@@ -1115,7 +1114,6 @@ export type MentorIbDatabase = {
       student_profiles: {
         Insert: Pick<StudentProfileRow, "app_user_id"> & {
           current_stage_summary?: string | null;
-          display_name?: string | null;
           notes_visibility_preference?: string | null;
         };
         Relationships: [];

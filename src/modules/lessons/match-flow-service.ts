@@ -244,7 +244,6 @@ async function resolveStudentProfile(account: ResolvedAuthAccount) {
     .from("student_profiles")
     .insert({
       app_user_id: account.id,
-      display_name: normalizeOptionalText(account.full_name, 120),
     })
     .select("id")
     .single<StudentProfileRecord>();

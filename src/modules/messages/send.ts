@@ -350,29 +350,21 @@ async function isReplyTargetInConversation(
 
 async function resolveActorDisplayName(
   appUserId: string,
-  senderRole: ParticipantRole,
+  _senderRole: ParticipantRole,
 ): Promise<string> {
+  void _senderRole;
   const supabase = createSupabaseServiceRoleClient();
 
-  const userResult = await supabase
+  const { data } = await supabase
     .from("app_users")
     .select("full_name")
     .eq("id", appUserId)
     .maybeSingle<{ full_name: string | null }>();
 
-  const profileResult =
-    senderRole === "student"
-      ? await supabase
-          .from("student_profiles")
-          .select("display_name")
-          .eq("app_user_id", appUserId)
-          .maybeSingle<{ display_name: string | null }>()
-      : { data: null };
-
   return resolveDisplayName({
     app_user_id: appUserId,
-    display_name: profileResult.data?.display_name ?? null,
-    full_name: userResult.data?.full_name ?? null,
+    display_name: null,
+    full_name: data?.full_name ?? null,
   });
 }
 

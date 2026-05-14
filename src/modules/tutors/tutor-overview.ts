@@ -56,7 +56,6 @@ type LessonRecord = {
 
 type StudentProfileRecord = {
   app_user_id: string;
-  display_name: string | null;
   id: string;
 };
 
@@ -415,7 +414,7 @@ async function loadStudentLookup(
 
   const { data: studentRows, error: studentError } = await supabase
     .from("student_profiles")
-    .select("app_user_id, display_name, id")
+    .select("app_user_id, id")
     .in("id", uniqueIds)
     .returns<StudentProfileRecord[]>();
 
@@ -539,7 +538,6 @@ function buildStudentDto(
   studentRecord: StudentProfileRecord & { user: AppUserSummaryRecord | null },
 ): TutorOverviewStudentDto {
   const displayName =
-    trimToNull(studentRecord.display_name) ??
     trimToNull(studentRecord.user?.full_name ?? null) ??
     "Mentor IB student";
 

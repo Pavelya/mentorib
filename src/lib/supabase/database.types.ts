@@ -168,7 +168,6 @@ type TutorProfileRow = {
   application_status: TutorApplicationStatus;
   bio: string | null;
   created_at: string;
-  display_name: string | null;
   headline: string | null;
   id: string;
   intro_video_external_id: string | null;
@@ -1219,7 +1218,6 @@ export type MentorIbDatabase = {
         Insert: Pick<TutorProfileRow, "app_user_id"> & {
           application_status?: TutorApplicationStatus;
           bio?: string | null;
-          display_name?: string | null;
           headline?: string | null;
           intro_video_external_id?: string | null;
           intro_video_provider?: string | null;

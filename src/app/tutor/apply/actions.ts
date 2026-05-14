@@ -202,7 +202,7 @@ function readIntent(formData: FormData): TutorApplicationActionIntent {
 
 function readDraftValues(formData: FormData): TutorApplicationDraftInput {
   return {
-    displayName: readString(formData, "display_name"),
+    fullName: readString(formData, "full_name"),
     focusAreaCodes: readStringList(formData, "focus_area_codes").filter(
       (code) => code.length > 0,
     ),

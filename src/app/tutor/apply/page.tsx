@@ -291,9 +291,9 @@ function PendingReviewView({
           titleAs="h2"
         >
           <ul className={styles.receivedList}>
-            {draft.displayName ? (
+            {draft.fullName ? (
               <li>
-                <strong>Display name:</strong> {draft.displayName}
+                <strong>Full name:</strong> {draft.fullName}
               </li>
             ) : null}
             {draft.headline ? (

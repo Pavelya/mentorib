@@ -353,21 +353,21 @@ async function resolveActorDisplayName(
   senderRole: ParticipantRole,
 ): Promise<string> {
   const supabase = createSupabaseServiceRoleClient();
-  const profileTable =
-    senderRole === "tutor" ? "tutor_profiles" : "student_profiles";
 
-  const [userResult, profileResult] = await Promise.all([
-    supabase
-      .from("app_users")
-      .select("full_name")
-      .eq("id", appUserId)
-      .maybeSingle<{ full_name: string | null }>(),
-    supabase
-      .from(profileTable)
-      .select("display_name")
-      .eq("app_user_id", appUserId)
-      .maybeSingle<{ display_name: string | null }>(),
-  ]);
+  const userResult = await supabase
+    .from("app_users")
+    .select("full_name")
+    .eq("id", appUserId)
+    .maybeSingle<{ full_name: string | null }>();
+
+  const profileResult =
+    senderRole === "student"
+      ? await supabase
+          .from("student_profiles")
+          .select("display_name")
+          .eq("app_user_id", appUserId)
+          .maybeSingle<{ display_name: string | null }>()
+      : { data: null };
 
   return resolveDisplayName({
     app_user_id: appUserId,

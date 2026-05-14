@@ -78,7 +78,6 @@ type StudentProfileRecord = {
 type TutorProfileRecord = {
   app_user_id: string;
   bio: string | null;
-  display_name: string | null;
   headline: string | null;
   id: string;
   public_slug: string | null;
@@ -389,7 +388,7 @@ async function loadTutorLookup(
 
   const { data: tutorRows, error: tutorError } = await supabase
     .from("tutor_profiles")
-    .select("app_user_id, bio, display_name, headline, id, public_slug")
+    .select("app_user_id, bio, headline, id, public_slug")
     .in("id", uniqueIds)
     .returns<TutorProfileRecord[]>();
 
@@ -538,7 +537,7 @@ function buildTutorDto(
   tutor: TutorProfileRecord & { user: AppUserSummaryRecord | null },
 ): StudentLessonTutorDto {
   const displayName =
-    trimToNull(tutor.display_name) ?? trimToNull(tutor.user?.full_name ?? null) ??
+    trimToNull(tutor.user?.full_name ?? null) ??
     "Mentor IB tutor";
 
   return {

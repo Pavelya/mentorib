@@ -26,9 +26,9 @@ import type { ExaminerBadge } from "@/modules/tutors/examiner-credentials-builde
 const PUBLIC_TUTOR_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 type PublicTutorProfileRecord = {
+  app_user_id: string;
   application_status: string;
   bio: string | null;
-  display_name: string | null;
   headline: string | null;
   id: string;
   intro_video_external_id: string | null;
@@ -42,6 +42,10 @@ type PublicTutorProfileRecord = {
   public_listing_status: string;
   public_slug: string | null;
   updated_at: string;
+};
+
+type PublicTutorProfileWithName = PublicTutorProfileRecord & {
+  display_name: string | null;
 };
 
 type TutorSubjectCapabilityRecord = {
@@ -162,8 +166,8 @@ export async function getPublicTutorProfileBySlug(
     .select(
       [
         "id",
+        "app_user_id",
         "public_slug",
-        "display_name",
         "headline",
         "bio",
         "pricing_summary",
@@ -189,13 +193,24 @@ export async function getPublicTutorProfileBySlug(
     throw new Error("Could not load the public tutor profile.");
   }
 
-  if (!profile?.public_slug || !profile.display_name || !profile.bio) {
+  if (!profile?.public_slug || !profile.bio) {
     return null;
   }
 
+  const displayName = await loadDisplayNameByAppUserId(profile.app_user_id);
+
+  if (!displayName) {
+    return null;
+  }
+
+  const enrichedProfile: PublicTutorProfileWithName = {
+    ...profile,
+    display_name: displayName,
+  };
+
   const relatedRecords = await loadPublicTutorProfileRelatedRecords(profile.id);
 
-  return buildPublicTutorProfileDto(profile, relatedRecords);
+  return buildPublicTutorProfileDto(enrichedProfile, relatedRecords);
 }
 
 export async function listPublicTutorProfileSitemapEntries(): Promise<
@@ -211,8 +226,8 @@ export async function listPublicTutorProfileSitemapEntries(): Promise<
     .select(
       [
         "id",
+        "app_user_id",
         "public_slug",
-        "display_name",
         "headline",
         "bio",
         "pricing_summary",
@@ -242,14 +257,20 @@ export async function listPublicTutorProfileSitemapEntries(): Promise<
   }
 
   const profileIds = profiles.map((profile) => profile.id);
-  const [capabilitiesByTutorId, credentialsByTutorId, schedulesByTutorId] =
+  const appUserIds = uniqueValues(profiles.map((profile) => profile.app_user_id));
+  const [capabilitiesByTutorId, credentialsByTutorId, schedulesByTutorId, namesByAppUserId] =
     await Promise.all([
       loadCapabilitiesByTutorIds(profileIds),
       loadCredentialsByTutorIds(profileIds),
       loadSchedulesByTutorIds(profileIds),
+      loadDisplayNamesByAppUserIds(appUserIds),
     ]);
 
   return profiles
+    .map((profile): PublicTutorProfileWithName => ({
+      ...profile,
+      display_name: namesByAppUserId.get(profile.app_user_id) ?? null,
+    }))
     .filter((profile) => profile.public_slug && profile.display_name && profile.bio)
     .filter((profile) => {
       const indexabilityInput = buildPublicRouteInput({
@@ -448,7 +469,7 @@ async function loadLanguages(languageCodes: string[]) {
 }
 
 function buildPublicTutorProfileDto(
-  profile: PublicTutorProfileRecord,
+  profile: PublicTutorProfileWithName,
   relatedRecords: RelatedPublicTutorProfileRecords,
 ): PublicTutorProfileDto {
   const introVideo = buildVideoReference(profile);
@@ -623,7 +644,7 @@ function buildAvailabilitySummary(schedule: SchedulePolicyRecord | null) {
 
 function buildVideoReference(
   profile: Pick<
-    PublicTutorProfileRecord,
+    PublicTutorProfileWithName,
     "display_name" | "intro_video_external_id" | "intro_video_provider" | "intro_video_url"
   >,
 ): PublicTutorVideoReferenceDto | null {
@@ -761,4 +782,50 @@ function normalizeOptionalText(value: string | null) {
 
 function uniqueValues(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));
+}
+
+async function loadDisplayNameByAppUserId(
+  appUserId: string,
+): Promise<string | null> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("app_users")
+    .select("full_name")
+    .eq("id", appUserId)
+    .maybeSingle<{ full_name: string | null }>();
+
+  if (error) {
+    throw new Error("Could not load tutor account name.");
+  }
+
+  return normalizeOptionalText(data?.full_name ?? null);
+}
+
+async function loadDisplayNamesByAppUserIds(
+  appUserIds: readonly string[],
+): Promise<Map<string, string>> {
+  const lookup = new Map<string, string>();
+  if (appUserIds.length === 0) {
+    return lookup;
+  }
+
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("app_users")
+    .select("full_name, id")
+    .in("id", appUserIds)
+    .returns<Array<{ full_name: string | null; id: string }>>();
+
+  if (error) {
+    throw new Error("Could not load tutor account names.");
+  }
+
+  for (const row of data ?? []) {
+    const name = normalizeOptionalText(row.full_name);
+    if (name) {
+      lookup.set(row.id, name);
+    }
+  }
+
+  return lookup;
 }

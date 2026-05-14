@@ -117,6 +117,19 @@ type TutorProfileRecord = {
   public_slug: string | null;
 };
 
+async function loadTutorAccountFullName(
+  appUserId: string,
+): Promise<string | null> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data } = await supabase
+    .from("app_users")
+    .select("full_name")
+    .eq("id", appUserId)
+    .maybeSingle<{ full_name: string | null }>();
+
+  return data?.full_name?.trim() || null;
+}
+
 type TutorLanguageCapabilityRecord = {
   language_code: string;
   tutor_profile_id: string;
@@ -918,7 +931,7 @@ async function resolvePublicTutorBookingContext(
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const { data: tutor, error: tutorError } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("app_user_id, id, display_name, public_slug, headline, bio, pricing_summary")
+    .select("app_user_id, id, public_slug, headline, bio, pricing_summary")
     .eq("public_slug", slug)
     .eq("application_status", "approved")
     .eq("profile_visibility_status", "public_visible")
@@ -928,6 +941,8 @@ async function resolvePublicTutorBookingContext(
   if (tutorError || !tutor) {
     return null;
   }
+
+  tutor.display_name = await loadTutorAccountFullName(tutor.app_user_id);
 
   const learningNeed = await loadLatestBookableLearningNeed(studentProfileId);
 
@@ -1743,7 +1758,7 @@ async function loadExistingDraftBundle(
 
   const { data: tutor } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("app_user_id, id, display_name, public_slug, headline, bio, pricing_summary")
+    .select("app_user_id, id, public_slug, headline, bio, pricing_summary")
     .eq("id", lesson.tutor_profile_id)
     .maybeSingle<TutorProfileRecord>();
 
@@ -1753,6 +1768,10 @@ async function loadExistingDraftBundle(
 
   if (!isUuidContext(context) && normalizePublicTutorSlug(context) !== tutor?.public_slug) {
     return null;
+  }
+
+  if (tutor) {
+    tutor.display_name = await loadTutorAccountFullName(tutor.app_user_id);
   }
 
   return {
@@ -1859,7 +1878,7 @@ async function loadTutorProfileById(tutorProfileId: string) {
   const serviceRoleClient = createSupabaseServiceRoleClient();
   const { data, error } = await serviceRoleClient
     .from("tutor_profiles")
-    .select("app_user_id, id, display_name, public_slug, headline, bio, pricing_summary")
+    .select("app_user_id, id, public_slug, headline, bio, pricing_summary")
     .eq("id", tutorProfileId)
     .maybeSingle<TutorProfileRecord>();
 
@@ -1868,6 +1887,10 @@ async function loadTutorProfileById(tutorProfileId: string) {
       "tutor_lookup_failed",
       "We couldn't load the tutor booking context yet.",
     );
+  }
+
+  if (data) {
+    data.display_name = await loadTutorAccountFullName(data.app_user_id);
   }
 
   return data ?? null;

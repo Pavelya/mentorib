@@ -31,7 +31,6 @@ const TIME_OF_DAY_PATTERN = /^(\d{2}):(\d{2})(?::\d{2})?$/;
 
 type TutorProfileRecord = {
   application_status: TutorApplicationStatus;
-  display_name: string | null;
   id: string;
 };
 
@@ -101,7 +100,7 @@ export type TutorScheduleDto = {
 };
 
 export async function getTutorSchedule(
-  account: Pick<ResolvedAuthAccount, "id" | "timezone">,
+  account: Pick<ResolvedAuthAccount, "full_name" | "id" | "timezone">,
 ): Promise<TutorScheduleDto> {
   const tutorProfile = await loadTutorProfile(account.id);
   const meetingProviderOptions = await loadActiveReferenceMeetingProviders();
@@ -123,7 +122,7 @@ export async function getTutorSchedule(
     policy: mapSchedulePolicyRecord(policy),
     profile: {
       applicationStatus: tutorProfile.application_status,
-      displayName: tutorProfile.display_name?.trim() || "Mentor IB tutor",
+      displayName: account.full_name?.trim() || "Mentor IB tutor",
     },
     state: "ready",
   };
@@ -390,7 +389,7 @@ async function loadTutorProfile(
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("tutor_profiles")
-    .select("application_status, display_name, id")
+    .select("application_status, id")
     .eq("app_user_id", appUserId)
     .maybeSingle<TutorProfileRecord>();
 

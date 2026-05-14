@@ -27,7 +27,6 @@ const PAID_PAYMENT_STATUS = "paid" as const;
 export type TutorPayoutProfileRecord = {
   app_user_id: string;
   application_status: TutorApplicationStatus;
-  display_name: string | null;
   id: string;
   payout_account_country: string | null;
   payout_onboarding_completed_at: string | null;
@@ -70,7 +69,7 @@ export async function loadTutorPayoutProfile(
   const { data, error } = await supabase
     .from("tutor_profiles")
     .select(
-      "app_user_id, application_status, display_name, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
+      "app_user_id, application_status, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
     )
     .eq("app_user_id", appUserId)
     .maybeSingle<TutorPayoutProfileRecord>();
@@ -89,7 +88,7 @@ export async function loadTutorPayoutProfileByStripeAccountId(
   const { data, error } = await supabase
     .from("tutor_profiles")
     .select(
-      "app_user_id, application_status, display_name, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
+      "app_user_id, application_status, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
     )
     .eq("stripe_account_id", stripeAccountId)
     .maybeSingle<TutorPayoutProfileRecord>();
@@ -234,7 +233,15 @@ function formatBucketLabel(amountByCurrency: Map<string, number>) {
 export async function buildTutorEarningsDto(
   profile: TutorPayoutProfileRecord,
 ): Promise<TutorEarningsDto> {
-  const monthlySummary = await loadCompletedLessonEarnings(profile.id);
+  const supabase = createSupabaseServiceRoleClient();
+  const [monthlySummary, accountResult] = await Promise.all([
+    loadCompletedLessonEarnings(profile.id),
+    supabase
+      .from("app_users")
+      .select("full_name")
+      .eq("id", profile.app_user_id)
+      .maybeSingle<{ full_name: string | null }>(),
+  ]);
   const totalLessonCount = monthlySummary.reduce(
     (sum, bucket) => sum + bucket.lessonCount,
     0,
@@ -254,7 +261,7 @@ export async function buildTutorEarningsDto(
     payoutReadinessStatus: profile.payout_readiness_status,
     payoutRequirementsSummary: profile.payout_requirements_summary,
     payoutStatusSyncedAt: profile.payout_status_synced_at,
-    profileDisplayName: profile.display_name?.trim() || "Mentor IB tutor",
+    profileDisplayName: accountResult.data?.full_name?.trim() || "Mentor IB tutor",
     publicListingStatus: profile.public_listing_status,
     totalEarningsLabel,
     totalLessonCount,
@@ -306,7 +313,7 @@ export async function applyConnectAccountSnapshot(input: {
     .eq("id", input.profile.id)
     .eq("stripe_account_id", input.accountId)
     .select(
-      "app_user_id, application_status, display_name, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
+      "app_user_id, application_status, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
     )
     .maybeSingle<TutorPayoutProfileRecord>();
 
@@ -357,7 +364,7 @@ export async function recordConnectAccountStarted(input: {
     })
     .eq("id", input.profileId)
     .select(
-      "app_user_id, application_status, display_name, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
+      "app_user_id, application_status, id, payout_account_country, payout_onboarding_completed_at, payout_onboarding_started_at, payout_readiness_status, payout_requirements_summary, payout_status_synced_at, profile_visibility_status, public_listing_status, stripe_account_id",
     )
     .maybeSingle<TutorPayoutProfileRecord>();
 

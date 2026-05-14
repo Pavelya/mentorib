@@ -53,15 +53,19 @@ type MatchCandidateRecord = {
 };
 
 type TutorProfileRecord = {
+  app_user_id: string;
   application_status: string;
   bio: string | null;
-  display_name: string | null;
   headline: string | null;
   id: string;
   pricing_summary: string | null;
   profile_visibility_status: string;
   public_listing_status: string;
   public_slug: string | null;
+};
+
+type TutorProfileWithName = TutorProfileRecord & {
+  display_name: string | null;
 };
 
 type TutorLanguageCapabilityRecord = {
@@ -482,14 +486,16 @@ async function loadVisibleCandidates(matchRunId: string) {
   return data ?? [];
 }
 
-async function loadTutorProfilesByIds(tutorProfileIds: string[]) {
+async function loadTutorProfilesByIds(
+  tutorProfileIds: string[],
+): Promise<TutorProfileWithName[]> {
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("tutor_profiles")
     .select(
       [
         "id",
-        "display_name",
+        "app_user_id",
         "public_slug",
         "headline",
         "bio",
@@ -506,7 +512,29 @@ async function loadTutorProfilesByIds(tutorProfileIds: string[]) {
     throw new Error("Could not load tutor match profiles.");
   }
 
-  return data ?? [];
+  const profiles = data ?? [];
+  const appUserIds = Array.from(new Set(profiles.map((row) => row.app_user_id)));
+
+  if (appUserIds.length === 0) {
+    return [];
+  }
+
+  const { data: users, error: usersError } = await supabase
+    .from("app_users")
+    .select("full_name, id")
+    .in("id", appUserIds)
+    .returns<Array<{ full_name: string | null; id: string }>>();
+
+  if (usersError) {
+    throw new Error("Could not load tutor account names.");
+  }
+
+  const namesById = new Map((users ?? []).map((row) => [row.id, row.full_name]));
+
+  return profiles.map((profile) => ({
+    ...profile,
+    display_name: namesById.get(profile.app_user_id) ?? null,
+  }));
 }
 
 async function loadSchedulePoliciesByTutorIds(tutorProfileIds: string[]) {
@@ -639,7 +667,7 @@ function buildMatchCards({
   languageCapabilities: TutorLanguageCapabilityRecord[];
   languageRows: ReferenceLanguage[];
   needLanguage: ReferenceLanguage;
-  profiles: TutorProfileRecord[];
+  profiles: TutorProfileWithName[];
   schedules: SchedulePolicyRecord[];
   subject: ReferenceSubject;
 }) {

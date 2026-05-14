@@ -213,7 +213,7 @@ async function persistTutorApplicationDraft(input: {
     }
   }
 
-  const displayName = nullIfBlank(input.values.displayName);
+  const fullName = nullIfBlank(input.values.fullName);
   const headline = nullIfBlank(input.values.headline);
   const bio = nullIfBlank(input.values.bio);
   const hourlyRateMinor = parseHourlyRateMajor(input.values.hourlyRateMajor);
@@ -230,13 +230,24 @@ async function persistTutorApplicationDraft(input: {
       ? "in_progress"
       : profile.application_status;
 
+  const { error: accountError } = await supabase
+    .from("app_users")
+    .update({ full_name: fullName })
+    .eq("id", input.account.id);
+
+  if (accountError) {
+    throw new TutorApplicationCommandError(
+      "account_full_name_update_failed",
+      "We couldn't save your name yet. Please try again in a moment.",
+    );
+  }
+
   const { error: profileError } = await supabase
     .from("tutor_profiles")
     .update({
       application_status: nextApplicationStatus,
       bio,
       currency_code: currencyCode,
-      display_name: displayName,
       headline,
       hourly_rate_minor: hourlyRateMinor,
     })

@@ -1360,9 +1360,19 @@ async function loadTutorDisplayName(
   const supabase = createSupabaseServiceRoleClient();
   const { data } = await supabase
     .from("tutor_profiles")
-    .select("display_name, id")
+    .select("app_user_id, id")
     .eq("id", tutorProfileId)
-    .maybeSingle<{ display_name: string | null; id: string }>();
+    .maybeSingle<{ app_user_id: string; id: string }>();
 
-  return data?.display_name ?? null;
+  if (!data?.app_user_id) {
+    return null;
+  }
+
+  const { data: userRow } = await supabase
+    .from("app_users")
+    .select("full_name")
+    .eq("id", data.app_user_id)
+    .maybeSingle<{ full_name: string | null }>();
+
+  return userRow?.full_name ?? null;
 }

@@ -23,7 +23,7 @@ import {
   type TutorPublicListingStatus,
 } from "@/modules/tutors/constants";
 
-const MAX_DISPLAY_NAME_LENGTH = 80;
+const MAX_FULL_NAME_LENGTH = 80;
 const MAX_HEADLINE_LENGTH = 120;
 const MAX_BIO_LENGTH = 600;
 const MAX_HOURLY_RATE_MINOR = 100_000_00;
@@ -45,7 +45,7 @@ export const TUTOR_APPLICATION_PENDING_STATUSES: readonly TutorApplicationStatus
 
 export type TutorApplicationDraftInput = {
   bio: string;
-  displayName: string;
+  fullName: string;
   focusAreaCodes: string[];
   headline: string;
   hourlyRateMajor: string;
@@ -56,7 +56,7 @@ export type TutorApplicationDraftInput = {
 
 export const emptyTutorApplicationDraft: TutorApplicationDraftInput = {
   bio: "",
-  displayName: "",
+  fullName: "",
   focusAreaCodes: [],
   headline: "",
   hourlyRateMajor: "",
@@ -67,7 +67,7 @@ export const emptyTutorApplicationDraft: TutorApplicationDraftInput = {
 
 export type TutorApplicationField =
   | "bio"
-  | "displayName"
+  | "fullName"
   | "focusAreaCodes"
   | "headline"
   | "hourlyRateMajor"
@@ -150,7 +150,6 @@ export type TutorApplicationDto = {
 type TutorProfileRecord = {
   application_status: TutorApplicationStatus;
   bio: string | null;
-  display_name: string | null;
   headline: string | null;
   hourly_rate_minor: number | null;
   id: string;
@@ -180,7 +179,7 @@ type MeetingPreferenceRecord = {
 };
 
 export async function getTutorApplication(
-  account: Pick<ResolvedAuthAccount, "id" | "timezone">,
+  account: Pick<ResolvedAuthAccount, "full_name" | "id" | "timezone">,
 ): Promise<TutorApplicationDto> {
   const [subjects, focusAreas, languages, needOptionRows] = await Promise.all([
     loadActiveReferenceSubjects(),
@@ -205,6 +204,7 @@ export async function getTutorApplication(
         capabilities: [],
         draft: {
           ...emptyTutorApplicationDraft,
+          fullName: account.full_name ?? "",
           timezone: resolveTimezone(account.timezone),
         },
         hasMeetingLink: false,
@@ -252,8 +252,8 @@ export async function getTutorApplication(
 
   const draft: TutorApplicationDraftInput = {
     bio: tutorProfile.bio ?? "",
-    displayName: tutorProfile.display_name ?? "",
     focusAreaCodes: draftFocusAreaCodes,
+    fullName: account.full_name ?? "",
     headline: tutorProfile.headline ?? "",
     hourlyRateMajor: formatHourlyRateMajor(tutorProfile.hourly_rate_minor),
     languageCodes,
@@ -266,7 +266,7 @@ export async function getTutorApplication(
   const profileMinimumComplete = evaluateProfileMinimumComplete({
     bio: draft.bio,
     capabilityCount: capabilities.length,
-    displayName: draft.displayName,
+    fullName: draft.fullName,
     headline: draft.headline,
     hourlyRateMinor: tutorProfile.hourly_rate_minor,
     timezone: schedulePolicy?.timezone ?? null,
@@ -309,16 +309,16 @@ export function validateTutorApplicationDraft(
 ): TutorApplicationFieldErrors {
   const errors: TutorApplicationFieldErrors = {};
 
-  const displayName = values.displayName.trim();
+  const fullName = values.fullName.trim();
   const headline = values.headline.trim();
   const bio = values.bio.trim();
   const hourlyRate = values.hourlyRateMajor.trim();
   const timezone = values.timezone.trim();
 
-  if (!displayName) {
-    errors.displayName = "Add the name students will see.";
-  } else if (displayName.length > MAX_DISPLAY_NAME_LENGTH) {
-    errors.displayName = `Keep your display name under ${MAX_DISPLAY_NAME_LENGTH} characters.`;
+  if (!fullName) {
+    errors.fullName = "Add your full name.";
+  } else if (fullName.length > MAX_FULL_NAME_LENGTH) {
+    errors.fullName = `Keep your name under ${MAX_FULL_NAME_LENGTH} characters.`;
   }
 
   if (!headline) {
@@ -492,13 +492,13 @@ export const DEFAULT_TUTOR_APPLICATION_CURRENCY = DEFAULT_PLATFORM_CURRENCY_CODE
 function evaluateProfileMinimumComplete(input: {
   bio: string;
   capabilityCount: number;
-  displayName: string;
+  fullName: string;
   headline: string;
   hourlyRateMinor: number | null;
   timezone: string | null;
 }): boolean {
   return (
-    Boolean(input.displayName.trim()) &&
+    Boolean(input.fullName.trim()) &&
     Boolean(input.headline.trim()) &&
     Boolean(input.bio.trim()) &&
     Boolean(input.timezone?.trim()) &&
@@ -651,12 +651,7 @@ function buildReadinessGates(input: {
         ? "blocked"
         : "in_progress";
 
-  const holdState: TutorApplicationReadinessGate["state"] =
-    input.publicListingStatus === "paused" || input.publicListingStatus === "delisted"
-      ? "blocked"
-      : "complete";
-
-  return [
+  const gates: TutorApplicationReadinessGate[] = [
     {
       description: "Application approved by Mentor IB review.",
       key: "applicationApproved",
@@ -665,7 +660,7 @@ function buildReadinessGates(input: {
     },
     {
       description:
-        "Display name, headline, teaching description, rate, timezone, and at least one subject focus are complete.",
+        "Display name, headline, bio, rate, timezone, and at least one subject focus are complete.",
       key: "profileMinimum",
       label: "Profile minimum complete",
       state: profileMinimumState,
@@ -689,13 +684,31 @@ function buildReadinessGates(input: {
       label: "Payouts ready",
       state: payoutState,
     },
-    {
-      description: "No active suspension or admin-initiated hold.",
-      key: "noActiveHold",
-      label: "No active hold",
-      state: holdState,
-    },
   ];
+
+  // The admin-hold gate is surfaced only when it is actively blocking — a
+  // green "No active hold" row reads as noise on a healthy profile. When the
+  // listing is paused or delisted by Mentor IB, the row appears with a clear
+  // status-specific message so the tutor knows what is happening.
+  if (input.publicListingStatus === "paused") {
+    gates.push({
+      description:
+        "Mentor IB has temporarily paused your public profile. Check your notifications for details.",
+      key: "noActiveHold",
+      label: "Profile paused by Mentor IB",
+      state: "blocked",
+    });
+  } else if (input.publicListingStatus === "delisted") {
+    gates.push({
+      description:
+        "Mentor IB has removed your profile from public discovery. Check your notifications for details.",
+      key: "noActiveHold",
+      label: "Profile removed from discovery",
+      state: "blocked",
+    });
+  }
+
+  return gates;
 }
 
 function deriveSubmittedAt(profile: TutorProfileRecord): string | null {
@@ -724,7 +737,7 @@ async function loadTutorProfile(
   const { data, error } = await supabase
     .from("tutor_profiles")
     .select(
-      "application_status, bio, display_name, headline, hourly_rate_minor, id, payout_readiness_status, public_listing_status, public_slug, updated_at",
+      "application_status, bio, headline, hourly_rate_minor, id, payout_readiness_status, public_listing_status, public_slug, updated_at",
     )
     .eq("app_user_id", appUserId)
     .maybeSingle<TutorProfileRecord>();

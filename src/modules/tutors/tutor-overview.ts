@@ -31,7 +31,6 @@ const OPEN_ISSUE_CASE_STATUSES: readonly LessonIssueCaseStatus[] = [
 
 type TutorProfileRecord = {
   application_status: TutorApplicationStatus;
-  display_name: string | null;
   headline: string | null;
   id: string;
   payout_readiness_status: PayoutReadinessStatus;
@@ -149,7 +148,7 @@ export type TutorOverviewDto = {
 };
 
 export async function getTutorOverview(
-  account: Pick<ResolvedAuthAccount, "id">,
+  account: Pick<ResolvedAuthAccount, "full_name" | "id">,
 ): Promise<TutorOverviewDto> {
   const tutorProfile = await loadTutorProfile(account.id);
 
@@ -189,8 +188,7 @@ export async function getTutorOverview(
     openIssues,
     pendingRequests,
     profile: {
-      displayName:
-        trimToNull(tutorProfile.display_name) ?? "Mentor IB tutor",
+      displayName: trimToNull(account.full_name) ?? "Mentor IB tutor",
       headline: trimToNull(tutorProfile.headline),
     },
     readiness: {
@@ -284,7 +282,7 @@ async function loadTutorProfile(
   const { data, error } = await supabase
     .from("tutor_profiles")
     .select(
-      "application_status, display_name, headline, id, payout_readiness_status, profile_visibility_status, public_slug",
+      "application_status, headline, id, payout_readiness_status, profile_visibility_status, public_slug",
     )
     .eq("app_user_id", appUserId)
     .maybeSingle<TutorProfileRecord>();

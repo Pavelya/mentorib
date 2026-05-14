@@ -63,6 +63,7 @@ type ScheduleRow = {
 };
 
 type ProfileRow = {
+  app_user_id: string;
   bio: string | null;
   created_at: string;
   currency_code: string | null;
@@ -141,6 +142,11 @@ export async function getSeoCuratedTutorsForScope(
     SEO_CURATED_LIST_MAX_VISIBLE,
   );
 
+  const appUserIds = uniqueStrings(profileRows.map((row) => row.app_user_id));
+  const namesByAppUserId = await loadFullNamesByAppUserIds(appUserIds);
+  for (const row of profileRows) {
+    row.display_name = namesByAppUserId.get(row.app_user_id) ?? null;
+  }
   const profileById = new Map(profileRows.map((row) => [row.id, row]));
   const languagesByTutor = await materializeLanguageDtos(languageRows);
 
@@ -227,8 +233,8 @@ async function loadListedTutorProfiles(
     .select(
       [
         "id",
+        "app_user_id",
         "public_slug",
-        "display_name",
         "headline",
         "bio",
         "trial_price_minor",
@@ -247,6 +253,31 @@ async function loadListedTutorProfiles(
     throw new Error("Could not load tutor profiles for SEO scope.");
   }
   return data ?? [];
+}
+
+async function loadFullNamesByAppUserIds(
+  appUserIds: readonly string[],
+): Promise<Map<string, string>> {
+  const lookup = new Map<string, string>();
+  if (appUserIds.length === 0) {
+    return lookup;
+  }
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("app_users")
+    .select("full_name, id")
+    .in("id", appUserIds)
+    .returns<Array<{ full_name: string | null; id: string }>>();
+  if (error) {
+    throw new Error("Could not load tutor account names for SEO scope.");
+  }
+  for (const row of data ?? []) {
+    const trimmed = row.full_name?.trim();
+    if (trimmed) {
+      lookup.set(row.id, trimmed);
+    }
+  }
+  return lookup;
 }
 
 async function loadExaminersForScope(

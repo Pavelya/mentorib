@@ -172,7 +172,6 @@ export async function applySetupRoleSelection(
         {
           app_user_id: account.id,
           application_status: "in_progress",
-          display_name: displayName,
         },
         { ignoreDuplicates: true, onConflict: "app_user_id" },
       );

@@ -65,7 +65,7 @@ const options: TutorApplicationOptionsDto = {
 };
 
 const completeDraft: TutorApplicationDraftInput = {
-  displayName: "Maya Chen",
+  fullName: "Maya Chen",
   focusAreaCodes: ["internal_assessment"],
   headline: "Biology HL Examiner & IA coach",
   hourlyRateMajor: "60",
@@ -84,10 +84,10 @@ describe("validateTutorApplicationDraft", () => {
 
   it("requires display name and headline", () => {
     const errors = validateTutorApplicationDraft(
-      { ...completeDraft, displayName: "  ", headline: "" },
+      { ...completeDraft, fullName: "  ", headline: "" },
       options,
     );
-    expect(errors.displayName).toBeDefined();
+    expect(errors.fullName).toBeDefined();
     expect(errors.headline).toBeDefined();
   });
 

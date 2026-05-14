@@ -39,7 +39,6 @@ export const tutorProfiles = pgTable(
     app_user_id: uuid("app_user_id")
       .notNull()
       .references(() => appUsers.id, { onDelete: "cascade" }),
-    display_name: text("display_name"),
     public_slug: text("public_slug"),
     headline: text("headline"),
     bio: text("bio"),

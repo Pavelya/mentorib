@@ -59,7 +59,7 @@ type StepDefinition = {
 const steps: readonly StepDefinition[] = [
   {
     description: "How students see you on Mentor IB.",
-    fields: ["displayName", "headline"],
+    fields: ["fullName", "headline"],
     guidance: {
       body:
         "Your real name and a one-line headline. Students scan headlines fast.",
@@ -144,7 +144,7 @@ const steps: readonly StepDefinition[] = [
 ];
 
 const FIELD_LABELS: Record<TutorApplicationField, string> = {
-  displayName: "Display name",
+  fullName: "Full name",
   focusAreaCodes: "Types of help",
   headline: "Headline",
   hourlyRateMajor: "Hourly rate",
@@ -388,7 +388,7 @@ export function TutorApplicationForm({ application }: ApplyFormProps) {
 function HiddenDraftFields({ values }: { values: TutorApplicationDraftInput }) {
   return (
     <>
-      <input name="display_name" type="hidden" value={values.displayName} />
+      <input name="full_name" type="hidden" value={values.fullName} />
       <input name="headline" type="hidden" value={values.headline} />
       <input
         name="bio"
@@ -439,16 +439,16 @@ function StepFields({
       return (
         <div className={styles.fieldStack}>
           <TextField
-            error={errors.displayName}
-            id="displayName"
-            label="Display name"
+            error={errors.fullName}
+            id="fullName"
+            label="Full name"
             maxLength={80}
-            name="display_name_visible"
+            name="full_name_visible"
             onChange={(event) =>
-              updateValues({ displayName: event.target.value })
+              updateValues({ fullName: event.target.value })
             }
             placeholder="e.g. Maya Chen"
-            value={values.displayName}
+            value={values.fullName}
           />
           <TextField
             description="One short line about your IB focus."
@@ -596,7 +596,7 @@ function ReviewSection({
       <Section
         density="compact"
         eyebrow="Profile"
-        title={values.displayName || "Your tutor profile"}
+        title={values.fullName || "Your tutor profile"}
         titleAs="h3"
       >
         <p className={styles.reviewHeadline}>
@@ -769,7 +769,7 @@ function mergeInitialValues(
 ): TutorApplicationDraftInput {
   const hasActionValues =
     fromAction !== emptyTutorApplicationDraft &&
-    (fromAction.displayName ||
+    (fromAction.fullName ||
       fromAction.headline ||
       fromAction.focusAreaCodes.length > 0 ||
       fromAction.subjectCodes.length > 0);
@@ -777,8 +777,8 @@ function mergeInitialValues(
 }
 
 function buildApplicationTitle(values: TutorApplicationDraftInput): string {
-  if (values.displayName.trim()) {
-    return values.displayName.trim();
+  if (values.fullName.trim()) {
+    return values.fullName.trim();
   }
   if (values.headline.trim()) {
     return values.headline.trim();

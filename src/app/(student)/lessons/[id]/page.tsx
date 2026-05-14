@@ -48,6 +48,12 @@ import {
   type StudentLessonIssueDto,
   type StudentLessonMeetingDto,
 } from "@/modules/lessons/student-lessons";
+import {
+  getReviewEligibilityForStudentLesson,
+  REVIEW_MAX_RATING,
+  type LessonReviewEligibilityDto,
+  type ReviewSummaryDto,
+} from "@/modules/reviews";
 
 import {
   ISSUE_CASE_LABELS,
@@ -61,6 +67,7 @@ import {
   ReportIssueForm,
   RescheduleLessonForm,
   STUDENT_ISSUE_TYPE_OPTIONS,
+  SubmitTutorReviewForm,
 } from "./lesson-actions-client";
 import styles from "./lesson-detail.module.css";
 
@@ -81,6 +88,7 @@ export default async function StudentLessonDetailPage({
     return renderDetailPage({
       detail: buildPreviewStudentLessonDetail(),
       previewNotice: true,
+      reviewEligibility: { status: "ineligible", reason: "Live review capture connects once Supabase auth is configured." },
       timezone,
     });
   }
@@ -138,9 +146,15 @@ export default async function StudentLessonDetailPage({
     notFound();
   }
 
+  const reviewEligibility = await getReviewEligibilityForStudentLesson(
+    account,
+    detail.id,
+  );
+
   return renderDetailPage({
     detail,
     previewNotice: false,
+    reviewEligibility,
     timezone,
   });
 }
@@ -148,10 +162,12 @@ export default async function StudentLessonDetailPage({
 function renderDetailPage({
   detail,
   previewNotice,
+  reviewEligibility,
   timezone,
 }: {
   detail: StudentLessonDetailDto;
   previewNotice: boolean;
+  reviewEligibility: LessonReviewEligibilityDto;
   timezone: string;
 }) {
   const subjectLabel = detail.context.subject?.label ?? "Mentor IB lesson";
@@ -253,7 +269,77 @@ function renderDetailPage({
         detail={detail}
         previewNotice={previewNotice}
       />
+
+      <ReviewSection
+        detail={detail}
+        eligibility={reviewEligibility}
+        previewNotice={previewNotice}
+      />
     </article>
+  );
+}
+
+function ReviewSection({
+  detail,
+  eligibility,
+  previewNotice,
+}: {
+  detail: StudentLessonDetailDto;
+  eligibility: LessonReviewEligibilityDto;
+  previewNotice: boolean;
+}) {
+  return (
+    <Panel eyebrow="Lesson review" title="Tell other students what worked">
+      <Section density="compact">
+        {previewNotice ? (
+          <InlineNotice tone="info" title="Review preview">
+            <p>
+              Students can publish a star rating and a short, lesson-grounded
+              comment after the lesson is marked completed. Live review capture
+              connects once Supabase auth is configured.
+            </p>
+          </InlineNotice>
+        ) : eligibility.status === "already_submitted" ? (
+          <ExistingReviewSummary review={eligibility.existingReview} />
+        ) : eligibility.status === "ineligible" ? (
+          <p className={styles.bodyText}>{eligibility.reason}</p>
+        ) : (
+          <SubmitTutorReviewForm
+            lessonId={detail.id}
+            tutorDisplayName={detail.tutor.displayName}
+          />
+        )}
+      </Section>
+    </Panel>
+  );
+}
+
+function ExistingReviewSummary({ review }: { review: ReviewSummaryDto }) {
+  const filledStars = "★".repeat(review.ratingValue);
+  const emptyStars = "☆".repeat(Math.max(0, REVIEW_MAX_RATING - review.ratingValue));
+
+  return (
+    <div className={styles.reviewSummary}>
+      <div className={styles.reviewSummaryHeader}>
+        <StatusBadge tone="positive">Review published</StatusBadge>
+        <span
+          aria-label={`Rated ${review.ratingValue} out of ${REVIEW_MAX_RATING}`}
+          className={styles.reviewStarsInline}
+        >
+          <span aria-hidden="true">
+            {filledStars}
+            <span style={{ color: "var(--color-border-strong)" }}>{emptyStars}</span>
+          </span>
+        </span>
+      </div>
+      {review.comment ? (
+        <p className={styles.noteText}>{review.comment}</p>
+      ) : (
+        <p className={styles.bodyText}>
+          You published a {review.ratingValue}-star rating without a comment.
+        </p>
+      )}
+    </div>
   );
 }
 

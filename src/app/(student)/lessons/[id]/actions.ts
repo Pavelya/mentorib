@@ -25,6 +25,12 @@ import {
   reportStudentLessonIssue,
   LessonActionError,
 } from "@/modules/lessons/lesson-actions";
+import {
+  REVIEW_MAX_RATING,
+  REVIEW_MIN_RATING,
+  ReviewActionError,
+  submitTutorReviewForLesson,
+} from "@/modules/reviews";
 
 export type CancelLessonActionState = {
   code: string | null;
@@ -44,6 +50,13 @@ export type ReportIssueActionState = {
   fieldErrors: Partial<Record<"issueType" | "summary", string>>;
   message: string | null;
   values: { issueType: string; lessonId: string; summary: string };
+};
+
+export type SubmitReviewActionState = {
+  code: string | null;
+  fieldErrors: Partial<Record<"comment" | "rating", string>>;
+  message: string | null;
+  values: { comment: string; lessonId: string; rating: string };
 };
 
 const LESSONS_BASE_PATH = "/lessons" as const;
@@ -322,6 +335,121 @@ export async function reportLessonIssueAction(
       values,
     };
   }
+}
+
+export async function submitTutorReviewAction(
+  _previousState: SubmitReviewActionState,
+  formData: FormData,
+): Promise<SubmitReviewActionState> {
+  const values = {
+    comment: getFormValue(formData, "comment"),
+    lessonId: getFormValue(formData, "lessonId"),
+    rating: getFormValue(formData, "rating"),
+  };
+
+  if (!values.lessonId) {
+    return {
+      code: "missing_lesson",
+      fieldErrors: {},
+      message: "We couldn't recover this lesson context. Refresh the page and try again.",
+      values,
+    };
+  }
+
+  const ratingValue = parseRatingInput(values.rating);
+
+  if (ratingValue === null) {
+    return {
+      code: "invalid_rating",
+      fieldErrors: {
+        rating: `Pick a rating between ${REVIEW_MIN_RATING} and ${REVIEW_MAX_RATING} stars.`,
+      },
+      message: "Pick how many stars to give this lesson before submitting.",
+      values,
+    };
+  }
+
+  const detailHref = `${LESSONS_BASE_PATH}/${values.lessonId}`;
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email?.trim()) {
+    redirect(buildAuthSignInPath(detailHref) as Route);
+  }
+
+  try {
+    const account = await ensureAuthAccount(user);
+
+    if (requiresRoleSelection(account)) {
+      redirect(routeFamilies.setup.defaultHref);
+    }
+
+    if (isRestrictedAccount(account)) {
+      return {
+        code: "account_restricted",
+        fieldErrors: {},
+        message: "This account cannot leave a review right now.",
+        values,
+      };
+    }
+
+    if (!hasRole(account, "student")) {
+      redirect(buildPostSignInRedirect(account, detailHref) as Route);
+    }
+
+    await submitTutorReviewForLesson(account, values.lessonId, {
+      comment: values.comment.length > 0 ? values.comment : null,
+      ratingValue,
+    });
+
+    revalidatePath(detailHref);
+    revalidatePath(LESSONS_BASE_PATH);
+
+    return {
+      code: "submitted",
+      fieldErrors: {},
+      message:
+        "Thanks for the review — your feedback helps other students decide and helps the tutor improve.",
+      values: { comment: "", lessonId: values.lessonId, rating: String(ratingValue) },
+    };
+  } catch (error) {
+    if (error instanceof ReviewActionError) {
+      return {
+        code: error.code,
+        fieldErrors: {},
+        message: error.message,
+        values,
+      };
+    }
+
+    return {
+      code: "review_failed",
+      fieldErrors: {},
+      message: "We couldn't save this review. Please try again in a moment.",
+      values,
+    };
+  }
+}
+
+function parseRatingInput(raw: string): number | null {
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+
+  if (
+    !Number.isFinite(parsed) ||
+    parsed < REVIEW_MIN_RATING ||
+    parsed > REVIEW_MAX_RATING
+  ) {
+    return null;
+  }
+
+  return parsed;
 }
 
 function getFormValue(formData: FormData, key: string) {

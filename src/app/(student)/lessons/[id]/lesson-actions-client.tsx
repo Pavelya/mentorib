@@ -1,24 +1,32 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
   Button,
+  Icon,
   InlineNotice,
   SelectField,
   StatusBadge,
   Textarea,
 } from "@/components/ui";
 import type { LessonIssueType } from "@/modules/lessons/constants";
+import {
+  REVIEW_COMMENT_MAX_LENGTH,
+  REVIEW_MAX_RATING,
+  REVIEW_MIN_RATING,
+} from "@/modules/reviews";
 
 import {
   cancelLessonAction,
   reportLessonIssueAction,
   rescheduleLessonAction,
+  submitTutorReviewAction,
   type CancelLessonActionState,
   type ReportIssueActionState,
   type RescheduleLessonActionState,
+  type SubmitReviewActionState,
 } from "./actions";
 import styles from "./lesson-detail.module.css";
 
@@ -239,6 +247,117 @@ function ReportSubmitButton() {
   return (
     <Button type="submit" variant="secondary">
       {pending ? "Submitting report..." : "Submit issue report"}
+    </Button>
+  );
+}
+
+type SubmitReviewFormProps = {
+  lessonId: string;
+  tutorDisplayName: string;
+};
+
+const initialReviewState: SubmitReviewActionState = {
+  code: null,
+  fieldErrors: {},
+  message: null,
+  values: { comment: "", lessonId: "", rating: "" },
+};
+
+const RATING_VALUES: readonly number[] = Array.from(
+  { length: REVIEW_MAX_RATING - REVIEW_MIN_RATING + 1 },
+  (_, index) => REVIEW_MIN_RATING + index,
+);
+
+export function SubmitTutorReviewForm({
+  lessonId,
+  tutorDisplayName,
+}: SubmitReviewFormProps) {
+  const [state, formAction] = useActionState(
+    submitTutorReviewAction,
+    initialReviewState,
+  );
+  const [rating, setRating] = useState<number | null>(() => {
+    const parsed = Number.parseInt(state.values.rating, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  });
+  const succeeded = state.code === "submitted";
+
+  return (
+    <form action={formAction} className={styles.actionForm}>
+      <input name="lessonId" type="hidden" value={lessonId} />
+
+      {state.message ? (
+        <InlineNotice
+          title={succeeded ? "Review published" : "We couldn't publish the review"}
+          tone={succeeded ? "success" : "actionNeeded"}
+        >
+          <p>{state.message}</p>
+        </InlineNotice>
+      ) : null}
+
+      {!succeeded ? (
+        <>
+          <fieldset className={styles.ratingGroup}>
+            <legend className={styles.ratingGroupLegend}>
+              How was your lesson with {tutorDisplayName}?
+            </legend>
+            {RATING_VALUES.map((value) => {
+              const isFilled = rating !== null && value <= rating;
+              return (
+                <label className={styles.ratingStarLabel} key={value}>
+                  <input
+                    aria-label={`${value} ${value === 1 ? "star" : "stars"}`}
+                    checked={rating === value}
+                    name="rating"
+                    onChange={() => setRating(value)}
+                    type="radio"
+                    value={value}
+                  />
+                  <Icon
+                    className={
+                      isFilled
+                        ? styles.ratingStarIconFilled
+                        : styles.ratingStarIcon
+                    }
+                    filled={isFilled}
+                    name="star"
+                    size={28}
+                  />
+                </label>
+              );
+            })}
+          </fieldset>
+          {state.fieldErrors.rating ? (
+            <p className={styles.bodyText} role="alert">
+              {state.fieldErrors.rating}
+            </p>
+          ) : null}
+
+          <Textarea
+            defaultValue={state.values.comment}
+            description="Optional. Keep it lesson-grounded — what worked, what you'd want to repeat. Avoid private details."
+            error={state.fieldErrors.comment}
+            label="Add context"
+            labelMeta="Optional"
+            maxLength={REVIEW_COMMENT_MAX_LENGTH}
+            name="comment"
+            placeholder="What worked well? What helped you most?"
+            rows={4}
+          />
+
+          <ReviewSubmitButton />
+        </>
+      ) : null}
+    </form>
+  );
+}
+
+function ReviewSubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="primary">
+      {pending ? "Publishing review..." : "Publish review"}
     </Button>
   );
 }

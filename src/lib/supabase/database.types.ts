@@ -45,6 +45,7 @@ import type {
   NotificationType,
   PolicyNoticeType,
 } from "@/modules/notifications/constants";
+import type { ReviewStatus } from "@/modules/reviews/constants";
 import type {
   AvailabilityOverrideType,
   AvailabilityRuleVisibilityStatus,
@@ -579,6 +580,36 @@ type JobRunRow = {
   started_at: string | null;
   trigger_object_id: string | null;
   trigger_object_type: string | null;
+  updated_at: string;
+};
+
+type ReviewRow = {
+  comment: string | null;
+  created_at: string;
+  flagged_at: string | null;
+  id: string;
+  lesson_id: string;
+  moderation_note: string | null;
+  published_at: string | null;
+  rating_value: number;
+  review_status: ReviewStatus;
+  student_profile_id: string;
+  submitted_at: string;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type TutorRatingSnapshotRow = {
+  aggregation_version: string;
+  average_rating_value: number | string | null;
+  created_at: string;
+  last_recomputed_at: string;
+  prior_rating_value: number | string;
+  prior_review_count: number;
+  published_review_count: number;
+  rating_sum: number;
+  smoothed_rating_value: number | string | null;
+  tutor_profile_id: string;
   updated_at: string;
 };
 
@@ -1210,6 +1241,49 @@ export type MentorIbDatabase = {
             TutorMeetingPreferenceRow,
             "created_at" | "id" | "tutor_profile_id" | "updated_at"
           >
+        >;
+      };
+      reviews: {
+        Insert: Pick<
+          ReviewRow,
+          "lesson_id" | "rating_value" | "student_profile_id" | "tutor_profile_id"
+        > & {
+          comment?: string | null;
+          flagged_at?: string | null;
+          moderation_note?: string | null;
+          published_at?: string | null;
+          review_status?: ReviewStatus;
+          submitted_at?: string;
+        };
+        Relationships: [];
+        Row: ReviewRow;
+        Update: Partial<
+          Omit<
+            ReviewRow,
+            | "created_at"
+            | "id"
+            | "lesson_id"
+            | "student_profile_id"
+            | "tutor_profile_id"
+            | "updated_at"
+          >
+        >;
+      };
+      tutor_rating_snapshot: {
+        Insert: Pick<TutorRatingSnapshotRow, "tutor_profile_id"> & {
+          aggregation_version?: string;
+          average_rating_value?: number | string | null;
+          last_recomputed_at?: string;
+          prior_rating_value?: number | string;
+          prior_review_count?: number;
+          published_review_count?: number;
+          rating_sum?: number;
+          smoothed_rating_value?: number | string | null;
+        };
+        Relationships: [];
+        Row: TutorRatingSnapshotRow;
+        Update: Partial<
+          Omit<TutorRatingSnapshotRow, "created_at" | "tutor_profile_id" | "updated_at">
         >;
       };
       tutor_profiles: {

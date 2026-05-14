@@ -24,12 +24,14 @@ import {
   Card,
   Chip,
   Flag,
+  Icon,
   InlineNotice,
   Panel,
   Section,
   StatusBadge,
   getButtonClassName,
 } from "@/components/ui";
+import { REVIEW_MAX_RATING } from "@/modules/reviews";
 import { ensureAuthAccount } from "@/lib/auth/account-service";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -303,6 +305,8 @@ export default async function TutorProfilePage({
           </div>
         </Section>
 
+        <ReviewSurfaceSection profile={profile} />
+
         {profile.introVideo ? <IntroVideoSection profile={profile} /> : null}
 
         <SeoLandingLinkSection profile={profile} />
@@ -540,6 +544,146 @@ function uniqueLinkValues<T extends { slug: string }>(values: T[]): T[] {
     out.push(value);
   }
   return out;
+}
+
+function ReviewSurfaceSection({ profile }: { profile: PublicTutorProfileDto }) {
+  const { rating, reviews } = profile.reviewSummary;
+  const hasFeatured = rating.hasPublicRating && rating.smoothedRatingValue !== null;
+  const eyebrow = "Student reviews";
+
+  return (
+    <Section
+      aria-label="Student reviews"
+      density="spacious"
+      eyebrow={eyebrow}
+      title={
+        hasFeatured
+          ? `What students say about ${profile.displayName}.`
+          : `${profile.displayName} is new to Mentor IB.`
+      }
+      titleAs="h2"
+    >
+      {hasFeatured ? (
+        <FeaturedRatingBlock
+          publishedReviewCount={rating.publishedReviewCount}
+          smoothedRatingValue={rating.smoothedRatingValue ?? 0}
+          tutorDisplayName={profile.displayName}
+        />
+      ) : (
+        <NewTutorReviewFraming
+          publishedReviewCount={rating.publishedReviewCount}
+          tutorDisplayName={profile.displayName}
+        />
+      )}
+
+      {reviews.length > 0 ? (
+        <ul className={styles.reviewList}>
+          {reviews.map((review) => (
+            <li className={styles.reviewCard} key={review.id}>
+              <div className={styles.reviewCardHeader}>
+                <span className={styles.reviewCardReviewer}>
+                  {review.reviewerLabel}
+                </span>
+                <ReviewStarsRow ratingValue={review.ratingValue} />
+              </div>
+              {review.context.subject || review.context.focus ? (
+                <p className={styles.reviewCardContext}>
+                  {[review.context.subject, review.context.focus]
+                    .filter((label): label is string => Boolean(label))
+                    .join(" · ")}
+                </p>
+              ) : null}
+              {review.comment ? (
+                <p className={styles.reviewCardComment}>{review.comment}</p>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </Section>
+  );
+}
+
+function FeaturedRatingBlock({
+  publishedReviewCount,
+  smoothedRatingValue,
+  tutorDisplayName,
+}: {
+  publishedReviewCount: number;
+  smoothedRatingValue: number;
+  tutorDisplayName: string;
+}) {
+  return (
+    <div className={styles.reviewSummary}>
+      <div className={styles.reviewHeadline}>
+        <p
+          aria-label={`${smoothedRatingValue.toFixed(1)} out of ${REVIEW_MAX_RATING} stars`}
+          className={styles.reviewRatingValue}
+        >
+          {smoothedRatingValue.toFixed(1)}
+        </p>
+        <ReviewStarsRow ratingValue={smoothedRatingValue} />
+        <p className={styles.reviewRatingMeta}>
+          {publishedReviewCount}{" "}
+          {publishedReviewCount === 1 ? "published review" : "published reviews"}
+        </p>
+      </div>
+      <p className={styles.reviewRatingMeta}>
+        Mentor IB stabilizes star ratings so a small number of lessons cannot skew the
+        score for or against {tutorDisplayName}.
+      </p>
+    </div>
+  );
+}
+
+function NewTutorReviewFraming({
+  publishedReviewCount,
+  tutorDisplayName,
+}: {
+  publishedReviewCount: number;
+  tutorDisplayName: string;
+}) {
+  if (publishedReviewCount === 0) {
+    return (
+      <p className={styles.reviewRatingMeta}>
+        {tutorDisplayName} hasn&apos;t collected published lesson reviews yet on
+        Mentor IB. Trust here comes from verified credentials and approved profile
+        review — not from review count.
+      </p>
+    );
+  }
+
+  return (
+    <p className={styles.reviewRatingMeta}>
+      {tutorDisplayName} has {publishedReviewCount}{" "}
+      {publishedReviewCount === 1 ? "published review" : "published reviews"} so
+      far. Mentor IB only foregrounds a star rating once there is enough lesson
+      evidence to make it meaningful.
+    </p>
+  );
+}
+
+function ReviewStarsRow({ ratingValue }: { ratingValue: number }) {
+  const rounded = Math.round(Math.min(Math.max(ratingValue, 0), REVIEW_MAX_RATING));
+
+  return (
+    <span
+      aria-hidden="true"
+      className={styles.reviewStarsRow}
+    >
+      {Array.from({ length: REVIEW_MAX_RATING }, (_, index) => {
+        const filled = index < rounded;
+        return (
+          <Icon
+            filled={filled}
+            key={index}
+            name="star"
+            size={16}
+          />
+        );
+      })}
+    </span>
+  );
 }
 
 function IntroVideoSection({ profile }: { profile: PublicTutorProfileDto }) {

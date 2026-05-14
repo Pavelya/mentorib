@@ -16,6 +16,7 @@ import {
   Pause,
   Presentation,
   Sigma,
+  Star,
   TrendingUp,
 } from "lucide-react";
 
@@ -34,6 +35,7 @@ const iconRegistry = {
   physics: Atom,
   psychology: Brain,
   reviewed: BadgeCheck,
+  star: Star,
   studentRole: GraduationCap,
   tok: MessagesSquare,
   tutorRole: Presentation,
@@ -44,6 +46,7 @@ export type IconKey = keyof typeof iconRegistry;
 type IconProps = {
   "aria-label"?: string;
   className?: string;
+  filled?: boolean;
   name: IconKey;
   size?: number | string;
   strokeWidth?: number;
@@ -52,6 +55,7 @@ type IconProps = {
 export function Icon({
   "aria-label": ariaLabel,
   className,
+  filled,
   name,
   size = 20,
   strokeWidth = 1.75,
@@ -64,6 +68,7 @@ export function Icon({
       aria-hidden={isDecorative ? true : undefined}
       aria-label={ariaLabel}
       className={className}
+      fill={filled ? "currentColor" : "none"}
       role={isDecorative ? undefined : "img"}
       size={size}
       strokeWidth={strokeWidth}

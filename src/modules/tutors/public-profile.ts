@@ -20,6 +20,11 @@ import {
   formatHourlyRate,
   formatTrialPrice,
 } from "@/modules/pricing/tutor-pricing";
+import {
+  buildEmptyPublicTutorReviewSummary,
+  getPublicTutorReviewSummary,
+  type PublicTutorReviewSummaryDto,
+} from "@/modules/reviews";
 import { loadExaminerBadgesForTutor } from "@/modules/tutors/examiner-credentials";
 import type { ExaminerBadge } from "@/modules/tutors/examiner-credentials-builder";
 
@@ -125,6 +130,7 @@ export type PublicTutorProfileDto = {
     alt: string;
     url: string;
   } | null;
+  reviewSummary: PublicTutorReviewSummaryDto;
   seo: {
     description: string;
     imageUrl: string | null;
@@ -208,9 +214,12 @@ export async function getPublicTutorProfileBySlug(
     display_name: displayName,
   };
 
-  const relatedRecords = await loadPublicTutorProfileRelatedRecords(profile.id);
+  const [relatedRecords, reviewSummary] = await Promise.all([
+    loadPublicTutorProfileRelatedRecords(profile.id),
+    getPublicTutorReviewSummary(profile.id),
+  ]);
 
-  return buildPublicTutorProfileDto(enrichedProfile, relatedRecords);
+  return buildPublicTutorProfileDto(enrichedProfile, relatedRecords, reviewSummary);
 }
 
 export async function listPublicTutorProfileSitemapEntries(): Promise<
@@ -471,6 +480,7 @@ async function loadLanguages(languageCodes: string[]) {
 function buildPublicTutorProfileDto(
   profile: PublicTutorProfileWithName,
   relatedRecords: RelatedPublicTutorProfileRecords,
+  reviewSummary: PublicTutorReviewSummaryDto = buildEmptyPublicTutorReviewSummary(),
 ): PublicTutorProfileDto {
   const introVideo = buildVideoReference(profile);
   const subjects = buildSubjectCapabilities(relatedRecords);
@@ -526,6 +536,7 @@ function buildPublicTutorProfileDto(
       currencyCode: profile.currency_code,
     }),
     primaryImage,
+    reviewSummary,
     seo: buildSeoSummary({
       bio: profile.bio ?? "",
       displayName: profile.display_name ?? "Mentor IB tutor",

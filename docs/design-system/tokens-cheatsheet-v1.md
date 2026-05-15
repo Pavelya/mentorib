@@ -224,16 +224,26 @@ State tokens come in `surface` + `border` pairs. Use them for tone-mapped chrome
 }
 ```
 
-## 11. What is **not** a token
+## 11. Stacking
+
+The DS exposes a single z-index token for the portal layer; route-local stacking values remain forbidden.
+
+| Token | Value | Intended use |
+|---|---|---|
+| `--z-popover` | `1000` | portal-rendered overlays (`Popover`, `Menu`, future `Tooltip`/`Dialog`) so they layer above `AppFrame` chrome without colliding |
+
+Introduced in `P2-DS-MENU-001` alongside the `Popover` primitive. Future floating primitives (Tooltip, Dialog) should reuse this token until the DS has reason to introduce a multi-step stacking scale; the bare numeric literal `1000` must never appear in route-local CSS.
+
+## 12. What is **not** a token
 
 The following are intentionally **not** exposed as tokens; do not invent them:
 
 - per-route accent palettes — extend a state pair instead
 - per-component spacing scales — use `--space-*` only
-- z-index scale — none defined yet; if a route truly needs stacking, escalate per `agent-ui-rules.md` rather than inlining a magic number
+- multi-step z-index scale — only `--z-popover` is defined today (§11). If a route needs a stacking value that does not match the portal layer, escalate per `agent-ui-rules.md` rather than inlining a magic number
 - font-weight scale — pick from CSS-supported weights (`400`, `500`, `600`, `700`); do not introduce a `--weight-*` family without DS sign-off
 
-## 12. Maintenance contract
+## 13. Maintenance contract
 
 - Every change to `:root` in `src/styles/globals.css` must update this cheatsheet in the same commit.
 - Every new DS primitive must consume only the tokens documented here. New primitive variants that need a new token must add the token to `globals.css` and document it here at the same time.

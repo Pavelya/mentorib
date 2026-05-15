@@ -187,8 +187,9 @@ Bad parallel examples:
 | 1 | `P2-APPLY-001` | `ready` | `P1` | 1 | Tutor application staged flow and readiness experience |
 | 1 | `P2-TRUST-001` | `ready` | `P1` | 2 | Lesson-linked review capture and publication flow |
 | 1 | `P2-REPORT-001` | `ready` | `P1` | 2 | Lesson reports and post-lesson continuity surfaces |
-| 1 | `P2-MSG-001` | `draft` | `P2` | 3 | Rich messaging behaviors wave |
+| 1 | `P2-DS-MENU-001` | `ready` | `P1` | 3 | Popover, Menu, OverflowMenuTrigger primitives + Chip pressed state |
 | 1 | `P2-NOTIF-PREF-001` | `draft` | `P2` | 2 | Notification preferences and channel controls |
+| 2 | `P2-MSG-001` | `ready` | `P2` | 3 | Rich messaging behaviors wave |
 | 2 | `P2-APPLY-002` | `draft` | `P2` | 1 | Internal tutor review queue and approval decisions |
 | 2 | `P2-PROFILE-001` | `draft` | `P1` | 1 | Tutor profile editor and listing publication controls |
 | 2 | `P2-GROW-001` | `planned` | `P3` | 4 | Public browse search scaling and external search activation path |
@@ -545,50 +546,220 @@ Tests:
 - The `due` value is exposed only as a derived view-model flag for the tutor surface; it should not be persisted as a row state.
 - Use existing notification lifecycle helpers in `src/modules/notifications/lifecycle.ts`; do not introduce a parallel dispatch path.
 
-## 11.7 `P2-MSG-001` Rich messaging behaviors wave
+## 11.6a `P2-DS-MENU-001` Popover, Menu, OverflowMenuTrigger primitives + Chip pressed state
 
-**Status:** `draft`
-**Priority:** `P2`
+**Status:** `ready`
+**Priority:** `P1`
 **Wave:** 3
-**Depends on:** `P1-MSG-002`
+**Depends on:** `P1-DS-FOUND-001-C`, `P1-DS-FOUND-001-E`
 
 **Goal**
 
-Add the first richer messaging behaviors that materially improve conversation feel without turning Mentor IB into a generic chat product.
+Add the missing design-system primitives needed by wave-3 communication and admin surfaces: an anchored `Popover`, a composable `Menu` built on top of it, an `OverflowMenuTrigger` icon button, and a `pressed`/`selected` state on the existing `Chip` primitive. This is a DS foundation task, not a feature task; it ships primitives only, with no route-level consumers.
 
 **Required source docs**
 
-- `docs/architecture/message-architecture-v1.md`
-- `docs/architecture/background-jobs-and-notifications-architecture-v1.md`
-- `docs/data/database-rls-boundaries-v1.md`
-- `docs/data/auth-and-authorization-matrix-v1.md`
-- `docs/data/privacy-policy-data-inventory-handoff-v1.md`
+- `docs/design-system/design-system-spec-final-v1.md`
+- `docs/design-system/component-specs-core-v1.md`
+- `docs/design-system/agent-ui-rules.md`
+- `docs/design-system/component-inventory-v1.md`
+- `docs/design-system/tokens-cheatsheet-v1.md`
+- `docs/architecture/accessibility-and-inclusive-ux-architecture-v1.md`
 
 **Scope**
 
-- reactions
-- typing indicator
-- online presence
-- better conversation filtering or search if usage justifies it
+Primitives:
+
+- `src/components/ui/popover.tsx` + `popover.module.css`: anchored floating surface with controlled (`open`, `onOpenChange`) and uncontrolled APIs. Required behavior: render through a portal to `document.body`, anchor against a `triggerRef`, close on `Escape`, close on outside click, trap focus inside while open, restore focus to the trigger on close, expose `aria-haspopup` / `aria-expanded` wiring helpers for the trigger, support placements `bottom-start`, `bottom-end`, `top-start`, `top-end` with viewport-collision flip. No animation framework — use existing motion tokens for a short transform+opacity transition.
+- `src/components/ui/menu.tsx` + `menu.module.css`: composed on top of `Popover`. Exports `Menu`, `MenuItem`, `MenuSeparator`. Items accept `icon?: IconKey`, `tone?: "default" | "destructive"`, `disabled?: boolean`, `onSelect: () => void`. Required behavior: arrow-key navigation between items, `Home`/`End` jumps, type-ahead focus by first letter, `Enter`/`Space` activates and closes the menu, `Escape` closes without activation, ARIA role `menu` with `menuitem` children, items render through `Icon` from `src/components/ui/icon.tsx` for the optional leading glyph (no inline SVGs).
+- `src/components/ui/overflow-menu-trigger.tsx`: icon button that wraps a `Button` (size `compact`, variant `ghost` or equivalent — confirm from `button.tsx`) with the lucide `more-horizontal` (or `more-vertical`, configurable via prop) icon. Composes with `Menu` via the controlled API. Exposes `aria-label` as a required prop so consumers must label the trigger contextually ("Conversation options", "Lesson options", etc.).
+- Chip pressed state: extend `src/components/ui/chip.tsx` with a `pressed?: boolean` prop and matching CSS module rule. Pressed state must be visually distinct from each existing tone without redefining tones, and must set `aria-pressed` on the rendered element when the chip is interactive (i.e. when `onClick` is provided). Non-interactive chips ignore the prop.
+
+Type exports:
+
+- Export `PopoverProps`, `MenuProps`, `MenuItemProps`, `OverflowMenuTriggerProps` from `src/components/ui/index.ts`, alongside existing `ChipProps` etc.
+- Update the existing `Chip` type export so `pressed` is part of `ChipProps`.
+
+Docs:
+
+- Update `docs/design-system/component-inventory-v1.md` with rows for `Popover`, `Menu`, `OverflowMenuTrigger`, and the pressed-state addition to `Chip`. Each row follows the existing format (component name, file, variants, consumers, notes); consumers column may say "introduced in `P2-DS-MENU-001`, no consumers yet" — that is the expected initial state.
+- Update `docs/design-system/tokens-cheatsheet-v1.md` only if new tokens are introduced (z-index for portal layer, elevation/shadow for popover surface). Prefer reusing existing tokens; if a new token is needed, define it in the same commit per the DS-first rule.
+
+Out-of-scope reuse note:
+
+- This task ships the primitives. Wave-3 features (`P2-MSG-001`, future `P2-OPS-001` action menus) consume them. No consumer wiring lands here.
 
 **Out of scope**
 
-- file attachments
-- native mobile push
-- community or multi-party chat
+- Any route-level adoption of `Popover` / `Menu` / `OverflowMenuTrigger`. Adoption ships with the consuming feature task.
+- A combobox, listbox, or autocomplete primitive — those are separate primitives even though they share floating-layer concerns. Defer until a feature task needs them.
+- A modal `Dialog` primitive (focus trap + portal patterns overlap, but the API and visual contract are different). Defer until a feature task needs one.
+- Tooltip primitive (also floating-layer; defer until a feature task needs one).
+- Replacing existing inline menu-like UI in current routes. This task does not migrate any existing surface.
+- New tone additions to `Chip` beyond the pressed state.
 
 **Acceptance criteria**
 
-- richer message behavior remains phase-appropriate and does not break access boundaries
-- presence and typing are additive convenience, not an access loophole
-- privacy and logging posture remain explicit
-- message UX still feels tied to tutoring relationships and lesson context
+- `Popover`, `Menu`, `OverflowMenuTrigger` are exported from `src/components/ui/index.ts` and render correctly in isolation (verified by unit test, since no route consumes them yet).
+- Keyboard model passes: opening with `Enter`/`Space` on the trigger; closing with `Escape` returns focus to the trigger; outside click closes; arrow keys cycle items; `Home`/`End` jump to first/last; type-ahead focus works.
+- ARIA attributes are correct: trigger has `aria-haspopup="menu"` and `aria-expanded` reflecting open state; menu surface has `role="menu"`; items have `role="menuitem"`; destructive items still expose their action via the same role (tone is visual only).
+- Portal rendering avoids stacking issues with existing route chrome (`AppFrame`); a z-index/elevation token is documented in `tokens-cheatsheet-v1.md` if introduced.
+- `Chip` with `pressed` renders a visually distinct state and emits `aria-pressed` when interactive; non-interactive chips do not emit `aria-pressed`.
+- `docs/design-system/component-inventory-v1.md` carries new rows for all three new primitives and an updated row for `Chip`; if any token landed, `docs/design-system/tokens-cheatsheet-v1.md` is updated in the same commit.
+- No route files under `src/app/**` are modified by this task.
+- `pnpm lint:arch` passes with no new violations.
 
 **Verification**
 
-- RLS and access review
-- Realtime/privacy review
-- phased-scope review against the message architecture
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`.
+- `pnpm lint:arch`.
+- `pnpm test` covering: `Popover` open/close + focus restore; `Menu` keyboard navigation, type-ahead, and item selection; `OverflowMenuTrigger` ARIA wiring; `Chip` pressed state visual class application and `aria-pressed` rendering.
+- Manual cross-browser smoke (Chrome + Safari) of a story-shaped harness page if one exists; if none exists, gate this on a single unit-test mount that exercises the keyboard model. Do not add a Storybook dependency for this task.
+- `pnpm test:e2e` is not required (this task does not touch public route rendering, robots, or sitemap).
+
+**Implementation notes**
+
+- Do not add a floating-positioning library (Floating UI, Popper, etc.) unless the manual collision-flip logic becomes unwieldy. If one is genuinely required, stop and escalate per the "stop and escalate" rule before installing — the frozen baseline does not include one.
+- Mirror the API style of existing DS components (`Chip`, `Card`, `Section`): named exports, controlled `className` pass-through, props typed in the same file, CSS variables consumed from `src/styles/globals.css`.
+- The `Menu` keyboard model should match the W3C APG menu pattern. Reference the existing accessibility architecture doc for any role-attribute conventions.
+- For the icon glyph in `OverflowMenuTrigger`, register the lucide icon key in `src/components/ui/icon.tsx` if not already present, in the same commit. Never inline an SVG.
+
+## 11.7 `P2-MSG-001` Rich messaging behaviors wave
+
+**Status:** `ready`
+**Priority:** `P2`
+**Wave:** 3
+**Depends on:** `P1-MSG-002`, `P2-DS-MENU-001`
+
+**Goal**
+
+Add the first richer messaging behaviors on top of the existing P1 message domain so conversations feel responsive and expressive without turning Mentor IB into a generic chat product. This wave delivers: message reactions (durable), typing indicator (ephemeral), online presence (ephemeral), lightweight conversation list filtering, and per-conversation mute/archive controls wired to the existing `conversation_participants` flags.
+
+**Required source docs**
+
+- `docs/architecture/message-architecture-v1.md` (§7.2, §9, §10, §11)
+- `docs/architecture/background-jobs-and-notifications-architecture-v1.md` (§8.5 new-message channel rule; §13.3 presence/typing rule; §15.2 phase 1.5 alignment)
+- `docs/data/database-schema-outline-v1.md` (§13.6 reserved `message_reactions`)
+- `docs/data/database-rls-boundaries-v1.md` (§9.6 messaging tables; §12.2 conversation channel rule; §12.4 policy-complexity rule)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§9.8 conversations/messages/blocks/reports)
+- `docs/data/privacy-policy-data-inventory-handoff-v1.md` (no message bodies in logs/analytics; messaging stays `P4`)
+- `docs/data/database-enum-and-status-glossary-v1.md` (for the new `message_reaction_keys` enum)
+- `docs/data/migration-conventions-v1.md` (migration ordering and naming)
+- `docs/design-system/agent-ui-rules.md` (no route-local chip/icon CSS; reactions UI must reuse DS primitives)
+- `docs/design-system/component-inventory-v1.md` (extend if a new primitive lands)
+
+**Scope**
+
+Data layer:
+
+- Create `message_reactions` table (lesson/message domain, owned alongside `messages` in `src/modules/messages/schema.ts`) with columns: `id` (uuid PK), `message_id` (FK `messages.id` on delete cascade), `reactor_app_user_id` (FK `app_users.id` on delete cascade), `reaction_key` (text enum), `created_at`, `updated_at`.
+- Declare a `messageReactionKeys` enum in `src/modules/messages/constants.ts` with the fixed set `["thumbs_up", "heart", "laugh", "celebrate", "thinking", "clap"]`. The DB column stores the canonical string key, not raw unicode. Rendering maps key → glyph via a DS-owned helper.
+- Uniqueness: one reaction per (`message_id`, `reactor_app_user_id`). Switching reaction is an UPDATE, not insert-of-second-row. Re-clicking the same key removes the row (toggle off).
+- Indexes: `uniqueIndex("message_reactions_message_reactor_key").on(message_id, reactor_app_user_id)`, `index("message_reactions_message_idx").on(message_id)`.
+- New migration file ordered after `20260514150000_lesson_reports_baseline.sql` (use the next available `YYYYMMDDHHMMSS` slot per `migration-conventions-v1.md`); name suggestion `*_message_reactions_baseline.sql`.
+- RLS policy on `message_reactions` (Type B per §9.6 boundary): SELECT — actor is a participant of the conversation that owns `message_id`; INSERT/UPDATE/DELETE — actor is the `reactor_app_user_id` AND a participant of that conversation AND the message is not in `removed` state AND no active `user_blocks` row exists between the reactor and the message author. Apply `with check` mirroring `using`. Service-role bypass via the existing service-role client for shaped reads only.
+- No new tables for typing or presence. Typing and presence are Supabase Realtime channel features only.
+
+Domain + DTO layer:
+
+- Add `src/modules/messages/reactions.ts` exporting:
+  - `toggleMessageReaction(account, { messageId, reactionKey })` → result type aligned with `MessageSendResult` (`ok` / `not_found` / `forbidden` / `validation_failed` / `rate_limited` / `temporary_failure`), with the participant + block + status checks already used in `src/modules/messages/send.ts`.
+  - `loadReactionsForMessages(messageIds, accountId)` returning `Map<messageId, ReactionSummary>` where `ReactionSummary = { counts: Record<MessageReactionKey, number>, myReactionKey: MessageReactionKey | null, total: number }`.
+- Extend `ThreadMessageDto` in `src/modules/messages/conversations.ts` with `reactions: ReactionSummary` (defaulting to `{ counts: {}, myReactionKey: null, total: 0 }`). Reactions are loaded inside `getConversationThreadForActor` in the same Supabase round-trip batch already used for reply targets, to avoid N+1.
+- Extend `ConversationListItemDto` with `filterFlags: { hasUnread: boolean; isMuted: boolean; isArchived: boolean }`. `hasUnread` derives from `unreadCount > 0`; `isMuted`/`isArchived` are already on the participant row.
+- New server action `toggleReactionAction` in `src/modules/messages/actions.ts` following the same `useFormState` / FormData shape as `sendMessageAction`. Rate-limit reactions with the same window helper used for sends (a separate counter scoped to reactions, threshold suggestion: 30/min — confirm during implementation).
+- New server actions `setConversationMutedAction` and `setConversationArchivedAction` writing the existing `conversation_participants.is_muted` / `is_archived` columns. Participant check enforced server-side, identical to read paths.
+
+Realtime layer:
+
+- Add `src/lib/supabase/realtime.ts` helper that returns a Supabase browser client and a typed `joinConversationChannel(conversationId)` function. Channel name: `conversation:<conversationId>` (private). The helper must not be imported from server modules.
+- Configure Supabase Realtime authorization (RLS on `realtime.messages` per §12.2 / §12.4) so a connection may only `read` / `presence` / `broadcast` on a `conversation:<id>` topic when the authenticated user has a row in `conversation_participants` for that conversation. Authorization SQL ships in the same migration as the `message_reactions` table.
+- Typing: `broadcast` event `typing` with payload `{ actorRole: ParticipantRole, ts: number }`. Auto-expire client-side after 4s with no follow-up. Never persisted.
+- Presence: standard Supabase `presence` track per channel join; payload `{ actorRole, since: ISO timestamp }`. The DTO surface exposes a derived `counterpart.isOnline: boolean` on `ConversationListItemDto` and `MessageThreadDto` only when the channel is joined; server-rendered initial state is `false`.
+- New message arrival, reaction add/remove, and conversation-state changes (mute/archive flips) emit `broadcast` events on the same private channel so live clients can refresh without polling. The canonical store remains Postgres; broadcast carries IDs only, never message bodies or reaction details that aren't already in the recipient's RLS scope.
+
+Route surfaces (no new routes):
+
+- `/messages` and `/tutor/messages`:
+  - Conversation list gains a chip-row filter: `All`, `Unread`, `Muted`, `Archived` (single-select, defaults to `All`). Counterpart-name substring filter via an input that filters in-memory over the already-loaded `ConversationListItemDto[]`. No new query parameters in this wave; filter state is client-side only.
+  - Each conversation row gets a kebab/overflow trigger for mute/unmute and archive/unarchive, reusing the DS overflow primitive.
+  - When `isMuted`, the list row mutes its unread badge styling (no count emphasis); when `isArchived`, the row only renders under the `Archived` filter.
+- Thread view (server-rendered shell, client island for live behavior):
+  - Each message hover/long-press exposes a reaction trigger that opens a 6-glyph picker mapped from `messageReactionKeys`. Tapping a key toggles the user's reaction.
+  - Below each message, render a compact reaction summary chip per non-zero key with its count; the user's selected key is visually emphasized. Tapping the chip toggles the same reaction.
+  - Typing indicator renders at the bottom of the thread above the composer when the counterpart has emitted `typing` within the last 4s.
+  - Counterpart header shows an "Online" presence dot only when the counterpart is currently tracked in the channel's presence state.
+
+Notifications + analytics:
+
+- No new notification types. Reactions and presence/typing must not generate `Notification` rows or emails. The existing `new_message` notification path stays unchanged.
+- New analytics events (no free-text payload, per privacy doc §13/§19): `message_reaction_toggled` with properties `{ conversationId, messageId, reactionKey, action: "added" | "removed" | "switched" }`; `conversation_muted_toggled` with `{ conversationId, action }`; `conversation_archived_toggled` with `{ conversationId, action }`. No presence/typing analytics events (they would re-leak ephemeral activity).
+- Observability: extend `logMessagesEvent` callsites in [src/modules/messages/observability.ts](src/modules/messages/observability.ts) for reaction add/remove and mute/archive flips. Log payload contains only IDs and counts; never message body or reaction glyph context.
+
+Tests:
+
+- Vitest unit tests in `src/test/modules/messages/`:
+  - `reactions.toggle.test.ts` — toggle on/off, switch key, non-participant denied, blocked counterpart denied, removed message denied, validation for unknown `reaction_key`.
+  - `conversations.reactions-shape.test.ts` — `getConversationThreadForActor` returns the correct `ReactionSummary` for messages and survives mixed-author reaction sets.
+  - `mute-archive.actions.test.ts` — participant required; idempotent toggle; analytics event payload shape.
+- DB tests under `supabase/tests/`:
+  - `message_reactions_rls.sql` — participant can insert/select/delete own reaction; non-participant denied across all four verbs; blocker/blocked pair denied on insert; removed-message reaction insert denied.
+  - `realtime_conversation_channel.sql` — authorization SQL allows participants to subscribe to `conversation:<id>` private topic and denies non-participants. If `realtime.messages` policies are exercised, follow `database-test-conventions-v1.md` patterns for that surface.
+- Playwright is not required for this task. If a smoke is added later, gate it on a seeded conversation with two participants.
+
+**Out of scope**
+
+- File attachments and image upload in messages.
+- Message edit/delete UX from the composer (status field exists; UX not in this wave).
+- Server-side message-body search (Postgres FTS). The filter row is metadata + counterpart name only.
+- Native mobile push notifications, browser push, or any new outbound channel.
+- Notification preferences UI (owned by `P2-NOTIF-PREF-001`).
+- Community or multi-party chat / group conversations.
+- Tutor cold-outreach changes (architecture rule §4.1 stays untouched).
+- Reaction packs, custom emoji upload, or animated reactions.
+- Persisted typing/presence (durable rows or last-seen timestamps).
+- Per-message read receipts beyond the existing `message_reads` model.
+- Internal moderation surfaces for reactions (covered by `P2-OPS-001` if needed).
+- Cross-conversation search hub or unified inbox views.
+
+**Acceptance criteria**
+
+- A participant on an active conversation can react to any non-removed message with one of the six fixed keys; re-clicking the same key removes the reaction; clicking a different key switches it; only one reaction per message per user persists.
+- A non-participant cannot read, insert, update, or delete a `message_reactions` row for a conversation they do not belong to, verified by RLS DB test.
+- A blocked relationship denies reaction insert in both directions, mirroring the message-send block rule.
+- The thread DTO returns reactions in the same payload as messages with no N+1 query against `message_reactions`.
+- The conversation list filter chips (`All`, `Unread`, `Muted`, `Archived`) and counterpart-name input narrow the visible list without changing what the server returns.
+- Toggling mute on a conversation suppresses unread badge emphasis on the list row and does not change `unreadCount` math; toggling archive moves the row under the `Archived` filter.
+- Joining a thread subscribes to the `conversation:<id>` private Realtime channel; non-participants cannot subscribe (Realtime authorization SQL covers this).
+- The counterpart's online dot reflects Realtime Presence state and is `false` on first server render.
+- A typing event from the counterpart shows the typing indicator within ~1s and clears within ~4s of the last event.
+- Reaction add/remove triggers a broadcast event on the conversation channel; live thread state refreshes from canonical data (not from broadcast payload) when a reaction changes.
+- No new `Notification` row, no email, and no analytics event carries message body, reaction glyph context outside the canonical key, or counterpart name as free text.
+- `logMessagesEvent` callsites for reactions and mute/archive contain only IDs and counts; verified by code review and a unit test that asserts the logged shape.
+- The full reaction toggle state machine and visibility rules are covered by automated tests.
+- No route-local SVGs, chips, or CSS land in messaging route files; reaction glyphs, filter chips, and overflow menus all resolve to existing DS primitives (icon → `src/components/ui/icon.tsx`, filter chip → DS chip primitive; if a new primitive is required, `docs/design-system/component-inventory-v1.md` is updated in the same commit).
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`.
+- `pnpm lint:arch`.
+- `pnpm test` covering: reaction toggle state machine, thread DTO shape with reactions, mute/archive action authorization, analytics payload shape.
+- DB tests: `message_reactions` RLS suite; Realtime channel authorization suite.
+- `pnpm test:e2e` is not required unless the human asks for a smoke flow; this task does not touch public route rendering, robots, or sitemap.
+- Realtime/privacy review: confirm typing and presence are Realtime-only and produce no durable rows, no `Notification` rows, and no logged or analytics payload.
+- RLS and access review: walk through participant / non-participant / blocked-pair cases for `message_reactions` and the `conversation:<id>` private topic.
+- Phased-scope review against the message architecture: confirm the wave matches §7.2 (phase 1.5 features) plus the existing schema reservations in §9.4, without introducing attachments, push, or moderation surfaces deferred to `P2-OPS-001`.
+
+**Implementation notes**
+
+- The existing `MessageThreadDto` already batches reply-target lookups; piggy-back reactions onto the same batch step in `getConversationThreadForActor` rather than adding a new fetch function on the page.
+- The `messageReactionKeys` enum is the canonical contract: routes never inline the literal strings or glyph mapping. Glyph mapping lives next to the DS icon helper.
+- Use the existing `sendConversationMessage` participant + block + active-status checks as the model for `toggleMessageReaction`. Do not duplicate the block-lookup logic; extract a small shared helper in `src/modules/messages/send.ts` (or a new `src/modules/messages/access.ts`) and reuse from both call sites.
+- Reaction rate-limit counter uses the same `RATE_LIMIT_WINDOW_MS` shape as `send.ts` for consistency; separate counters per surface.
+- Realtime client wiring lives in a single client island under `src/components/messages/`; do not subscribe from multiple components on the same screen (§12.4 policy-complexity rule).
+- Broadcast payloads are IDs only. The thread refresh path re-reads from the canonical DTO when a broadcast arrives, matching message-architecture §10.1.
+- The conversation list filter is intentionally client-side: it operates over the already-loaded participant-scoped list so it cannot leak rows the server would have hidden.
+- Mute/archive UI consumes the `OverflowMenuTrigger` + `Menu` primitives delivered by `P2-DS-MENU-001`. Filter chips consume `Chip` with the `pressed` state delivered by the same task. The reaction picker on each message consumes `Popover` (the picker is a button row inside a popover, not a `Menu`, because reactions are not menu items in the ARIA sense — they are toggle buttons; `role="group"` with `aria-label="React with"` is the recommended ARIA wrapper).
 
 ## 11.8 `P2-OPS-001` Admin trust and report-management internal surfaces
 
@@ -850,7 +1021,7 @@ Implement user-facing notification preferences so students and tutors can contro
 **Out of scope**
 
 - push notifications (no native mobile in Phase 2)
-- per-conversation mute controls (covered by P2-MSG-001 if needed)
+- per-conversation mute and archive controls (owned by `P2-MSG-001`)
 - notification scheduling or digest mode
 
 **Acceptance criteria**

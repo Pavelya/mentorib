@@ -14,6 +14,7 @@ export type ChipTone =
 type ChipSize = "default" | "compact";
 
 export type ChipProps = HTMLAttributes<HTMLSpanElement> & {
+  pressed?: boolean;
   size?: ChipSize;
   tone?: ChipTone;
   children: ReactNode;
@@ -22,16 +23,29 @@ export type ChipProps = HTMLAttributes<HTMLSpanElement> & {
 export function Chip({
   children,
   className,
+  onClick,
+  pressed,
   size = "default",
   tone = "default",
   ...props
 }: ChipProps) {
+  const isInteractive = typeof onClick === "function";
+
   return (
     <span
       {...props}
-      className={[styles.chip, styles[tone], size === "compact" ? styles.compact : "", className]
+      aria-pressed={isInteractive ? Boolean(pressed) : undefined}
+      className={[
+        styles.chip,
+        styles[tone],
+        size === "compact" ? styles.compact : "",
+        pressed ? styles.pressed : "",
+        isInteractive ? styles.interactive : "",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
+      onClick={onClick}
     >
       {children}
     </span>

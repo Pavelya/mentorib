@@ -59,3 +59,31 @@
   background: var(--surface-support);
   color: var(--ink-500);
 }
+
+.interactive {
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    background-color var(--motion-fast) ease;
+}
+
+.interactive:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  box-shadow: var(--focus-ring);
+}
+
+.pressed {
+  border-color: var(--forest-600);
+  box-shadow:
+    inset 0 0 0 1px var(--forest-600),
+    0 1px 0 0 rgb(23 60 52 / 0.08);
+  color: var(--forest-700);
+}
+
+.pressed.default,
+.pressed.info,
+.pressed.support {
+  background: var(--state-selected-surface);
+}
+

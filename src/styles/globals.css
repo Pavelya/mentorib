@@ -85,6 +85,8 @@
   --breakpoint-tablet: 48rem;
   --breakpoint-desktop: 75rem;
 
+  --z-popover: 1000;
+
   --focus-outline: rgb(23 60 52 / 0.42);
   --focus-ring: 0 0 0 3px rgb(23 60 52 / 0.18);
 

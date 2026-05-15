@@ -19,10 +19,12 @@ import {
 } from "@/modules/reviews";
 
 import {
+  acknowledgeLessonReportAction,
   cancelLessonAction,
   reportLessonIssueAction,
   rescheduleLessonAction,
   submitTutorReviewAction,
+  type AcknowledgeLessonReportActionState,
   type CancelLessonActionState,
   type ReportIssueActionState,
   type RescheduleLessonActionState,
@@ -358,6 +360,55 @@ function ReviewSubmitButton() {
   return (
     <Button type="submit" variant="primary">
       {pending ? "Publishing review..." : "Publish review"}
+    </Button>
+  );
+}
+
+type AcknowledgeLessonReportFormProps = {
+  lessonId: string;
+};
+
+const initialAcknowledgeReportState: AcknowledgeLessonReportActionState = {
+  code: null,
+  message: null,
+  values: { lessonId: "" },
+};
+
+export function AcknowledgeLessonReportForm({
+  lessonId,
+}: AcknowledgeLessonReportFormProps) {
+  const [state, formAction] = useActionState(
+    acknowledgeLessonReportAction,
+    initialAcknowledgeReportState,
+  );
+  const succeeded = state.code === "acknowledged";
+
+  return (
+    <form action={formAction} className={styles.actionForm}>
+      <input name="lessonId" type="hidden" value={lessonId} />
+
+      {state.message ? (
+        <InlineNotice
+          title={
+            succeeded ? "Recap acknowledged" : "We couldn't record that"
+          }
+          tone={succeeded ? "success" : "actionNeeded"}
+        >
+          <p>{state.message}</p>
+        </InlineNotice>
+      ) : null}
+
+      {!succeeded ? <AcknowledgeReportSubmitButton /> : null}
+    </form>
+  );
+}
+
+function AcknowledgeReportSubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="secondary">
+      {pending ? "Saving..." : "I've read this recap"}
     </Button>
   );
 }

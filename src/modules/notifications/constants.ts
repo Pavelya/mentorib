@@ -8,6 +8,7 @@ export const notificationTypes = [
   "upcoming_lesson_reminder",
   "lesson_issue_acknowledgement",
   "lesson_issue_resolution",
+  "lesson_report_shared",
   "review_submitted",
   "tutor_application_submitted",
   "tutor_application_reviewed",

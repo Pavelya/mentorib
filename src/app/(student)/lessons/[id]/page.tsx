@@ -41,6 +41,7 @@ import {
   buildStudentCancellationPolicy,
   type CancellationPolicyView,
 } from "@/modules/lessons/lesson-actions";
+import type { StudentLessonReportDto } from "@/modules/lessons/lesson-reports";
 import {
   buildPreviewStudentLessonDetail,
   getStudentLessonDetail,
@@ -63,6 +64,7 @@ import {
   mapLessonStatusToSummary,
 } from "../lesson-presentation";
 import {
+  AcknowledgeLessonReportForm,
   CancelLessonForm,
   ReportIssueForm,
   RescheduleLessonForm,
@@ -270,12 +272,85 @@ function renderDetailPage({
         previewNotice={previewNotice}
       />
 
+      <ReportSection
+        lessonId={detail.id}
+        previewNotice={previewNotice}
+        report={detail.report}
+      />
+
       <ReviewSection
         detail={detail}
         eligibility={reviewEligibility}
         previewNotice={previewNotice}
       />
     </article>
+  );
+}
+
+function ReportSection({
+  lessonId,
+  previewNotice,
+  report,
+}: {
+  lessonId: string;
+  previewNotice: boolean;
+  report: StudentLessonReportDto | null;
+}) {
+  if (previewNotice || !report) {
+    return null;
+  }
+
+  const { content } = report;
+
+  return (
+    <Panel eyebrow="Lesson recap" title="Lesson recap from your tutor">
+      <Section density="compact">
+        <p className={styles.bodyText}>
+          Your tutor shared this recap after the lesson. It builds on what you
+          worked on together and points to recommended next steps.
+        </p>
+
+        {content.goalSummary ? (
+          <Section density="compact" divider="top" eyebrow="Lesson goal">
+            <p className={styles.noteText}>{content.goalSummary}</p>
+          </Section>
+        ) : null}
+
+        {content.coverageSummary ? (
+          <Section density="compact" divider="top" eyebrow="What we covered">
+            <p className={styles.noteText}>{content.coverageSummary}</p>
+          </Section>
+        ) : null}
+
+        {content.studentConfidenceSignal ? (
+          <Section
+            density="compact"
+            divider="top"
+            eyebrow="Confidence and understanding"
+          >
+            <p className={styles.noteText}>
+              {content.studentConfidenceSignal}
+            </p>
+          </Section>
+        ) : null}
+
+        {content.nextStepsSummary ? (
+          <Section density="compact" divider="top" eyebrow="Next steps">
+            <p className={styles.noteText}>{content.nextStepsSummary}</p>
+          </Section>
+        ) : null}
+
+        {report.reportStatus === "acknowledged" ? (
+          <Section density="compact" divider="top">
+            <StatusBadge tone="positive">Recap acknowledged</StatusBadge>
+          </Section>
+        ) : report.isEligibleToAcknowledge ? (
+          <Section density="compact" divider="top">
+            <AcknowledgeLessonReportForm lessonId={lessonId} />
+          </Section>
+        ) : null}
+      </Section>
+    </Panel>
   );
 }
 

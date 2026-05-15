@@ -186,7 +186,7 @@ Bad parallel examples:
 | --- | --- | --- | --- | --- | --- |
 | 1 | `P2-APPLY-001` | `ready` | `P1` | 1 | Tutor application staged flow and readiness experience |
 | 1 | `P2-TRUST-001` | `ready` | `P1` | 2 | Lesson-linked review capture and publication flow |
-| 1 | `P2-REPORT-001` | `draft` | `P1` | 2 | Lesson reports and post-lesson continuity surfaces |
+| 1 | `P2-REPORT-001` | `ready` | `P1` | 2 | Lesson reports and post-lesson continuity surfaces |
 | 1 | `P2-MSG-001` | `draft` | `P2` | 3 | Rich messaging behaviors wave |
 | 1 | `P2-NOTIF-PREF-001` | `draft` | `P2` | 2 | Notification preferences and channel controls |
 | 2 | `P2-APPLY-002` | `draft` | `P2` | 1 | Internal tutor review queue and approval decisions |
@@ -441,47 +441,109 @@ Implement the lesson-linked tutor review flow so public review and rating signal
 
 ## 11.6 `P2-REPORT-001` Lesson reports and post-lesson continuity surfaces
 
-**Status:** `draft`
+**Status:** `ready`
 **Priority:** `P1`
 **Wave:** 2
 **Depends on:** `P1-LESS-001`, `P15-STUD-002`
 
 **Goal**
 
-Implement post-lesson reporting and continuity surfaces so lessons build visible academic momentum rather than disappearing into history.
+Implement post-lesson reporting and continuity surfaces so lessons build visible academic momentum rather than disappearing into history. The tutor authors a private continuity record per completed lesson, optionally shares it with the student, and the student can acknowledge it. Reports stay framed as continuity, not paperwork.
 
 **Required source docs**
 
-- `docs/research/ui-ux-research-two-sided-ecosystem.md`
-- `docs/foundations/service-blueprint-two-sided.md`
-- `docs/data/database-schema-outline-v1.md`
-- `docs/data/data-ownership-boundary-map-v1.md`
-- `docs/architecture/privacy-and-data-retention-architecture-v1.md`
+- `docs/research/ui-ux-research-two-sided-ecosystem.md` (§10.9 recommended report structure; §11 shared component strategy)
+- `docs/foundations/service-blueprint-two-sided.md` (§8 stages 8–11, continuity rules)
+- `docs/data/database-schema-outline-v1.md` (§12.4 `lesson_reports`)
+- `docs/data/database-enum-and-status-glossary-v1.md` (§11.3 `lesson_reports.report_status`)
+- `docs/data/database-rls-boundaries-v1.md` (§9.5 `lesson_reports`)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§10.5 `lesson_reports`)
+- `docs/data/data-ownership-boundary-map-v1.md` (§13 lessons ownership)
+- `docs/data/data-retention-erasure-field-map-v1.md` (§22 `lesson_reports`)
+- `docs/architecture/privacy-and-data-retention-architecture-v1.md` (§11.2 lesson reports, §19.1 logging)
+- `docs/architecture/analytics-and-product-telemetry-architecture-v1.md` (§11.6 tutor activation events)
 
 **Scope**
 
-- tutor-authored lesson report flow
-- student-visible continuity or next-step surface where approved
-- report status and sharing posture
-- report hooks from lesson detail and tutor-student continuity views
+Data layer:
+
+- Create `lesson_reports` table per schema outline §12.4 with columns: `id`, `lesson_id` (unique), `report_status`, `goal_summary`, `coverage_summary`, `student_confidence_signal`, `next_steps_summary`, `student_visible_at`, `acknowledged_at`, `submitted_at`, `shared_at`, `created_at`, `updated_at`.
+- Declare `reportStatuses` enum: `due`, `drafted`, `submitted`, `shared`, `acknowledged` (matches glossary §11.3).
+- Migration ordered after `20260514140000_lesson_review_trust_baseline.sql`.
+- Drizzle table declaration in `src/modules/lessons/schema.ts` (lesson domain owns reports per ownership map row 266).
+- RLS policy: tutor full owner read/write; student read only when `student_visible_at IS NOT NULL`; admin allowed via internal client.
+- `due` is implicit: no row pre-creation. The first tutor write creates a row in `drafted`. A completed lesson with no row is treated as "report due, not yet drafted" in derived DTO state.
+
+Domain + DTO layer:
+
+- `src/modules/lessons/lesson-reports.ts` (or equivalent module file) owning:
+  - `getLessonReportForTutor(account, lessonId)` — tutor full view.
+  - `getLessonReportForStudent(account, lessonId)` — shaped DTO that returns `null` unless `student_visible_at IS NOT NULL`.
+  - Server actions: `saveLessonReportDraft`, `submitLessonReport`, `shareLessonReport`, `acknowledgeLessonReport`.
+- Extend `StudentLessonDetailDto` and `TutorLessonDetailDto` with a `report` field carrying the report DTO + eligibility flags (`isEligibleToDraft`, `isEligibleToShare`, `isEligibleToAcknowledge`, `isLocked`).
+- Eligibility rules:
+  - Tutor drafting/submitting/sharing opens once `lesson_status = 'completed'` and `completed_at IS NOT NULL`.
+  - Tutor edits allowed in `drafted` and `submitted`. Content locks in `shared` and `acknowledged` (no in-task amendment flow).
+  - Student acknowledge available in `shared` only; flips status to `acknowledged` (idempotent, no-op if already acknowledged).
+
+Route surfaces (no new routes):
+
+- `/tutor/lessons/[id]`: "Lesson recap" Panel that supports drafting/submitting/sharing depending on state. Reuses `Panel`, `Section`, `StatusBadge` primitives and the existing `lesson-actions-client.tsx` form pattern.
+- `/lessons/[id]` (student): "Lesson recap from your tutor" Panel renders only when `student_visible_at IS NOT NULL`. Includes Acknowledge action when status = `shared`.
+- `/tutor/students/[studentProfileId]`: "Recent recaps" Section listing the last N (recommend ≤5) shared recaps for that student, each linking into the originating tutor lesson detail. No new route segment.
+
+Notifications + analytics:
+
+- Add notification type `lesson_report_shared` (in-app only; recipient is the lesson student). Emit at `shareLessonReport` boundary. Reuse existing notifications lifecycle wiring.
+- Emit analytics events `lesson_report_submitted` and `lesson_report_shared`. Event properties must not include free-text body (per privacy doc §19.1) — only lesson id reference, role, lesson state, subject category.
+
+Tests:
+
+- Vitest unit tests for state-machine eligibility transitions (`due` → `drafted` → `submitted` → `shared` → `acknowledged`; illegal transitions rejected).
+- DB test under `supabase/tests/` covering RLS: tutor read/write, student blocked until `student_visible_at` set, student read after share.
+- Server-action authorization tests in `src/test/**` covering: non-tutor cannot write; non-student cannot acknowledge; admin read passes via internal client.
 
 **Out of scope**
 
-- AI-authored educational summaries by default
-- institutional report export systems
-- public exposure of lesson reports
+- AI-authored educational summaries.
+- Institutional or PDF report export systems.
+- Public exposure of any lesson-report field.
+- Standalone `/lessons/[id]/report` or `/tutor/lessons/[id]/report` routes (the recap lives inside lesson detail).
+- `lesson_report_due` reminder jobs or scheduled-email nudges.
+- Editing or amendment flow after `shared` (locked this wave).
+- Cross-lesson aggregate recap views (e.g. a student "all my recaps" hub).
+- Email or push delivery of `lesson_report_shared` (in-app notification only this wave).
+- Logging or analytics capture of free-text report content.
+- Changes to `lesson_issue_cases` or any other adjacent lesson surface.
 
 **Acceptance criteria**
 
-- reports are framed as continuity, not paperwork
-- visibility rules are explicit and privacy-safe
-- report content stays tied to lessons and next actions
-- the system remains one shared continuity model across tutor and student contexts
+- A tutor on a `completed` lesson can draft, submit, share, and edit (until shared) a lesson recap from the lesson detail page.
+- A student sees the recap on `/lessons/[id]` only after the tutor shares it; never before.
+- Acknowledge flips status to `acknowledged` exactly once; clicking twice is a no-op.
+- A student on a `completed` lesson with no shared recap sees no recap panel and no leakage of the existence of an unfinished draft.
+- Public surfaces, sitemap, robots, marketing routes, and notifications never carry report free-text content.
+- RLS denies a non-participant any read or write of `lesson_reports`, including when the recap is shared (only the lesson student gets read).
+- `lesson_report_submitted` and `lesson_report_shared` analytics events fire with no free-text body in properties.
+- Tutor `/tutor/students/[studentProfileId]` shows at most 5 most recent shared recaps for that student with deep links into the originating lesson detail.
+- Existing `LessonSummary`, `PersonSummary`, `Panel`, `Section`, and `StatusBadge` primitives are reused. No new route-local card or panel CSS is introduced for the recap surface beyond what the existing `lesson-detail.module.css` patterns allow.
+- The full state machine and visibility rules are covered by automated tests.
 
 **Verification**
 
-- visibility and retention review
-- lesson-detail continuity review
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`.
+- `pnpm lint:arch`.
+- `pnpm test` covering: state-machine transitions, server-action authorization, RLS DB tests.
+- Manual DTO and visibility review across the two lesson-detail routes and the tutor-students detail route.
+- Privacy review: confirm no recap free-text reaches logs, analytics events, notifications, or non-participant surfaces.
+- Retention check: confirm migration aligns with `data-retention-erasure-field-map-v1.md` §22 (no auto-public exposure; redaction path remains feasible).
+
+**Implementation notes**
+
+- The lesson `report` field on existing detail DTOs is the integration point: do not add a parallel report fetcher to page files.
+- Continuity wording: "Lesson recap" on UI surfaces, not "report." The schema name stays `lesson_reports` for canonical alignment.
+- The `due` value is exposed only as a derived view-model flag for the tutor surface; it should not be persisted as a row state.
+- Use existing notification lifecycle helpers in `src/modules/notifications/lifecycle.ts`; do not introduce a parallel dispatch path.
 
 ## 11.7 `P2-MSG-001` Rich messaging behaviors wave
 

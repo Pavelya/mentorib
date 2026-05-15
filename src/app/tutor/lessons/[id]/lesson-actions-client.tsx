@@ -17,9 +17,15 @@ import {
   cancelTutorLessonAction,
   declineRequestAction,
   reportTutorLessonIssueAction,
+  saveLessonRecapDraftAction,
+  shareLessonRecapAction,
+  submitLessonRecapAction,
   type CancelLessonActionState,
   type ReportIssueActionState,
   type RequestDecisionActionState,
+  type SaveLessonRecapDraftActionState,
+  type ShareLessonRecapActionState,
+  type SubmitLessonRecapActionState,
 } from "./actions";
 import styles from "./lesson-detail.module.css";
 
@@ -270,6 +276,218 @@ function ReportSubmitButton() {
   return (
     <Button type="submit" variant="secondary">
       {pending ? "Submitting report..." : "Submit issue report"}
+    </Button>
+  );
+}
+
+const RECAP_FIELD_MAX_LENGTH = 2000;
+const RECAP_CONFIDENCE_MAX_LENGTH = 500;
+
+type LessonRecapDraftFormProps = {
+  defaults: {
+    coverageSummary: string;
+    goalSummary: string;
+    nextStepsSummary: string;
+    studentConfidenceSignal: string;
+  };
+  isEditable: boolean;
+  lessonId: string;
+};
+
+const initialRecapDraftState: SaveLessonRecapDraftActionState = {
+  code: null,
+  message: null,
+  values: {
+    coverageSummary: "",
+    goalSummary: "",
+    lessonId: "",
+    nextStepsSummary: "",
+    studentConfidenceSignal: "",
+  },
+};
+
+export function LessonRecapDraftForm({
+  defaults,
+  isEditable,
+  lessonId,
+}: LessonRecapDraftFormProps) {
+  const [state, formAction] = useActionState(
+    saveLessonRecapDraftAction,
+    initialRecapDraftState,
+  );
+  const succeeded = state.code === "saved";
+  const liveValues = state.values.lessonId === lessonId ? state.values : null;
+
+  const initialValues = liveValues ?? {
+    coverageSummary: defaults.coverageSummary,
+    goalSummary: defaults.goalSummary,
+    lessonId,
+    nextStepsSummary: defaults.nextStepsSummary,
+    studentConfidenceSignal: defaults.studentConfidenceSignal,
+  };
+
+  return (
+    <form action={formAction} className={styles.actionForm}>
+      <input name="lessonId" type="hidden" value={lessonId} />
+
+      {state.message ? (
+        <InlineNotice
+          title={succeeded ? "Recap draft saved" : "We couldn't save the draft"}
+          tone={succeeded ? "success" : "actionNeeded"}
+        >
+          <p>{state.message}</p>
+        </InlineNotice>
+      ) : null}
+
+      <Textarea
+        defaultValue={initialValues.goalSummary}
+        description="Optional. What was the lesson aiming to achieve?"
+        disabled={!isEditable}
+        label="Lesson goal"
+        labelMeta="Optional"
+        maxLength={RECAP_FIELD_MAX_LENGTH}
+        name="goalSummary"
+        placeholder="What you set out to do together."
+        rows={3}
+      />
+
+      <Textarea
+        defaultValue={initialValues.coverageSummary}
+        description="Optional. What was actually covered in this lesson?"
+        disabled={!isEditable}
+        label="What we covered"
+        labelMeta="Optional"
+        maxLength={RECAP_FIELD_MAX_LENGTH}
+        name="coverageSummary"
+        placeholder="Topics, materials, exercises, or examples the student worked through."
+        rows={4}
+      />
+
+      <Textarea
+        defaultValue={initialValues.studentConfidenceSignal}
+        description="Optional. Short signal about confidence or understanding (no private medical or family detail)."
+        disabled={!isEditable}
+        label="Confidence and understanding"
+        labelMeta="Optional"
+        maxLength={RECAP_CONFIDENCE_MAX_LENGTH}
+        name="studentConfidenceSignal"
+        placeholder="Where the student felt strong and where they wobbled."
+        rows={3}
+      />
+
+      <Textarea
+        defaultValue={initialValues.nextStepsSummary}
+        description="Optional. Action items or recommended focus before the next lesson."
+        disabled={!isEditable}
+        label="Next steps"
+        labelMeta="Optional"
+        maxLength={RECAP_FIELD_MAX_LENGTH}
+        name="nextStepsSummary"
+        placeholder="Suggested practice, reading, or focus for the next session."
+        rows={3}
+      />
+
+      {isEditable ? <RecapSaveButton /> : null}
+    </form>
+  );
+}
+
+function RecapSaveButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="secondary">
+      {pending ? "Saving draft..." : "Save draft"}
+    </Button>
+  );
+}
+
+type SubmitLessonRecapFormProps = {
+  lessonId: string;
+};
+
+const initialRecapSubmitState: SubmitLessonRecapActionState = {
+  code: null,
+  message: null,
+  values: { lessonId: "" },
+};
+
+export function SubmitLessonRecapForm({ lessonId }: SubmitLessonRecapFormProps) {
+  const [state, formAction] = useActionState(
+    submitLessonRecapAction,
+    initialRecapSubmitState,
+  );
+  const succeeded = state.code === "submitted";
+
+  return (
+    <form action={formAction} className={styles.actionForm}>
+      <input name="lessonId" type="hidden" value={lessonId} />
+
+      {state.message ? (
+        <InlineNotice
+          title={succeeded ? "Recap submitted" : "We couldn't submit the recap"}
+          tone={succeeded ? "success" : "actionNeeded"}
+        >
+          <p>{state.message}</p>
+        </InlineNotice>
+      ) : null}
+
+      <SubmitRecapButton />
+    </form>
+  );
+}
+
+function SubmitRecapButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="secondary">
+      {pending ? "Submitting recap..." : "Submit recap"}
+    </Button>
+  );
+}
+
+type ShareLessonRecapFormProps = {
+  lessonId: string;
+};
+
+const initialRecapShareState: ShareLessonRecapActionState = {
+  code: null,
+  message: null,
+  values: { lessonId: "" },
+};
+
+export function ShareLessonRecapForm({ lessonId }: ShareLessonRecapFormProps) {
+  const [state, formAction] = useActionState(
+    shareLessonRecapAction,
+    initialRecapShareState,
+  );
+  const succeeded = state.code === "shared";
+
+  return (
+    <form action={formAction} className={styles.actionForm}>
+      <input name="lessonId" type="hidden" value={lessonId} />
+
+      {state.message ? (
+        <InlineNotice
+          title={succeeded ? "Recap shared" : "We couldn't share the recap"}
+          tone={succeeded ? "success" : "actionNeeded"}
+        >
+          <p>{state.message}</p>
+        </InlineNotice>
+      ) : null}
+
+      <ShareRecapButton />
+    </form>
+  );
+}
+
+function ShareRecapButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button type="submit" variant="primary">
+      {pending ? "Sharing recap..." : "Share recap with student"}
     </Button>
   );
 }

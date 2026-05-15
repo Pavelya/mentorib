@@ -160,6 +160,28 @@ export const lessonIssueResolutionOutcomes = [
 export type LessonIssueResolutionOutcome =
   (typeof lessonIssueResolutionOutcomes)[number];
 
+// Lesson recap (continuity record) lifecycle.
+//
+// `due` is intentionally a derived view-model state surfaced when a completed
+// lesson has no row yet. Persisted rows always start in `drafted`. See
+// `docs/data/database-enum-and-status-glossary-v1.md` §11.3.
+export const persistedLessonReportStatuses = [
+  "drafted",
+  "submitted",
+  "shared",
+  "acknowledged",
+] as const;
+
+export type PersistedLessonReportStatus =
+  (typeof persistedLessonReportStatuses)[number];
+
+export const lessonReportStatuses = [
+  "due",
+  ...persistedLessonReportStatuses,
+] as const;
+
+export type LessonReportStatus = (typeof lessonReportStatuses)[number];
+
 export const paymentProviders = ["stripe"] as const;
 
 export type PaymentProvider = (typeof paymentProviders)[number];

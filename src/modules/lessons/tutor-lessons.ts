@@ -8,6 +8,10 @@ import {
   type LessonMeetingMethod,
   type LessonStatus,
 } from "@/modules/lessons/constants";
+import {
+  getTutorLessonReportView,
+  type TutorLessonReportView,
+} from "@/modules/lessons/lesson-reports";
 import { formatCurrencyFromMinorUnits } from "@/modules/pricing/money";
 
 const TUTOR_LESSON_LIST_LIMIT = 50;
@@ -171,6 +175,7 @@ export type TutorLessonListDto = {
 export type TutorLessonDetailDto = TutorLessonListItemDto & {
   isIssueEntryEligible: boolean;
   meeting: TutorLessonMeetingDto | null;
+  report: TutorLessonReportView | null;
 };
 
 export async function getTutorLessonList(
@@ -332,9 +337,10 @@ export async function getTutorLessonDetail(
     return null;
   }
 
-  const [meetingAccess, issueRecord] = await Promise.all([
+  const [meetingAccess, issueRecord, report] = await Promise.all([
     loadMeetingAccess(lesson.id),
     loadIssueRecord(lesson.id),
+    getTutorLessonReportView(account, lesson.id),
   ]);
 
   const item = buildLessonListItem({
@@ -348,6 +354,7 @@ export async function getTutorLessonDetail(
     ...item,
     isIssueEntryEligible: isIssueEntryEligible(lesson.lesson_status, issueRecord),
     meeting: buildMeetingDto(lesson.lesson_status, meetingAccess),
+    report,
   };
 }
 
@@ -442,6 +449,7 @@ export function buildPreviewTutorLessonDetail(): TutorLessonDetailDto {
       normalizedHost: null,
       provider: null,
     },
+    report: null,
   };
 }
 

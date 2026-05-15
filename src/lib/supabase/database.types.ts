@@ -29,6 +29,7 @@ import type {
   MatchRunStatus,
   PaymentProvider,
   PaymentStatus,
+  PersistedLessonReportStatus,
 } from "@/modules/lessons/constants";
 import type {
   AbuseReportStatus,
@@ -537,6 +538,21 @@ type LessonIssueCaseRow = {
   updated_at: string;
 };
 
+type LessonReportRow = {
+  acknowledged_at: string | null;
+  coverage_summary: string | null;
+  created_at: string;
+  goal_summary: string | null;
+  id: string;
+  lesson_id: string;
+  next_steps_summary: string | null;
+  report_status: PersistedLessonReportStatus;
+  student_confidence_signal: string | null;
+  student_visible_at: string | null;
+  submitted_at: string | null;
+  updated_at: string;
+};
+
 type PaymentRow = {
   amount: number;
   authorization_expires_at: string | null;
@@ -840,6 +856,23 @@ export type MentorIbDatabase = {
         Relationships: [];
         Row: LessonStatusHistoryRow;
         Update: Partial<Omit<LessonStatusHistoryRow, "created_at" | "id" | "lesson_id">>;
+      };
+      lesson_reports: {
+        Insert: Pick<LessonReportRow, "lesson_id"> & {
+          acknowledged_at?: string | null;
+          coverage_summary?: string | null;
+          goal_summary?: string | null;
+          next_steps_summary?: string | null;
+          report_status?: PersistedLessonReportStatus;
+          student_confidence_signal?: string | null;
+          student_visible_at?: string | null;
+          submitted_at?: string | null;
+        };
+        Relationships: [];
+        Row: LessonReportRow;
+        Update: Partial<
+          Omit<LessonReportRow, "created_at" | "id" | "lesson_id" | "updated_at">
+        >;
       };
       lessons: {
         Insert: Pick<

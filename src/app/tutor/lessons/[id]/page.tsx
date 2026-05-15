@@ -36,6 +36,7 @@ import {
   buildTutorCancellationPolicy,
   type CancellationPolicyView,
 } from "@/modules/lessons/lesson-actions";
+import type { TutorLessonReportView } from "@/modules/lessons/lesson-reports";
 import {
   buildPreviewTutorLessonDetail,
   getTutorLessonDetail,
@@ -53,8 +54,11 @@ import {
 } from "../lesson-presentation";
 import {
   CancelLessonForm,
+  LessonRecapDraftForm,
   ReportIssueForm,
   RequestDecisionForms,
+  ShareLessonRecapForm,
+  SubmitLessonRecapForm,
   TUTOR_ISSUE_TYPE_OPTIONS,
 } from "./lesson-actions-client";
 import styles from "./lesson-detail.module.css";
@@ -217,8 +221,131 @@ function renderDetailPage({
       />
 
       <IssueSection detail={detail} previewNotice={previewNotice} />
+
+      <RecapSection
+        lessonId={detail.id}
+        previewNotice={previewNotice}
+        report={detail.report}
+      />
     </article>
   );
+}
+
+function RecapSection({
+  lessonId,
+  previewNotice,
+  report,
+}: {
+  lessonId: string;
+  previewNotice: boolean;
+  report: TutorLessonReportView | null;
+}) {
+  if (previewNotice) {
+    return (
+      <Panel eyebrow="Lesson recap" title="Continuity record">
+        <Section density="compact">
+          <InlineNotice tone="info" title="Recap preview">
+            <p>
+              After a lesson is marked completed you can capture a short recap
+              — the goal, what was covered, confidence signals, and next steps
+              — and choose when to share it with the student. Live recap
+              authoring connects once Supabase auth is configured.
+            </p>
+          </InlineNotice>
+        </Section>
+      </Panel>
+    );
+  }
+
+  if (!report) {
+    return null;
+  }
+
+  if (report.kind === "not_ready") {
+    return (
+      <Panel eyebrow="Lesson recap" title="Continuity record">
+        <Section density="compact">
+          <p className={styles.bodyText}>
+            Recaps open once the lesson is marked completed. Until then, this
+            space stays empty so it does not compete with operational lesson
+            actions.
+          </p>
+        </Section>
+      </Panel>
+    );
+  }
+
+  const status = report.kind === "report" ? report.status : "due";
+  const statusBadge = recapStatusBadge(status);
+
+  const defaults = {
+    coverageSummary: report.report?.content.coverageSummary ?? "",
+    goalSummary: report.report?.content.goalSummary ?? "",
+    nextStepsSummary: report.report?.content.nextStepsSummary ?? "",
+    studentConfidenceSignal:
+      report.report?.content.studentConfidenceSignal ?? "",
+  };
+
+  return (
+    <Panel eyebrow="Lesson recap" title="Continuity record">
+      <Section density="compact">
+        <div className={styles.policyHeader}>
+          <StatusBadge tone={statusBadge.tone}>{statusBadge.label}</StatusBadge>
+        </div>
+
+        <p className={styles.bodyText}>
+          A lesson recap is a private continuity note. It stays visible only to
+          you until you choose to share it with the student. We never email
+          the content, never log it, and never expose it publicly.
+        </p>
+
+        {report.report?.isLocked ? (
+          <InlineNotice tone="info" title="Recap shared with the student">
+            <p>
+              You shared this recap with the student. Recap content locks
+              after sharing so the student keeps a stable record of what they
+              read.
+            </p>
+          </InlineNotice>
+        ) : null}
+
+        <LessonRecapDraftForm
+          defaults={defaults}
+          isEditable={report.isEligibleToEdit || report.isEligibleToDraft}
+          lessonId={lessonId}
+        />
+
+        {report.isEligibleToSubmit ? (
+          <Section density="compact" divider="top">
+            <SubmitLessonRecapForm lessonId={lessonId} />
+          </Section>
+        ) : null}
+
+        {report.isEligibleToShare ? (
+          <Section density="compact" divider="top">
+            <ShareLessonRecapForm lessonId={lessonId} />
+          </Section>
+        ) : null}
+      </Section>
+    </Panel>
+  );
+}
+
+function recapStatusBadge(
+  status: "due" | "drafted" | "submitted" | "shared" | "acknowledged",
+): { label: string; tone: "info" | "positive" | "warning" } {
+  switch (status) {
+    case "due":
+      return { label: "Recap due", tone: "warning" };
+    case "drafted":
+      return { label: "Draft", tone: "info" };
+    case "submitted":
+      return { label: "Submitted, not yet shared", tone: "info" };
+    case "shared":
+      return { label: "Shared with student", tone: "positive" };
+    case "acknowledged":
+      return { label: "Acknowledged by student", tone: "positive" };
+  }
 }
 
 function ContextSection({

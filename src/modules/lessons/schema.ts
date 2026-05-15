@@ -29,6 +29,7 @@ import {
   matchRunStatuses,
   paymentProviders,
   paymentStatuses,
+  persistedLessonReportStatuses,
 } from "@/modules/lessons/constants";
 import {
   languages,
@@ -407,6 +408,36 @@ export const lessonIssueCases = pgTable(
       table.case_status,
       table.reported_at,
     ),
+  ],
+);
+
+export const lessonReports = pgTable(
+  "lesson_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    lesson_id: uuid("lesson_id")
+      .notNull()
+      .references(() => lessons.id, { onDelete: "cascade" }),
+    report_status: text("report_status", { enum: persistedLessonReportStatuses })
+      .notNull()
+      .default("drafted"),
+    goal_summary: text("goal_summary"),
+    coverage_summary: text("coverage_summary"),
+    student_confidence_signal: text("student_confidence_signal"),
+    next_steps_summary: text("next_steps_summary"),
+    submitted_at: timestamp("submitted_at", { withTimezone: true }),
+    student_visible_at: timestamp("student_visible_at", { withTimezone: true }),
+    acknowledged_at: timestamp("acknowledged_at", { withTimezone: true }),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("lesson_reports_lesson_id_key").on(table.lesson_id),
+    index("lesson_reports_lesson_id_idx").on(table.lesson_id),
   ],
 );
 

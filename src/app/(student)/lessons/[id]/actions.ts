@@ -26,6 +26,10 @@ import {
   LessonActionError,
 } from "@/modules/lessons/lesson-actions";
 import {
+  acknowledgeStudentLessonReport,
+  LessonReportActionError,
+} from "@/modules/lessons/lesson-reports";
+import {
   REVIEW_MAX_RATING,
   REVIEW_MIN_RATING,
   ReviewActionError,
@@ -57,6 +61,12 @@ export type SubmitReviewActionState = {
   fieldErrors: Partial<Record<"comment" | "rating", string>>;
   message: string | null;
   values: { comment: string; lessonId: string; rating: string };
+};
+
+export type AcknowledgeLessonReportActionState = {
+  code: string | null;
+  message: string | null;
+  values: { lessonId: string };
 };
 
 const LESSONS_BASE_PATH = "/lessons" as const;
@@ -429,6 +439,80 @@ export async function submitTutorReviewAction(
       code: "review_failed",
       fieldErrors: {},
       message: "We couldn't save this review. Please try again in a moment.",
+      values,
+    };
+  }
+}
+
+export async function acknowledgeLessonReportAction(
+  _previousState: AcknowledgeLessonReportActionState,
+  formData: FormData,
+): Promise<AcknowledgeLessonReportActionState> {
+  const values = {
+    lessonId: getFormValue(formData, "lessonId"),
+  };
+
+  if (!values.lessonId) {
+    return {
+      code: "missing_lesson",
+      message:
+        "We couldn't recover this lesson context. Refresh the page and try again.",
+      values,
+    };
+  }
+
+  const detailHref = `${LESSONS_BASE_PATH}/${values.lessonId}`;
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email?.trim()) {
+    redirect(buildAuthSignInPath(detailHref) as Route);
+  }
+
+  try {
+    const account = await ensureAuthAccount(user);
+
+    if (requiresRoleSelection(account)) {
+      redirect(routeFamilies.setup.defaultHref);
+    }
+
+    if (isRestrictedAccount(account)) {
+      return {
+        code: "account_restricted",
+        message: "This account cannot acknowledge this recap right now.",
+        values,
+      };
+    }
+
+    if (!hasRole(account, "student")) {
+      redirect(buildPostSignInRedirect(account, detailHref) as Route);
+    }
+
+    await acknowledgeStudentLessonReport(account, values.lessonId);
+
+    revalidatePath(detailHref);
+
+    return {
+      code: "acknowledged",
+      message: "Thanks — your tutor will see this recap as acknowledged.",
+      values,
+    };
+  } catch (error) {
+    if (error instanceof LessonReportActionError) {
+      return {
+        code: error.code,
+        message: error.message,
+        values,
+      };
+    }
+
+    return {
+      code: "acknowledge_failed",
+      message:
+        "We couldn't record your acknowledgement. Please try again in a moment.",
       values,
     };
   }

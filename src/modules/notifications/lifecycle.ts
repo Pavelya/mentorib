@@ -270,6 +270,36 @@ export async function createLessonIssueResolutionNotifications(
   await Promise.all(created.map(dispatchNotificationEmail));
 }
 
+type LessonReportSharedInput = {
+  lessonId: string;
+  studentAppUserId: string;
+  tutorDisplayName: string | null;
+};
+
+export async function createLessonReportSharedNotification(
+  input: LessonReportSharedInput,
+) {
+  const tutorLabel = trimOrFallback(input.tutorDisplayName, "Your tutor");
+
+  const notification = await createNotification({
+    appUserId: input.studentAppUserId,
+    bodySummary: truncate(
+      `${tutorLabel} shared a lesson recap with you. Open the lesson detail to read the goal, what was covered, and recommended next steps.`,
+    ),
+    notificationType: "lesson_report_shared",
+    objectId: input.lessonId,
+    objectType: NOTIFICATION_OBJECT_TYPES.lesson,
+    title: "Lesson recap shared",
+  });
+
+  // `lesson_report_shared` is in-app only this wave; email dispatch is
+  // intentionally suppressed by `isEmailEligibleNotificationType`. The shared
+  // dispatch helper below will short-circuit safely.
+  await dispatchNotificationEmail(notification);
+
+  return notification;
+}
+
 type PayoutNotificationInput = {
   appUserId: string;
   outcome: "hold" | "ready";

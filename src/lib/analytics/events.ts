@@ -34,6 +34,20 @@ export type ProductEvent =
         context_source: string;
         outcome: "checkout_handoff" | "redirect";
       };
+    }
+  | {
+      name: "lesson_report_submitted";
+      properties: {
+        lesson_id: string;
+        subject_slug: string | null;
+      };
+    }
+  | {
+      name: "lesson_report_shared";
+      properties: {
+        lesson_id: string;
+        subject_slug: string | null;
+      };
     };
 
 export type ProductEventName = ProductEvent["name"];

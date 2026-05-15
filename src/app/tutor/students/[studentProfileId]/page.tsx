@@ -30,6 +30,10 @@ import {
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
 import {
+  getRecentSharedLessonRecapsForTutor,
+  type RecentLessonRecapDto,
+} from "@/modules/lessons/lesson-reports";
+import {
   buildPreviewTutorStudentRelationship,
   getTutorStudentRelationship,
   type TutorStudentRelationshipDto,
@@ -133,7 +137,10 @@ export default async function TutorStudentDetailPage({
     redirect(buildPostSignInRedirect(account, detailHref) as Route);
   }
 
-  const result = await getTutorStudentRelationship(account, studentProfileId);
+  const [result, recentRecaps] = await Promise.all([
+    getTutorStudentRelationship(account, studentProfileId),
+    getRecentSharedLessonRecapsForTutor(account, studentProfileId),
+  ]);
 
   if (result.state === "no_profile") {
     return (
@@ -160,6 +167,7 @@ export default async function TutorStudentDetailPage({
   return renderDetailPage({
     backHref,
     previewNotice: false,
+    recentRecaps,
     relationship: result.relationship,
     timezone,
   });
@@ -168,11 +176,13 @@ export default async function TutorStudentDetailPage({
 function renderDetailPage({
   backHref,
   previewNotice,
+  recentRecaps = [],
   relationship,
   timezone,
 }: {
   backHref: Route;
   previewNotice: boolean;
+  recentRecaps?: readonly RecentLessonRecapDto[];
   relationship: TutorStudentRelationshipDto;
   timezone: string;
 }) {
@@ -220,9 +230,53 @@ function renderDetailPage({
         timezone={timezone}
       />
 
+      <RecentRecapsSection recaps={recentRecaps} timezone={timezone} />
+
       <NextActionsSection />
     </article>
   );
+}
+
+function RecentRecapsSection({
+  recaps,
+  timezone,
+}: {
+  recaps: readonly RecentLessonRecapDto[];
+  timezone: string;
+}) {
+  if (recaps.length === 0) {
+    return null;
+  }
+
+  return (
+    <Section
+      eyebrow="Recent recaps"
+      title="Lesson recaps you've shared"
+      description="Continuity notes you've shared with this student. Open the lesson to update or revisit the recap."
+    >
+      <ul className={styles.detailList}>
+        {recaps.map((recap) => (
+          <li className={styles.detailItem} key={recap.lessonId}>
+            <Link href={recap.lessonHref as Route}>
+              {formatRecapLabel(recap, timezone)}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function formatRecapLabel(
+  recap: RecentLessonRecapDto,
+  timezone: string,
+): string {
+  const subjectLabel = recap.subject?.label ?? "Lesson";
+  const focusLabel = recap.focus?.label ? ` · ${recap.focus.label}` : "";
+  const sharedLabel = formatUtcDateTime(recap.sharedAt, { timezone });
+  const ackSuffix = recap.acknowledgedAt ? " · acknowledged" : "";
+
+  return `${subjectLabel}${focusLabel} — shared ${sharedLabel}${ackSuffix}`;
 }
 
 function BackLink({ href }: { href: Route }) {

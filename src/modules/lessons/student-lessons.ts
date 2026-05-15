@@ -8,6 +8,10 @@ import {
   type LessonMeetingMethod,
   type LessonStatus,
 } from "@/modules/lessons/constants";
+import {
+  getStudentLessonReportView,
+  type StudentLessonReportDto,
+} from "@/modules/lessons/lesson-reports";
 import { formatCurrencyFromMinorUnits } from "@/modules/pricing/money";
 
 const STUDENT_LESSON_LIST_LIMIT = 30;
@@ -169,6 +173,7 @@ export type StudentLessonListDto = {
 export type StudentLessonDetailDto = StudentLessonListItemDto & {
   isIssueEntryEligible: boolean;
   meeting: StudentLessonMeetingDto | null;
+  report: StudentLessonReportDto | null;
 };
 
 export async function getStudentLessonList(
@@ -277,9 +282,10 @@ export async function getStudentLessonDetail(
     return null;
   }
 
-  const [meetingAccess, issueRecord] = await Promise.all([
+  const [meetingAccess, issueRecord, report] = await Promise.all([
     loadMeetingAccess(lesson.id),
     loadIssueRecord(lesson.id),
+    getStudentLessonReportView(account, lesson.id),
   ]);
 
   const item = buildLessonListItem({
@@ -293,6 +299,7 @@ export async function getStudentLessonDetail(
     ...item,
     isIssueEntryEligible: isIssueEntryEligible(lesson.lesson_status, issueRecord),
     meeting: buildMeetingDto(lesson.lesson_status, meetingAccess),
+    report,
   };
 }
 
@@ -351,6 +358,7 @@ export function buildPreviewStudentLessonDetail(): StudentLessonDetailDto {
       normalizedHost: null,
       provider: null,
     },
+    report: null,
   };
 }
 

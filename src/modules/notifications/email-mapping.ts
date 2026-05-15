@@ -31,6 +31,9 @@ export function isEmailEligibleNotificationType(
 
 const NON_EMAIL_NOTIFICATION_TYPES = new Set<NotificationType>([
   "new_message",
+  // `lesson_report_shared` is in-app only this wave; email delivery is
+  // explicitly out of scope per `P2-REPORT-001`.
+  "lesson_report_shared",
 ]);
 
 export function buildNotificationEmailPayload(
@@ -197,6 +200,17 @@ function resolveEmailDescriptor(
         ctaLabel: "Open Messages",
         ctaPath: "/messages",
         subject: "Mentor IB · Messages",
+      };
+    case "lesson_report_shared":
+      // `lesson_report_shared` is in-app only this wave; the early-return in
+      // `buildNotificationEmailPayload` ensures this branch is unreachable,
+      // but the switch must stay exhaustive over `NotificationType`.
+      return {
+        ctaContextNote:
+          "Lesson recaps stay inside Mentor IB; open lesson detail to read the recap from your tutor.",
+        ctaLabel: "Open lesson detail",
+        ctaPath: lessonPath,
+        subject: "Mentor IB · Lesson recap shared",
       };
   }
 }

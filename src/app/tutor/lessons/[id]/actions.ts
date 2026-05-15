@@ -28,6 +28,12 @@ import {
   LessonActionError,
   type TutorRequestDecision,
 } from "@/modules/lessons/lesson-actions";
+import {
+  LessonReportActionError,
+  saveTutorLessonReportDraft,
+  shareTutorLessonReport,
+  submitTutorLessonReport,
+} from "@/modules/lessons/lesson-reports";
 
 export type RequestDecisionActionState = {
   code: string | null;
@@ -50,7 +56,32 @@ export type ReportIssueActionState = {
   values: { issueType: string; lessonId: string; summary: string };
 };
 
+export type SaveLessonRecapDraftActionState = {
+  code: string | null;
+  message: string | null;
+  values: {
+    coverageSummary: string;
+    goalSummary: string;
+    lessonId: string;
+    nextStepsSummary: string;
+    studentConfidenceSignal: string;
+  };
+};
+
+export type SubmitLessonRecapActionState = {
+  code: string | null;
+  message: string | null;
+  values: { lessonId: string };
+};
+
+export type ShareLessonRecapActionState = {
+  code: string | null;
+  message: string | null;
+  values: { lessonId: string };
+};
+
 const LESSONS_BASE_PATH = "/tutor/lessons" as const;
+const STUDENT_LESSONS_BASE_PATH = "/lessons" as const;
 
 export async function acceptRequestAction(
   _previousState: RequestDecisionActionState,
@@ -388,6 +419,207 @@ function getFormValue(formData: FormData, key: string) {
 
 function isLessonIssueType(value: string): value is LessonIssueType {
   return (lessonIssueTypes as readonly string[]).includes(value);
+}
+
+async function withTutorAccount(
+  detailHref: string,
+  handler: (account: Awaited<ReturnType<typeof ensureAuthAccount>>) => Promise<
+    | { kind: "ok" }
+    | { kind: "error"; code: string; message: string }
+  >,
+): Promise<
+  | { kind: "ok" }
+  | { kind: "error"; code: string; message: string }
+> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email?.trim()) {
+    redirect(buildAuthSignInPath(detailHref) as Route);
+  }
+
+  const account = await ensureAuthAccount(user);
+
+  if (requiresRoleSelection(account)) {
+    redirect(routeFamilies.setup.defaultHref);
+  }
+
+  if (isRestrictedAccount(account)) {
+    return {
+      kind: "error",
+      code: "account_restricted",
+      message: "This account cannot edit this recap right now.",
+    };
+  }
+
+  if (!hasRole(account, "tutor")) {
+    redirect(buildPostSignInRedirect(account, detailHref) as Route);
+  }
+
+  return handler(account);
+}
+
+export async function saveLessonRecapDraftAction(
+  _previousState: SaveLessonRecapDraftActionState,
+  formData: FormData,
+): Promise<SaveLessonRecapDraftActionState> {
+  const values = {
+    coverageSummary: getFormValue(formData, "coverageSummary"),
+    goalSummary: getFormValue(formData, "goalSummary"),
+    lessonId: getFormValue(formData, "lessonId"),
+    nextStepsSummary: getFormValue(formData, "nextStepsSummary"),
+    studentConfidenceSignal: getFormValue(formData, "studentConfidenceSignal"),
+  };
+
+  if (!values.lessonId) {
+    return {
+      code: "missing_lesson",
+      message:
+        "We couldn't recover this lesson context. Refresh the page and try again.",
+      values,
+    };
+  }
+
+  const detailHref = `${LESSONS_BASE_PATH}/${values.lessonId}`;
+
+  const result = await withTutorAccount(detailHref, async (account) => {
+    try {
+      await saveTutorLessonReportDraft(account, values.lessonId, {
+        coverageSummary: values.coverageSummary,
+        goalSummary: values.goalSummary,
+        nextStepsSummary: values.nextStepsSummary,
+        studentConfidenceSignal: values.studentConfidenceSignal,
+      });
+
+      revalidatePath(detailHref);
+
+      return { kind: "ok" };
+    } catch (error) {
+      if (error instanceof LessonReportActionError) {
+        return { kind: "error", code: error.code, message: error.message };
+      }
+
+      return {
+        kind: "error",
+        code: "report_save_failed",
+        message:
+          "We couldn't save your recap draft. Please try again in a moment.",
+      };
+    }
+  });
+
+  if (result.kind === "error") {
+    return { code: result.code, message: result.message, values };
+  }
+
+  return {
+    code: "saved",
+    message: "Draft saved. You can keep editing or submit it when ready.",
+    values,
+  };
+}
+
+export async function submitLessonRecapAction(
+  _previousState: SubmitLessonRecapActionState,
+  formData: FormData,
+): Promise<SubmitLessonRecapActionState> {
+  const values = { lessonId: getFormValue(formData, "lessonId") };
+
+  if (!values.lessonId) {
+    return {
+      code: "missing_lesson",
+      message:
+        "We couldn't recover this lesson context. Refresh the page and try again.",
+      values,
+    };
+  }
+
+  const detailHref = `${LESSONS_BASE_PATH}/${values.lessonId}`;
+
+  const result = await withTutorAccount(detailHref, async (account) => {
+    try {
+      await submitTutorLessonReport(account, values.lessonId);
+
+      revalidatePath(detailHref);
+
+      return { kind: "ok" };
+    } catch (error) {
+      if (error instanceof LessonReportActionError) {
+        return { kind: "error", code: error.code, message: error.message };
+      }
+
+      return {
+        kind: "error",
+        code: "report_submit_failed",
+        message: "We couldn't submit this recap. Please try again in a moment.",
+      };
+    }
+  });
+
+  if (result.kind === "error") {
+    return { code: result.code, message: result.message, values };
+  }
+
+  return {
+    code: "submitted",
+    message:
+      "Recap submitted. Share it with the student when you're ready — it stays private until you do.",
+    values,
+  };
+}
+
+export async function shareLessonRecapAction(
+  _previousState: ShareLessonRecapActionState,
+  formData: FormData,
+): Promise<ShareLessonRecapActionState> {
+  const values = { lessonId: getFormValue(formData, "lessonId") };
+
+  if (!values.lessonId) {
+    return {
+      code: "missing_lesson",
+      message:
+        "We couldn't recover this lesson context. Refresh the page and try again.",
+      values,
+    };
+  }
+
+  const detailHref = `${LESSONS_BASE_PATH}/${values.lessonId}`;
+  const studentDetailHref = `${STUDENT_LESSONS_BASE_PATH}/${values.lessonId}`;
+
+  const result = await withTutorAccount(detailHref, async (account) => {
+    try {
+      await shareTutorLessonReport(account, values.lessonId);
+
+      revalidatePath(detailHref);
+      revalidatePath(studentDetailHref);
+
+      return { kind: "ok" };
+    } catch (error) {
+      if (error instanceof LessonReportActionError) {
+        return { kind: "error", code: error.code, message: error.message };
+      }
+
+      return {
+        kind: "error",
+        code: "report_share_failed",
+        message: "We couldn't share this recap. Please try again in a moment.",
+      };
+    }
+  });
+
+  if (result.kind === "error") {
+    return { code: result.code, message: result.message, values };
+  }
+
+  return {
+    code: "shared",
+    message:
+      "Recap shared with the student. They'll see it on the lesson detail and be notified in the app.",
+    values,
+  };
 }
 
 function messageForDecision(decision: TutorRequestDecision) {

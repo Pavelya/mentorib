@@ -6,6 +6,7 @@ import {
   getSharedAccountRouteContext,
   listAccountNotifications,
 } from "@/modules/accounts/shared-account";
+import type { NotificationType } from "@/modules/notifications/constants";
 
 import {
   markAllNotificationsReadAction,
@@ -206,23 +207,7 @@ function getNotificationStatusTone(status: "dismissed" | "read" | "unread") {
   }
 }
 
-function getNotificationTypeLabel(
-  type:
-    | "new_message"
-    | "lesson_accepted"
-    | "lesson_declined"
-    | "lesson_issue_acknowledgement"
-    | "lesson_issue_resolution"
-    | "lesson_request_expired"
-    | "lesson_request_submitted"
-    | "lesson_updated"
-    | "payout_processed"
-    | "policy_notice_updated"
-    | "review_submitted"
-    | "tutor_application_reviewed"
-    | "tutor_application_submitted"
-    | "upcoming_lesson_reminder",
-) {
+function getNotificationTypeLabel(type: NotificationType) {
   switch (type) {
     case "new_message":
       return "Chat message";
@@ -242,6 +227,8 @@ function getNotificationTypeLabel(
       return "Issue received";
     case "lesson_issue_resolution":
       return "Issue resolved";
+    case "lesson_report_shared":
+      return "Lesson recap shared";
     case "review_submitted":
       return "Review activity";
     case "tutor_application_submitted":
@@ -255,23 +242,7 @@ function getNotificationTypeLabel(
   }
 }
 
-function getNotificationTypeTone(
-  type:
-    | "new_message"
-    | "lesson_accepted"
-    | "lesson_declined"
-    | "lesson_issue_acknowledgement"
-    | "lesson_issue_resolution"
-    | "lesson_request_expired"
-    | "lesson_request_submitted"
-    | "lesson_updated"
-    | "payout_processed"
-    | "policy_notice_updated"
-    | "review_submitted"
-    | "tutor_application_reviewed"
-    | "tutor_application_submitted"
-    | "upcoming_lesson_reminder",
-) {
+function getNotificationTypeTone(type: NotificationType) {
   switch (type) {
     case "new_message":
       return "info";
@@ -291,6 +262,7 @@ function getNotificationTypeTone(
     case "lesson_updated":
     case "upcoming_lesson_reminder":
     case "lesson_issue_acknowledgement":
+    case "lesson_report_shared":
       return "info";
   }
 }

@@ -1,0 +1,176 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  color: var(--ink-500);
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.title {
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.filterForm {
+  display: contents;
+}
+
+.queueList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.queueRow {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.queueRowHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.queueRowTitle {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.queueRowMeta {
+  color: var(--ink-500);
+  font-size: 0.875rem;
+}
+
+.queueRowLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.queueEmpty {
+  color: var(--ink-500);
+}
+
+.detailGrid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.9fr);
+  align-items: start;
+}
+
+.detailList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detailRow {
+  display: grid;
+  gap: var(--space-1);
+  border-top: 1px solid var(--ink-100);
+  padding-top: var(--space-2);
+}
+
+.detailRow:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.detailLabel {
+  color: var(--ink-500);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.detailValue {
+  margin: 0;
+  color: var(--ink-700);
+}
+
+.historyList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.historyEntry {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.historyMeta {
+  color: var(--ink-500);
+  font-size: 0.8125rem;
+}
+
+.historyNote {
+  margin: 0;
+  color: var(--ink-700);
+}
+
+.historyInternalNote {
+  margin: 0;
+  color: var(--ink-500);
+  font-style: italic;
+}
+
+.actionPanel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.actionForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.actionLabel {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.actionSubmitRow {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.helperText {
+  color: var(--ink-500);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+@media (max-width: 64rem) {
+  .detailGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

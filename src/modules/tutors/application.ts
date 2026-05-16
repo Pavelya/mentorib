@@ -196,6 +196,10 @@ export async function getTutorApplication(
 
   const tutorProfile = await loadTutorProfile(account.id);
 
+  const reviewerNote = tutorProfile
+    ? await loadApplicantVisibleReviewerNote(tutorProfile.id, tutorProfile.application_status)
+    : null;
+
   if (!tutorProfile) {
     return {
       applicationStatus: "not_started",
@@ -297,10 +301,36 @@ export async function getTutorApplication(
       profileMinimumComplete,
       publicListingStatus: tutorProfile.public_listing_status,
     }),
-    reviewNote: null,
+    reviewNote: reviewerNote,
     state: "ready",
     submittedAt: deriveSubmittedAt(tutorProfile),
   };
+}
+
+async function loadApplicantVisibleReviewerNote(
+  tutorProfileId: string,
+  applicationStatus: TutorApplicationStatus,
+): Promise<string | null> {
+  if (
+    applicationStatus !== "changes_requested" &&
+    applicationStatus !== "rejected"
+  ) {
+    return null;
+  }
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("tutor_application_reviews")
+    .select("reviewer_note, review_status")
+    .eq("tutor_profile_id", tutorProfileId)
+    .in("review_status", ["changes_requested", "rejected"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ reviewer_note: string | null; review_status: string }>();
+  if (error) {
+    return null;
+  }
+  const note = data?.reviewer_note?.trim();
+  return note && note.length > 0 ? note : null;
 }
 
 export function validateTutorApplicationDraft(

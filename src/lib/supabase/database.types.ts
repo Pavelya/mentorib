@@ -59,6 +59,7 @@ import type {
   TutorProfileVisibilityStatus,
   TutorPublicListingStatus,
 } from "@/modules/tutors/constants";
+import type { TutorApplicationReviewStatus } from "@/modules/tutors/review-constants";
 
 type Json =
   | string
@@ -225,6 +226,17 @@ type TutorCredentialRow = {
   reviewed_at: string | null;
   storage_object_path: string;
   title: string;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type TutorApplicationReviewRow = {
+  created_at: string;
+  id: string;
+  internal_note: string | null;
+  review_status: TutorApplicationReviewStatus;
+  reviewer_app_user_id: string;
+  reviewer_note: string | null;
   tutor_profile_id: string;
   updated_at: string;
 };
@@ -1272,6 +1284,27 @@ export type MentorIbDatabase = {
         Row: WebhookEventRow;
         Update: Partial<
           Omit<WebhookEventRow, "created_at" | "event_type" | "id" | "provider" | "provider_event_id" | "received_at" | "updated_at" | "verification_status">
+        >;
+      };
+      tutor_application_reviews: {
+        Insert: Pick<
+          TutorApplicationReviewRow,
+          "review_status" | "reviewer_app_user_id" | "tutor_profile_id"
+        > & {
+          internal_note?: string | null;
+          reviewer_note?: string | null;
+        };
+        Relationships: [];
+        Row: TutorApplicationReviewRow;
+        Update: Partial<
+          Omit<
+            TutorApplicationReviewRow,
+            | "created_at"
+            | "id"
+            | "reviewer_app_user_id"
+            | "tutor_profile_id"
+            | "updated_at"
+          >
         >;
       };
       tutor_credentials: {

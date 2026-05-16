@@ -190,7 +190,7 @@ Bad parallel examples:
 | 1 | `P2-DS-MENU-001` | `ready` | `P1` | 3 | Popover, Menu, OverflowMenuTrigger primitives + Chip pressed state |
 | 1 | `P2-NOTIF-PREF-001` | `ready` | `P2` | 2 | Notification preferences and channel controls |
 | 2 | `P2-MSG-001` | `ready` | `P2` | 3 | Rich messaging behaviors wave |
-| 2 | `P2-APPLY-002` | `draft` | `P2` | 1 | Internal tutor review queue and approval decisions |
+| 2 | `P2-APPLY-002` | `ready` | `P2` | 1 | Internal tutor review queue and approval decisions |
 | 2 | `P2-PROFILE-001` | `draft` | `P1` | 1 | Tutor profile editor and listing publication controls |
 | 2 | `P2-GROW-001` | `planned` | `P3` | 4 | Public browse search scaling and external search activation path |
 | 3 | `P2-MEDIA-001` | `draft` | `P1` | 1 | Tutor credential, media, and intro video management |
@@ -260,48 +260,74 @@ Implement the staged tutor application flow so becoming a tutor feels confidence
 
 ## 11.2 `P2-APPLY-002` Internal tutor review queue and approval decisions
 
-**Status:** `draft`
+**Status:** `ready`
 **Priority:** `P2`
 **Wave:** 1
 **Depends on:** `P2-APPLY-001`
 
 **Goal**
 
-Implement the internal tutor-review surface and decision workflow so application approval, rejection, credential review, and request-for-changes actions are explicit, auditable, and capability-gated.
+Implement the internal tutor-review surface and decision workflow so application approval, rejection, and request-for-changes actions are explicit, auditable, and capability-gated. The decision flow must move applicants between the canonical `tutor_profiles.application_status` values (`submitted` ↔ `under_review` ↔ `changes_requested` ↔ `approved`/`rejected`) and, on approval, flip the tutor's `user_roles.role_status` from `pending` to `active` so the tutor can exercise the role.
 
 **Required source docs**
 
-- `docs/architecture/admin-and-moderation-architecture-v1.md`
-- `docs/data/auth-and-authorization-matrix-v1.md`
-- `docs/data/data-dto-and-query-boundary-map-v1.md`
-- `docs/data/api-and-server-action-contracts-v1.md`
-- `docs/architecture/route-layout-implementation-map-v1.md`
-- `docs/data/database-enum-and-status-glossary-v1.md` (section 8.2 — canonical `changes_requested` status)
+- `docs/architecture/admin-and-moderation-architecture-v1.md` (§§ 6, 7, 8, 9, 10, 15 — internal capability families, internal route boundary, dual-layer auth, queue architecture, tutor approval architecture, internal notes)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§§ 8.6, 10.10 — internal admin routes; `tutor_application_reviews` and `admin_action_logs` table-family rules)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (§§ 9, 21 — query owner table; admin/moderation `D7` DTO rules)
+- `docs/data/api-and-server-action-contracts-v1.md` (§§ 6, 8, 14, 21, 22 — Server Action golden path, boundary errors, abuse contract, observability)
+- `docs/architecture/route-layout-implementation-map-v1.md` (§§ 7.7, 9.7 — internal family; internal layout responsibilities)
+- `docs/data/database-enum-and-status-glossary-v1.md` (§§ 8.2 `tutor_profiles.application_status`, 13.4 `tutor_application_reviews.review_status`)
+- `docs/data/database-rls-boundaries-v1.md` (internal-only table RLS posture)
+- `docs/data/migration-conventions-v1.md` and `docs/data/database-change-review-checklist-v1.md` (migration shape and review checklist)
+- `docs/data/drizzle-schema-and-query-conventions-v1.md` (module schema declaration conventions)
+- `docs/data/tutor-listing-readiness-model-v1.md` (approval as the gate that unblocks downstream listing readiness — must not be conflated with listing publication)
+- `docs/architecture/background-jobs-and-notifications-architecture-v1.md` (notification enqueue boundary for the existing `tutor_application_reviewed` kind)
+- `docs/architecture/canonical-value-ownership-map-v1.md` (canonical-value ownership for statuses and reference-backed labels used in the queue UI)
+- `docs/design-system/agent-ui-rules.md` and `docs/design-system/component-specs-phase2-v1.md` (DS-first rules; reuse `Popover`, `Menu`, `OverflowMenuTrigger`, `Chip` from `P2-DS-MENU-001` for action menus and filter chips)
 
 **Scope**
 
-- `/internal/tutor-reviews`
-- review queue and detail surface
-- credential review cues
-- approve, reject, and request-changes actions using the canonical `changes_requested` application status
-- application audit trail expectations
+- `/internal/tutor-reviews` queue list page and `/internal/tutor-reviews/[applicationId]` detail page
+- internal layout (`src/app/internal/layout.tsx`) and `/internal/tutor-reviews` pages perform server-side dual-layer authorization: the actor must hold an active `admin` row in `user_roles`; unauthorized actors render `not_found` per the boundary error contract, not a visible forbidden page
+- new internal-only table `tutor_application_reviews` (per glossary §13.4) holding one review record per tutor application transition, with: `id`, `tutor_profile_id`, `reviewer_app_user_id`, `review_status` (`queued`/`under_review`/`changes_requested`/`approved`/`rejected`), `reviewer_note` (visible to applicant when status is `changes_requested` or `rejected`), `internal_note` (never exposed to the applicant), `created_at`, `updated_at`, plus indexes that support the queue filters and the tutor-history view; RLS enabled with internal-only access and no anon/auth role access
+- queue list surface: filter by review status (default `queued` + `under_review`), basic sort (oldest submission first), pagination, and a counter chip per status; rows must show only D7 admin DTO fields (applicant display name, submitted-at, current status, last-reviewer summary) and link to the detail surface
+- detail surface: read-only summary of the applicant's submitted application data composed from the existing tutor application read path (no new cross-domain join in the page), plus a per-row history of prior review events for that applicant
+- explicit Server Actions for the three decision transitions: `claimForReview` (queued → under_review), `requestChanges` (under_review → changes_requested, requires `reviewer_note`), `approveApplication` (under_review → approved), `rejectApplication` (under_review → rejected, requires `reviewer_note`); each action: validates the actor has admin capability, validates the source state via a small state-machine helper, writes a new `tutor_application_reviews` row, updates `tutor_profiles.application_status` in the same transaction, and on `approveApplication` flips the tutor's `user_roles.role_status` from `pending` to `active` (use the existing service-role write path consistent with `applySetupRoleSelection`)
+- notification fan-out: on each terminal or applicant-visible transition (`changes_requested`, `approved`, `rejected`) enqueue the existing `tutor_application_reviewed` notification kind through the approved notification boundary; the applicant-facing payload exposes only the new status and the public `reviewer_note` (never `internal_note`)
+- audit posture: every decision is captured as a new `tutor_application_reviews` row (the table is the audit trail for this domain — no separate `admin_action_logs` write is added in this task)
+- module placement: schema in `src/modules/tutors/review-schema.ts` (or extend `src/modules/tutors/schema.ts`); domain command + query services in `src/modules/tutors/application-review-service.ts` and `src/modules/tutors/application-review.ts`; DTO types kept distinct from the applicant-facing application DTOs
+- UI primitives: action menus must consume `OverflowMenuTrigger` + `Menu`; filter chips must consume `Chip` with the `pressed` state; no route-local icons, flags, or ad hoc menu CSS; reference-backed labels (e.g., subject names shown in the detail view) flow through `src/modules/reference/**` loaders
 
 **Out of scope**
 
-- broad support or finance tooling
-- generalized internal dashboard sprawl
+- broad support or finance tooling, or any generalized internal dashboard expansion
+- credential file review actions and credential-status transitions (`tutor_credentials.review_status` workflow) — owned by `P2-MEDIA-001`
+- payout readiness or `public_listing_status` mutation from this surface (`approved` only unlocks the listing readiness gate; flipping to `listed` is owned by the tutor or by `P2-OPS-002`/`P2-PROFILE-001`)
+- finer-grained internal capability roles beyond the existing `admin` row in `user_roles` (the architecture's capability separation is acknowledged but is a later refactor; this task uses `admin` as the sole gate)
+- a separate `admin_action_logs` table, generalized moderation case schema, or shared internal queue infrastructure — owned by `P2-OPS-001`
+- realtime updates to the queue (page refresh / cache revalidate is sufficient)
+- bulk actions, assignment/claim semantics beyond a single reviewer per `under_review` transition, or reviewer reassignment workflows
 
 **Acceptance criteria**
 
-- internal access is capability-gated and explicit
-- review decisions are modeled as state transitions, not hidden edits
-- applicants receive only shaped status and next-step information
-- internal notes remain internal
+- the `/internal/*` routes deny access to non-admins via a server-side check at the page boundary and render `not_found` rather than `403` or a visible internal shell
+- `tutor_application_reviews` exists with the canonical `review_status` set from glossary §13.4, has RLS enabled, and is only writable by service-role/server paths
+- review decisions are modeled as explicit state transitions; an attempt to drive an illegal transition (e.g., approving an application not in `under_review`) returns a `conflict` error and does not mutate state
+- on `approveApplication`, both `tutor_profiles.application_status = 'approved'` and the tutor's `user_roles.role_status = 'active'` are updated atomically; on failure neither side is updated
+- on `changes_requested` and `rejected`, a `reviewer_note` is required; on all applicant-visible transitions the `tutor_application_reviewed` notification is enqueued and the payload never carries `internal_note`
+- the applicant-facing application status surface (existing P2-APPLY-001 read path) reflects the new state and reviewer note without exposing internal-only fields, audit history, or reviewer identity
+- queue list and detail DTOs are `D7`-shaped: no raw rows, no `app_user_id` leaks beyond what the admin scope already permits, no credential file contents, no message bodies
+- DS-first holds: no new route-local card/chip/panel/icon CSS or inline SVGs; menus and chips reuse the `P2-DS-MENU-001` primitives; if a new shared variant is required, the design-system inventory and (if applicable) tokens cheatsheet are updated in the same commit
+- copy is supportive and operational, not adversarial; rejection and changes-requested templates point applicants to the next concrete step
 
 **Verification**
 
-- authorization and DTO review
-- state-transition and audit review
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- Vitest unit tests cover: the state-machine helper (allowed/disallowed transitions), the approve-and-grant-role atomicity, and the notification payload shape (no `internal_note` leak)
+- Supabase DB tests cover: RLS on `tutor_application_reviews` (admin-only read/write, anon/auth denied) and the migration shape per the change-review checklist
+- manual privilege check: signing in as a non-admin renders `not_found` for both queue and detail routes; signing in as an admin can drive a sample applicant through `claim → request_changes → re-submit → approve` and through `claim → reject`
+- DTO leak review: both queue and detail responses inspected to confirm `internal_note`, raw reviewer email, and unrelated tutor records are absent
+- no `pnpm test:e2e` required (no public route surface or auth-entry surface is touched); call this out in the final report
 
 ## 11.3 `P2-PROFILE-001` Tutor profile editor and listing publication controls
 

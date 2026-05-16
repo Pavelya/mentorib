@@ -41,6 +41,7 @@ import type {
   UserBlockStatus,
 } from "@/modules/messages/constants";
 import type {
+  NotificationCategory,
   NotificationChannel,
   NotificationDeliveryStatus,
   NotificationStatus,
@@ -381,6 +382,16 @@ type NotificationRow = {
   object_type: string;
   read_at: string | null;
   title: string;
+  updated_at: string;
+};
+
+type NotificationPreferenceRow = {
+  app_user_id: string;
+  created_at: string;
+  email_enabled: boolean;
+  id: string;
+  in_app_enabled: boolean;
+  notification_category: NotificationCategory;
   updated_at: string;
 };
 
@@ -1098,6 +1109,23 @@ export type MentorIbDatabase = {
           Omit<
             NotificationDeliveryRow,
             "created_at" | "id" | "notification_id" | "updated_at"
+          >
+        >;
+      };
+      notification_preferences: {
+        Insert: Pick<
+          NotificationPreferenceRow,
+          "app_user_id" | "notification_category"
+        > & {
+          email_enabled?: boolean;
+          in_app_enabled?: boolean;
+        };
+        Relationships: [];
+        Row: NotificationPreferenceRow;
+        Update: Partial<
+          Omit<
+            NotificationPreferenceRow,
+            "app_user_id" | "created_at" | "id" | "notification_category" | "updated_at"
           >
         >;
       };

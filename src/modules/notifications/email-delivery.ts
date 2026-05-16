@@ -8,7 +8,8 @@ import {
   buildNotificationEmailPayload,
   isEmailEligibleNotificationType,
 } from "@/modules/notifications/email-mapping";
-import type { NotificationType } from "@/modules/notifications/constants";
+import { NOTIFICATION_TYPE_TO_CATEGORY, type NotificationType } from "@/modules/notifications/constants";
+import { resolveNotificationDispatchPolicy } from "@/modules/notifications/preferences";
 
 type NotificationRow = MentorIbDatabase["public"]["Tables"]["notifications"]["Row"];
 type NotificationDeliveryRow =
@@ -36,6 +37,27 @@ export async function scheduleNotificationEmailDelivery(
 
   if (!isEmailEligibleNotificationType(notification.notification_type)) {
     return { outcome: "skipped" as const, reason: "channel_in_app_only" };
+  }
+
+  const dispatchPolicy = await resolveNotificationDispatchPolicy(
+    notification.app_user_id,
+    notification.notification_type,
+  );
+
+  if (!dispatchPolicy.isMandatory && !dispatchPolicy.emailEnabled) {
+    logEmailEvent("info", "notification_email_skipped", {
+      app_user_id: notification.app_user_id,
+      notification_category:
+        NOTIFICATION_TYPE_TO_CATEGORY[notification.notification_type],
+      notification_id: notification.id,
+      notification_type: notification.notification_type,
+      reason: "channel_disabled_by_preference",
+    });
+
+    return {
+      outcome: "skipped" as const,
+      reason: "channel_disabled_by_preference",
+    };
   }
 
   const result = await enqueueJob({

@@ -43,11 +43,12 @@ All entries below are exported by the barrel `src/components/ui/index.ts` and mu
 | `Section` | `section.tsx` | densities `default`, `compact`, `spacious`; dividers `none`, `top`, `bottom`; supports `eyebrow`, `title`, `description`, `action` | public, student, tutor | introduced in `P1-DS-FOUND-001-C`. Lightweight grouping primitive — no surface chrome. Replaces the bespoke `.profileSectionRow`/`.profileSectionHeader`/`.sectionHeader`/`.sectionEyebrow` patterns in account, public, and tutor surfaces. |
 | `SelectField` | `select-field.tsx` | sizes `default`, `compact` | student, tutor | shared select shell |
 | `StatusBadge` | `status-badge.tsx` | tones `positive`, `warning`, `destructive`, `trust`, `info` | account, plus `LessonSummary`, `ConversationListItem`, and other continuity components (transitively used by every role surface) | text-bearing state pill (heavier than `Chip`). |
+| `Switch` | `switch.tsx` | layouts `inline` (default) / `stacked`; `disabled`; optional `description` and `helperText`; controlled `checked` / `onCheckedChange` | account (notification preferences in `/settings`) | introduced in `P2-NOTIF-PREF-001`. Single source-of-truth toggle: renders a `role="switch"` button with `aria-checked`, wired-up `aria-describedby`, and a `data-state` driven knob. Route-local toggle CSS is forbidden — extend this primitive instead. |
 | `TabBar` | `tab-bar.tsx` | `default`, scrollable | student, plus `ConversationShell` (transitively used by `/messages` and `/tutor/messages`) | shared tab grammar |
 | `Textarea` | `textarea.tsx` | `default`, long-form | student, plus `ConversationThread` composer | shared textarea shell |
 | `TextField` | `text-field.tsx` | sizes `default`, `compact` | account, auth, tutor | shared input shell |
 
-The DS exports `CardProps`, `ChipProps`, `ChipTone`, `FlagCode`, `IconKey`, `MenuItemProps`, `MenuItemTone`, `MenuProps`, `OverflowMenuTriggerProps`, `PopoverPlacement`, `PopoverProps`, and `SectionProps` types; consume these instead of redeclaring shapes in route code.
+The DS exports `CardProps`, `ChipProps`, `ChipTone`, `FlagCode`, `IconKey`, `MenuItemProps`, `MenuItemTone`, `MenuProps`, `OverflowMenuTriggerProps`, `PopoverPlacement`, `PopoverProps`, `SectionProps`, and `SwitchProps` types; consume these instead of redeclaring shapes in route code.
 
 ## 4. Shared continuity components (`src/components/continuity/**`, `src/components/datetime/**`, `src/components/shell/**`)
 

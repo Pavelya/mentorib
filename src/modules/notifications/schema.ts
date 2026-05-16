@@ -12,6 +12,7 @@ import {
 import { appUsers } from "@/modules/accounts/schema";
 import { jobRuns } from "@/modules/jobs/schema";
 import {
+  notificationCategories,
   notificationChannels,
   notificationDeliveryStatuses,
   notificationStatuses,
@@ -140,6 +141,34 @@ export const notificationDeliveries = pgTable(
       table.provider,
       table.provider_message_id,
     ),
+  ],
+);
+
+export const notificationPreferences = pgTable(
+  "notification_preferences",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    app_user_id: uuid("app_user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+    notification_category: text("notification_category", {
+      enum: notificationCategories,
+    }).notNull(),
+    in_app_enabled: boolean("in_app_enabled").notNull().default(true),
+    email_enabled: boolean("email_enabled").notNull().default(true),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("notification_preferences_app_user_category_key").on(
+      table.app_user_id,
+      table.notification_category,
+    ),
+    index("notification_preferences_app_user_idx").on(table.app_user_id),
   ],
 );
 

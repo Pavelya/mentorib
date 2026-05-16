@@ -30,6 +30,7 @@ export {
 export { Section, type SectionProps } from "./section";
 export { SelectField } from "./select-field";
 export { StatusBadge } from "./status-badge";
+export { Switch, type SwitchProps } from "./switch";
 export { TabBar } from "./tab-bar";
 export { Textarea } from "./textarea";
 export { TextField } from "./text-field";

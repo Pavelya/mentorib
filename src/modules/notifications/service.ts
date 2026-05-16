@@ -1,10 +1,13 @@
 import type { MentorIbDatabase } from "@/lib/supabase/database.types";
+import { logEmailEvent } from "@/lib/email/logging";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 
-import type {
-  NotificationStatus,
-  NotificationType,
+import {
+  NOTIFICATION_TYPE_TO_CATEGORY,
+  type NotificationStatus,
+  type NotificationType,
 } from "@/modules/notifications/constants";
+import { resolveNotificationDispatchPolicy } from "@/modules/notifications/preferences";
 
 type NotificationRow =
   MentorIbDatabase["public"]["Tables"]["notifications"]["Row"];
@@ -39,6 +42,23 @@ export async function createNotification(
   const trimmedObjectType = input.objectType.trim();
 
   if (!trimmedTitle || !trimmedBody || !trimmedObjectType) {
+    return null;
+  }
+
+  const dispatchPolicy = await resolveNotificationDispatchPolicy(
+    input.appUserId,
+    input.notificationType,
+  );
+
+  if (!dispatchPolicy.isMandatory && !dispatchPolicy.inAppEnabled) {
+    logEmailEvent("info", "notification_in_app_skipped", {
+      app_user_id: input.appUserId,
+      notification_category:
+        NOTIFICATION_TYPE_TO_CATEGORY[input.notificationType],
+      notification_type: input.notificationType,
+      reason: "channel_disabled_by_preference",
+    });
+
     return null;
   }
 

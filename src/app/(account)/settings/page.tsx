@@ -3,9 +3,11 @@ import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
 import { Panel } from "@/components/ui";
 import { buildAccountRoleBadges } from "@/modules/accounts/role-badges";
 import { getSharedAccountRouteContext } from "@/modules/accounts/shared-account";
+import { getNotificationPreferenceSnapshot } from "@/modules/notifications/preferences";
 import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
 import styles from "../account-surfaces.module.css";
+import { NotificationPreferencesForm } from "./notification-preferences-form";
 import { SettingsProfileForm } from "./settings-form";
 
 export default async function SettingsPage() {
@@ -22,6 +24,9 @@ export default async function SettingsPage() {
   const initialPreferredLanguageCode = resolveInitialPreferredLanguageCode(
     account.preferred_language_code,
     languageOptions,
+  );
+  const notificationPreferenceSnapshot = await getNotificationPreferenceSnapshot(
+    account.id,
   );
 
   return (
@@ -45,6 +50,16 @@ export default async function SettingsPage() {
             languageOptions={languageOptions}
             roleBadges={roleBadges}
             timezone={account.timezone}
+          />
+        </Panel>
+
+        <Panel
+          description="Choose which optional notifications reach you, and how. Critical lifecycle notifications keep sending so booking and payment events never go silent."
+          title="Notification preferences"
+          tone="raised"
+        >
+          <NotificationPreferencesForm
+            initialSnapshot={notificationPreferenceSnapshot}
           />
         </Panel>
       </section>

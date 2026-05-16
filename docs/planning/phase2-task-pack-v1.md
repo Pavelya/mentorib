@@ -188,7 +188,7 @@ Bad parallel examples:
 | 1 | `P2-TRUST-001` | `ready` | `P1` | 2 | Lesson-linked review capture and publication flow |
 | 1 | `P2-REPORT-001` | `ready` | `P1` | 2 | Lesson reports and post-lesson continuity surfaces |
 | 1 | `P2-DS-MENU-001` | `ready` | `P1` | 3 | Popover, Menu, OverflowMenuTrigger primitives + Chip pressed state |
-| 1 | `P2-NOTIF-PREF-001` | `draft` | `P2` | 2 | Notification preferences and channel controls |
+| 1 | `P2-NOTIF-PREF-001` | `ready` | `P2` | 2 | Notification preferences and channel controls |
 | 2 | `P2-MSG-001` | `ready` | `P2` | 3 | Rich messaging behaviors wave |
 | 2 | `P2-APPLY-002` | `draft` | `P2` | 1 | Internal tutor review queue and approval decisions |
 | 2 | `P2-PROFILE-001` | `draft` | `P1` | 1 | Tutor profile editor and listing publication controls |
@@ -993,50 +993,146 @@ Implement the data subject request workflow so access, erasure, and portability 
 
 ## 11.13 `P2-NOTIF-PREF-001` Notification preferences and channel controls
 
-**Status:** `draft`
+**Status:** `ready`
 **Priority:** `P2`
 **Wave:** 2
-**Depends on:** `P1-NOTIF-001`
+**Depends on:** `P1-NOTIF-001`, `P1-NOTIF-002`, `P1-ACCOUNT-001`
 
 **Goal**
 
-Implement user-facing notification preferences so students and tutors can control which notification types they receive and through which channels, without losing critical operational notifications.
+Implement user-facing notification preferences so students and tutors can opt out of non-critical notification categories per channel from a single shared `/settings` surface, while critical operational notifications keep dispatching by policy. The architecture rule from `background-jobs-and-notifications-architecture-v1.md` §8.7 ("required transactional notifications send by policy; optional engagement notifications can arrive later as a separate preference layer") is the framing — this task ships that "separate preference layer" without expanding into a complex preference center.
 
 **Required source docs**
 
-- `docs/architecture/background-jobs-and-notifications-architecture-v1.md`
-- `docs/architecture/message-architecture-v1.md`
-- `docs/data/database-schema-outline-v1.md`
-- `docs/data/api-and-server-action-contracts-v1.md`
-- `docs/architecture/privacy-and-data-retention-architecture-v1.md`
+- `docs/architecture/background-jobs-and-notifications-architecture-v1.md` (§8.5 channel rule, §8.7 preference posture, §8.9 legal-update visibility)
+- `docs/architecture/message-architecture-v1.md` (§13.1 message-notification scope; new-message stays in-app only and is owned by the messaging surface — preferences UI must not expose chat toggles)
+- `docs/data/database-schema-outline-v1.md` (§15 notification family — preference table is a sibling of `notifications` / `notification_deliveries`)
+- `docs/data/database-rls-boundaries-v1.md` (notification family RLS pattern; owner-read/owner-write applies to preferences)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§10.8 notification-table read/write posture)
+- `docs/data/api-and-server-action-contracts-v1.md` (server-action mutation pattern for owner-scoped settings writes)
+- `docs/architecture/privacy-and-data-retention-architecture-v1.md` (logging boundaries — preference toggles must not log identifying content)
+- `docs/design-system/agent-ui-rules.md` (DS-first: reuse `Panel`, `Section`, `Switch`/`Toggle` patterns; no route-local card or chip CSS)
+- `docs/architecture/canonical-value-ownership-map-v1.md` (category catalog lives in the notifications module, not in `src/modules/reference/**`, because it is a notification-domain vocabulary, not a cross-surface reference vocabulary)
 
 **Scope**
 
-- notification preference surface in student and tutor settings
-- per-category opt-in/opt-out for non-critical notifications
-- channel selection where multiple channels exist (in-app, email)
-- critical operational notifications remain mandatory and non-dismissable (booking confirmations, payment receipts, lesson cancellations, dispute outcomes)
-- preference persistence and immediate effect on notification dispatch
+Data layer:
+
+- New table `notification_preferences` (migration ordered after `20260515120000_message_reactions_baseline.sql`) with columns:
+  - `id uuid primary key default gen_random_uuid()`
+  - `app_user_id uuid not null references app_users(id) on delete cascade`
+  - `notification_category text not null` — references the optional-category enum declared below (CHECK constraint, not a Postgres enum, mirroring the existing `notification_type` text-with-CHECK pattern in `notifications`)
+  - `in_app_enabled boolean not null default true`
+  - `email_enabled boolean not null default true`
+  - `created_at`, `updated_at timestamptz not null default now()`
+  - `unique (app_user_id, notification_category)`
+- RLS policies (anon denied; authenticated owner read/insert/update; admin via internal service-role only):
+  - `select using (auth.uid() = app_user_id)`
+  - `insert with check (auth.uid() = app_user_id)`
+  - `update using (auth.uid() = app_user_id) with check (auth.uid() = app_user_id)`
+  - no `delete` policy — rows are upserted, never removed by the user; account deletion cascades.
+- Drizzle table declaration in `src/modules/notifications/schema.ts` (notifications module owns it; do not add a parallel `preferences/` module).
+- Default behavior is row-absence-equals-enabled — explicit rows are only written when the user changes a switch. A missing row resolves to "both channels on" for that category.
+
+Constants and category catalog:
+
+- Extend `src/modules/notifications/constants.ts` with:
+  - `notificationCategories` — the user-facing groupings; each maps to a stable slug used as the row's `notification_category` value. Recommended set (final wording is task-locked):
+    - `lesson_reminders` → covers `upcoming_lesson_reminder`
+    - `reviews` → covers `review_submitted`
+    - `tutor_application_updates` → covers `tutor_application_submitted`, `tutor_application_reviewed`
+    - `lesson_recaps` → covers `lesson_report_shared` (in-app channel only; email toggle is hidden or disabled for this category since `lesson_report_shared` is in-app-only per `P2-REPORT-001`)
+  - `MANDATORY_NOTIFICATION_TYPES` — the set that always dispatches regardless of preference state and is **not** user-toggleable. Must include: `lesson_request_submitted`, `lesson_accepted`, `lesson_declined`, `lesson_request_expired`, `lesson_updated`, `lesson_issue_acknowledgement`, `lesson_issue_resolution`, `payout_processed`, `policy_notice_updated`.
+  - `NOTIFICATION_TYPE_TO_CATEGORY` — single source-of-truth map from each `NotificationType` to either a `notificationCategory` (optional) or `null` (mandatory). `new_message` maps to `null` for the purposes of this table because per-conversation mute is owned by `P2-MSG-001` and the preferences UI never exposes it.
+
+Enforcement at dispatch boundaries:
+
+- Add `resolveNotificationDispatchPolicy(appUserId, notificationType)` in `src/modules/notifications/preferences.ts` returning `{ inAppEnabled: boolean; emailEnabled: boolean; isMandatory: boolean }`. Reads the row (if any) via the service-role client; mandatory types short-circuit to `{ inAppEnabled: true, emailEnabled: true, isMandatory: true }`.
+- Wire enforcement at exactly two existing boundaries — do not introduce a third:
+  - `createNotification(...)` in `src/modules/notifications/service.ts`: when `inAppEnabled === false` for the resolved category, return `null` (no row written) and emit a structured `logEmailEvent`-style log entry (`notification_in_app_skipped`) carrying only `notification_type`, `notification_category`, `app_user_id` — never title, body, or object names.
+  - `scheduleNotificationEmailDelivery(...)` in `src/modules/notifications/email-delivery.ts`: when `emailEnabled === false`, return `{ outcome: "skipped", reason: "channel_disabled_by_preference" }` before enqueuing the job. The existing `isEmailEligibleNotificationType` channel rule continues to apply first (e.g. `new_message` and `lesson_report_shared` stay in-app-only regardless of preference state).
+- `upsertNewMessageNotification` is **not** modified — per-conversation mute lives on `conversation_notification_state` and is owned by `P2-MSG-001`.
+
+Server action:
+
+- `src/app/(account)/settings/notification-preference-actions.ts` exporting `updateNotificationPreference({ category, channel, enabled })`:
+  - Zod-validates `category` against `notificationCategories` and `channel` against `{ "in_app" | "email" }`.
+  - Rejects if `category` is not in the catalog or if the (category, channel) combination is one the UI cannot reach (e.g. `email` channel for `lesson_recaps`).
+  - Uses the supabase client bound to the authenticated user (not the service-role client) so RLS enforces ownership end-to-end.
+  - Upserts on `(app_user_id, notification_category)` and updates only the targeted boolean column.
+  - `revalidatePath("/settings")` on success.
+- No new route handler under `/api/*`; this is a server action consumed by the settings form.
+
+Route surface (no new routes):
+
+- Extend `/settings` (`src/app/(account)/settings/page.tsx`) with a second `Panel title="Notification preferences"` rendered below the existing Profile panel. Layout is one `Section` per category showing the category label, a short description, and two channel switches (`In-app`, `Email`). Categories whose email channel is unsupported render the email switch as visually disabled with a one-line helper ("This category is delivered in-app only.").
+- A separate top-level `Section` titled "Always sent" lists the mandatory categories as static text (e.g. "Booking confirmations · Payment receipts · Lesson cancellations · Dispute outcomes · Legal updates") so users see *why* certain notifications never appear in the toggle grid. Wording stays generic — no per-type toggle.
+- New client component `src/app/(account)/settings/notification-preferences-form.tsx` rendering the switches. Uses the existing form-state pattern from `settings-form.tsx`. Switches are optimistic-disabled while the action is pending; on error, the switch reverts and an inline error message renders using the existing form-error pattern.
+- Reuse `Panel`, `Section`, `Switch` (or `Toggle`, depending on what already exists in `src/components/ui/`). If a `Switch` primitive does not yet exist, extend the design system in the same task per the DS-first rule and update `docs/design-system/component-inventory-v1.md`. Do not introduce a route-local toggle component.
+
+DTO + read path:
+
+- `getNotificationPreferenceSnapshot(appUserId)` in `src/modules/notifications/preferences.ts` returns `{ [category]: { in_app_enabled, email_enabled } }` defaulted to `{ in_app_enabled: true, email_enabled: true }` for missing rows. Used by the settings page server component to hydrate the form.
+- The shape is a flat record keyed by `notificationCategory`. Do not expose the underlying row IDs to the client.
+
+Privacy and logging:
+
+- No notification title, body, object id, counterpart name, or `notification_type` shows up in analytics or email-event logs for the new skip-reason. The dispatch-skip log line carries only `app_user_id`, `notification_type`, `notification_category`, and the reason string.
+- Preference rows are user-owned data — include them in account deletion via the existing `ON DELETE CASCADE` on `app_users.id` (covered by the FK declaration).
+
+Tests:
+
+- Vitest unit tests in `src/test/modules/notifications/`:
+  - `preferences.resolve.test.ts` — `resolveNotificationDispatchPolicy` returns `isMandatory: true` for every entry in `MANDATORY_NOTIFICATION_TYPES`; defaults to enabled when no row exists; respects stored false; unknown notification type maps to `isMandatory: true` (safe default).
+  - `preferences.dispatch.test.ts` — with a stubbed preference of `in_app_enabled = false` for `reviews`, `createNotification` for `review_submitted` returns `null` and emits the skip log; mandatory `lesson_accepted` still creates a row in the same scenario.
+  - `preferences.email.test.ts` — with `email_enabled = false` for `lesson_reminders`, `scheduleNotificationEmailDelivery` returns `{ outcome: "skipped", reason: "channel_disabled_by_preference" }` for `upcoming_lesson_reminder` and is unaffected for `lesson_accepted`.
+  - `preferences.action.test.ts` — `updateNotificationPreference` rejects unknown category, rejects the email channel for in-app-only categories, and upserts correctly on first call vs. update.
+- DB test under `supabase/tests/database/smoke/notification_preferences_baseline.test.sql`:
+  - Schema shape, FK, unique constraint, defaults, and the four RLS verbs: owner select/insert/update allowed; non-owner select/insert/update denied; anonymous denied across all verbs.
+- Playwright is not required for this task. The settings page is already covered by the logged-in smoke; if a new e2e is added later, gate it on a seeded `app_user` and assert one toggle round-trip.
 
 **Out of scope**
 
-- push notifications (no native mobile in Phase 2)
-- per-conversation mute and archive controls (owned by `P2-MSG-001`)
-- notification scheduling or digest mode
+- push notifications (browser or native mobile) — explicitly deferred by `message-architecture-v1.md` §13.2.
+- per-conversation mute and archive controls — owned by `P2-MSG-001`; the new settings panel must not expose chat toggles.
+- digest mode, quiet hours, scheduling windows, or per-day delivery rules — explicitly deferred by §8.7 and §13.2.
+- toggling **any** mandatory category (booking lifecycle, payment, payout, legal, dispute outcomes) — these stay non-dismissable by design.
+- preference management for admin/internal users beyond the standard owner-scoped flow (admins use the same settings panel as their `app_user`).
+- a separate `/settings/notifications` route — the panel lives inside `/settings` per the route topology.
+- changes to `notification_types` or `notification_deliveries`.
+- editing notification body templates or email copy.
+- analytics on preference changes (event taxonomy work happens in `P2-OPS-003` if needed).
 
 **Acceptance criteria**
 
-- users can manage notification preferences from their settings
-- non-critical notifications respect user channel preferences
-- critical notifications are clearly marked as mandatory and cannot be disabled
-- preference changes take effect immediately for subsequent notifications
-- defaults are sensible (all channels on) and explicit
+- A logged-in student or tutor sees a "Notification preferences" panel under `/settings` with one row per optional category and two channel switches per row.
+- Toggling a switch persists immediately through the server action, survives a hard reload, and is scoped to the acting `app_user` (verified by RLS DB test).
+- A `lesson_accepted` notification continues to create both an in-app row and an email job even when *all* optional preferences are off — verified by `preferences.dispatch.test.ts` and `preferences.email.test.ts`.
+- A `review_submitted` notification with `in_app_enabled = false` for the `reviews` category does **not** create a `notifications` row; the existing realtime/bell surface receives nothing for that event.
+- A `upcoming_lesson_reminder` with `email_enabled = false` for `lesson_reminders` does **not** enqueue an email job; the in-app row still appears if the in-app switch stays on.
+- The "Always sent" section visibly enumerates the mandatory categories so users understand which notifications they cannot disable.
+- The `lesson_recaps` row renders with the email switch visually disabled and a helper line explaining that the category is in-app-only this wave.
+- `new_message` notifications are unaffected by this task; the panel does not expose any chat-related toggle.
+- A non-owner cannot read or write another user's preferences (RLS DB test covers all four verbs).
+- No notification title, body, object id, counterpart name, or chat content leaks into the new skip-reason logs.
+- No route-local `.card`, `.chip`, `.panel`, or toggle CSS is introduced; primitives come from `src/components/ui/**`.
 
 **Verification**
 
-- notification category and criticality review
-- preference persistence and dispatch review
-- critical notification bypass review
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`.
+- `pnpm lint:arch`.
+- `pnpm test` covering the four Vitest specs above plus the existing notification suite (no regressions on lifecycle dispatch).
+- Local DB test: `pnpm supabase db reset` then run the new `notification_preferences_baseline.test.sql` smoke alongside the existing notification family smoke.
+- Manual settings-page review on both a student and a tutor account: toggle each switch, hard-reload, confirm persistence, confirm the "Always sent" section copy.
+- Dispatch review: trigger an in-scope optional notification (e.g. submit a review while logged in as the tutor) with the relevant switch off and confirm no in-app row appears; flip the switch back on and confirm the next event reaches the bell.
+
+**Implementation notes**
+
+- Default-on, row-absent semantics let us ship the feature without backfill migrations. Do not pre-populate rows for existing users.
+- The category catalog is the **only** place where notification-type → category mapping lives. Lifecycle helpers in `src/modules/notifications/lifecycle.ts` must not duplicate the mapping; they call into the central dispatch helpers which already own enforcement.
+- Mandatory enforcement is a code-level rule (`MANDATORY_NOTIFICATION_TYPES`), not a row flag. A future task that needs to make a mandatory type optional must change the constant and add a category — never store a "mandatory" boolean per user.
+- Reuse `src/modules/notifications/email-delivery.ts` skip-reason taxonomy by adding `channel_disabled_by_preference` next to the existing `channel_in_app_only`. Do not introduce a parallel skip surface.
+- If a `Switch`/`Toggle` primitive does not exist in `src/components/ui/`, extending the DS is in scope for this task per the DS-first rule; update `component-inventory-v1.md` in the same commit. If one already exists, reuse it as-is.
 
 ## 11.14 `P2-GROW-001` Public browse search scaling and external search activation path
 

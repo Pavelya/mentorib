@@ -7,6 +7,11 @@ import {
   type ParticipantRole,
   type UserBlockStatus,
 } from "@/modules/messages/constants";
+import {
+  emptyReactionSummary,
+  loadReactionsForMessages,
+  type ReactionSummary,
+} from "@/modules/messages/reactions";
 
 const CONVERSATION_LIST_LIMIT = 30;
 const THREAD_MESSAGE_LIMIT = 60;
@@ -62,6 +67,11 @@ export type ConversationListItemDto = {
     displayName: string;
     role: ParticipantRole;
   };
+  filterFlags: {
+    hasUnread: boolean;
+    isArchived: boolean;
+    isMuted: boolean;
+  };
   id: string;
   isArchived: boolean;
   isMuted: boolean;
@@ -85,6 +95,7 @@ export type ThreadMessageDto = {
   editedAt: string | null;
   id: string;
   isFromCurrentActor: boolean;
+  reactions: ReactionSummary;
   replyTo: {
     id: string;
     preview: string;
@@ -294,7 +305,12 @@ export async function getConversationThreadForActor(
     }
   }
 
-  const replyLookup = await loadReplyTargetMessages(replyTargetIds);
+  const messageIds = orderedMessages.map((message) => message.id);
+
+  const [replyLookup, reactionLookup] = await Promise.all([
+    loadReplyTargetMessages(replyTargetIds),
+    loadReactionsForMessages(messageIds, account.id),
+  ]);
 
   const unreadByConversation = await loadUnreadCountByConversation(account.id, [
     conversationRow.id,
@@ -319,6 +335,7 @@ export async function getConversationThreadForActor(
       counterpartParticipant: counterpartRow,
       message,
       participant: participantRow,
+      reactionLookup,
       replyLookup,
     }),
   );
@@ -354,6 +371,7 @@ function buildConversationListItem({
   const blockState = blockLookup.get(counterpartParticipant.app_user_id) ?? "active";
 
   const previewSource = lastMessage;
+  const hasUnread = unreadCount > 0;
 
   return {
     blockState,
@@ -362,6 +380,11 @@ function buildConversationListItem({
       avatarUrl: counterpart.avatar_url,
       displayName: counterpartName,
       role: counterpartParticipant.participant_role,
+    },
+    filterFlags: {
+      hasUnread,
+      isArchived: participant.is_archived,
+      isMuted: participant.is_muted,
     },
     id: conversation.id,
     isArchived: participant.is_archived,
@@ -383,12 +406,14 @@ function buildThreadMessage({
   counterpartParticipant,
   message,
   participant,
+  reactionLookup,
   replyLookup,
 }: {
   account: Pick<ResolvedAuthAccount, "id">;
   counterpartParticipant: ParticipantRecord;
   message: ThreadMessageRecord;
   participant: ParticipantRecord;
+  reactionLookup: Map<string, ReactionSummary>;
   replyLookup: Map<string, MessagePreviewRecord>;
 }): ThreadMessageDto {
   const isOwn = message.sender_app_user_id === account.id;
@@ -399,6 +424,9 @@ function buildThreadMessage({
   const replyTarget = message.reply_to_message_id
     ? replyLookup.get(message.reply_to_message_id) ?? null
     : null;
+  const reactions = isRemoved
+    ? emptyReactionSummary()
+    : reactionLookup.get(message.id) ?? emptyReactionSummary();
 
   return {
     body: isRemoved ? REMOVED_MESSAGE_BODY : message.body,
@@ -406,6 +434,7 @@ function buildThreadMessage({
     editedAt: message.edited_at,
     id: message.id,
     isFromCurrentActor: isOwn,
+    reactions,
     replyTo: replyTarget
       ? {
           id: replyTarget.id,
@@ -681,6 +710,11 @@ export function buildPreviewConversationList(): ConversationListDto {
           displayName: previewCounterpart,
           role: "tutor",
         },
+        filterFlags: {
+          hasUnread: true,
+          isArchived: false,
+          isMuted: false,
+        },
         id: "preview-conversation",
         isArchived: false,
         isMuted: false,
@@ -718,6 +752,7 @@ export function buildPreviewConversationThread(): MessageThreadDto {
         editedAt: null,
         id: "preview-message-1",
         isFromCurrentActor: true,
+        reactions: emptyReactionSummary(),
         replyTo: null,
         senderRole: "student",
         status: "sent",
@@ -728,6 +763,7 @@ export function buildPreviewConversationThread(): MessageThreadDto {
         editedAt: null,
         id: "preview-message-2",
         isFromCurrentActor: false,
+        reactions: emptyReactionSummary(),
         replyTo: null,
         senderRole: "tutor",
         status: "sent",
@@ -738,6 +774,7 @@ export function buildPreviewConversationThread(): MessageThreadDto {
         editedAt: null,
         id: "preview-message-3",
         isFromCurrentActor: false,
+        reactions: emptyReactionSummary(),
         replyTo: null,
         senderRole: "tutor",
         status: "sent",

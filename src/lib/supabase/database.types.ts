@@ -35,6 +35,7 @@ import type {
   AbuseReportStatus,
   AbuseReportType,
   ConversationStatus,
+  MessageReactionKey,
   MessageStatus,
   ParticipantRole,
   UserBlockStatus,
@@ -309,6 +310,15 @@ type MessageRow = {
   removed_at: string | null;
   reply_to_message_id: string | null;
   sender_app_user_id: string;
+  updated_at: string;
+};
+
+type MessageReactionRow = {
+  created_at: string;
+  id: string;
+  message_id: string;
+  reaction_key: MessageReactionKey;
+  reactor_app_user_id: string;
   updated_at: string;
 };
 
@@ -1030,6 +1040,17 @@ export type MentorIbDatabase = {
         Row: JobRunRow;
         Update: Partial<
           Omit<JobRunRow, "attempt_number" | "created_at" | "id" | "job_type" | "updated_at">
+        >;
+      };
+      message_reactions: {
+        Insert: Pick<
+          MessageReactionRow,
+          "message_id" | "reaction_key" | "reactor_app_user_id"
+        >;
+        Relationships: [];
+        Row: MessageReactionRow;
+        Update: Partial<
+          Pick<MessageReactionRow, "reaction_key">
         >;
       };
       message_reads: {

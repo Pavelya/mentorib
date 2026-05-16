@@ -1,0 +1,147 @@
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filterChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filterSearch {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.listItemRow {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.listItemLink {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.listItemMenu {
+  display: flex;
+  align-items: flex-start;
+  padding-top: var(--space-3);
+}
+
+.listMuted {
+  opacity: 0.75;
+}
+
+.listMuted .unreadBadge {
+  opacity: 0.6;
+}
+
+.listEmpty {
+  padding: var(--space-3) var(--space-1);
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+  line-height: var(--line-body);
+}
+
+.threadStatusRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.04em;
+  color: var(--ink-500);
+}
+
+.onlineDot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--state-positive-border, var(--state-trust-border));
+}
+
+.typingIndicator {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: var(--caption);
+  font-style: italic;
+}
+
+.reactionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.reactionTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-panel-soft);
+  color: var(--ink-700);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) ease,
+    background var(--motion-fast) ease;
+}
+
+.reactionTrigger:hover,
+.reactionTrigger:focus-visible {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.reactionPicker {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-2);
+}
+
+.reactionPickerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-700);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) ease,
+    background var(--motion-fast) ease;
+}
+
+.reactionPickerButton:hover,
+.reactionPickerButton:focus-visible {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.reactionPickerButtonActive {
+  border-color: var(--state-trust-border);
+  background: var(--surface-raised);
+}
+
+.reactionPickerButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

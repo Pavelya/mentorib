@@ -48,6 +48,35 @@ export type ProductEvent =
         lesson_id: string;
         subject_slug: string | null;
       };
+    }
+  | {
+      name: "message_reaction_toggled";
+      properties: {
+        action: "added" | "removed" | "switched";
+        conversation_id: string;
+        message_id: string;
+        reaction_key:
+          | "thumbs_up"
+          | "heart"
+          | "laugh"
+          | "celebrate"
+          | "thinking"
+          | "clap";
+      };
+    }
+  | {
+      name: "conversation_muted_toggled";
+      properties: {
+        action: "enabled" | "disabled";
+        conversation_id: string;
+      };
+    }
+  | {
+      name: "conversation_archived_toggled";
+      properties: {
+        action: "enabled" | "disabled";
+        conversation_id: string;
+      };
     };
 
 export type ProductEventName = ProductEvent["name"];

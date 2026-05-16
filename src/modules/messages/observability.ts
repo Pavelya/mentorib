@@ -5,6 +5,7 @@ type SafeMessageEventPayload = {
   body_length?: number;
   conversation_id?: string;
   message_id?: string;
+  reaction_key?: string;
   reason?: string;
   recipient_app_user_id?: string;
   unread_marked?: number;

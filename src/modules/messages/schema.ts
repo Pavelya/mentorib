@@ -15,6 +15,7 @@ import {
   abuseReportStatuses,
   abuseReportTypes,
   conversationStatuses,
+  messageReactionKeys,
   messageStatuses,
   participantRoles,
   userBlockStatuses,
@@ -157,6 +158,33 @@ export const messageReads = pgTable(
       table.app_user_id,
     ),
     index("message_reads_app_user_read_at_idx").on(table.app_user_id, table.read_at),
+  ],
+);
+
+export const messageReactions = pgTable(
+  "message_reactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    message_id: uuid("message_id")
+      .notNull()
+      .references(() => messages.id, { onDelete: "cascade" }),
+    reactor_app_user_id: uuid("reactor_app_user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+    reaction_key: text("reaction_key", { enum: messageReactionKeys }).notNull(),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("message_reactions_message_reactor_key").on(
+      table.message_id,
+      table.reactor_app_user_id,
+    ),
+    index("message_reactions_message_idx").on(table.message_id),
   ],
 );
 

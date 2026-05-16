@@ -41,3 +41,21 @@ export const abuseReportStatuses = [
 ] as const;
 
 export type AbuseReportStatus = (typeof abuseReportStatuses)[number];
+
+export const messageReactionKeys = [
+  "thumbs_up",
+  "heart",
+  "laugh",
+  "celebrate",
+  "thinking",
+  "clap",
+] as const;
+
+export type MessageReactionKey = (typeof messageReactionKeys)[number];
+
+export function isMessageReactionKey(value: unknown): value is MessageReactionKey {
+  return (
+    typeof value === "string" &&
+    (messageReactionKeys as readonly string[]).includes(value)
+  );
+}

@@ -1,21 +1,18 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { notFound, redirect } from "next/navigation";
 
-import {
-  ConversationShell,
-  ConversationThread,
-  ScreenState,
-} from "@/components/continuity";
+import { ConversationShell, ScreenState } from "@/components/continuity";
 import {
   ConversationComposer,
   MarkConversationRead,
+  MessagesExperience,
 } from "@/components/messages";
 import styles from "@/components/messages/messages.module.css";
-import { InlineNotice, getButtonClassName } from "@/components/ui";
+import { InlineNotice } from "@/components/ui";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
+  type ResolvedAuthAccount,
 } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import { routeFamilies } from "@/lib/routing/route-families";
@@ -46,9 +43,8 @@ export default async function TutorMessagesPage({ searchParams }: TutorMessagesP
   const requestedConversationId = getSingleValue(resolvedSearchParams.c);
 
   if (!isSupabaseAuthConfigured()) {
-    return renderMessagesPage({
+    return renderPreviewMessagesPage({
       list: buildPreviewConversationList(),
-      previewNotice: true,
       thread: requestedConversationId ? buildPreviewConversationThread() : null,
     });
   }
@@ -63,7 +59,7 @@ export default async function TutorMessagesPage({ searchParams }: TutorMessagesP
     redirect(buildAuthSignInPath(MESSAGES_BASE_PATH) as Route);
   }
 
-  let account: Awaited<ReturnType<typeof ensureAuthAccount>> | null = null;
+  let account: ResolvedAuthAccount | null = null;
 
   try {
     account = await ensureAuthAccount(user);
@@ -116,54 +112,25 @@ export default async function TutorMessagesPage({ searchParams }: TutorMessagesP
     }
   }
 
-  return renderMessagesPage({ list, previewNotice: false, thread });
+  return renderMessagesPage({
+    list,
+    thread,
+  });
 }
 
 function renderMessagesPage({
   list,
-  previewNotice,
   thread,
 }: {
   list: ConversationListDto;
-  previewNotice: boolean;
   thread: MessageThreadDto | null;
 }) {
-  const selectedId = thread?.conversation.id ?? null;
   const hasConversations = list.conversations.length > 0;
-  const showThreadColumn = hasConversations || thread;
 
-  return (
-    <article className={styles.page}>
-      {previewNotice ? (
-        <InlineNotice
-          className={styles.notice}
-          title="Messages preview"
-          tone="info"
-        >
-          <p>
-            Live messaging connects once Supabase auth is configured. The shared shell
-            below previews the conversation list and thread surfaces.
-          </p>
-        </InlineNotice>
-      ) : null}
-
-      {showThreadColumn ? (
-        <ConversationShell
-          basePath={MESSAGES_BASE_PATH}
-          conversations={list.conversations}
-          emptyState={<EmptyListNotice />}
-          selectedConversationId={selectedId}
-          thread={
-            thread ? renderThread(thread, { isPreview: previewNotice }) : <SelectThreadHint />
-          }
-        />
-      ) : (
+  if (!hasConversations && !thread) {
+    return (
+      <article className={styles.page}>
         <ScreenState
-          action={
-            <Link className={getButtonClassName()} href="/tutor/lessons">
-              Open lessons hub
-            </Link>
-          }
           description="Conversations stay attached to a student relationship. They show up here once a student reaches out or you accept a booking request."
           hints={[
             "Threads live across lessons, not per session.",
@@ -172,31 +139,57 @@ function renderMessagesPage({
           kind="empty"
           title="No conversations yet"
         />
-      )}
-    </article>
-  );
-}
-
-function renderThread(thread: MessageThreadDto, options: { isPreview: boolean }) {
-  const composerSlot = options.isPreview
-    ? undefined
-    : renderComposerSlot(thread);
+      </article>
+    );
+  }
 
   return (
-    <>
-      {options.isPreview ? null : (
+    <article className={styles.page}>
+      {thread ? (
         <MarkConversationRead
           conversationId={thread.conversation.id}
           unreadCount={thread.conversation.unreadCount}
         />
-      )}
-      <ConversationThread
-        composerSlot={composerSlot}
-        formatTimestamp={formatThreadTimestamp}
+      ) : null}
+      <MessagesExperience
+        actorRole="tutor"
+        basePath={MESSAGES_BASE_PATH}
+        conversations={list.conversations}
+        selectedConversationId={thread?.conversation.id ?? null}
         thread={thread}
-        threadActions={<ThreadSafetyActions thread={thread} basePath={MESSAGES_BASE_PATH} />}
+        threadComposer={thread ? renderComposerSlot(thread) : null}
       />
-    </>
+    </article>
+  );
+}
+
+function renderPreviewMessagesPage({
+  list,
+  thread,
+}: {
+  list: ConversationListDto;
+  thread: MessageThreadDto | null;
+}) {
+  return (
+    <article className={styles.page}>
+      <InlineNotice
+        className={styles.notice}
+        title="Messages preview"
+        tone="info"
+      >
+        <p>
+          Live messaging connects once Supabase auth is configured. The shared shell
+          below previews the conversation list and thread surfaces.
+        </p>
+      </InlineNotice>
+      <ConversationShell
+        basePath={MESSAGES_BASE_PATH}
+        conversations={list.conversations}
+        emptyState={null}
+        selectedConversationId={thread?.conversation.id ?? null}
+        thread={null}
+      />
+    </article>
   );
 }
 
@@ -242,68 +235,6 @@ function renderComposerSlot(thread: MessageThreadDto) {
       counterpartName={counterpartName}
     />
   );
-}
-
-function ThreadSafetyActions({
-  thread,
-  basePath,
-}: {
-  thread: MessageThreadDto;
-  basePath: string;
-}) {
-  const counterpartId = thread.conversation.counterpart.appUserId;
-
-  return (
-    <>
-      <Link
-        className={getButtonClassName({ size: "compact", variant: "secondary" })}
-        href={`${basePath}?c=${thread.conversation.id}&action=block&user=${counterpartId}` as Route}
-      >
-        {thread.blockState === "blocked_by_me" ? "Manage block" : "Block"}
-      </Link>
-      <Link
-        className={getButtonClassName({ size: "compact", variant: "ghost" })}
-        href={`${basePath}?c=${thread.conversation.id}&action=report&user=${counterpartId}` as Route}
-      >
-        Report
-      </Link>
-    </>
-  );
-}
-
-function EmptyListNotice() {
-  return (
-    <ScreenState
-      className={styles.emptyState}
-      description="Once a student starts a conversation with you, it shows up in this list."
-      kind="empty"
-      title="No conversations yet"
-    />
-  );
-}
-
-function SelectThreadHint() {
-  return (
-    <ScreenState
-      description="Open any conversation from the list to see the shared message shell with the student and lesson context kept visible."
-      hints={["Threads stay attached to the student relationship, not the lesson."]}
-      kind="empty"
-      title="Select a conversation"
-    />
-  );
-}
-
-function formatThreadTimestamp(isoTimestamp: string) {
-  const date = new Date(isoTimestamp);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
 }
 
 function getSingleValue(value: string | string[] | undefined) {

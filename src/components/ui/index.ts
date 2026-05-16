@@ -20,6 +20,7 @@ export {
   type OverflowMenuTriggerProps,
 } from "./overflow-menu-trigger";
 export { Panel } from "./panel";
+export { ReactionGlyph, getReactionLabel } from "./reaction-glyph";
 export {
   getPopoverTriggerProps,
   Popover,

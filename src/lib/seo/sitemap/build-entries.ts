@@ -71,5 +71,17 @@ export async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     buildSeoLandingSitemapEntries(),
   ]);
 
-  return [...staticEntries, ...tutorProfileEntries, ...seoLandingEntries];
+  const tutorSearchEntry = {
+    changeFrequency: "daily" as const,
+    lastModified: new Date(),
+    priority: 0.75,
+    url: buildAbsoluteUrl("/tutors").toString(),
+  };
+
+  return [
+    ...staticEntries,
+    tutorSearchEntry,
+    ...tutorProfileEntries,
+    ...seoLandingEntries,
+  ];
 }

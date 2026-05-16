@@ -10,5 +10,9 @@ export {
   ConversationShell,
   ConversationThread,
 } from "./conversation-shell";
-export { MatchRow, type MatchRowShortlistState } from "./match-row";
+export {
+  MatchRow,
+  type BrowseTutorRowDto,
+  type MatchRowShortlistState,
+} from "./match-row";
 export { ScreenState } from "./screen-state";

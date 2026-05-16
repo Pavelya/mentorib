@@ -1,0 +1,108 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.hero {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lede {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-lg);
+  line-height: var(--line-body);
+  max-width: 60ch;
+}
+
+.searchSurface {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.searchBar {
+  display: grid;
+  max-width: 36rem;
+}
+
+.filterRail {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.filterGroup {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.filterGroupLabel {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.filterGroupItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.languageFlag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.375rem;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--border-subtle);
+}
+
+.resultsList {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.resultsMeta {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.04em;
+}
+
+.resultsGrid {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.paginationMeta {
+  color: var(--ink-700);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.04em;
+}

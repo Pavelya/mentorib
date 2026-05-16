@@ -1,8 +1,19 @@
 # Mentor IB Search Platform Decision v1
 
 **Date:** 2026-04-08
-**Status:** Standalone architecture decision for Postgres-first search versus Algolia-from-day-one adoption
+**Status:** Amended on 2026-05-16 by `P2-GROW-001`: the original Postgres-first recommendation is **superseded for the public `/tutors` browse surface only**. Algolia is the live backend for public browse search from day one of Phase 2. The rest of this document still applies: matching, ranking, booking, trust, and availability stay on Postgres and application-owned logic, and Algolia is never queried by the matching pipeline.
 **Scope:** platform choice for public browse search, relationship to matching, MVP cost and complexity tradeoffs, migration risk, and recommended direction
+
+## 0. Amendment — `P2-GROW-001` (2026-05-16)
+
+The Phase 2 product decision was to ship a public-facing `/tutors` search page as soon as profile data became indexable, not to wait for usage evidence on a Postgres-backed browse surface. As a result:
+
+- Algolia owns the public browse search index (`tutors_dev` / `tutors_preview` / `tutors_prod`).
+- The index is populated from the same canonical sources used by `src/modules/tutors/public-profile.ts` through `src/modules/search/public-tutor-indexer.ts`, hooked into the tutor profile editor and admin approval lifecycle.
+- The search-only API key (browser-safe) is shipped via `NEXT_PUBLIC_ALGOLIA_SEARCH_ONLY_KEY`; the admin key (`ALGOLIA_ADMIN_API_KEY`) is server-only and never imported into client bundles.
+- Matching (`/match`, `/results`) continues to use the Postgres-backed, application-owned matching pipeline as described in §4. The matching path **never** queries Algolia.
+
+The remainder of this document stays authoritative for the broader architecture posture (matching ownership, adapter discipline, vendor-decoupling boundaries). The MVP-era "do not adopt Algolia day one" recommendation below no longer reflects the platform direction for public browse search, but is preserved for historical context.
 
 ## 1. Why This Document Exists
 

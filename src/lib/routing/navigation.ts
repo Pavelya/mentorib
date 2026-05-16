@@ -10,6 +10,7 @@ export type NavItem = {
 export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
   public: [
     { href: "/", label: "Home" },
+    { href: "/tutors" as Route, label: "Find Tutors" },
     { href: "/match", label: "Get Matched" },
     { href: "/how-it-works", label: "How It Works" },
     { href: "/trust-and-safety", label: "Trust & Safety" },
@@ -30,6 +31,7 @@ export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
   student: [
     { href: "/match", label: "Match" },
     { href: "/results", label: "Results" },
+    { href: "/tutors" as Route, label: "Browse" },
     { href: "/saved", label: "Saved" },
     { href: "/messages", label: "Messages" },
     { href: "/lessons", label: "Lessons" },

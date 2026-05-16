@@ -2,6 +2,7 @@ import { expect, test, type ConsoleMessage, type Page } from "@playwright/test";
 
 const PUBLIC_ROUTES: Array<{ path: string; titlePattern: RegExp }> = [
   { path: "/", titlePattern: /Mentor IB/i },
+  { path: "/tutors", titlePattern: /Mentor IB/i },
   { path: "/how-it-works", titlePattern: /Mentor IB/i },
   { path: "/trust-and-safety", titlePattern: /Mentor IB/i },
   { path: "/support", titlePattern: /Mentor IB/i },

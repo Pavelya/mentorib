@@ -27,6 +27,7 @@
     "@supabase/supabase-js": "2.104.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "algoliasearch": "^5.52.1",
     "country-flag-icons": "^1.6.16",
     "drizzle-orm": "0.45.2",
     "lucide-react": "^1.11.0",

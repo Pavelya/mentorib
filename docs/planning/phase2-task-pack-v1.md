@@ -192,7 +192,7 @@ Bad parallel examples:
 | 2 | `P2-MSG-001` | `ready` | `P2` | 3 | Rich messaging behaviors wave |
 | 2 | `P2-APPLY-002` | `ready` | `P2` | 1 | Internal tutor review queue and approval decisions |
 | 2 | `P2-PROFILE-001` | `ready` | `P1` | 1 | Tutor profile editor and listing publication controls |
-| 2 | `P2-GROW-001` | `planned` | `P3` | 4 | Public browse search scaling and external search activation path |
+| 2 | `P2-GROW-001` | `ready` | `P2` | 4 | Public tutor search page powered by Algolia |
 | 3 | `P2-MEDIA-001` | `draft` | `P1` | 1 | Tutor credential, media, and intro video management |
 | 3 | `P2-OPS-001` | `draft` | `P2` | 3 | Admin trust and report-management internal surfaces |
 | 3 | `P2-OPS-003` | `draft` | `P2` | 3 | Admin reference-data and policy broadcast management |
@@ -1229,49 +1229,137 @@ Tests:
 - Reuse `src/modules/notifications/email-delivery.ts` skip-reason taxonomy by adding `channel_disabled_by_preference` next to the existing `channel_in_app_only`. Do not introduce a parallel skip surface.
 - If a `Switch`/`Toggle` primitive does not exist in `src/components/ui/`, extending the DS is in scope for this task per the DS-first rule; update `component-inventory-v1.md` in the same commit. If one already exists, reuse it as-is.
 
-## 11.14 `P2-GROW-001` Public browse search scaling and external search activation path
+## 11.14 `P2-GROW-001` Public tutor search page powered by Algolia
 
-**Status:** `planned`
-**Priority:** `P3`
+**Status:** `ready`
+**Priority:** `P2`
 **Wave:** 4
-**Depends on:** measurable browse-search or performance trigger
+**Depends on:** `P2-PROFILE-001` (tutor profile editor and publication controls — provides the canonical `listed` / `public_visible` / `approved` state used to populate the Algolia index)
+
+**Architectural note — supersedes prior platform direction**
+
+The earlier recommendation in `docs/architecture/search-platform-decision-v1.md` to use a Postgres-first browse search is explicitly overridden for this task. Algolia is the live backend for the public tutor search page from day one. Matching (`/match`, `/results`) remains internal, Postgres-backed, and application-owned — Algolia is **only** used for the public tutor search/browse surface. Update `search-platform-decision-v1.md` in the same change to reflect this product decision.
 
 **Goal**
 
-Respond to real browse-search scale pressure by activating the approved search-scaling path without changing the product's matching-first architecture.
+Introduce a public-facing tutor search page at `/tutors` where any visitor (logged-out, student, or tutor) can search and filter tutors using a typo-tolerant Algolia-backed index. Add navigation to this page across all student-facing surfaces and the public header. Index public tutor data into Algolia from the tutor profile lifecycle so listing/unlisting/suspension stay in sync.
 
 **Required source docs**
 
-- `docs/architecture/search-platform-decision-v1.md`
+- `docs/architecture/search-platform-decision-v1.md` (will be amended by this task)
 - `docs/architecture/query-performance-slos-and-scaling-thresholds-v1.md`
+- `docs/architecture/search-and-query-architecture-v1.md`
 - `docs/data/data-dto-and-query-boundary-map-v1.md`
-- `docs/data/projection-sql-patterns-v1.md`
-- `docs/architecture/analytics-and-product-telemetry-architecture-v1.md`
+- `docs/architecture/seo-and-ai-discoverability-v1.md`
+- `docs/architecture/security-architecture-v1.md` (Algolia search-only key posture, secured API keys)
+- `docs/architecture/configuration-and-governance-architecture-v1.md` (env handling, vendor config)
+- `docs/data/reference-data-governance-v1.md` (subject / language / level filter vocabularies)
+- `docs/design-system/agent-ui-rules.md`
+- `docs/design-system/component-specs-core-v1.md` (`MatchRow` variants, including the `browse` variant)
+- `docs/design-system/component-inventory-v1.md`
+- `docs/design-system/tokens-cheatsheet-v1.md`
 
 **Scope**
 
-- evidence-based threshold review
-- browse-search adapter or export activation path
-- public discovery record parity checks
-- conditional external search activation for public browse only
+Routing and topology
+
+- new route `/tutors` (index) in the `(public)` route group, sibling to existing `/tutors/[slug]`
+- public route family, SEO route class A (indexable base page, query-string variants `noindex` via metadata — follow the SEO posture used by existing public pages)
+- add to `src/lib/routing/navigation.ts`:
+  - `public` family: add `{ href: "/tutors", label: "Find Tutors" }` near the top (after Home)
+  - `student` family: add `{ href: "/tutors", label: "Browse" }` so the link appears on every student page through `AppFrame`
+- no changes to `tutor`, `account`, `setup`, `auth`, or `internal` nav entries
+- update `src/app/sitemap.ts` to include `/tutors`
+
+Search module (new `src/modules/search/`)
+
+- `algolia-server.ts`: server-only admin client factory using `ALGOLIA_ADMIN_API_KEY`. Never imported into client bundles.
+- `algolia-search-client.ts`: browser-safe client using `NEXT_PUBLIC_ALGOLIA_APP_ID` + `NEXT_PUBLIC_ALGOLIA_SEARCH_ONLY_KEY`.
+- `public-tutor-record.ts`: canonical `PublicTutorSearchRecord` DTO and `buildPublicTutorSearchRecord(profile, related, reviewSummary)` builder. Only public-safe fields (display name, public slug, headline, subjects, languages, level coverage, country flag code, hourly/trial price + currency, average rating, review count, lessons taught, examiner-badge flag, intro-video presence, next-availability hint if cheaply derivable, `updated_at`). No private application answers, no contact details, no internal trust signals, no moderation data.
+- `public-tutor-indexer.ts`: idempotent `upsertPublicTutorRecord(tutorId)` and `removePublicTutorRecord(tutorId)`. The upsert reads from the same canonical sources used by `src/modules/tutors/public-profile.ts` and is only callable from server contexts.
+- `index-settings.ts`: declarative Algolia index settings (searchable attributes, attributes for faceting, ranking, custom ranking on `reviewCount` / `averageRating`, typo tolerance). A `scripts/algolia-apply-settings.ts` script applies settings from this declaration so the configuration is checked into the repo, not configured in the dashboard.
+
+Index synchronization
+
+- hook tutor profile lifecycle so the index stays consistent:
+  - on transition into `application_status = approved` AND `profile_visibility_status = public_visible` AND `public_listing_status = listed` → `upsertPublicTutorRecord`
+  - on any transition that leaves that triple (admin hold, tutor pause/delist, suspension, profile edit losing eligibility) → `removePublicTutorRecord`
+  - on profile content edits while still listed → `upsertPublicTutorRecord` to refresh the record
+- wire these calls inside `src/modules/tutors/tutor-profile-editor-service.ts` and the admin approval pathway in `src/modules/tutors/application-review-service.ts` (do not introduce a separate webhook layer)
+- failures from Algolia must not roll back the underlying profile transition; log and surface through the existing error reporting path used by other server actions
+
+UI
+
+- server-rendered `/tutors` page using `AppFrame` and the existing public layout
+- search bar uses the DS `TextField` primitive
+- filter rail uses the DS `Chip` primitive with the `pressed` state added in `P2-DS-MENU-001` for active filters; filter options for subject, language, and IB level pulled from `src/modules/reference/discovery.ts` (no route-local arrays)
+- result list uses `MatchRow` with the `browse` variant. If the `browse` variant is not yet implemented in `src/components/continuity/match-row.tsx`, extend the component (and update `docs/design-system/component-inventory-v1.md` accordingly in the same commit) — do not create a route-local card.
+- empty state uses the existing `ScreenState` continuity primitive
+- pagination is handled by Algolia (page-based, not infinite scroll)
+- the search experience is client-rendered after first paint (using `algoliasearch` directly from the public module — implement query/facet/pagination state with React state + URL search params; do **not** add `react-instantsearch` or any other heavier package unless explicitly approved); the page shell itself is a Server Component
+- query string is the source of truth (`q`, `subject`, `language`, `level`, `page`) so deep links and SSR-first paint remain stable
+- icons through `src/components/ui/icon.tsx`; flags through `src/components/ui/flag.tsx`; money formatting through `src/modules/pricing/**`
+
+Environment variables (add to `.env.example` with empty values and document in the task report)
+
+- `NEXT_PUBLIC_ALGOLIA_APP_ID` — Algolia application ID, safe to expose in the browser bundle
+- `NEXT_PUBLIC_ALGOLIA_SEARCH_ONLY_KEY` — search-only API key restricted to the public tutors index; safe to expose
+- `NEXT_PUBLIC_ALGOLIA_TUTORS_INDEX` — index name (e.g. `tutors_prod` / `tutors_preview` / `tutors_dev`)
+- `ALGOLIA_ADMIN_API_KEY` — server-only admin key used by the indexer and the settings script; must never be imported into client code
+- all four go through the existing typed env module; missing required server vars must fail server actions clearly, not silently
+
+Telemetry
+
+- emit PostHog events `public_tutor_search_performed`, `public_tutor_search_filter_changed`, and `public_tutor_search_result_clicked` per `docs/architecture/analytics-and-product-telemetry-architecture-v1.md`
+
+SEO
+
+- `/tutors` base page is indexable with descriptive metadata and structured data consistent with existing public pages
+- any URL with non-empty `q` / `page` / filter params renders with `robots: noindex, follow` to avoid indexing of every filter permutation
 
 **Out of scope**
 
-- changing matching ownership
-- making Algolia mandatory before the trigger exists
-- mixing browse-search infrastructure with ranking logic
+- changing the matching-first product model: `/match` and `/results` continue to use internal Postgres-backed matching; Algolia is never queried by the matching pipeline
+- ranking, fit scoring, availability overlap computation, trust calculations
+- adding `react-instantsearch` or any other Algolia UI library
+- a backfill admin UI — a one-shot rebuild script is in scope but a long-term admin surface is not
+- compare / saved / shortlist behavior changes (these already exist on `/results` and `/saved`)
+- tutor-side or admin-side search surfaces
+- internationalized or geo-aware filtering beyond the existing reference vocabularies
 
 **Acceptance criteria**
 
-- the trigger condition is explicit and measurable before work begins
-- matching remains internal and application-owned
-- public search DTO and projection contracts remain stable
-- no user-facing search rewrite is required if the adapter changes
+- `/tutors` renders publicly with a working Algolia-backed search and at least subject, language, and IB-level filters using shared reference vocabularies
+- `MatchRow browse` variant is used for results; no route-local card / chip / panel CSS introduced
+- "Find Tutors" / "Browse" link is present in both the public top nav and every student-family page through `AppFrame`
+- the Algolia index is populated and kept in sync by `src/modules/search/public-tutor-indexer.ts`; toggling a tutor's listing status in the profile editor results in the record appearing or disappearing from search within one round-trip
+- only public-safe fields appear in the index; no application answers, contact details, internal trust signals, or moderation data
+- the four env vars exist in `.env.example` and runtime fails cleanly when server-side vars are missing
+- search-only key is the only Algolia key shipped to the browser; admin key is never imported into client bundles
+- `src/modules/search/index-settings.ts` defines settings declaratively and `scripts/algolia-apply-settings.ts` can re-apply them
+- `docs/architecture/search-platform-decision-v1.md` is amended to record the Algolia-direct decision for public browse
+- `docs/design-system/component-inventory-v1.md` (and `tokens-cheatsheet-v1.md` if tokens changed) is updated in the same commit if `MatchRow browse` or any DS primitive is extended
 
 **Verification**
 
-- threshold evidence review
-- contract-parity review
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm build`
+- `pnpm lint:arch`
+- `pnpm test`
+- `pnpm test:e2e` (route covers a public page, navigation, and `sitemap.ts` changes)
+- manual: with Algolia credentials in `.env.local`, run the settings script, run the indexer on a seeded tutor, visit `/tutors`, exercise search, filters, pagination, and a result-click handoff into `/tutors/[slug]`
+- manual: toggle `public_listing_status` on a tutor through the profile editor and confirm the Algolia record is added/removed
+- bundle inspection: confirm `ALGOLIA_ADMIN_API_KEY` does not appear in any client chunk
+
+**Required manual steps**
+
+- create the Algolia application and the three indexes (`tutors_dev`, `tutors_preview`, `tutors_prod`) in the Algolia dashboard
+- create a search-only API key restricted to the appropriate index name, and copy the admin API key
+- populate `.env.local` with the four variables above
+- run `pnpm tsx scripts/algolia-apply-settings.ts` once per environment to seed index settings
+- run the one-shot rebuild script against the dev index to backfill from existing eligible tutor profiles
+- add the same four variables to the Vercel project (Preview + Production), with admin key marked server-only
 
 ## 11.15 `P2-QUALITY-001` Phase 2 verification and operational hardening pass
 

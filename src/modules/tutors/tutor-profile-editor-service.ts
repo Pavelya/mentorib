@@ -4,6 +4,7 @@ import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import { normalizeTimezone } from "@/lib/datetime";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { createTutorListingStatusChangedNotification } from "@/modules/notifications/lifecycle";
+import { syncPublicTutorRecord } from "@/modules/search/public-tutor-indexer";
 import {
   loadActiveReferenceLanguages,
   loadActiveReferenceLearningNeedOptionValues,
@@ -204,6 +205,9 @@ export async function updateTutorProfile(
     .map((gate) => gate.key);
 
   if (missingGateKeys.length === 0) {
+    // Profile edits while still listed need a fresh record so subjects,
+    // languages, headline, pricing, etc. stay in sync with the index.
+    await syncPublicTutorRecord(profile.id);
     return {
       autoPaused: false,
       publicListingStatus: "listed",
@@ -229,6 +233,8 @@ export async function updateTutorProfile(
     reason: "gate_regression",
     tutorProfileId: profile.id,
   });
+
+  await syncPublicTutorRecord(profile.id);
 
   return {
     autoPaused: true,
@@ -299,6 +305,8 @@ export async function setTutorListingPublication(
       tutorProfileId: profile.id,
     });
 
+    await syncPublicTutorRecord(profile.id);
+
     return { autoPaused: false, publicListingStatus: "not_listed" };
   }
 
@@ -354,6 +362,8 @@ export async function setTutorListingPublication(
     reason: "self",
     tutorProfileId: profile.id,
   });
+
+  await syncPublicTutorRecord(profile.id);
 
   return { autoPaused: false, publicListingStatus: "listed" };
 }

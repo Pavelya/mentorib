@@ -4,6 +4,7 @@ import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { createNotification, NOTIFICATION_OBJECT_TYPES } from "@/modules/notifications/service";
 import { scheduleNotificationEmailDelivery } from "@/modules/notifications/email-delivery";
 import { logEmailEvent } from "@/lib/email/logging";
+import { syncPublicTutorRecord } from "@/modules/search/public-tutor-indexer";
 import type { TutorApplicationStatus } from "@/modules/tutors/constants";
 import {
   getAvailableReviewActions,
@@ -172,6 +173,13 @@ async function runReviewTransition(
     reviewerNote,
     tutorProfileId: profile.id,
   });
+
+  // Reflect the new application status in the public search index. Approve
+  // makes the profile eligible (subject to listing status); the other
+  // transitions either leave or never enter the eligibility triple.
+  if (action !== "claim") {
+    await syncPublicTutorRecord(profile.id);
+  }
 
   return {
     applicationStatus: nextStatus,

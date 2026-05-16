@@ -12,6 +12,7 @@ export const notificationTypes = [
   "review_submitted",
   "tutor_application_submitted",
   "tutor_application_reviewed",
+  "tutor_listing_status_changed",
   "payout_processed",
   "policy_notice_updated",
 ] as const;
@@ -102,6 +103,7 @@ export const NOTIFICATION_TYPE_TO_CATEGORY: Record<
   review_submitted: "reviews",
   tutor_application_submitted: "tutor_application_updates",
   tutor_application_reviewed: "tutor_application_updates",
+  tutor_listing_status_changed: null,
   payout_processed: null,
   policy_notice_updated: null,
 };

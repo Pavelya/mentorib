@@ -191,7 +191,7 @@ Bad parallel examples:
 | 1 | `P2-NOTIF-PREF-001` | `ready` | `P2` | 2 | Notification preferences and channel controls |
 | 2 | `P2-MSG-001` | `ready` | `P2` | 3 | Rich messaging behaviors wave |
 | 2 | `P2-APPLY-002` | `ready` | `P2` | 1 | Internal tutor review queue and approval decisions |
-| 2 | `P2-PROFILE-001` | `draft` | `P1` | 1 | Tutor profile editor and listing publication controls |
+| 2 | `P2-PROFILE-001` | `ready` | `P1` | 1 | Tutor profile editor and listing publication controls |
 | 2 | `P2-GROW-001` | `planned` | `P3` | 4 | Public browse search scaling and external search activation path |
 | 3 | `P2-MEDIA-001` | `draft` | `P1` | 1 | Tutor credential, media, and intro video management |
 | 3 | `P2-OPS-001` | `draft` | `P2` | 3 | Admin trust and report-management internal surfaces |
@@ -331,49 +331,118 @@ Implement the internal tutor-review surface and decision workflow so application
 
 ## 11.3 `P2-PROFILE-001` Tutor profile editor and listing publication controls
 
-**Status:** `draft`
+**Status:** `ready`
 **Priority:** `P1`
 **Wave:** 1
 **Depends on:** `P2-APPLY-001`
 
 **Goal**
 
-Implement deeper tutor profile management so tutors can improve listing quality, manage public-facing content, and understand how profile completeness affects readiness and visibility.
+Implement the post-approval tutor profile editor and the tutor-owned publication controls so an `approved` tutor can keep their public-facing profile current, see exactly which profile fields gate listing readiness, and flip their public listing between `not_listed` ↔ `listed` (and to/from a self-`paused` state) — without re-using the application flow as a permanent editing surface and without exposing any internal moderation state.
+
+The tutor application flow (`P2-APPLY-001`) is the pre-approval onboarding surface. After approval, the same content (`headline`, `bio`, `hourly_rate_minor`, `currency_code`, `pricing_summary`, `tutor_subject_capabilities`, `tutor_language_capabilities`, `schedule_policies.timezone`) must be editable through a dedicated editor that uses the same domain mutation paths, the same validation, and the same DS primitives, but is shaped for ongoing edits rather than staged submission. This task also adds the tutor-owned listing-publication action so the readiness checklist's terminal step (going live) is a real user action rather than a passive side effect.
 
 **Required source docs**
 
-- `docs/data/data-dto-and-query-boundary-map-v1.md`
-- `docs/foundations/ux-object-model.md`
-- `docs/design-system/design-system-spec-final-v1.md`
-- `docs/architecture/file-and-media-architecture-v1.md`
-- `docs/data/data-ownership-boundary-map-v1.md`
-- `docs/data/tutor-listing-readiness-model-v1.md`
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (§§ 8.6 D5 tutor-private DTO, 9 query owner table — “Public tutor profile” row stays D1, “tutor profile setup state” lives behind D5)
+- `docs/foundations/ux-object-model.md` (§ 3.7 `TutorProfile` two-mode rule: public consumption mode and owner edit mode share one object)
+- `docs/design-system/design-system-spec-final-v1.md` (Panel/Section/Card/Chip/StatusBadge usage; `ChecklistPanel` for readiness)
+- `docs/design-system/component-specs-phase2-v1.md` (§ 11 `ChecklistPanel` — tutor wrapper used for the readiness checklist; reuse the same primitives the apply page already consumes)
+- `docs/design-system/component-specs-core-v1.md` (Panel/Section/Card/Chip/StatusBadge/Avatar/Icon/Flag — no new variants needed)
+- `docs/design-system/agent-ui-rules.md` (DS-first; no route-local card/chip/panel/icon/flag CSS; icons via `src/components/ui/icon.tsx`, flags via `src/components/ui/flag.tsx`; copy discipline)
+- `docs/architecture/file-and-media-architecture-v1.md` (separation of M1 private verification assets, M2 public profile media, M3 derived trust proof, M4 external video references — this task does **not** ship the media surfaces themselves; it only confirms which fields stay out of the editor and are owned by `P2-MEDIA-001`)
+- `docs/data/data-ownership-boundary-map-v1.md` (§§ 9 `tutor_profiles` ownership, 10 tutor capability/credential ownership — owner edit through controlled mutation paths; admin paths separate)
+- `docs/data/tutor-listing-readiness-model-v1.md` (§§ 4 gates 1–6, 5.2 listing-status values, 5.3 gate failure after listing, 7 readiness checklist — canonical contract for the editor’s readiness panel and the publish/pause control)
+- `docs/data/database-enum-and-status-glossary-v1.md` (§§ 8.1 `profile_visibility_status`, 8.2 `application_status`, 8.3 `public_listing_status`, 15.3 `payout_account_status` — canonical enum values)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§§ around `tutor_profiles`, `tutor_subject_capabilities`, `tutor_language_capabilities` write paths — owning tutor through controlled mutation paths; admin paths separate)
+- `docs/data/database-rls-boundaries-v1.md` (RLS posture for tutor-owned tables; no new tables in this task)
+- `docs/data/drizzle-schema-and-query-conventions-v1.md` (module schema and repository conventions — reuse `src/modules/tutors/schema.ts`)
+- `docs/data/api-and-server-action-contracts-v1.md` (§§ 6 Server Action golden path, 8 boundary errors, 14 cache revalidation — “tutor profile edit revalidates public tutor profile path and relevant public tutor tags”)
+- `docs/architecture/route-layout-implementation-map-v1.md` (§ 7.6 tutor family — `/tutor/profile` fits the explicit operational pattern alongside `/tutor/apply`, `/tutor/overview`; § 16 reserved-later note for tutor profile management is now activated)
+- `docs/architecture/canonical-value-ownership-map-v1.md` (canonical-value ownership for statuses; reference-backed labels for subjects/focus areas/languages flow through `src/modules/reference/**`)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016 tutor profile/credential/media management; J-INT-005 admin-owned `paused`/`delisted` flows that the editor must reflect read-only)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/schema.ts` — `tutor_profiles`, `tutor_subject_capabilities`, `tutor_language_capabilities`, `schedule_policies`, `tutor_meeting_preferences` already exist; no migrations needed.
+- `src/modules/tutors/application.ts` — `TutorApplicationDraftInput`, `validateTutorApplicationDraft`, `buildResolvedCapabilityPairs`, `parseHourlyRateMajor`, `formatHourlyRateMajor`, `evaluateTutorProfileMinimum` (via `listing-readiness.ts`), `buildApplicationOptions`. These are the authoritative validators and option builders for the editor; the new profile-editor service must wrap them, not reimplement them.
+- `src/modules/tutors/listing-readiness.ts` — reuse `evaluateTutorProfileMinimum` for gate 2.
+- `src/modules/tutors/tutor-overview.ts` — already computes gate state for the overview readiness module; the editor's readiness panel must read from the same domain function and not recompute gates independently.
+- `src/app/tutor/apply/actions.ts` + `apply-form.tsx` — same input shape; the editor's Server Actions reuse the same validation and the same Supabase service-role write path, but mutate without ever touching `application_status`.
+- `src/components/ui` primitives (`Panel`, `Section`, `Card`, `Chip`, `StatusBadge`, `Avatar`, `Icon`, `Flag`, `InlineNotice`, `getButtonClassName`) and `src/components/continuity` (`PersonSummary`).
+- `src/app/(public)/tutors/[slug]/page.tsx` — the “preview public profile” link target. The editor’s preview action must open this existing route in a new tab and must not bypass `evaluateTutorProfileIndexability`.
 
 **Scope**
 
-- tutor profile editor DTO and service boundary
-- publication-status and preview controls
-- public versus private field separation
-- profile-quality or readiness guidance reflecting the 6-gate listing readiness model
-- clear indication of which profile fields affect listing gates
+- New tutor route `src/app/tutor/profile/page.tsx` (server component) at `/tutor/profile`, plus `actions.ts`, `profile-form.tsx` (client component), and a route-local `profile.module.css` aligned with the apply page’s structure. The page:
+  - resolves auth + account exactly like `src/app/tutor/apply/page.tsx` (Supabase `getUser` → `ensureAuthAccount` → role/restriction gates → redirect to setup/sign-in as needed)
+  - requires the tutor to hold `application_status === "approved"`; tutors with any other application status are redirected to `/tutor/apply` with a brief explanation `InlineNotice` left on `/tutor/apply` (no new copy on profile)
+  - renders a `Panel`-led editor (DS-first, no route-local card/panel CSS) for the public-content fields and a `ChecklistPanel`-based readiness summary that mirrors `/tutor/apply` post-approval but reflects the **current** profile state rather than the application draft
+  - exposes a single tutor-owned “Publish public listing” / “Pause public listing” / “Resume public listing” action driven by `public_listing_status` (see publication transitions below)
+  - exposes a “Preview public profile” secondary action linking to `/tutors/${publicSlug}` in a new tab, only when `publicSlug` exists
+- New domain module entry points in `src/modules/tutors`:
+  - `tutor-profile-editor.ts` (query): `getTutorProfileEditor(account)` returns a `D5` DTO shaped for the owner-edit mode, composed from the existing application reads (reuses `loadActiveReferenceSubjects/FocusAreas/Languages`, `buildApplicationOptions`, capability + language + schedule-policy + meeting-preference loaders). DTO fields: current values, validation options, current `application_status`, current `public_listing_status`, `publicSlug`, per-gate state from `buildReadinessGates` (same function used by `tutor-overview.ts`), the read-only admin-hold reason when `public_listing_status` is `paused`/`delisted` (status enum + tutor-facing copy from `tutor-listing-readiness-model-v1.md` § 5.2), and an `applicantVisibleReviewerNote: null` (this surface never shows reviewer notes — they belong on `/tutor/apply`).
+  - `tutor-profile-editor-service.ts` (command): two Server Actions, called from the new `actions.ts`:
+    - `updateTutorProfile(input)` — validates with the existing `validateTutorApplicationDraft` (renamed wrapper acceptable, but reuse the implementation), writes through the same service-role path the apply action uses, and updates `tutor_profiles.headline/bio/hourly_rate_minor/currency_code/pricing_summary`, plus replaces `tutor_subject_capabilities` and `tutor_language_capabilities` rows. Does **not** touch `application_status`. On approved + listed profiles, the action runs gate evaluation (`evaluateTutorProfileMinimum` + the same gate composition used in `application.ts`) and, if any gate that was previously passing now fails, auto-flips `public_listing_status` from `listed` → `not_listed` in the same transaction and enqueues the existing tutor-listing notification (see notification section). It never auto-flips to `paused`/`delisted` (those are admin-only per `J-INT-005`).
+    - `setTutorListingPublication(action)` — accepts one of three intents: `publish`, `self_pause`, `resume`. Transitions are:
+      - `publish`: `not_listed` → `listed`, allowed only when **all six gates pass** (gate 1 application approved, gate 2 profile minimum complete, gate 3 schedule set, gate 4 meeting link configured, gate 5 payout ready, gate 6 no admin hold). When the listing already auto-evaluates to `eligible` per `tutor-listing-readiness-model-v1.md` § 5.2, the action immediately promotes to `listed`. Failing gates return a `conflict` boundary error with the failing gate keys; the page surfaces the same `ChecklistPanel` items as remaining work.
+      - `self_pause`: `listed` → `not_listed` (do **not** invent a new `self_paused` enum value; `paused`/`delisted` remain admin-owned per `J-INT-005` and the glossary §8.3 definitions). The tutor-facing label can be “Paused by you” but the stored value is `not_listed`. Add a `self_paused_at` timestamp column on `tutor_profiles` to distinguish tutor-initiated unlisting from gate failure — see migration note below.
+      - `resume`: `not_listed` (self-paused) → `listed` if all gates pass; otherwise the action returns `conflict` with the remaining gate keys.
+      - Any transition while `public_listing_status` is `paused` or `delisted` (admin hold) returns `conflict` and renders the existing admin-hold copy from the readiness model § 5.2.
+  - Both actions wrap writes in a single transaction, call `revalidatePath('/tutors/[slug]', 'page')` (and the existing tutor public tag if used), and `revalidatePath('/tutor/profile')` + `/tutor/overview` on success.
+- One **small** migration in `supabase/migrations/` adding `self_paused_at timestamptz null` to `tutor_profiles` and an index `tutor_profiles_self_paused_at_idx`; no enum changes, no new tables. Update `src/modules/tutors/schema.ts` to mirror the column. Include a Supabase DB test covering RLS write authority (owner write only via service role; anon/auth blocked).
+- DTO and copy:
+  - Editor DTO is `D5` (tutor private). It must **not** carry `internal_note`, `tutor_application_reviews` rows, admin reviewer identity, raw `tutor_credentials.review_status`, or unrelated tutors' data.
+  - Public consumption stays `D1` via the existing `getPublicTutorProfileBySlug` path; this task does not change the public DTO shape.
+  - Tutor-facing copy comes verbatim from the readiness-model § 5.2 messages for paused/delisted; supportive (coaching) tone for missing gates; no internal moderation language.
+- Readiness panel uses the same `buildReadinessGates` output already used by `/tutor/apply` and `/tutor/overview`, rendered via `ChecklistPanel` from the design system. Each item must clearly indicate which gate it represents (“Profile minimum”, “Schedule set”, “Meeting link”, “Payouts ready”, plus the admin-hold row only when active per `application.ts:723-739`). Items deep-link with `Link` to the owning surface: profile-minimum → editor section anchor on the same page; schedule → `/tutor/schedule`; meeting → `/tutor/schedule` (meeting preference editor — already there); payouts → `/tutor/earnings`.
+- Notification integration: when `setTutorListingPublication` transitions `not_listed` → `listed` or `listed` → `not_listed` (tutor-initiated), enqueue an in-app notification through the existing notification boundary used by `P1-NOTIF-001`/`P1-NOTIF-002` (`tutor_listing_status_changed` kind — reuse if it exists; if not present, this task adds the kind to the existing kinds enum and queues a tutor-only payload `{ status, reason: "self" | "gate_regression", missingGateKeys: [...] }`; verify whether the kind exists before adding). Auto-flip due to gate regression (from `updateTutorProfile`) uses `reason: "gate_regression"` and includes the failing gate keys.
+- DS-first verification: no route-local card/chip/panel/icon CSS or inline SVGs. Icons via `src/components/ui/icon.tsx`; flags via `src/components/ui/flag.tsx`. Reference-backed labels (subjects, focus areas, languages) flow through `src/modules/reference/**` loaders.
 
 **Out of scope**
 
-- route-family invention without an explicit route-map revision
-- duplicating public and private tutor models
-- generic CMS behavior
+- credential, public media, and intro-video editing surfaces — owned entirely by `P2-MEDIA-001` (this task only ensures the editor leaves their fields untouched and links out where appropriate)
+- review queue, admin pause/delist actions, internal note surfacing — owned by `P2-APPLY-002` (already shipped) and `P2-OPS-001`/`P2-OPS-002`
+- payout onboarding UI or Stripe Connect flow changes — owned by `P1-TUTOR-005` and later `P2-OPS-002`
+- schedule and availability editing — owned by the existing `/tutor/schedule` surface; the readiness panel deep-links there
+- a separate public/private tutor-profile model — the canonical object is one row in `tutor_profiles` with two read shapes; do not introduce a parallel “published draft” model
+- generic CMS-like blocks, rich text, or arbitrary attachments
+- automatic transitions to/from admin-owned `paused`/`delisted` (those remain admin-only per `J-INT-005`)
+- `profile_visibility_status` mutations beyond keeping it in sync with publication (the column predates this task and is not the discovery gate; `public_listing_status` is)
+- introducing a new `self_paused` enum value on `public_listing_status` (kept as `not_listed` + `self_paused_at` timestamp)
+- new search/discovery work — this task only revalidates the existing public tutor route on changes
+- introducing internal `/api/*` endpoints for editor data; reads stay in the Server Component, writes stay in Server Actions
+- new design-system primitives — this task must compose only existing DS components
 
 **Acceptance criteria**
 
-- tutors edit through a role-safe profile editor DTO
-- public and private fields stay explicitly separated
-- publication or listability controls do not expose internal moderation state
-- profile quality guidance feels like coaching, not punishment
+- `/tutor/profile` exists, is gated to `application_status === "approved"` (any other status redirects to `/tutor/apply`), respects all account-state redirects already enforced by `/tutor/apply`, and renders a DS-composed editor with a readiness `ChecklistPanel` and a single publication-control action.
+- The editor DTO is `D5` and carries no internal moderation state (`internal_note`, reviewer identity, `tutor_application_reviews` rows, or `tutor_credentials.review_status`).
+- `updateTutorProfile` validates with the same rules `/tutor/apply` already uses (`validateTutorApplicationDraft`), writes through the same service-role path, and never mutates `application_status`. Subject + language capability replacements happen in a single transaction with the profile update.
+- After a successful `updateTutorProfile` on a `listed` profile that now fails any of gates 2–4 (profile minimum, schedule set, meeting link), `public_listing_status` auto-flips to `not_listed` in the same transaction and the gate-regression notification is enqueued; the public route is revalidated. Auto-flip never crosses into `paused`/`delisted`.
+- `setTutorListingPublication("publish")` succeeds only when all six gates currently pass; otherwise it returns `conflict` with the failing gate keys and the UI surfaces those gates as next steps in the checklist. The transition is `not_listed` → `listed` (no intermediate `eligible` state stored in the row beyond what `tutor-listing-readiness-model-v1.md` § 5.2 already describes — `eligible` remains the transient evaluation result).
+- `setTutorListingPublication("self_pause")` transitions `listed` → `not_listed` and writes `self_paused_at = now()`. `setTutorListingPublication("resume")` clears `self_paused_at` and re-publishes if gates pass.
+- While `public_listing_status` is `paused` or `delisted`, both Server Actions return `conflict`; the UI displays the readiness-model § 5.2 tutor-facing message read-only and offers no “Resume” button.
+- Successful writes revalidate `/tutors/[slug]`, `/tutor/profile`, and `/tutor/overview` (and any existing tutor public cache tag); the next public-profile fetch reflects the change.
+- The migration adds only `self_paused_at` + its index to `tutor_profiles`, has RLS unchanged from the existing posture (owner-readable, service-role write), and ships with a DB test confirming anon/authenticated cannot write `self_paused_at` directly.
+- DS-first holds: no new route-local card/chip/panel/icon CSS, no inline SVGs, no new DS primitives; the page composes existing `Panel`/`Section`/`Card`/`Chip`/`StatusBadge`/`ChecklistPanel`/`Icon`/`Flag` primitives. `pnpm lint:arch` passes.
+- Reference-backed labels (subjects, focus areas, languages) come from `src/modules/reference/**` loaders, not route-local arrays.
+- Copy is coaching, supportive, and avoids internal language; admin-hold rows reuse the canonical strings from the readiness model.
+- Tutors with `application_status` other than `approved` cannot reach the editor; tutors with `approved` but failing gates can save edits but cannot publish.
 
 **Verification**
 
-- DTO and ownership review
-- route-boundary review before implementation if a new route is required
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- Vitest unit tests cover: (a) the publish/self-pause/resume state machine including all `conflict` cases, (b) the auto-flip-on-regression path in `updateTutorProfile` (verify both the status flip and the notification payload’s `missingGateKeys`), (c) DTO leak check ensuring `getTutorProfileEditor` never carries reviewer notes, internal notes, or unrelated tutors’ rows, (d) admin-hold lockout (any tutor action while `paused`/`delisted` returns `conflict`).
+- Supabase DB test covers: migration shape per `database-change-review-checklist-v1.md`, RLS on the new column (owner read OK; anon/auth write denied), and the existing `tutor_profiles` RLS posture is preserved.
+- `pnpm test:e2e` is **not** required (no public route, auth entry, `robots.ts`, or `sitemap.ts` change). Call this out explicitly in the final report.
+- Manual smoke (documented in the report):
+  - sign in as a tutor with `application_status = approved` and all six gates passing → publish → public profile is reachable at `/tutors/${slug}` and `public_listing_status = listed`
+  - same tutor → self-pause → public profile becomes unavailable and `self_paused_at` is set
+  - same tutor → resume → public profile is reachable again
+  - sign in as an approved tutor missing meeting link → publish returns `conflict` and the checklist highlights “Meeting link configured”
+  - sign in as a tutor with `application_status = changes_requested` → `/tutor/profile` redirects to `/tutor/apply`
+  - admin pauses listing via the existing admin path → tutor sees the canonical paused message on `/tutor/profile` and both Server Actions return `conflict`
 
 ## 11.4 `P2-MEDIA-001` Tutor credential, media, and intro video management
 

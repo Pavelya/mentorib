@@ -85,6 +85,7 @@ export const tutorProfiles = pgTable(
     payout_status_synced_at: timestamp("payout_status_synced_at", {
       withTimezone: true,
     }),
+    self_paused_at: timestamp("self_paused_at", { withTimezone: true }),
     created_at: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -102,6 +103,7 @@ export const tutorProfiles = pgTable(
       table.profile_visibility_status,
     ),
     index("tutor_profiles_stripe_account_id_idx").on(table.stripe_account_id),
+    index("tutor_profiles_self_paused_at_idx").on(table.self_paused_at),
   ],
 );
 

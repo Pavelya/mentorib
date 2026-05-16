@@ -1,0 +1,322 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { redirect } from "next/navigation";
+
+import { TimezoneNotice } from "@/components/datetime";
+import {
+  Card,
+  Chip,
+  InlineNotice,
+  Panel,
+  Section,
+  StatusBadge,
+  getButtonClassName,
+} from "@/components/ui";
+import type { ChipTone } from "@/components/ui";
+import {
+  buildPostSignInRedirect,
+  ensureAuthAccount,
+} from "@/lib/auth/account-service";
+import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
+import { getCurrentUserTimezone } from "@/lib/datetime/server";
+import { routeFamilies } from "@/lib/routing/route-families";
+import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  hasRole,
+  isRestrictedAccount,
+  requiresRoleSelection,
+} from "@/modules/accounts/account-state";
+import type { TutorApplicationReadinessGate } from "@/modules/tutors/application";
+import { getTutorProfileEditor } from "@/modules/tutors/tutor-profile-editor";
+
+import { TutorProfileEditorForm } from "./profile-form";
+import { TutorListingPublicationForm } from "./publication-form";
+import styles from "./profile.module.css";
+
+const PROFILE_PATH = "/tutor/profile" as const;
+const APPLY_PATH = "/tutor/apply" as const;
+
+export default async function TutorProfilePage() {
+  const timezone = await getCurrentUserTimezone();
+
+  if (!isSupabaseAuthConfigured()) {
+    return (
+      <article className={styles.page}>
+        <TimezoneNotice timezone={timezone} />
+        <InlineNotice title="Tutor profile preview" tone="info">
+          <p>
+            Live profile editing connects once Supabase auth is configured.
+            Sign in to manage your tutor profile.
+          </p>
+        </InlineNotice>
+      </article>
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email?.trim()) {
+    redirect(buildAuthSignInPath(PROFILE_PATH) as Route);
+  }
+
+  let account: Awaited<ReturnType<typeof ensureAuthAccount>> | null = null;
+  try {
+    account = await ensureAuthAccount(user);
+  } catch {
+    account = null;
+  }
+
+  if (!account) {
+    return (
+      <article className={styles.page}>
+        <InlineNotice title="Tutor profile unavailable" tone="warning">
+          <p>
+            We could not load your account context. Refresh the page or sign in
+            again to continue.
+          </p>
+        </InlineNotice>
+      </article>
+    );
+  }
+
+  if (requiresRoleSelection(account)) {
+    redirect(routeFamilies.setup.defaultHref);
+  }
+
+  if (isRestrictedAccount(account)) {
+    return (
+      <article className={styles.page}>
+        <InlineNotice title="Account access limited" tone="warning">
+          <p>This account cannot manage the tutor profile right now.</p>
+        </InlineNotice>
+      </article>
+    );
+  }
+
+  const canAccessProfile =
+    hasRole(account, "tutor", ["active", "pending"]) ||
+    account.primary_role_context === "tutor";
+
+  if (!canAccessProfile) {
+    redirect(buildPostSignInRedirect(account, PROFILE_PATH) as Route);
+  }
+
+  const editor = await getTutorProfileEditor(account);
+
+  if (
+    editor.state === "no_profile" ||
+    editor.applicationStatus !== "approved"
+  ) {
+    redirect(APPLY_PATH);
+  }
+
+  const publicationStatusLabel = getPublicationLabel(
+    editor.publicListingStatus,
+    editor.selfPausedAt,
+  );
+
+  return (
+    <article className={styles.page}>
+      <header className={styles.intro}>
+        <p className={styles.eyebrow}>Tutor profile</p>
+        <h1 className={styles.title}>Your public profile</h1>
+        <p className={styles.description}>
+          Keep your headline, bio, subjects, and rate current. Mentor IB
+          students see this on your public profile.
+        </p>
+      </header>
+
+      <Panel
+        eyebrow="Listing"
+        title="Public listing"
+        tone={editor.adminHold ? "soft" : "forest"}
+      >
+        <p className={styles.statusLine}>
+          <StatusBadge tone={publicationStatusLabel.tone}>
+            {publicationStatusLabel.label}
+          </StatusBadge>
+          {editor.publicSlug ? (
+            <span className={styles.statusMeta}>
+              Public URL · /tutors/{editor.publicSlug}
+            </span>
+          ) : null}
+        </p>
+        {editor.adminHold ? (
+          <InlineNotice
+            title={
+              editor.adminHold.status === "paused"
+                ? "Profile paused by Mentor IB"
+                : "Profile removed from discovery"
+            }
+            tone="warning"
+          >
+            <p>{editor.adminHold.message}</p>
+          </InlineNotice>
+        ) : (
+          <TutorListingPublicationForm
+            canPublish={editor.canPublish}
+            publicListingStatus={editor.publicListingStatus}
+            selfPausedAt={editor.selfPausedAt}
+          />
+        )}
+        <div className={styles.actionRow}>
+          {editor.publicSlug ? (
+            <Link
+              className={getButtonClassName({
+                size: "compact",
+                variant: "secondary",
+              })}
+              href={`/tutors/${editor.publicSlug}` as Route}
+              prefetch={false}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Preview public profile
+            </Link>
+          ) : null}
+        </div>
+      </Panel>
+
+      <ReadinessChecklistPanel gates={editor.readinessGates} />
+
+      <Panel eyebrow="Edit" title="Edit your profile" tone="default">
+        <TutorProfileEditorForm
+          draft={editor.draft}
+          options={editor.options}
+        />
+      </Panel>
+    </article>
+  );
+}
+
+function ReadinessChecklistPanel({
+  gates,
+}: {
+  gates: TutorApplicationReadinessGate[];
+}) {
+  return (
+    <Section
+      density="default"
+      description="All readiness gates must pass before your profile becomes publicly discoverable."
+      eyebrow="Readiness"
+      title="Listing readiness"
+      titleAs="h2"
+    >
+      <ul className={styles.readinessList}>
+        {gates.map((gate) => (
+          <li key={gate.key}>
+            <Card>
+              <div className={styles.readinessRow}>
+                <div className={styles.readinessText}>
+                  <p className={styles.readinessLabel}>{gate.label}</p>
+                  <p className={styles.readinessDescription}>
+                    {gate.description}
+                  </p>
+                  {getGateActionHref(gate.key) ? (
+                    <Link
+                      className={styles.readinessLink}
+                      href={getGateActionHref(gate.key) as Route}
+                    >
+                      {getGateActionLabel(gate.key)}
+                    </Link>
+                  ) : null}
+                </div>
+                <Chip size="compact" tone={getGateChipTone(gate.state)}>
+                  {getGateChipLabel(gate.state)}
+                </Chip>
+              </div>
+            </Card>
+          </li>
+        ))}
+      </ul>
+    </Section>
+  );
+}
+
+function getGateChipLabel(state: TutorApplicationReadinessGate["state"]): string {
+  switch (state) {
+    case "complete":
+      return "Complete";
+    case "under_review":
+      return "Under review";
+    case "blocked":
+      return "Needs attention";
+    case "in_progress":
+    default:
+      return "In progress";
+  }
+}
+
+function getGateChipTone(state: TutorApplicationReadinessGate["state"]): ChipTone {
+  switch (state) {
+    case "complete":
+      return "positive";
+    case "under_review":
+      return "info";
+    case "blocked":
+      return "warning";
+    case "in_progress":
+    default:
+      return "default";
+  }
+}
+
+function getGateActionHref(
+  key: TutorApplicationReadinessGate["key"],
+): string | null {
+  switch (key) {
+    case "scheduleSet":
+    case "meetingLink":
+      return "/tutor/schedule";
+    case "payoutReady":
+      return "/tutor/earnings";
+    case "profileMinimum":
+      return null;
+    case "applicationApproved":
+    case "noActiveHold":
+    default:
+      return null;
+  }
+}
+
+function getGateActionLabel(
+  key: TutorApplicationReadinessGate["key"],
+): string {
+  switch (key) {
+    case "scheduleSet":
+      return "Open schedule";
+    case "meetingLink":
+      return "Set meeting link";
+    case "payoutReady":
+      return "Open payouts";
+    default:
+      return "";
+  }
+}
+
+function getPublicationLabel(
+  status: import("@/modules/tutors/constants").TutorPublicListingStatus,
+  selfPausedAt: string | null,
+): { label: string; tone: "positive" | "warning" | "info" } {
+  if (status === "listed") {
+    return { label: "Listed", tone: "positive" };
+  }
+  if (status === "paused") {
+    return { label: "Paused by Mentor IB", tone: "warning" };
+  }
+  if (status === "delisted") {
+    return { label: "Removed by Mentor IB", tone: "warning" };
+  }
+  if (status === "eligible") {
+    return { label: "Eligible", tone: "info" };
+  }
+  if (selfPausedAt) {
+    return { label: "Paused by you", tone: "info" };
+  }
+  return { label: "Not listed", tone: "info" };
+}

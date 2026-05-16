@@ -538,7 +538,7 @@ function evaluateProfileMinimumComplete(input: {
   );
 }
 
-function buildApplicationOptions(input: {
+export function buildApplicationOptions(input: {
   focusAreas: ReferenceSubjectFocusArea[];
   languages: ReferenceLanguage[];
   needOptionRows: ReferenceLearningNeedOptionValue[];
@@ -645,7 +645,7 @@ function deriveDraftFocusAreaCodes(input: {
   );
 }
 
-function buildReadinessGates(input: {
+export function buildReadinessGates(input: {
   applicationStatus: TutorApplicationStatus;
   hasMeetingLink: boolean;
   hasScheduleRules: boolean;

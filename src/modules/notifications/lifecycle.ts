@@ -326,6 +326,53 @@ export async function createPayoutNotification(input: PayoutNotificationInput) {
   return notification;
 }
 
+type TutorListingStatusChangeReason = "self" | "gate_regression";
+
+type TutorListingStatusChangedInput = {
+  appUserId: string;
+  missingGateKeys?: readonly string[];
+  publicListingStatus: "listed" | "not_listed";
+  reason: TutorListingStatusChangeReason;
+  tutorProfileId: string;
+};
+
+export async function createTutorListingStatusChangedNotification(
+  input: TutorListingStatusChangedInput,
+) {
+  const title =
+    input.publicListingStatus === "listed"
+      ? "Your public listing is live"
+      : input.reason === "gate_regression"
+        ? "Your public listing was paused"
+        : "Listing paused";
+
+  const summary =
+    input.publicListingStatus === "listed"
+      ? "Your tutor profile is now discoverable to students. You can pause it any time from /tutor/profile."
+      : input.reason === "gate_regression"
+        ? `A readiness step needs your attention, so your public listing has been paused. Open /tutor/profile to finish the remaining steps${
+            input.missingGateKeys && input.missingGateKeys.length > 0
+              ? ` (${input.missingGateKeys.join(", ")})`
+              : ""
+          }.`
+        : "You paused your public listing. Resume it from /tutor/profile whenever you're ready.";
+
+  const notification = await createNotification({
+    appUserId: input.appUserId,
+    bodySummary: truncate(summary),
+    notificationType: "tutor_listing_status_changed",
+    objectId: input.tutorProfileId,
+    objectType: NOTIFICATION_OBJECT_TYPES.tutorProfile,
+    title,
+  });
+
+  // `tutor_listing_status_changed` is in-app only; the email-mapping module
+  // short-circuits delivery for this type.
+  await dispatchNotificationEmail(notification);
+
+  return notification;
+}
+
 type PolicyNoticeNotificationInput = {
   appUserId: string;
   policyNoticeVersionId: string;

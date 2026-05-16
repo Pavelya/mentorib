@@ -19,6 +19,7 @@ export const NOTIFICATION_OBJECT_TYPES = {
   payment: "payment",
   policyNoticeVersion: "policy_notice_version",
   tutorApplication: "tutor_application",
+  tutorProfile: "tutor_profile",
   tutorReview: "tutor_review",
 } as const;
 

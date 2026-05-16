@@ -34,6 +34,10 @@ const NON_EMAIL_NOTIFICATION_TYPES = new Set<NotificationType>([
   // `lesson_report_shared` is in-app only this wave; email delivery is
   // explicitly out of scope per `P2-REPORT-001`.
   "lesson_report_shared",
+  // `tutor_listing_status_changed` is the tutor-only in-app heads-up for
+  // listed↔not_listed transitions; the tutor sees the editor immediately
+  // after taking the action, so an email duplicate would be noise.
+  "tutor_listing_status_changed",
 ]);
 
 export function buildNotificationEmailPayload(
@@ -211,6 +215,16 @@ function resolveEmailDescriptor(
         ctaLabel: "Open lesson detail",
         ctaPath: lessonPath,
         subject: "Mentor IB · Lesson recap shared",
+      };
+    case "tutor_listing_status_changed":
+      // In-app only — the early-return in `buildNotificationEmailPayload`
+      // covers this branch, but the switch must stay exhaustive.
+      return {
+        ctaContextNote:
+          "Open Mentor IB to manage your listing publication and readiness.",
+        ctaLabel: "Open tutor profile",
+        ctaPath: "/tutor/profile",
+        subject: "Mentor IB · Listing status update",
       };
   }
 }

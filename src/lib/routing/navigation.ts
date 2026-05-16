@@ -36,6 +36,7 @@ export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
   ],
   tutor: [
     { href: "/tutor/overview", label: "Overview" },
+    { href: "/tutor/profile" as Route, label: "Profile" },
     { href: "/tutor/lessons", label: "Lessons" },
     { href: "/tutor/schedule", label: "Schedule" },
     { href: "/tutor/messages", label: "Messages" },

@@ -279,13 +279,13 @@ async function persistTutorApplicationDraft(input: {
     }
   }
 
-  await syncSubjectCapabilities({
+  await syncTutorSubjectCapabilities({
     options: input.options,
     tutorProfileId: profile.id,
     values: input.values,
   });
 
-  await syncLanguageCapabilities({
+  await syncTutorLanguageCapabilities({
     languageCodes: input.values.languageCodes,
     options: input.options,
     tutorProfileId: profile.id,
@@ -327,7 +327,7 @@ function isApplicationOpenForEdits(
   );
 }
 
-async function syncSubjectCapabilities(input: {
+export async function syncTutorSubjectCapabilities(input: {
   options: TutorApplicationOptionsDto;
   tutorProfileId: string;
   values: TutorApplicationDraftInput;
@@ -407,7 +407,7 @@ async function syncSubjectCapabilities(input: {
   }
 }
 
-async function syncLanguageCapabilities(input: {
+export async function syncTutorLanguageCapabilities(input: {
   languageCodes: string[];
   options: TutorApplicationOptionsDto;
   tutorProfileId: string;

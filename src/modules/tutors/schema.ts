@@ -29,13 +29,12 @@ import {
   tutorApplicationStatuses,
   tutorCredentialReviewStatuses,
   tutorCredentialTypes,
+  tutorIntroVideoPublicationStatuses,
   tutorProfileVisibilityStatuses,
   tutorPublicListingStatuses,
   tutorPublicMediaPublicationStatuses,
   tutorPublicMediaRoles,
 } from "@/modules/tutors/constants";
-
-const tutorIntroVideoPublicationStatuses = ["hidden", "published"] as const;
 
 export const tutorProfiles = pgTable(
   "tutor_profiles",

@@ -82,6 +82,11 @@ export const tutorPublicMediaPublicationStatuses = [
 export type TutorPublicMediaPublicationStatus =
   (typeof tutorPublicMediaPublicationStatuses)[number];
 
+export const tutorIntroVideoPublicationStatuses = ["hidden", "published"] as const;
+
+export type TutorIntroVideoPublicationStatus =
+  (typeof tutorIntroVideoPublicationStatuses)[number];
+
 export const availabilityRuleVisibilityStatuses = [
   "active",
   "hidden",

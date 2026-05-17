@@ -57,6 +57,7 @@ import type {
   TutorCredentialReviewStatus,
   TutorCredentialType,
   TutorProfileVisibilityStatus,
+  TutorIntroVideoPublicationStatus,
   TutorPublicListingStatus,
   TutorPublicMediaPublicationStatus,
   TutorPublicMediaRole,
@@ -177,7 +178,9 @@ type TutorProfileRow = {
   headline: string | null;
   id: string;
   intro_video_external_id: string | null;
+  intro_video_last_validated_at: string | null;
   intro_video_provider: string | null;
+  intro_video_publication_status: TutorIntroVideoPublicationStatus;
   intro_video_url: string | null;
   payout_account_country: string | null;
   payout_onboarding_completed_at: string | null;
@@ -1423,7 +1426,9 @@ export type MentorIbDatabase = {
           bio?: string | null;
           headline?: string | null;
           intro_video_external_id?: string | null;
+          intro_video_last_validated_at?: string | null;
           intro_video_provider?: string | null;
+          intro_video_publication_status?: TutorIntroVideoPublicationStatus;
           intro_video_url?: string | null;
           payout_readiness_status?: PayoutReadinessStatus;
           pricing_summary?: string | null;

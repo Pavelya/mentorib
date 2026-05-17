@@ -193,7 +193,17 @@ Bad parallel examples:
 | 2 | `P2-APPLY-002` | `ready` | `P2` | 1 | Internal tutor review queue and approval decisions |
 | 2 | `P2-PROFILE-001` | `ready` | `P1` | 1 | Tutor profile editor and listing publication controls |
 | 2 | `P2-GROW-001` | `ready` | `P2` | 4 | Public tutor search page powered by Algolia |
-| 3 | `P2-MEDIA-001` | `draft` | `P1` | 1 | Tutor credential, media, and intro video management |
+| 3 | `P2-MEDIA-001` | `decomposed` | `P1` | 1 | Tutor credential, media, and intro video management (parent — see subtasks `-01` … `-10`) |
+| 3 | `P2-MEDIA-001-01` | `ready` | `P1` | 1 | Migration foundation: `tutor_public_media_assets`, intro-video state columns, storage buckets, provider seeds, smoke test |
+| 3 | `P2-MEDIA-001-02` | `ready` | `P1` | 1 | Video provider adapter layer (YouTube, Vimeo, Loom) + registry |
+| 3 | `P2-MEDIA-001-03` | `ready` | `P1` | 1 | Credential management domain and Server Actions (M1 private) |
+| 3 | `P2-MEDIA-001-04` | `ready` | `P1` | 1 | Public profile photo management domain and Server Actions (M2 public) |
+| 3 | `P2-MEDIA-001-05` | `ready` | `P1` | 1 | Intro-video reference domain and Server Actions (M4 external) |
+| 3 | `P2-MEDIA-001-06` | `ready` | `P1` | 1 | Tutor sub-routes UI: `/tutor/profile/{credentials,photo,video}` + "Trust & media" summary panel |
+| 3 | `P2-MEDIA-001-07` | `ready` | `P1` | 1 | Gate-2 readiness extension (`hasPublishedProfilePhoto`) + auto-flip-on-regression |
+| 3 | `P2-MEDIA-001-08` | `ready` | `P1` | 1 | Public profile integration (M2 hero + M4 embed) + CSP `frame-src` + `images.remotePatterns` |
+| 3 | `P2-MEDIA-001-09` | `ready` | `P1` | 1 | Internal credential review panel + `setTutorCredentialReviewStatus` + `tutor_credential_reviewed` notification |
+| 3 | `P2-MEDIA-001-10` | `ready` | `P1` | 1 | Final verification of `P2-MEDIA-001` scope (closes parent) |
 | 3 | `P2-OPS-001` | `draft` | `P2` | 3 | Admin trust and report-management internal surfaces |
 | 3 | `P2-OPS-003` | `draft` | `P2` | 3 | Admin reference-data and policy broadcast management |
 | 4 | `P2-OPS-002` | `draft` | `P2` | 3 | Admin user detail and finance intervention surfaces |
@@ -301,7 +311,7 @@ Implement the internal tutor-review surface and decision workflow so application
 **Out of scope**
 
 - broad support or finance tooling, or any generalized internal dashboard expansion
-- credential file review actions and credential-status transitions (`tutor_credentials.review_status` workflow) — owned by `P2-MEDIA-001`
+- credential file review actions and credential-status transitions (`tutor_credentials.review_status` workflow) — owned by the `P2-MEDIA-001` family (specifically `P2-MEDIA-001-09` for the internal review panel and `setTutorCredentialReviewStatus`)
 - payout readiness or `public_listing_status` mutation from this surface (`approved` only unlocks the listing readiness gate; flipping to `listed` is owned by the tutor or by `P2-OPS-002`/`P2-PROFILE-001`)
 - finer-grained internal capability roles beyond the existing `admin` row in `user_roles` (the architecture's capability separation is acknowledged but is a later refactor; this task uses `admin` as the sole gate)
 - a separate `admin_action_logs` table, generalized moderation case schema, or shared internal queue infrastructure — owned by `P2-OPS-001`
@@ -350,7 +360,7 @@ The tutor application flow (`P2-APPLY-001`) is the pre-approval onboarding surfa
 - `docs/design-system/component-specs-phase2-v1.md` (§ 11 `ChecklistPanel` — tutor wrapper used for the readiness checklist; reuse the same primitives the apply page already consumes)
 - `docs/design-system/component-specs-core-v1.md` (Panel/Section/Card/Chip/StatusBadge/Avatar/Icon/Flag — no new variants needed)
 - `docs/design-system/agent-ui-rules.md` (DS-first; no route-local card/chip/panel/icon/flag CSS; icons via `src/components/ui/icon.tsx`, flags via `src/components/ui/flag.tsx`; copy discipline)
-- `docs/architecture/file-and-media-architecture-v1.md` (separation of M1 private verification assets, M2 public profile media, M3 derived trust proof, M4 external video references — this task does **not** ship the media surfaces themselves; it only confirms which fields stay out of the editor and are owned by `P2-MEDIA-001`)
+- `docs/architecture/file-and-media-architecture-v1.md` (separation of M1 private verification assets, M2 public profile media, M3 derived trust proof, M4 external video references — this task does **not** ship the media surfaces themselves; it only confirms which fields stay out of the editor and are owned by the `P2-MEDIA-001` family, subtasks `P2-MEDIA-001-03` through `P2-MEDIA-001-06`)
 - `docs/data/data-ownership-boundary-map-v1.md` (§§ 9 `tutor_profiles` ownership, 10 tutor capability/credential ownership — owner edit through controlled mutation paths; admin paths separate)
 - `docs/data/tutor-listing-readiness-model-v1.md` (§§ 4 gates 1–6, 5.2 listing-status values, 5.3 gate failure after listing, 7 readiness checklist — canonical contract for the editor’s readiness panel and the publish/pause control)
 - `docs/data/database-enum-and-status-glossary-v1.md` (§§ 8.1 `profile_visibility_status`, 8.2 `application_status`, 8.3 `public_listing_status`, 15.3 `payout_account_status` — canonical enum values)
@@ -401,7 +411,7 @@ The tutor application flow (`P2-APPLY-001`) is the pre-approval onboarding surfa
 
 **Out of scope**
 
-- credential, public media, and intro-video editing surfaces — owned entirely by `P2-MEDIA-001` (this task only ensures the editor leaves their fields untouched and links out where appropriate)
+- credential, public media, and intro-video editing surfaces — owned entirely by the `P2-MEDIA-001` family (specifically `P2-MEDIA-001-06` for the tutor-owned sub-routes, with the domain modules in `P2-MEDIA-001-03`/`-04`/`-05`); this task only ensures the editor leaves their fields untouched and links out where appropriate
 - review queue, admin pause/delist actions, internal note surfacing — owned by `P2-APPLY-002` (already shipped) and `P2-OPS-001`/`P2-OPS-002`
 - payout onboarding UI or Stripe Connect flow changes — owned by `P1-TUTOR-005` and later `P2-OPS-002`
 - schedule and availability editing — owned by the existing `/tutor/schedule` surface; the readiness panel deep-links there
@@ -444,50 +454,833 @@ The tutor application flow (`P2-APPLY-001`) is the pre-approval onboarding surfa
   - sign in as a tutor with `application_status = changes_requested` → `/tutor/profile` redirects to `/tutor/apply`
   - admin pauses listing via the existing admin path → tutor sees the canonical paused message on `/tutor/profile` and both Server Actions return `conflict`
 
-## 11.4 `P2-MEDIA-001` Tutor credential, media, and intro video management
+## 11.4 `P2-MEDIA-001` Tutor credential, media, and intro video management (decomposed)
 
-**Status:** `draft`
+**Status:** `decomposed`
 **Priority:** `P1`
 **Wave:** 1
 **Depends on:** `P2-APPLY-001`, `P2-PROFILE-001`
 
+**Decomposition note**
+
+This parent task is large enough that implementing it in a single agent session is impractical. It is broken into ten subtasks `P2-MEDIA-001-01` … `P2-MEDIA-001-10` (sections 11.4.1 … 11.4.10). Each subtask is independently `ready` once its `Depends on` chain is satisfied. The original parent acceptance criteria, manual smoke list, and operational steps are preserved verbatim under section 11.4.10 (`P2-MEDIA-001-10`), which is the final verification subtask and closes the parent. No code, route, schema, or DTO behavior is added by the parent task itself — implementation lives in the subtasks. The parent must not be implemented directly; pick a subtask.
+
 **Goal**
 
-Implement the tutor-side management flow for credential evidence, public profile media, and external intro video references, with clear separation between private verification inputs and public trust outputs.
+Implement the tutor-owned management surfaces for the three media classes the approved file-and-media architecture defines for tutors — private credential evidence (M1), the public tutor profile photo (M2), and the external intro video reference (M4) — plus the internal credential review actions that move `tutor_credentials.review_status` through its lifecycle. Today the schema already carries `tutor_credentials` and `tutor_profiles.intro_video_*` columns, but no UI uploads, manages, reviews, or renders them; there is no public profile-photo asset model at all; and no Supabase Storage buckets exist. The subtasks below fill that gap end-to-end so that approved tutors can shape their public trust surface and so that `evaluateTutorProfileMinimum` can finally enforce gate 2's "real profile photo" requirement.
+
+The boundary is strict and binding on every subtask: raw credential files never appear on public routes; public trust proof remains derived from approved credentials via the existing `buildTrustProofs`/`examiner-credentials-builder` pipelines; intro-video input accepts a provider URL only (no pasted embed HTML); and tutor-owned media writes flow through the same Server Action discipline as `P2-PROFILE-001`.
+
+**Subtask index**
+
+| ID | Short title | Status | Depends on (within family) |
+| --- | --- | --- | --- |
+| `P2-MEDIA-001-01` | Migration foundation: `tutor_public_media_assets` table, intro-video state columns, storage buckets, provider seeds, smoke test | `ready` | — |
+| `P2-MEDIA-001-02` | Video provider adapter layer (YouTube, Vimeo, Loom) + registry | `ready` | `-01` |
+| `P2-MEDIA-001-03` | Credential management domain and Server Actions (M1 private) | `ready` | `-01` |
+| `P2-MEDIA-001-04` | Public profile photo management domain and Server Actions (M2 public) | `ready` | `-01` |
+| `P2-MEDIA-001-05` | Intro-video reference domain and Server Actions (M4 external) | `ready` | `-01`, `-02` |
+| `P2-MEDIA-001-06` | Tutor sub-routes UI: `/tutor/profile/{credentials,photo,video}` + "Trust & media" summary panel | `ready` | `-03`, `-04`, `-05` |
+| `P2-MEDIA-001-07` | Gate-2 readiness extension (`hasPublishedProfilePhoto`) + auto-flip-on-regression | `ready` | `-04` |
+| `P2-MEDIA-001-08` | Public profile integration (M2 hero photo + M4 embed) + CSP `frame-src` + `images.remotePatterns` | `ready` | `-04`, `-05` |
+| `P2-MEDIA-001-09` | Internal credential review panel + `setTutorCredentialReviewStatus` + `tutor_credential_reviewed` notification | `ready` | `-03` |
+| `P2-MEDIA-001-10` | Final verification: acceptance-criteria walkthrough, manual smoke, operational impact report; closes parent | `ready` | `-01` … `-09` |
+
+**Cross-family guidance**
+
+- Every subtask inherits the parent's hard boundary statement above and the parent's full source-doc list under each subtask's `Required source docs` section (subtasks list only the docs they touch directly; for any subtask, the parent doc list remains canonical context).
+- No subtask may widen the parent's `Out of scope`. The parent out-of-scope list (preserved under `P2-MEDIA-001-10`) is binding on every subtask.
+- Subtasks must not silently reorder or rename the parent's acceptance criteria. The parent acceptance criteria are restated and verified end-to-end in `P2-MEDIA-001-10`.
+- DS-first holds across every UI-touching subtask (`-06`, `-08`, `-09`): no new DS primitives introduced by this family; compose only existing `Panel`/`Section`/`Card`/`Chip`/`StatusBadge`/`Avatar`/`Icon`/`Flag`/`InlineNotice`/`Popover`/`Menu`/`OverflowMenuTrigger`/`ChecklistPanel`.
+
+## 11.4.1 `P2-MEDIA-001-01` Migration foundation: tables, buckets, provider seeds
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-APPLY-001`, `P2-PROFILE-001`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Land the single SQL migration, Drizzle schema mirror, and shared constants that every other subtask in the `P2-MEDIA-001` family depends on. This subtask ships **data structure only**: it does not introduce any UI, Server Action, public-DTO change, or readiness-gate behavior. Once this subtask is merged, the schema can carry M1 credential evidence (already present), the new M2 public-media asset model, and the new M4 intro-video publication state — and the two Supabase Storage buckets exist with the correct RLS posture so that subsequent subtasks (`-03`, `-04`) can write through them.
 
 **Required source docs**
 
-- `docs/architecture/file-and-media-architecture-v1.md`
-- `docs/data/data-ownership-boundary-map-v1.md`
-- `docs/data/auth-and-authorization-matrix-v1.md`
-- `docs/architecture/accessibility-and-inclusive-ux-architecture-v1.md`
-- `docs/architecture/compliance-and-regulatory-posture-v1.md`
+- `docs/architecture/file-and-media-architecture-v1.md` (§ 7 object model, § 8 storage and bucket separation, § 11 public image architecture, § 12 external video architecture, § 15 publication-state model, § 16 security posture)
+- `docs/data/database-rls-boundaries-v1.md` (§ 9.3 `tutor_credentials` Type C posture — pattern the new `tutor_public_media_assets` table must follow)
+- `docs/data/database-enum-and-status-glossary-v1.md` (§ 8.4 `tutor_credentials.review_status` allowed values — used as reference; no enum change here)
+- `docs/data/database-change-review-checklist-v1.md` (migration shape, RLS smoke test, indexes)
+- `docs/data/drizzle-schema-and-query-conventions-v1.md` (module schema declaration conventions — additions in `src/modules/tutors/schema.ts`)
+- `docs/data/data-retention-erasure-field-map-v1.md` (§ 13 intro video fields; § 15 `tutor_credentials` retention — informs column posture only, no retention code in this subtask)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/schema.ts` — `tutor_credentials` and `tutor_profiles.intro_video_*` columns already exist; **no** column changes on `tutor_credentials`. Add the new `tutorPublicMediaAssets` declaration and extend `tutorProfiles` with `intro_video_publication_status` and `intro_video_last_validated_at`.
+- `src/modules/tutors/constants.ts` — reuse `tutorCredentialReviewStatuses`, `tutorCredentialTypes`. Add only `tutorPublicMediaRoles` (initially `["profile_photo"]`) and `tutorPublicMediaPublicationStatuses` (`["uploaded", "pending_review", "approved", "published", "hidden"]` per file-and-media § 15.2).
+- `src/modules/reference/schema.ts` — `videoMediaProviders` reference table already exists; this subtask adds the seed rows (`youtube`, `vimeo`, `loom`).
+- Existing migrations' `set_updated_at` trigger pattern; existing `tutor_credentials_select_self` RLS policy shape (mirror for the new table).
 
 **Scope**
 
-- private credential upload and management
-- public media asset management
-- external intro video reference management
-- review/publication-state handling where required
+- One **migration** in `supabase/migrations/` (single file, single timestamp) that:
+  - Creates the `tutor-credentials` private storage bucket (RLS: owner read via service-role signed URLs only; no anon/auth direct access) and the `tutor-public-media` public storage bucket (RLS: public read; service-role write). Bucket creation is idempotent (`if not exists`).
+  - Creates the `tutor_public_media_assets` table: `id uuid pk`, `tutor_profile_id uuid not null references tutor_profiles(id) on delete cascade`, `media_role text not null check (media_role in ('profile_photo'))`, `storage_object_path text not null`, `alt_text text`, `publication_status text not null default 'uploaded'`, `sort_order integer not null default 0`, `created_at`/`updated_at` with the existing `set_updated_at` trigger; a partial unique index `tutor_public_media_assets_one_published_photo_per_tutor_idx` enforcing one `published` `profile_photo` per tutor; RLS enabled with `_select_self` policy mirroring the existing `tutor_credentials_select_self`; admin policies reuse the existing internal capability check.
+  - Adds `intro_video_publication_status text not null default 'hidden' check (intro_video_publication_status in ('hidden', 'published'))` and `intro_video_last_validated_at timestamptz null` to `tutor_profiles`. The two intro-video state additions live on `tutor_profiles` because the URL columns are already there; do not create a separate `tutor_video_references` table (file-and-media § 7.6 allows this when a single provider video per tutor is the product rule).
+  - Seeds `video_media_providers` with three rows: `('youtube', 'YouTube', 0, true)`, `('vimeo', 'Vimeo', 1, true)`, `('loom', 'Loom', 2, true)`. Idempotent insert (`on conflict (provider_key) do nothing`).
+- Mirror the schema additions in `src/modules/tutors/schema.ts` (new `tutorPublicMediaAssets` declaration; new `intro_video_publication_status` + `intro_video_last_validated_at` columns on `tutorProfiles`). No query, repository, or service module is introduced here.
+- Add `tutorPublicMediaRoles` and `tutorPublicMediaPublicationStatuses` to `src/modules/tutors/constants.ts`. No usage of these constants is introduced in this subtask.
+- Supabase DB smoke test under `supabase/tests/database/smoke/tutor_media_baseline.test.sql` covering: new table shape and constraints, RLS posture (owner select via service role only; anon/auth blocked), partial unique index enforcement (second `'published'` `profile_photo` per tutor fails), storage bucket existence and policy posture (`tutor-credentials` blocks anon read; `tutor-public-media` allows anon read), provider seed presence, intro-video new-column defaults, and `tutor_credentials` RLS posture preserved.
 
 **Out of scope**
 
-- raw credential files on public tutor pages
-- native video hosting
-- broad asset-library features
+- any query, repository, Server Action, or UI surface (those live in `-03` through `-09`)
+- video provider adapter implementation (lives in `-02`)
+- changes to `evaluateTutorProfileMinimum` or any readiness behavior (lives in `-07`)
+- changes to public-profile DTOs or `next.config.ts` (lives in `-08`)
+- any notification kind additions (lives in `-09`)
+- a `tutor_video_references` table or any second public video per tutor
+- secondary public media (galleries, banner images, additional credential thumbnails)
 
 **Acceptance criteria**
 
-- credential evidence and public trust proof remain separate concepts
-- public media and intro video references follow the approved visibility rules
-- accessibility expectations for public video embeds are respected
-- storage and review posture stay explicit and secure
+- One new migration file exists under `supabase/migrations/` with the next sequential timestamp; it creates the table, the partial unique index, the two new `tutor_profiles` columns, the `video_media_providers` seed rows (idempotent), and the two storage buckets (idempotent); RLS on the new table mirrors `tutor_credentials_select_self`; admin access mirrors the existing internal capability pattern.
+- `src/modules/tutors/schema.ts` declares `tutorPublicMediaAssets` and the new `tutorProfiles` columns; `src/modules/tutors/constants.ts` exports `tutorPublicMediaRoles` and `tutorPublicMediaPublicationStatuses`. `pnpm typecheck` passes.
+- `supabase/tests/database/smoke/tutor_media_baseline.test.sql` exists and passes all assertions described in Scope.
+- No new files outside `supabase/migrations/`, `supabase/tests/database/smoke/`, `src/modules/tutors/schema.ts`, and `src/modules/tutors/constants.ts`. No changes to any route, service, query module, public DTO, or `next.config.ts`.
 
 **Verification**
 
-- media visibility review
-- storage and access review
-- public-surface exposure review
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- Supabase DB smoke test (`supabase/tests/database/smoke/tutor_media_baseline.test.sql`)
+- `pnpm test:e2e` is **not** required (no route, public rendering, or auth-entry change).
+- Manual: verify locally that `pnpm db:push` (or the project's standard migration command) applies cleanly against a fresh Supabase reset.
+
+**Required manual operational steps (call out in the report)**
+
+- The two Supabase Storage buckets (`tutor-credentials` private, `tutor-public-media` public) are created by this migration; verify on the Supabase dashboard that the policies match the migration's intent before any tutor uploads in production.
+- No new environment variables.
+
+## 11.4.2 `P2-MEDIA-001-02` Video provider adapter layer (YouTube, Vimeo, Loom)
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-01`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Add the shared provider-adapter layer that normalizes pasted YouTube, Vimeo, and Loom URLs into a canonical watch URL, canonical embed URL, and external id, and that rejects everything else with the canonical journey-copy validation error. This subtask is pure module code plus Vitest unit coverage — it does not call any DB, write any state, or expose any route. `-05` will consume the registry.
+
+**Required source docs**
+
+- `docs/architecture/file-and-media-architecture-v1.md` (§ 12 external video architecture and provider adapters, § 12.4 no pasted embed HTML, § 13.4 supported providers list, § 16.6 CSP allowlist for the three iframe origins)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016 canonical copy: `"This video link isn't supported. Use a supported public video provider."`)
+- `docs/data/api-and-server-action-contracts-v1.md` (§ 8 boundary errors — `validation` shape)
+- `docs/architecture/canonical-value-ownership-map-v1.md` (reference-backed provider labels flow through `src/modules/reference/**` loaders)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/reference/schema.ts` and the existing reference loaders — provider display names ultimately come from the `video_media_providers` rows seeded in `-01`. Adapter modules should expose static `displayName` for adapter-internal use only; any UI-visible label must come from the reference loader.
+
+**Scope**
+
+- New `src/modules/tutors/video-providers/` directory containing one module per supported provider:
+  - `youtube.ts` — handles canonical `youtube.com/watch?v=ID`, `youtu.be/ID`, `youtube.com/embed/ID`, `youtube-nocookie.com/embed/ID`, and URL variants with query parameters and timestamp fragments. Canonical embed URL points at `https://www.youtube-nocookie.com/embed/${id}` (privacy-preserving variant).
+  - `vimeo.ts` — handles `vimeo.com/ID`, `player.vimeo.com/video/ID`, and `vimeo.com/channels/.../ID`. Canonical embed URL points at `https://player.vimeo.com/video/${id}`.
+  - `loom.ts` — handles `loom.com/share/ID` and `loom.com/embed/ID`. Canonical embed URL points at `https://www.loom.com/embed/${id}`.
+- New `src/modules/tutors/video-providers/index.ts` registry exporting:
+  - `videoProviderRegistry` — array of adapter modules in deterministic order.
+  - `normalizeIntroVideoUrl(input: string): { providerKey: string; externalId: string; canonicalWatchUrl: string; canonicalEmbedUrl: string }` — iterates the registry and returns the first match.
+  - On no match, throws a `validation` boundary error with the canonical J-TUT-016 copy `"This video link isn't supported. Use a supported public video provider."`
+  - Rejects pasted iframe HTML (any input containing `<iframe`, leading `<`, or non-URL whitespace shapes) with the same validation copy (file-and-media § 12.4).
+- Each adapter module exports:
+  - `provider_key: string` (matches the seeded `video_media_providers.provider_key`)
+  - `displayName: string` (matches the seeded `display_name`; for internal logging/dev only — UI labels come from the reference loader)
+  - `parseUrl(url: string): { externalId: string; canonicalWatchUrl: string; canonicalEmbedUrl: string } | null`
+  - `thumbnailUrl(externalId: string): string | null` (used by `-08`'s embed surface; may return `null` for providers without a deterministic thumbnail URL)
+- Vitest unit tests under `src/modules/tutors/video-providers/*.test.ts` covering: each adapter's `parseUrl` for canonical, short, watch-with-params, embed, and invalid URL shapes; registry rejection of unsupported providers (e.g. Twitch, Wistia, Dailymotion); registry rejection of pasted iframe HTML; thumbnail URL shape for ids that support it.
+
+**Out of scope**
+
+- adapter usage from any Server Action or UI (lives in `-05`, `-08`)
+- thumbnail rendering, image proxying, or any HTTP fetch of provider metadata
+- additional providers beyond YouTube/Vimeo/Loom
+- generalized URL sanitization beyond the supported-provider check
+
+**Acceptance criteria**
+
+- `normalizeIntroVideoUrl` accepts all documented shapes for YouTube, Vimeo, and Loom and returns the normalized triple.
+- `normalizeIntroVideoUrl` rejects every other URL and any iframe-shaped input with the canonical J-TUT-016 copy.
+- Adapter modules are pure functions (no I/O, no DB, no network).
+- Vitest suite under `src/modules/tutors/video-providers/` passes and covers the cases listed in Scope.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required.
+
+## 11.4.3 `P2-MEDIA-001-03` Credential management domain and Server Actions (M1)
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-01`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Ship the tutor-owned credential management domain — query module returning a `D5` editor DTO with signed download URLs, plus the five Server Actions that upload, replace, edit metadata, toggle public display preference, and delete credentials. All writes use the Supabase service-role client, land objects in the **private** `tutor-credentials` bucket (created in `-01`), and respect the `_reviewed_at_consistency_chk` invariant when editing approved credentials. No UI is introduced in this subtask; `-06` consumes these.
+
+**Required source docs**
+
+- `docs/architecture/file-and-media-architecture-v1.md` (§ 9 credential architecture, § 16.3 file type/size constraints, § 19.2 storage cleanup posture)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§ 10.3 `tutor_credentials` owner-write through server-owned flows)
+- `docs/data/database-enum-and-status-glossary-v1.md` (§ 8.4 `tutor_credentials.review_status` allowed values and the `_reviewed_at_consistency_chk` invariant)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (§ 8.6 D5 tutor-private DTO)
+- `docs/data/api-and-server-action-contracts-v1.md` (§§ 6 Server Action golden path, 8 boundary errors, 14 cache revalidation)
+- `docs/architecture/security-architecture-v1.md` (upload constraints — private files never via public URLs; signed access)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/schema.ts` — `tutor_credentials` columns are already present (no migration here)
+- `src/modules/tutors/constants.ts` — `tutorCredentialReviewStatuses`, `tutorCredentialTypes`
+- `src/lib/supabase/*` — existing service-role and signed-URL helpers
+- `src/modules/reference/**` — subject and focus-area loaders for `credential_subject_id` / `credential_subject_focus_area_id` reference-backed metadata
+
+**Scope**
+
+- New `src/modules/tutors/media-credentials.ts` (query) exporting:
+  - `getTutorCredentialsForOwner(account)` returning a `D5` DTO of the owning tutor's credential rows; each row carries a signed short-TTL download URL **issued server-side and never embedded in HTML** (callers must consume the URL only within the Server Action result or a one-shot read).
+- New `src/modules/tutors/media-credentials-service.ts` (commands) exporting Server Actions:
+  - `uploadTutorCredential(input, file)` — validates file type (PDF/JPEG/PNG only per file-and-media § 16.3) and size (≤ 15 MB) at the boundary; writes the object to the **private** `tutor-credentials` bucket under `tutor/${tutorProfileId}/credentials/${credentialId}/${filename}`; inserts the row with `review_status = 'uploaded'` and `reviewed_at = null`.
+  - `replaceTutorCredentialFile(id, file)` — same validation. If the existing row's `review_status = 'approved'`, automatically resets to `pending_review` and clears `reviewed_at` (respecting the `_reviewed_at_consistency_chk` constraint).
+  - `updateTutorCredentialMetadata(id, input)` — patches `credential_type`, `title`, `issuing_body`, `credential_subject_id`, `credential_subject_focus_area_id`. Same auto-reset behavior if the row is `approved`.
+  - `setTutorCredentialPublicDisplayPreference(id, boolean)` — patches `public_display_preference` only; does **not** reset `review_status`.
+  - `deleteTutorCredential(id)` — soft-deletes the row and either deletes the storage object synchronously or enqueues cleanup via the existing background-jobs module if available (see file-and-media § 19.2 — reuse the worker pattern from `P15-DATA-002` if present; otherwise perform synchronous storage deletion and document the deferral in the subtask report).
+- All Server Actions:
+  - go through the Supabase service-role client
+  - return boundary errors per `api-and-server-action-contracts-v1.md` § 8
+  - revalidate `/tutor/profile` and `/tutor/profile/credentials` on success
+  - do **not** revalidate `/tutors/[slug]` (that revalidation is owned by `-09` on credential approval, not on owner-side writes; owner-side credential writes never change derived trust proof state for an approved row, because an edit auto-resets it to `pending_review`)
+- Vitest unit/integration coverage under `src/test/**` or co-located: file-type and size rejection; `review_status` reset on edit-of-approved; `_reviewed_at_consistency_chk` invariant preserved across replace, metadata edit, and delete; soft-delete + storage cleanup path; DTO never carries `internal_note`, `reviewer_app_user_id`, or other tutors' rows.
+
+**Out of scope**
+
+- internal review actions (lives in `-09`)
+- UI (lives in `-06`)
+- public-profile DTO changes (lives in `-08`)
+- gate-2 readiness changes (lives in `-07`)
+- any column changes to `tutor_credentials`
+
+**Acceptance criteria**
+
+- All five Server Actions exist with the contracts described.
+- Type/size validation rejects non-PDF/JPEG/PNG files and files > 15 MB at the boundary with a `validation` error.
+- An edit-of-approved (replace file or update metadata) auto-resets `review_status = 'pending_review'` and clears `reviewed_at`; `_reviewed_at_consistency_chk` is never violated.
+- Object paths use the documented `tutor/${tutorProfileId}/credentials/${credentialId}/${filename}` shape under the **private** `tutor-credentials` bucket.
+- Editor DTO is `D5` (owner only; no `internal_note`; no other tutors' rows); signed download URLs are server-issued and never rendered into static HTML.
+- Vitest coverage includes every case listed in Scope.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required (no route is introduced).
+
+## 11.4.4 `P2-MEDIA-001-04` Public profile photo management domain and Server Actions (M2)
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-01`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Ship the tutor-owned public-photo management domain — query module returning the owning tutor's photo state, plus the Server Actions that upload, update alt text, and publish/hide/remove the M2 profile photo. All writes use the Supabase service-role client and land objects in the **public** `tutor-public-media` bucket created in `-01`. The partial unique index `tutor_public_media_assets_one_published_photo_per_tutor_idx` enforces at-most-one published photo per tutor. No UI is introduced; `-06` consumes these.
+
+**Required source docs**
+
+- `docs/architecture/file-and-media-architecture-v1.md` (§ 11 public image architecture, § 15 publication-state model, § 16 security posture)
+- `docs/data/auth-and-authorization-matrix-v1.md` (owner-write through server-owned flows for tutor-owned tables)
+- `docs/data/database-rls-boundaries-v1.md` (RLS posture for the new `tutor_public_media_assets` table from `-01`)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (§ 8.6 D5 tutor-private DTO)
+- `docs/data/api-and-server-action-contracts-v1.md` (§§ 6, 8, 14)
+- `docs/architecture/accessibility-and-inclusive-ux-architecture-v1.md` (§ 13.1 alt-text strategy for profile imagery)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/schema.ts` — `tutorPublicMediaAssets` declared in `-01`
+- `src/modules/tutors/constants.ts` — `tutorPublicMediaRoles`, `tutorPublicMediaPublicationStatuses` from `-01`
+- `src/lib/supabase/*` — existing service-role client
+
+**Scope**
+
+- New `src/modules/tutors/media-public-assets.ts` (query) exporting:
+  - `getTutorPublicMediaForOwner(account)` returning the owning tutor's photo row (if any) with its `publication_status`, `alt_text`, and the public storage URL (since this bucket is public, the URL can be rendered directly).
+- New `src/modules/tutors/media-public-assets-service.ts` (commands) exporting Server Actions:
+  - `uploadTutorProfilePhoto(file, altText)` — validates type (JPEG/PNG/WebP) and size (≤ 5 MB) at the boundary; writes to the **public** `tutor-public-media` bucket under `tutor/${tutorProfileId}/photo/${assetId}.${ext}`; inserts/upserts a row with `publication_status = 'uploaded'`. No image transformation, cropping, or resizing (out of scope per file-and-media § 8.5).
+  - `updateTutorProfilePhotoAlt(altText)` — patches `alt_text` only.
+  - `setTutorProfilePhotoPublication("publish" | "hide" | "remove")` — handles state transitions:
+    - `publish` requires both an existing uploaded asset and a non-empty `alt_text` (alt-text required for publication per accessibility § 13.1); flips `publication_status` to `'published'`. Conflicts with the partial unique index are surfaced as a `conflict` boundary error.
+    - `hide` flips `publication_status` to `'hidden'` (or to `'approved'` if the file-and-media § 15.2 lifecycle requires an intermediate state; default behavior: `'hidden'`).
+    - `remove` deletes the storage object and the row in a single transaction.
+- All Server Actions go through the service-role client, return boundary errors per § 8, and revalidate `/tutor/profile` and `/tutor/profile/photo` on success. Publication transitions also revalidate `/tutors/[slug]` (the public profile path) and `/tutor/overview` so the readiness panel deep-link reflects the new state. Auto-flip-on-regression of `public_listing_status` is **not** handled here; it lives in `-07`.
+- Vitest unit/integration coverage: at-most-one-published invariant (second `publish` attempt while another asset is already `published` is rejected by the partial unique index and surfaced as `conflict`); alt-text required for publication; type/size rejection; remove deletes both row and storage object; DTO never leaks other tutors' rows.
+
+**Out of scope**
+
+- gate-2 readiness change or auto-flip (lives in `-07`)
+- public-profile DTO change to expose the photo URL (lives in `-08`)
+- UI surface (lives in `-06`)
+- image transformation or any paid image pipeline
+
+**Acceptance criteria**
+
+- Three Server Actions exist with the contracts described; type/size rejection works at the boundary.
+- Photo uploads land in the **public** `tutor-public-media` bucket under the documented path.
+- `publish` enforces alt-text-required-for-publication; the partial unique index ensures at-most-one `'published'` `profile_photo` per tutor.
+- `remove` deletes the storage object and the row atomically.
+- Vitest coverage includes every case listed in Scope.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required.
+
+## 11.4.5 `P2-MEDIA-001-05` Intro-video reference domain and Server Actions (M4)
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-01`, `P2-MEDIA-001-02`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Ship the tutor-owned intro-video reference domain — query module returning the owning tutor's intro-video state, plus the Server Actions that set the provider URL (routing through the adapter registry from `-02`), clear it, and toggle publication. Writes use the existing `tutor_profiles.intro_video_provider/external_id/url` columns plus the new `intro_video_publication_status` and `intro_video_last_validated_at` columns from `-01`. No UI; `-06` consumes these.
+
+**Required source docs**
+
+- `docs/architecture/file-and-media-architecture-v1.md` (§ 12 external video architecture, § 12.4 no pasted embed HTML, § 15 publication-state model)
+- `docs/data/auth-and-authorization-matrix-v1.md` (owner-write paths for `tutor_profiles`)
+- `docs/data/api-and-server-action-contracts-v1.md` (§§ 6, 8, 14)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016 canonical copy)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/video-providers/index.ts` — `normalizeIntroVideoUrl` from `-02`
+- `src/modules/tutors/schema.ts` — `tutorProfiles` `intro_video_*` columns (existing + the two added in `-01`)
+- `src/lib/supabase/*` — existing service-role client
+
+**Scope**
+
+- New `src/modules/tutors/media-video-reference.ts` (query) exporting:
+  - `getTutorIntroVideoForOwner(account)` returning the owning tutor's intro-video state: provider key, external id, canonical watch URL, canonical embed URL, publication status, last-validated timestamp.
+- New `src/modules/tutors/media-video-reference-service.ts` (commands) exporting Server Actions:
+  - `setTutorIntroVideo({ providerUrl })` — passes `providerUrl` through `normalizeIntroVideoUrl` (which throws the canonical J-TUT-016 `validation` error for unsupported providers and pasted iframe HTML); on success writes `intro_video_provider`, `intro_video_external_id`, `intro_video_url` (canonical watch URL), and sets `intro_video_last_validated_at = now()`. Does **not** change publication status (callers must call `setTutorIntroVideoPublication` explicitly).
+  - `clearTutorIntroVideo()` — nulls all four `intro_video_*` columns and resets `intro_video_publication_status` to `'hidden'`.
+  - `setTutorIntroVideoPublication("publish" | "hide")` — flips `intro_video_publication_status`. `publish` requires a non-null `intro_video_external_id` and `intro_video_url`; otherwise `conflict`.
+- All Server Actions revalidate `/tutor/profile`, `/tutor/profile/video`, `/tutors/[slug]`, and `/tutor/overview` on success.
+- Vitest unit/integration coverage: URL normalization happy paths (one case per provider); rejection of unsupported provider with the canonical copy; rejection of pasted iframe HTML; `validated_at` timestamp set on successful setter; publication gating requires existing reference; clearing resets publication to `'hidden'`.
+
+**Out of scope**
+
+- public-profile DTO change to expose the embed (lives in `-08`)
+- CSP / `next.config.ts` changes (lives in `-08`)
+- UI surface (lives in `-06`)
+- new providers beyond YouTube/Vimeo/Loom
+
+**Acceptance criteria**
+
+- Three Server Actions exist; the setter routes through the adapter registry and writes normalized values plus the validated-at timestamp.
+- Publication is a separate explicit toggle and requires an existing reference.
+- Unsupported providers and pasted iframe HTML are rejected with the canonical J-TUT-016 copy.
+- Vitest coverage includes every case listed in Scope.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required.
+
+## 11.4.6 `P2-MEDIA-001-06` Tutor sub-routes UI + "Trust & media" summary panel
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-03`, `P2-MEDIA-001-04`, `P2-MEDIA-001-05`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Ship the three tutor-owned sub-routes under `/tutor/profile` (`credentials`, `photo`, `video`) plus the "Trust & media" summary panel on the existing `/tutor/profile` page. Each sub-route is a server component with a sibling `actions.ts` thin wrapper around the Server Actions from `-03`/`-04`/`-05`, and a route-local CSS module that composes only existing DS primitives. Gate everything on `application_status === "approved"`. No new DS primitive, no new route family, no public-route or internal-route change.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md` (DS-first; no route-local card/chip/panel/icon/flag CSS or inline SVGs)
+- `docs/design-system/design-system-spec-final-v1.md` (Panel/Section/Card/Chip/StatusBadge/Avatar usage)
+- `docs/design-system/component-specs-core-v1.md` (compose only existing core primitives)
+- `docs/design-system/component-specs-phase2-v1.md` (Popover, Menu, OverflowMenuTrigger from `P2-DS-MENU-001` for row actions; Chip pressed state for the provider selector)
+- `docs/architecture/route-layout-implementation-map-v1.md` (§ 7.6 tutor family — new sub-routes sit beneath `/tutor/profile` and reuse `src/app/tutor/layout.tsx`)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016 tutor profile/credential/intro-video management)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/app/tutor/profile/page.tsx` — keep untouched aside from inserting the new "Trust & media" `Panel` and deep-links to the three sub-routes
+- `src/app/tutor/layout.tsx` — reuse as the layout for the new sub-routes
+- `src/components/ui/*` primitives and `ChecklistPanel`/`InlineNotice`
+- the auth/account/role-gate pattern used by `src/app/tutor/profile/page.tsx` and `src/app/tutor/apply/page.tsx` (Supabase `getUser` → `ensureAuthAccount` → role/restriction gates → redirect to setup/sign-in)
+- Server Actions from `-03`/`-04`/`-05`
+
+**Scope**
+
+- New `src/app/tutor/profile/credentials/page.tsx` (server component) + sibling `actions.ts` + route-local CSS module:
+  - lists current `tutor_credentials` rows for the owning tutor (consumes `getTutorCredentialsForOwner` from `-03`)
+  - "Add credential" form (credential_type, title, issuing_body, optional `credential_subject_id`/`credential_subject_focus_area_id`, file upload) — reference-backed labels from `src/modules/reference/**`
+  - per-row overflow menu (replace file, edit metadata, toggle `public_display_preference`, delete) composed via `OverflowMenuTrigger` + `Menu` from `P2-DS-MENU-001`
+  - read-only review-status chip per row using `StatusBadge`
+  - coaching copy explaining that approved credentials become public trust proof (not the raw file)
+- New `src/app/tutor/profile/photo/page.tsx` + sibling `actions.ts` + route-local CSS module:
+  - upload/replace/remove the M2 profile photo with alt-text capture
+  - "Publish photo" / "Hide photo" toggle wired to `setTutorProfilePhotoPublication`
+  - `Avatar` preview at the same size used by the public hero
+- New `src/app/tutor/profile/video/page.tsx` + sibling `actions.ts` + route-local CSS module:
+  - paste-and-validate a single intro-video URL (validation message from `-02`/`-05`)
+  - preview the normalized embed (server-rendered using the provider iframe — origin must already be in the CSP allowlist landed by `-08`; if `-08` has not landed yet, the preview is permitted on the tutor-only route because `-06` is gated to `application_status === "approved"` and tutor surfaces inherit the same CSP that `-08` extends)
+  - publication toggle wired to `setTutorIntroVideoPublication`
+- Insert a "Trust & media" `Panel` into `src/app/tutor/profile/page.tsx` that composes existing `Panel`/`Section`/`Chip`/`StatusBadge` primitives only. The panel summarizes credential count by `review_status`, photo publication state, intro-video publication state, and deep-links into the three new sub-routes.
+- All three sub-routes:
+  - resolve auth/account/role exactly like `src/app/tutor/profile/page.tsx`
+  - require `application_status === "approved"`; non-approved tutors are redirected to `/tutor/apply` with the existing `InlineNotice` pattern from `P2-PROFILE-001`
+  - revalidate themselves and `/tutor/profile` on every successful action
+- DS-first: no route-local card/chip/panel/icon/flag CSS, no inline SVGs; icons via `src/components/ui/icon.tsx`; flags via `src/components/ui/flag.tsx`. Reference-backed labels flow through `src/modules/reference/**` loaders.
+
+**Out of scope**
+
+- new DS primitives (none introduced by this family)
+- public-profile rendering (lives in `-08`)
+- internal credential review surface (lives in `-09`)
+- gate-2 readiness change (lives in `-07`)
+
+**Acceptance criteria**
+
+- The three sub-routes exist at `/tutor/profile/credentials`, `/tutor/profile/photo`, `/tutor/profile/video`, are gated to `application_status === "approved"` (mirroring `/tutor/profile`), and the `/tutor/profile` editor surfaces a "Trust & media" panel that deep-links into them.
+- Each sub-route composes only existing DS primitives; no new route-local card/chip/panel/icon/flag CSS; no inline SVGs; no new DS primitives.
+- Reference-backed labels (credential subjects, focus areas, video providers) flow through `src/modules/reference/**` loaders.
+- `pnpm lint:arch` passes.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required (no public-route or auth-entry change).
+- Manual: log in as an approved tutor and walk the three sub-routes; confirm DS-only composition (no inline SVG, no route-local card/panel CSS) by reading the route-local `.module.css` files and the JSX.
+
+## 11.4.7 `P2-MEDIA-001-07` Gate-2 readiness extension + auto-flip-on-photo-removal
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-04`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Extend `evaluateTutorProfileMinimum` so gate 2 enforces the "real profile photo" requirement, update every caller to load published-photo presence via the query from `-04`, and wire the auto-flip-on-regression path so an existing `listed` tutor removing their published photo flips to `not_listed` and receives the `tutor_listing_status_changed` notification with `reason: "gate_regression"` and `missingGateKeys: ["profilePhoto"]`. Existing approved-but-photoless tutors surface as gate-2-failing on `/tutor/profile` and `/tutor/overview` until they publish a photo.
+
+**Required source docs**
+
+- `docs/data/tutor-listing-readiness-model-v1.md` (§ 4.2 gate 2 — "real profile photo (not placeholder)")
+- `docs/data/api-and-server-action-contracts-v1.md` (§ 14 cache revalidation)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/listing-readiness.ts` — `evaluateTutorProfileMinimum` and `ProfileMinimumField`
+- `src/modules/tutors/application.ts` — call site that composes gate state
+- `src/modules/tutors/tutor-overview.ts` — call site that composes gate state for the overview readiness module
+- `src/modules/tutors/tutor-profile-editor.ts` — call site in the profile editor DTO
+- `src/modules/tutors/application-service.ts` — call site, if it consumes `evaluateTutorProfileMinimum`
+- `src/modules/tutors/tutor-profile-editor-service.ts` — auto-flip-on-regression path in `updateTutorProfile`
+- `getTutorPublicMediaForOwner` from `-04` — source of published-photo presence
+- `tutor_listing_status_changed` notification kind from `P2-PROFILE-001` — reuse with `reason: "gate_regression"` and `missingGateKeys: ["profilePhoto"]`
+
+**Scope**
+
+- Extend `TutorProfileMinimumInput` with `hasPublishedProfilePhoto: boolean`.
+- Add `"profilePhoto"` to the `ProfileMinimumField` union and to the `missing` checks. The field flips gate 2 to fail for any approved tutor with no published photo.
+- Update every call site to pass `hasPublishedProfilePhoto` derived from `getTutorPublicMediaForOwner` (or from a thin projection function in `-04` that returns just the boolean):
+  - `src/modules/tutors/application.ts`
+  - `src/modules/tutors/tutor-overview.ts`
+  - `src/modules/tutors/tutor-profile-editor.ts`
+  - `src/modules/tutors/application-service.ts` if it calls `evaluateTutorProfileMinimum`
+- Extend `src/modules/tutors/media-public-assets-service.ts`'s `setTutorProfilePhotoPublication("hide" | "remove")` path (or wrap it via a small editor-side helper in `tutor-profile-editor-service.ts`) so that:
+  - When the affected tutor's `public_listing_status` is `listed` and removing/hiding the photo would cause gate 2 to fail, the same transaction flips `public_listing_status → not_listed` and enqueues `tutor_listing_status_changed` with `reason: "gate_regression"` and `missingGateKeys: ["profilePhoto"]`.
+  - This mirrors the existing auto-flip behavior already implemented in `updateTutorProfile` for other gate regressions; reuse the same lifecycle helper (do not fork a parallel auto-flip path).
+- Update the readiness `ChecklistPanel` rendering so gate 2's item lists the profile-photo sub-item when missing.
+- Vitest coverage: extended `evaluateTutorProfileMinimum` returns `missing: ["profilePhoto"]` when photo is absent or unpublished; auto-flip happy path (`hide` on a `listed` tutor flips status and enqueues the notification with the documented payload); auto-flip does **not** trigger when the tutor is already `not_listed`.
+
+**Out of scope**
+
+- new auto-flip targets (only photo-removal regression on `listed` is added; other gate-regression auto-flips already exist via `updateTutorProfile`)
+- new notification kinds (reuse `tutor_listing_status_changed`)
+- changes to `public_listing_status` enum or `profile_visibility_status` enum
+
+**Acceptance criteria**
+
+- `evaluateTutorProfileMinimum` enforces published profile photo as part of gate 2; the `missing` array contains `"profilePhoto"` when missing/unpublished.
+- All callers pass the new boolean; no call site silently passes `true` as a placeholder.
+- Auto-flip-on-regression: hiding or removing a published photo on a `listed` tutor flips `public_listing_status → not_listed` and enqueues `tutor_listing_status_changed` with `reason: "gate_regression"` and `missingGateKeys: ["profilePhoto"]`.
+- Existing approved-but-photoless tutors surface as gate-2-failing on `/tutor/profile` and `/tutor/overview` (they were always failing the canonical gate; this subtask makes it visible).
+- Vitest coverage includes every case listed in Scope.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required.
+
+**Required manual operational steps (call out in the report)**
+
+- After deploy, every existing `approved` tutor without a published profile photo will have gate 2 fail and any currently `listed` row will not auto-delist (auto-flip only triggers on a write). Decide before deploy whether to (a) leave existing listed tutors as-is until they next edit, (b) run a one-time backfill that re-evaluates gates and flips offending rows to `not_listed`, or (c) grandfather existing listings via a temporary `legacy_photo_exempt_until` timestamp. The default in this subtask is (a); changing it is a separate decision outside this subtask's scope (track in `P2-MEDIA-001-10`).
+
+## 11.4.8 `P2-MEDIA-001-08` Public profile integration + CSP `frame-src` + `images.remotePatterns`
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-04`, `P2-MEDIA-001-05`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Extend the public-profile DTO and `/tutors/[slug]` rendering so the published M2 photo replaces the current `appUsers.avatar_url` fallback in the hero, and so the published M4 intro-video embed renders below the hero. Both are gated by `evaluateTutorProfileIndexability` (already shipped). Update `next.config.ts` to add only the three supported video-provider iframe origins to CSP `frame-src` and to allow the public-media bucket origin in `images.remotePatterns`. No wildcard.
+
+**Required source docs**
+
+- `docs/architecture/file-and-media-architecture-v1.md` (§ 11 public image architecture, § 12 external video architecture, § 16.6 CSP allowlist)
+- `docs/architecture/security-architecture-v1.md` (CSP must allow only explicit video-provider iframe domains, no wildcard)
+- `docs/data/data-retention-erasure-field-map-v1.md` (§ 13 intro-video fields — public rendering must be removable when retention requires)
+- `docs/architecture/accessibility-and-inclusive-ux-architecture-v1.md` (§ 13.2 tutor intro video — captions encouraged, fallback link when embed fails)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/public-profile.ts` — extend the existing public DTO and `buildTrustProofs` flow
+- `src/app/(public)/tutors/[slug]/page.tsx` — hero `Avatar` site and the insertion point for `IntroVideoEmbed`
+- `src/components/ui/avatar.tsx` — existing primitive
+- `next.config.ts` — CSP middleware / `images.remotePatterns`
+- `evaluateTutorProfileIndexability` — already shipped
+- `getTutorPublicMediaForOwner` projection from `-04` and the published intro-video projection from `-05`
+
+**Scope**
+
+- Extend the public profile DTO in `src/modules/tutors/public-profile.ts` to include:
+  - the published M2 photo public URL (when `tutor_public_media_assets.publication_status = 'published'` **and** `evaluateTutorProfileIndexability` passes)
+  - the M4 normalized embed reference (canonical embed URL, canonical watch URL, provider key, alt-text-equivalent title) when `intro_video_publication_status = 'published'`, the URL columns are non-null, **and** `evaluateTutorProfileIndexability` passes
+  - the DTO must never carry credential `storage_object_path`, never carry unpublished media URLs, and never carry `intro_video_*` fields when not `'published'`
+- Update `src/app/(public)/tutors/[slug]/page.tsx`:
+  - hero `Avatar` uses the M2 photo URL when present, falling back to the current `appUsers.avatar_url`, falling back to initials
+  - new `IntroVideoEmbed` server component renders below the hero with the provider's canonical embed iframe; iframe has `sandbox`/`allow` attributes scoped to the provider's domain; the iframe `title` attribute carries the photo's alt text (or a provider-aware default if no photo alt is published); a non-JS fallback link to the canonical watch URL is always rendered
+- Update `next.config.ts`:
+  - CSP `frame-src` directive adds **only** these origins: `https://www.youtube.com`, `https://www.youtube-nocookie.com`, `https://player.vimeo.com`, `https://www.loom.com`. No wildcard.
+  - `images.remotePatterns` allows the new `tutor-public-media` Supabase Storage origin
+- Vitest DTO leak tests: public DTO never carries `storage_object_path`; never carries unpublished media URLs; never carries `intro_video_*` fields when not `'published'`; indexability gate failure suppresses both the photo URL and the intro-video reference even when each is individually `'published'`.
+
+**Out of scope**
+
+- public-route-only e2e suite changes (the existing logged-out Playwright smoke suite already covers `/tutors/[slug]` rendering basics; `pnpm test:e2e` is **not** required by this subtask per the parent verification note — the final verification in `-10` calls this out explicitly)
+- changes to `IntroVideoEmbed` styling beyond DS composition
+- thumbnail fetching, captions transcoding, or any provider API integration
+
+**Acceptance criteria**
+
+- The public profile route renders the published M2 photo and the M4 embed only when both publication state is `'published'` **and** `evaluateTutorProfileIndexability` passes; otherwise the existing fallbacks (`appUsers.avatar_url` → initials for photo; no embed for video) are shown.
+- CSP `frame-src` lists only the four supported provider origins; no wildcard.
+- `images.remotePatterns` allows the `tutor-public-media` bucket origin.
+- Vitest DTO leak tests pass.
+- `pnpm lint:arch` passes (no inline SVG; no route-local card/panel CSS introduced for the embed).
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required by this subtask; the parent acceptance criteria list defers public-route smoke to `-10` manual checks.
+
+## 11.4.9 `P2-MEDIA-001-09` Internal credential review panel + `setTutorCredentialReviewStatus` + notification kind
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-03`
+**Parent:** `P2-MEDIA-001`
+
+**Goal**
+
+Extend the existing tutor application review detail page (`src/app/internal/tutor-reviews/[applicationId]/page.tsx`) with a credential review panel; add `setTutorCredentialReviewStatus` to `src/modules/tutors/application-review-service.ts`; revalidate the public tutor route on credential approval so `buildTrustProofs` updates; add the `tutor_credential_reviewed` notification kind (if not already present in the kinds enum) and emit on decision transitions. Do not create a parallel `/internal/credentials` route family — reviews are separate item *types* on the same surface for MVP per file-and-media § 18.1.
+
+Note: the parent task referenced the path as `[reviewId]`; the actual route segment in the repo is `[applicationId]`. Use the actual path; treat the parent's wording as a typo to be reconciled in `-10`'s acceptance walkthrough.
+
+**Required source docs**
+
+- `docs/architecture/file-and-media-architecture-v1.md` (§ 18.1 review-state separation between credential review and public-media review)
+- `docs/data/database-enum-and-status-glossary-v1.md` (§ 8.4 `tutor_credentials.review_status` allowed transitions; the `_reviewed_at_consistency_chk` invariant)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§ 10.3 internal review actions; admin-only review-status changes)
+- `docs/architecture/admin-and-moderation-architecture-v1.md` (review-state separation, audit-trail discipline)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016 canonical rejection copy: `"This credential needs an update before it can count as approved proof."`; J-INT-004 credential review flow)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/app/internal/tutor-reviews/[applicationId]/page.tsx` — existing tutor application review detail page; extend with a "Credential review" panel
+- `src/modules/tutors/application-review-service.ts` — extend with `setTutorCredentialReviewStatus`; do not fork a parallel service
+- `src/modules/tutors/application-review-repository.ts` — reuse the `tutor_application_reviews` insert path for internal-note rows
+- `getTutorCredentialsForOwner` from `-03` — adapt or add an admin-scoped variant `getTutorCredentialsForAdmin(tutorProfileId)` that returns rows with admin-only signed download URLs (server-issued for the admin only, never embedded in HTML for cache poisoning)
+- notification dispatcher used by `P1-NOTIF-001`/`P1-NOTIF-002`/`P2-PROFILE-001`
+
+**Scope**
+
+- New "Credential review" panel rendered on `src/app/internal/tutor-reviews/[applicationId]/page.tsx`:
+  - lists the tutor's credentials with file preview via signed short-TTL URL (server-issued for the admin only)
+  - each row exposes `Approve` / `Reject` / `Request update` / `Mark expired` actions through `setTutorCredentialReviewStatus` (composed via `OverflowMenuTrigger` + `Menu` from `P2-DS-MENU-001`)
+  - admin-only DTO; no PII beyond what `application-review` already exposes
+- New `setTutorCredentialReviewStatus(credentialId, decision, internalNote)` Server Action in `src/modules/tutors/application-review-service.ts`:
+  - writes `review_status` and, for terminal states, `reviewed_at = now()` (respecting `_reviewed_at_consistency_chk`)
+  - inserts an internal-note row through the existing `tutor_application_reviews` mechanism shipped by `P2-APPLY-002`
+  - enqueues a `tutor_credential_reviewed` notification on `approved` / `rejected` / `expired` transitions; rejection copy uses J-TUT-016: `"This credential needs an update before it can count as approved proof."`
+  - revalidates `/tutors/[slug]` and the relevant tutor public cache tag on `approved` (so `buildTrustProofs` updates)
+- Add the `tutor_credential_reviewed` notification kind to the existing kinds enum if it is not present. Reuse the existing in-app notification dispatch path (no new channel).
+- Vitest coverage: `setTutorCredentialReviewStatus` per terminal state (`approved`, `rejected`, `expired`); invariant preservation for `_reviewed_at_consistency_chk`; notification fan-out on each terminal state; `tutor_application_reviews` row inserted with the correct internal-note payload; admin authorization rejection for non-admin actors.
+
+**Out of scope**
+
+- a separate `/internal/credentials` route family or dedicated moderation queue
+- bulk actions across multiple credentials
+- credential `expired` cron-based automatic transitions (admin-initiated only in this subtask)
+- public-safe redacted credential thumbnails as a separate M3 asset type — derived trust proof stays text-only via `buildTrustProofs`
+
+**Acceptance criteria**
+
+- The credential review panel exists on the existing tutor application review detail page and exposes `Approve` / `Reject` / `Request update` / `Mark expired` actions.
+- Transitions respect the `_reviewed_at_consistency_chk` constraint, write a `tutor_application_reviews` internal-note row, and revalidate the public tutor route on credential approval.
+- The credential rejection notification uses the J-TUT-016 canonical copy.
+- The `tutor_credential_reviewed` notification kind is present in the kinds enum and is fanned out on each terminal transition.
+- Vitest coverage includes every case listed in Scope.
+- `pnpm lint:arch` passes (no route-local icons, flags, or ad hoc menu CSS; row actions use `OverflowMenuTrigger` + `Menu`).
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` is **not** required.
+
+## 11.4.10 `P2-MEDIA-001-10` Final verification of `P2-MEDIA-001` scope (closes parent)
+
+**Status:** `ready`
+**Priority:** `P1`
+**Wave:** 1
+**Depends on:** `P2-MEDIA-001-01`, `P2-MEDIA-001-02`, `P2-MEDIA-001-03`, `P2-MEDIA-001-04`, `P2-MEDIA-001-05`, `P2-MEDIA-001-06`, `P2-MEDIA-001-07`, `P2-MEDIA-001-08`, `P2-MEDIA-001-09`
+**Parent:** `P2-MEDIA-001` (this subtask closes the parent)
+
+**Goal**
+
+Verify end-to-end that the full original scope of `P2-MEDIA-001` is delivered by the preceding nine subtasks, run the complete verification stack and the manual smoke walkthrough preserved from the original parent task, and produce the operational-impact report for the gate-2 photo enforcement. No new product code is added by this subtask except small remediations for any gaps the verification surfaces (each remediation must be scoped tightly and noted in the subtask report).
+
+**Required source docs**
+
+- The full source-doc list from the parent `P2-MEDIA-001` task (preserved below in the **Original parent acceptance criteria** section); each subtask's individual doc list is a subset.
+- `docs/architecture/file-and-media-architecture-v1.md` (referenced as canonical end-to-end)
+- `docs/data/tutor-listing-readiness-model-v1.md` (gate 2 enforcement check)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016 and J-INT-004 walkthroughs)
+- `docs/architecture/security-architecture-v1.md` (CSP `frame-src` audit)
+
+**Scope**
+
+- Confirm each of the parent acceptance criteria below holds end-to-end against the merged state of `-01` through `-09`. For any criterion not satisfied, file a remediation note in the subtask report and either (a) land a tightly scoped fix in this subtask or (b) reopen the responsible subtask.
+- Run the full verification stack and record results: `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`. Run the Supabase DB smoke test (`supabase/tests/database/smoke/tutor_media_baseline.test.sql`).
+- Run the complete manual smoke walkthrough listed under **Original parent manual smoke** below. Record results per bullet in the subtask report.
+- Verify Supabase Storage bucket policies on the dashboard match the `-01` migration's intent before any tutor uploads in production.
+- Audit the CSP response on `/tutors/[slug]`: confirm `frame-src` lists only the four supported provider origins; no wildcard.
+- Produce the **Operational-impact report** for the gate-2 photo enforcement: count of existing approved tutors without a published photo, count of currently `listed` rows that would become gate-2-failing, and a recommendation on which of options (a/b/c) from the parent operational-steps section to apply at deploy time.
+- Reconcile the parent's wording `[reviewId]` against the actual repo path `[applicationId]` (the route is `src/app/internal/tutor-reviews/[applicationId]/page.tsx`). Update the parent doc if the typo remains anywhere in the source-doc set.
+
+**Out of scope**
+
+- net-new features beyond closing identified gaps from `-01` … `-09`
+- e2e Playwright run (the parent acceptance list says `pnpm test:e2e` is **not** required; record this explicitly in the report)
+
+**Original parent acceptance criteria (binding for this final verification)**
+
+- The three sub-routes `/tutor/profile/credentials`, `/tutor/profile/photo`, `/tutor/profile/video` exist, are gated to `application_status === "approved"` (mirroring `/tutor/profile`), and the `/tutor/profile` editor surfaces a "Trust & media" panel that deep-links into them.
+- All editor DTOs are `D5` and carry no internal moderation state (no `internal_note`, no reviewer identity, no unrelated tutors' rows). Signed credential download URLs are server-issued and never appear in the rendered HTML for cache poisoning.
+- Credential uploads validate type (PDF/JPEG/PNG only) and size (≤ 15 MB) at the boundary; uploads land in the **private** `tutor-credentials` bucket; the row defaults to `review_status = 'uploaded'`; an edit of file or metadata on an `approved` row resets it to `pending_review` with `reviewed_at = null`. Deletion removes the row and either deletes the storage object synchronously or enqueues cleanup via the background-jobs module.
+- Public photo uploads validate type (JPEG/PNG/WebP) and size (≤ 5 MB), land in the **public** `tutor-public-media` bucket, default to `publication_status = 'uploaded'`, and require an explicit "Publish photo" action to flip to `'published'`. At most one `profile_photo` is `'published'` per tutor (partial unique index).
+- Intro-video setter accepts only YouTube / Vimeo / Loom URLs (registry lookup); unsupported providers return the canonical journey copy `"This video link isn't supported. Use a supported public video provider."` Pasted iframe HTML is rejected. The setter writes the normalized provider, external id, and canonical URL via the adapter; `intro_video_last_validated_at = now()`. Publication requires a separate explicit toggle.
+- The public profile route renders the published M2 photo and the M4 embed only when both publication state is `'published'` **and** `evaluateTutorProfileIndexability` passes; otherwise the fallback (existing `appUsers.avatar_url` → initials for photo; no embed for video) is shown. CSP `frame-src` allows only the supported provider origins; no wildcards.
+- `evaluateTutorProfileMinimum` enforces published profile photo as part of gate 2; `tutor-profile-editor.ts`/`media-public-assets-service.ts` auto-flip-on-regression flips `public_listing_status` from `listed` → `not_listed` when a published photo is removed from a listed tutor, and enqueues `tutor_listing_status_changed` with `reason: "gate_regression"` and `missingGateKeys: ["profilePhoto"]`. Existing approved-but-photoless tutors are surfaced as gate-2-failing on `/tutor/profile` and `/tutor/overview` until they publish a photo (operational impact called out in the subtask report).
+- Internal review panel exists on the existing tutor application review detail page and exposes `Approve` / `Reject` / `Request update` / `Mark expired` actions. The transitions respect the `_reviewed_at_consistency_chk` constraint, write a `tutor_application_reviews` internal-note row, and revalidate the public tutor route on credential approval (so `buildTrustProofs` updates). Credential rejection notification text uses the J-TUT-016 canonical copy.
+- One migration adds the new table, the partial unique index, the two new `tutor_profiles` columns, the `video_media_providers` seed rows (idempotent), and the two storage buckets; RLS on the new table mirrors `tutor_credentials_select_self`. The Supabase DB smoke test passes. The bucket-creation portion handles existing buckets idempotently (`if not exists`).
+- DS-first holds: no new route-local card/chip/panel/icon CSS; no inline SVGs; no new DS primitives introduced; the three sub-routes compose only existing `Panel`/`Section`/`Card`/`Chip`/`StatusBadge`/`Avatar`/`Icon`/`Flag`/`Popover`/`Menu`/`OverflowMenuTrigger`/`ChecklistPanel`/`InlineNotice` primitives. `pnpm lint:arch` passes.
+- Reference-backed labels (subjects/focus areas for credential `credential_subject_id`, video provider display names) flow through `src/modules/reference/**` loaders, not route-local arrays.
+
+**Original parent out-of-scope (binding for this final verification)**
+
+- raw credential files on public tutor pages — public exposure is **only** via derived `TrustProof` via the existing `buildTrustProofs` pipeline (file-and-media §§ 9.3, 10.1)
+- native video hosting, transcoding, or any direct video upload (file-and-media § 12.1) — Cloudflare Stream or equivalent is explicitly deferred (§ 21)
+- arbitrary user-supplied embed HTML; arbitrary providers beyond YouTube/Vimeo/Loom (§ 12.4, § 13.4)
+- image transformation, cropping, resizing, or any paid image pipeline (§ 8.5) — accept the uploaded image as-is
+- a separate `/internal/credentials` admin route family or a dedicated credential moderation queue (handled in-line on the existing tutor review detail per file-and-media § 18.1)
+- a `tutor_video_references` table or any second public video per tutor — MVP supports exactly one intro video per tutor on `tutor_profiles`
+- secondary public media (galleries, banner images, additional credential thumbnails) — file-and-media § 11.1 caps Phase 1 public media at one primary photo
+- report attachments (M5) or any other new asset class
+- credential `expired` automatic transitions (admin-initiated only across this family; cron-based expiry deferred)
+- public-safe redacted credential thumbnails as a separate `M3` asset type — derived trust proof stays text-only via the existing builder
+- changes to `profile_visibility_status` or `public_listing_status` enums; the photo/video publication state is per-asset, not per-tutor
+- e2e test coverage of file upload itself (Playwright file-upload UX is brittle; integration tests cover service boundaries instead)
+
+**Original parent manual smoke (each bullet must be exercised and recorded)**
+
+- sign in as an approved tutor with all other gates passing, no photo → `/tutor/profile` shows gate 2 failing with the photo sub-item; `Publish` button on `/tutor/profile/photo` is disabled until an upload exists
+- upload a JPG, set alt text, click `Publish photo` → photo appears on `/tutors/${slug}` in the hero, alt text is on the `img`; the readiness checklist on `/tutor/profile` now shows gate 2 passing
+- paste a YouTube URL on `/tutor/profile/video` → normalized embed preview renders; click `Publish` → embed appears on `/tutors/${slug}`; non-JS fallback link to the canonical watch URL is present
+- paste a Twitch URL → form rejects with `"This video link isn't supported. Use a supported public video provider."`
+- paste raw `<iframe>` HTML → rejected with the same validation copy
+- upload a credential PDF on `/tutor/profile/credentials` → row appears with `review_status = uploaded`; sign in as admin → review detail page exposes the file preview via signed URL; click `Approve` → row flips to `approved` with `reviewed_at` set; sign back in as the tutor → `buildTrustProofs` surfaces the credential on `/tutors/${slug}` as derived M3 trust proof; raw file is not linked from the public page
+- edit an `approved` credential's title → review status auto-resets to `pending_review` with `reviewed_at` cleared; public trust proof line disappears until re-approval
+- admin clicks `Reject` on a pending credential → tutor receives a `tutor_credential_reviewed` notification with the canonical J-TUT-016 copy
+- while listed with a published photo, click `Hide photo` → `public_listing_status` auto-flips to `not_listed`, gate-regression notification arrives, public profile becomes unreachable
+- confirm `Content-Security-Policy` `frame-src` on the public profile response lists only YouTube/Vimeo/Loom origins; no wildcard
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- Supabase DB smoke test (`supabase/tests/database/smoke/tutor_media_baseline.test.sql`)
+- `pnpm test:e2e` is **not** required (call this out explicitly in the final report)
+- Complete the **Original parent manual smoke** walkthrough above and record per-bullet results in the subtask report
+- Produce the **Operational-impact report** described in Scope; include counts and a recommended deploy-time option (a/b/c)
+- On successful verification, mark the parent `P2-MEDIA-001` as `done` along with `-01` … `-10`
+
+**Required source docs**
+
+- `docs/architecture/file-and-media-architecture-v1.md` (canonical doc — § 6 asset-class model M1/M2/M3/M4, § 7 object model, § 8 storage and bucket separation, § 9 credential architecture, § 11 public image architecture, § 12 external video architecture and provider adapters, § 15 publication-state model, § 16 security posture, § 22 decisions to lock now)
+- `docs/data/data-ownership-boundary-map-v1.md` (§§ around `tutor_credentials` "owner limited, internal full, never public raw"; tutor public profile content stays on `tutor_profiles`)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§ 10.3 `tutor_credentials` — owner uploads via server-owned flows; admin review-status changes only through internal tools; public never reads raw evidence)
+- `docs/data/database-rls-boundaries-v1.md` (§ 9.3 `tutor_credentials` Type C posture; sets the RLS pattern the new `tutor_public_media_assets` table must follow — owner-read via server-owned writes, admin full)
+- `docs/data/database-enum-and-status-glossary-v1.md` (§ 8.4 `tutor_credentials.review_status` allowed values and transitions)
+- `docs/data/data-retention-erasure-field-map-v1.md` (§ 13 intro video fields → "remove intro video provider/id/url from public rendering"; § 15 `tutor_credentials` P5 retention and `storage_object_path` cleanup posture)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (§ 8.6 class D5 tutor-private DTO — editor/queue DTOs; § 1026 area "D5/D7 for private tutor credential review")
+- `docs/data/tutor-listing-readiness-model-v1.md` (§ 4.2 gate 2 — "real profile photo (not placeholder)" is currently unenforced; this task adds the photo check to `evaluateTutorProfileMinimum`)
+- `docs/data/api-and-server-action-contracts-v1.md` (§§ 6 Server Action golden path, 8 boundary errors, 14 cache revalidation)
+- `docs/data/drizzle-schema-and-query-conventions-v1.md` (module schema/repository conventions — new declarations in `src/modules/tutors/schema.ts`)
+- `docs/data/database-change-review-checklist-v1.md` (migration shape, RLS smoke test, indexes)
+- `docs/architecture/accessibility-and-inclusive-ux-architecture-v1.md` (§ 13.1 alt-text strategy for profile imagery; § 13.2 tutor intro video — captions encouraged, video must enhance not gate understanding, fallback when embed fails)
+- `docs/architecture/compliance-and-regulatory-posture-v1.md` (file storage posture; takedown discipline)
+- `docs/architecture/security-architecture-v1.md` (upload constraints — file type/size/purpose; private files never via public URLs; signed access; CSP must allow only explicit video-provider iframe domains, no wildcard)
+- `docs/architecture/privacy-and-data-retention-architecture-v1.md` (credential retention, public-media removal precedes storage deletion)
+- `docs/architecture/route-layout-implementation-map-v1.md` (§ 7.6 tutor family — operational routes stay under `/tutor/*`; new sub-routes sit beneath the existing `/tutor/profile` editor and reuse `src/app/tutor/layout.tsx`)
+- `docs/architecture/canonical-value-ownership-map-v1.md` (status canonicalization; reference-backed labels through `src/modules/reference/**`)
+- `docs/design-system/agent-ui-rules.md` (DS-first; no route-local card/chip/panel/icon/flag CSS or inline SVGs; icons via `src/components/ui/icon.tsx`; flags via `src/components/ui/flag.tsx`)
+- `docs/design-system/design-system-spec-final-v1.md` (Panel/Section/Card/Chip/StatusBadge/Avatar usage)
+- `docs/design-system/component-specs-core-v1.md` (compose only existing core primitives)
+- `docs/design-system/component-specs-phase2-v1.md` (Popover, Menu, OverflowMenuTrigger from `P2-DS-MENU-001` for credential row actions and asset row actions; Chip pressed state for provider selector)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-TUT-016 tutor profile/credential/intro-video management; J-INT-004 credential review)
+- `docs/architecture/admin-and-moderation-architecture-v1.md` (review-state separation between credential review and public-media review per file-and-media § 18.1)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/modules/tutors/schema.ts` — `tutor_credentials` table already exists (`storage_object_path`, `review_status`, `public_display_preference`, `credential_subject_id`, `credential_subject_focus_area_id`); `tutor_profiles.intro_video_provider`/`intro_video_external_id`/`intro_video_url` columns already exist. **No** column changes on these; only the new `tutor_public_media_assets` table.
+- `src/modules/tutors/constants.ts` — reuse `tutorCredentialReviewStatuses`, `tutorCredentialTypes`. Add only `tutorPublicMediaRoles` (initially `["profile_photo"]`) and `tutorPublicMediaPublicationStatuses` (`["uploaded", "pending_review", "approved", "published", "hidden"]` per file-and-media § 15.2).
+- `src/modules/reference/schema.ts` — `videoMediaProviders` reference table already exists; this task adds the seed rows (`youtube`, `vimeo`, `loom`).
+- `src/modules/tutors/examiner-credentials.ts` + `examiner-credentials-builder.ts` — already query approved `tutor_credentials` and build examiner badges; reuse as-is.
+- `src/modules/tutors/public-profile.ts` — `buildTrustProofs` already derives M3 trust output from approved credentials; reuse, and extend the public DTO to include the published M2 photo URL and the M4 normalized intro-video reference (publication-gated).
+- `src/modules/tutors/listing-readiness.ts` — extend `TutorProfileMinimumInput` with `hasPublishedProfilePhoto: boolean` and add it to the `missing` checks for gate 2 per the readiness-model § 4.2 photo requirement; update every caller (`application.ts:279-302`, `tutor-overview.ts`, `tutor-profile-editor.ts`) to pass the new field. The new field flips gate 2 to fail for any approved tutor with no published photo, so the migration includes a backfill note (existing approved tutors stay `not_listed` until they publish a photo) — call out the operational impact in the report.
+- `src/modules/tutors/tutor-profile-editor.ts` + `tutor-profile-editor-service.ts` — keep the existing editor untouched; the new sub-routes are sibling pages that link from a "Trust & media" panel added to `/tutor/profile`. The auto-flip-on-regression path in `updateTutorProfile` must call the extended `evaluateTutorProfileMinimum` so that removing a published photo on a listed profile re-flips to `not_listed`.
+- `src/components/ui` primitives (`Panel`, `Section`, `Card`, `Chip`, `StatusBadge`, `Avatar`, `Icon`, `Flag`, `InlineNotice`, `getButtonClassName`, `ChecklistPanel`) and the Phase 2 DS primitives (`Popover`, `Menu`, `OverflowMenuTrigger` from `P2-DS-MENU-001`).
+- `src/lib/supabase/*` — reuse existing client wiring for service-role writes and signed-URL downloads.
+- `src/app/internal/tutor-reviews/` — extend the existing tutor application review detail page with a credential review panel rather than creating a new `/internal/credentials` family.
+- `src/app/(public)/tutors/[slug]/page.tsx` — render the published M2 photo (replacing the current `appUsers.avatar_url` fallback if photo is published) and the M4 intro-video embed below the hero. Both must be gated by `evaluateTutorProfileIndexability`.
+
+**Scope**
+
+- New sub-routes under the existing tutor profile editor, each a server component with sibling `actions.ts` and a route-local CSS module composed only of existing DS primitives:
+  - `src/app/tutor/profile/credentials/page.tsx` — list current `tutor_credentials` rows for the owning tutor, an "Add credential" form (credential_type, title, issuing_body, optional credential_subject_id/credential_subject_focus_area_id, file upload), per-row overflow menu (replace file, edit metadata, toggle `public_display_preference`, delete), and a read-only review-status chip per row using `StatusBadge`. Coaching copy explains that approved credentials become public trust proof (not the raw file).
+  - `src/app/tutor/profile/photo/page.tsx` — upload/replace/remove the M2 profile photo, with alt-text capture (per accessibility § 13.1) and a single "Publish photo" / "Hide photo" toggle that moves `tutor_public_media_assets.publication_status` between `approved` and `published` / `hidden`. The page renders an `Avatar` preview at the same size used by the public hero.
+  - `src/app/tutor/profile/video/page.tsx` — paste-and-validate a single intro-video URL (provider auto-detected and normalized via the new adapter layer), preview the normalized embed, and toggle publication. Reuses the existing `tutor_profiles.intro_video_provider/external_id/url` columns; no schema change.
+- Add a "Trust & media" panel to `src/app/tutor/profile/page.tsx` that summarizes credential count by `review_status`, photo publication state, intro-video publication state, and deep-links into the three new sub-routes. The panel must compose existing `Panel`/`Section`/`Chip`/`StatusBadge` primitives — no new DS primitives.
+- New domain module entries in `src/modules/tutors/`:
+  - `media-credentials.ts` (query) + `media-credentials-service.ts` (command): `getTutorCredentialsForOwner(account)` returns a `D5` DTO of own credential rows with signed short-TTL download URLs (server-issued, not exposed in HTML). Server Actions: `uploadTutorCredential(input, file)`, `replaceTutorCredentialFile(id, file)`, `updateTutorCredentialMetadata(id, input)`, `setTutorCredentialPublicDisplayPreference(id, boolean)`, `deleteTutorCredential(id)`. All writes go through the Supabase service-role client, validate file type (PDF/JPEG/PNG only per file-and-media § 16.3) and size (≤ 15 MB), write the object to the **private** `tutor-credentials` bucket under a `tutor/${tutorProfileId}/credentials/${credentialId}/${filename}` path, and on first upload force `review_status = 'uploaded'`. Replacement or metadata edit on an `approved` credential automatically resets `review_status` to `pending_review` and clears `reviewed_at` (per glossary § 8.4 transition rules and constraint `tutor_credentials_reviewed_at_consistency_chk`). Deletion soft-deletes the row and schedules storage cleanup via the existing background-jobs module (see file-and-media § 19.2 — reuse the worker pattern from `P15-DATA-002` if present; otherwise perform synchronous storage deletion and document the deferral).
+  - `media-public-assets.ts` (query) + `media-public-assets-service.ts` (command): `getTutorPublicMediaForOwner(account)`. Server Actions: `uploadTutorProfilePhoto(file, altText)`, `updateTutorProfilePhotoAlt(altText)`, `setTutorProfilePhotoPublication("publish" | "hide" | "remove")`. Writes go to the **public** `tutor-public-media` bucket under `tutor/${tutorProfileId}/photo/${assetId}.${ext}`. Image type restricted to JPEG/PNG/WebP, size ≤ 5 MB, square aspect enforced by client-side preview only (no transformations — image transformation is explicitly an optimization layer per file-and-media § 8.5 and out of scope here).
+  - `media-video-reference.ts` (query) + `media-video-reference-service.ts` (command): `getTutorIntroVideoForOwner(account)`. Server Actions: `setTutorIntroVideo({ providerUrl })`, `clearTutorIntroVideo()`, `setTutorIntroVideoPublication("publish" | "hide")`. The setter routes the URL through the new provider-adapter layer.
+  - `video-providers/` adapter layer with one module per supported provider (`youtube.ts`, `vimeo.ts`, `loom.ts`) and a shared `index.ts` registry. Each adapter exports: `provider_key`, `displayName`, `parseUrl(url) -> { externalId, canonicalWatchUrl, canonicalEmbedUrl } | null`, and `thumbnailUrl(externalId) -> string | null`. The registry validates supported provider and rejects everything else with a `validation` boundary error using the canonical journey copy from J-TUT-016: `"This video link isn't supported. Use a supported public video provider."` No pasted embed HTML is accepted (file-and-media § 12.4). Last-validated timestamp is recorded on the tutor row via a new `intro_video_last_validated_at timestamptz null` column (see migration).
+- One **migration** in `supabase/migrations/` (single file, single timestamp) that:
+  - Creates the `tutor-credentials` private storage bucket (RLS: owner read via service-role signed URLs only; no anon/auth direct access) and the `tutor-public-media` public storage bucket (RLS: public read; service-role write).
+  - Creates the `tutor_public_media_assets` table: `id uuid pk`, `tutor_profile_id uuid not null references tutor_profiles(id) on delete cascade`, `media_role text not null check (media_role in ('profile_photo'))`, `storage_object_path text not null`, `alt_text text`, `publication_status text not null default 'uploaded'`, `sort_order integer not null default 0`, `created_at`/`updated_at` with the existing `set_updated_at` trigger; a partial unique index `tutor_public_media_assets_one_published_photo_per_tutor_idx` enforcing one `published` `profile_photo` per tutor; RLS enabled with `_select_self` policy mirroring the existing `tutor_credentials_select_self`; admin policies reuse the existing internal capability check.
+  - Adds `intro_video_publication_status text not null default 'hidden' check (publication_status in ('hidden', 'published'))` and `intro_video_last_validated_at timestamptz null` to `tutor_profiles`. The two intro-video state additions live on `tutor_profiles` because the URL columns are already there; do not create a separate `tutor_video_references` table for MVP (file-and-media § 7.6 allows this when a single provider video per tutor is the product rule).
+  - Seeds `video_media_providers` with three rows: `('youtube', 'YouTube', 0, true)`, `('vimeo', 'Vimeo', 1, true)`, `('loom', 'Loom', 2, true)`. Idempotent insert (`on conflict (provider_key) do nothing`).
+  - Includes a Supabase DB smoke test under `supabase/tests/database/smoke/` covering: new table shape and constraints, RLS posture (owner select only; anon/auth blocked), storage bucket existence and policy, provider seed presence, and the intro-video new-column defaults.
+- Mirror the schema additions in `src/modules/tutors/schema.ts` (new `tutorPublicMediaAssets` declaration; new `intro_video_publication_status` + `intro_video_last_validated_at` columns on `tutorProfiles`).
+- Extend `evaluateTutorProfileMinimum` to take `hasPublishedProfilePhoto: boolean` and add `"profilePhoto"` to the `ProfileMinimumField` union and `missing` checks. Update every caller (`application.ts`, `tutor-overview.ts`, `tutor-profile-editor.ts`, `application-service.ts` if it calls the function) to load published-photo presence via the new `getTutorPublicMediaForOwner` projection. The readiness `ChecklistPanel` line for gate 2 must now include the photo sub-item.
+- Public profile integration (`src/modules/tutors/public-profile.ts` + `src/app/(public)/tutors/[slug]/page.tsx`):
+  - DTO carries the published M2 photo public URL (when `tutor_public_media_assets.publication_status = 'published'` and the tutor passes `evaluateTutorProfileIndexability`) and the M4 normalized embed reference (when `intro_video_publication_status = 'published'`, the URL columns are non-null, and the tutor passes indexability).
+  - The hero `Avatar` uses the M2 photo URL when present, falling back to the current `appUsers.avatar_url`, falling back to initials.
+  - A new `IntroVideoEmbed` server component renders the provider's canonical embed iframe with the provider's domain set in `sandbox`/`allow` attributes; the page includes a non-JS fallback link to the canonical watch URL and the photo's alt text is rendered as the iframe `title`.
+  - Update `next.config.ts` (or the existing CSP middleware) to add **only** the three provider iframe origins to `frame-src`: `https://www.youtube.com`, `https://www.youtube-nocookie.com`, `https://player.vimeo.com`, `https://www.loom.com`. No wildcard (file-and-media § 16.6).
+  - Update `next.config.ts` `images.remotePatterns` to allow the new public-media bucket origin.
+- Internal credential review surface (extends `src/app/internal/tutor-reviews/[reviewId]/page.tsx` — the existing application detail page; do **not** create a parallel `/internal/credentials` route family, per file-and-media § 18.1 reviews are separate item *types*, not separate queues for MVP):
+  - New "Credential review" panel listing the tutor's credentials with file preview via signed short-TTL URL (server-issued for the admin only), each row offering `Approve` / `Reject` / `Request update` / `Mark expired` actions through a new `setTutorCredentialReviewStatus(credentialId, decision, internalNote)` Server Action in `src/modules/tutors/application-review-service.ts` (reuse — do not fork). The action writes `review_status`, `reviewed_at = now()` for terminal states (per the `_reviewed_at_consistency_chk` constraint), and inserts an internal-note row through the existing `tutor_application_reviews` mechanism shipped by `P2-APPLY-002`. The user-facing copy for a rejection uses J-TUT-016's canonical line: `"This credential needs an update before it can count as approved proof."`
+  - After any credential transition, revalidate `/tutors/[slug]` (approved credentials feed `buildTrustProofs`) and the relevant tutor public cache tag.
+- Notification integration:
+  - On credential decision transitions (`approved` / `rejected` / `expired`), enqueue a tutor-only notification via the boundary used by `P1-NOTIF-001`/`P1-NOTIF-002`. Reuse a `tutor_credential_reviewed` kind if it exists; otherwise add it to the existing kinds enum.
+  - On the auto-flip-on-photo-removal regression (an existing listed tutor removes their published photo), reuse the `tutor_listing_status_changed` `reason: "gate_regression"` payload from `P2-PROFILE-001` with `missingGateKeys: ["profilePhoto"]`.
+- DS-first verification: no route-local card/chip/panel/icon CSS, no inline SVGs, no new DS primitives. Reference-backed labels (subjects/focus areas for credential context, video providers) come from `src/modules/reference/**` loaders only.
+
+**Out of scope**
+
+- raw credential files on public tutor pages — public exposure is **only** via derived `TrustProof` via the existing `buildTrustProofs` pipeline (file-and-media §§ 9.3, 10.1)
+- native video hosting, transcoding, or any direct video upload (file-and-media § 12.1) — Cloudflare Stream or equivalent is explicitly deferred (§ 21)
+- arbitrary user-supplied embed HTML; arbitrary providers beyond YouTube/Vimeo/Loom (§ 12.4, § 13.4)
+- image transformation, cropping, resizing, or any paid image pipeline (§ 8.5) — accept the uploaded image as-is
+- a separate `/internal/credentials` admin route family or a dedicated credential moderation queue (handled in-line on the existing tutor review detail per file-and-media § 18.1)
+- a `tutor_video_references` table or any second public video per tutor — MVP supports exactly one intro video per tutor on `tutor_profiles`
+- secondary public media (galleries, banner images, additional credential thumbnails) — file-and-media § 11.1 caps Phase 1 public media at one primary photo
+- report attachments (M5) or any other new asset class
+- credential `expired` automatic transitions (admin-initiated only in this task; cron-based expiry deferred)
+- public-safe redacted credential thumbnails as a separate `M3` asset type — derived trust proof stays text-only via the existing builder
+- changes to `profile_visibility_status` or `public_listing_status` enums; the photo/video publication state is per-asset, not per-tutor
+- e2e test coverage of file upload itself (Playwright file-upload UX is brittle; integration tests cover service boundaries instead)
+
+**Acceptance criteria**
+
+- The three sub-routes `/tutor/profile/credentials`, `/tutor/profile/photo`, `/tutor/profile/video` exist, are gated to `application_status === "approved"` (mirroring `/tutor/profile`), and the `/tutor/profile` editor surfaces a "Trust & media" panel that deep-links into them.
+- All editor DTOs are `D5` and carry no internal moderation state (no `internal_note`, no reviewer identity, no unrelated tutors' rows). Signed credential download URLs are server-issued and never appear in the rendered HTML for cache poisoning.
+- Credential uploads validate type (PDF/JPEG/PNG only) and size (≤ 15 MB) at the boundary; uploads land in the **private** `tutor-credentials` bucket; the row defaults to `review_status = 'uploaded'`; an edit of file or metadata on an `approved` row resets it to `pending_review` with `reviewed_at = null`. Deletion removes the row and either deletes the storage object synchronously or enqueues cleanup via the background-jobs module.
+- Public photo uploads validate type (JPEG/PNG/WebP) and size (≤ 5 MB), land in the **public** `tutor-public-media` bucket, default to `publication_status = 'uploaded'`, and require an explicit "Publish photo" action to flip to `'published'`. At most one `profile_photo` is `'published'` per tutor (partial unique index).
+- Intro-video setter accepts only YouTube / Vimeo / Loom URLs (registry lookup); unsupported providers return the canonical journey copy `"This video link isn't supported. Use a supported public video provider."` Pasted iframe HTML is rejected. The setter writes the normalized provider, external id, and canonical URL via the adapter; `intro_video_last_validated_at = now()`. Publication requires a separate explicit toggle.
+- The public profile route renders the published M2 photo and the M4 embed only when both publication state is `'published'` **and** `evaluateTutorProfileIndexability` passes; otherwise the fallback (existing `appUsers.avatar_url` → initials for photo; no embed for video) is shown. CSP `frame-src` allows only the three supported provider origins; no wildcards.
+- `evaluateTutorProfileMinimum` enforces published profile photo as part of gate 2; `tutor-profile-editor.ts` auto-flip-on-regression flips `public_listing_status` from `listed` → `not_listed` when a published photo is removed from a listed tutor, and enqueues `tutor_listing_status_changed` with `reason: "gate_regression"` and `missingGateKeys: ["profilePhoto"]`. Existing approved-but-photoless tutors are surfaced as gate-2-failing on `/tutor/profile` and `/tutor/overview` until they publish a photo (call out the operational impact in the report).
+- Internal review panel exists on the existing tutor application review detail page and exposes `Approve` / `Reject` / `Request update` / `Mark expired` actions. The transitions respect the existing `_reviewed_at_consistency_chk` constraint, write a `tutor_application_reviews` internal-note row, and revalidate the public tutor route on credential approval (so `buildTrustProofs` updates). Credential rejection notification text uses the J-TUT-016 canonical copy.
+- One migration adds the new table, the partial unique index, the two new `tutor_profiles` columns, the `video_media_providers` seed rows (idempotent), and the two storage buckets; RLS on the new table mirrors `tutor_credentials_select_self`. The Supabase DB smoke test passes. The bucket-creation portion handles existing buckets idempotently (`if not exists`).
+- DS-first holds: no new route-local card/chip/panel/icon CSS; no inline SVGs; no new DS primitives introduced; the three sub-routes compose only existing `Panel`/`Section`/`Card`/`Chip`/`StatusBadge`/`Avatar`/`Icon`/`Flag`/`Popover`/`Menu`/`OverflowMenuTrigger`/`ChecklistPanel`/`InlineNotice` primitives. `pnpm lint:arch` passes.
+- Reference-backed labels (subjects/focus areas for credential `credential_subject_id`, video provider display names) flow through `src/modules/reference/**` loaders, not route-local arrays.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- Vitest unit tests cover: (a) each video adapter's `parseUrl` for canonical, short, watch-with-params, and invalid URL shapes; registry rejection of unsupported providers, (b) credential Server Actions: file-type and size rejection, `review_status` reset on edit-of-approved, `_reviewed_at_consistency_chk` invariant preserved across all decisions, (c) photo Server Actions: at-most-one-published invariant and the alt-text required-for-publication rule, (d) intro-video setter: URL normalization, publication gating, validated-at timestamping, (e) extended `evaluateTutorProfileMinimum` returns `missing: ["profilePhoto"]` when photo is absent or unpublished, (f) auto-flip-on-photo-removal: `updateTutorPublicProfilePhoto("hide")` on a `listed` tutor flips `public_listing_status → not_listed` and enqueues the gate-regression notification with `missingGateKeys: ["profilePhoto"]`, (g) DTO leak check ensuring the public profile DTO never carries credential `storage_object_path`, never carries unpublished media URLs, and never carries `intro_video_*` fields when not `'published'`, (h) `setTutorCredentialReviewStatus` for each terminal state.
+- Supabase DB smoke test (`supabase/tests/database/smoke/tutor_media_baseline.test.sql`) covers: `tutor_public_media_assets` table shape; RLS posture (`anon`/`authenticated` cannot select/write directly); partial unique index enforcement (second `'published'` `profile_photo` per tutor fails); `tutor-credentials` bucket exists and blocks anon read; `tutor-public-media` bucket exists and allows anon read; the three `video_media_providers` rows exist and are active; intro-video new-column defaults; `tutor_credentials` RLS posture preserved.
+- `pnpm test:e2e` is **not** required (no public-route-rendering-only change worth a Playwright run; the public-profile integration is verified by the public route's existing smoke plus manual checks below). Call this out explicitly in the final report.
+- Manual smoke (documented in the report):
+  - sign in as an approved tutor with all other gates passing, no photo → `/tutor/profile` shows gate 2 failing with the photo sub-item; `Publish` button on `/tutor/profile/photo` is disabled until an upload exists
+  - upload a JPG, set alt text, click `Publish photo` → photo appears on `/tutors/${slug}` in the hero, alt text is on the `img`; the readiness checklist on `/tutor/profile` now shows gate 2 passing
+  - paste a YouTube URL on `/tutor/profile/video` → normalized embed preview renders; click `Publish` → embed appears on `/tutors/${slug}`; non-JS fallback link to the canonical watch URL is present
+  - paste a Twitch URL → form rejects with `"This video link isn't supported. Use a supported public video provider."`
+  - paste raw `<iframe>` HTML → rejected with the same validation copy
+  - upload a credential PDF on `/tutor/profile/credentials` → row appears with `review_status = uploaded`; sign in as admin → review detail page exposes the file preview via signed URL; click `Approve` → row flips to `approved` with `reviewed_at` set; sign back in as the tutor → `buildTrustProofs` surfaces the credential on `/tutors/${slug}` as derived M3 trust proof; raw file is not linked from the public page
+  - edit an `approved` credential's title → review status auto-resets to `pending_review` with `reviewed_at` cleared; public trust proof line disappears until re-approval
+  - admin clicks `Reject` on a pending credential → tutor receives a `tutor_credential_reviewed` notification with the canonical J-TUT-016 copy
+  - while listed with a published photo, click `Hide photo` → `public_listing_status` auto-flips to `not_listed`, gate-regression notification arrives, public profile becomes unreachable
+  - confirm `Content-Security-Policy` `frame-src` on the public profile response lists only YouTube/Vimeo/Loom origins; no wildcard
+
+**Required manual operational steps (call out in the report)**
+
+- The two Supabase Storage buckets (`tutor-credentials` private, `tutor-public-media` public) are created by the migration; verify on the Supabase dashboard that the policies match the migration's intent before any tutor uploads in production.
+- After deploy, every existing `approved` tutor without a published profile photo will have gate 2 fail and any currently `listed` row will not auto-delist (auto-flip only triggers on a write). Decide before deploy whether to (a) leave existing listed tutors as-is until they next edit, (b) run a one-time backfill that re-evaluates gates and flips offending rows to `not_listed`, or (c) grandfather existing listings via a temporary `legacy_photo_exempt_until` timestamp. The default in this task is (a); changing it is a separate decision outside the task's scope.
+- No new environment variables are required; CSP and `images.remotePatterns` changes ship in `next.config.ts`.
 
 ## 11.5 `P2-TRUST-001` Lesson-linked review capture and publication flow
 

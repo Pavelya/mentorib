@@ -67,6 +67,21 @@ export const FALLBACK_TUTOR_CREDENTIAL_TYPE: TutorCredentialType =
 
 export const EXAMINER_TUTOR_CREDENTIAL_TYPE: TutorCredentialType = "examiner";
 
+export const tutorPublicMediaRoles = ["profile_photo"] as const;
+
+export type TutorPublicMediaRole = (typeof tutorPublicMediaRoles)[number];
+
+export const tutorPublicMediaPublicationStatuses = [
+  "uploaded",
+  "pending_review",
+  "approved",
+  "published",
+  "hidden",
+] as const;
+
+export type TutorPublicMediaPublicationStatus =
+  (typeof tutorPublicMediaPublicationStatuses)[number];
+
 export const availabilityRuleVisibilityStatuses = [
   "active",
   "hidden",

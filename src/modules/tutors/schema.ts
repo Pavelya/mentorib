@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -30,7 +31,11 @@ import {
   tutorCredentialTypes,
   tutorProfileVisibilityStatuses,
   tutorPublicListingStatuses,
+  tutorPublicMediaPublicationStatuses,
+  tutorPublicMediaRoles,
 } from "@/modules/tutors/constants";
+
+const tutorIntroVideoPublicationStatuses = ["hidden", "published"] as const;
 
 export const tutorProfiles = pgTable(
   "tutor_profiles",
@@ -73,6 +78,14 @@ export const tutorProfiles = pgTable(
     ),
     intro_video_external_id: text("intro_video_external_id"),
     intro_video_url: text("intro_video_url"),
+    intro_video_publication_status: text("intro_video_publication_status", {
+      enum: tutorIntroVideoPublicationStatuses,
+    })
+      .notNull()
+      .default("hidden"),
+    intro_video_last_validated_at: timestamp("intro_video_last_validated_at", {
+      withTimezone: true,
+    }),
     stripe_account_id: text("stripe_account_id"),
     payout_account_country: text("payout_account_country"),
     payout_onboarding_started_at: timestamp("payout_onboarding_started_at", {
@@ -220,6 +233,50 @@ export const tutorCredentials = pgTable(
     index("tutor_credentials_examiner_focus_area_idx").on(
       table.credential_subject_focus_area_id,
     ),
+  ],
+);
+
+export const tutorPublicMediaAssets = pgTable(
+  "tutor_public_media_assets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tutor_profile_id: uuid("tutor_profile_id")
+      .notNull()
+      .references(() => tutorProfiles.id, { onDelete: "cascade" }),
+    media_role: text("media_role", {
+      enum: tutorPublicMediaRoles,
+    }).notNull(),
+    storage_object_path: text("storage_object_path").notNull(),
+    alt_text: text("alt_text"),
+    publication_status: text("publication_status", {
+      enum: tutorPublicMediaPublicationStatuses,
+    })
+      .notNull()
+      .default("uploaded"),
+    sort_order: integer("sort_order").notNull().default(0),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("tutor_public_media_assets_tutor_profile_id_idx").on(
+      table.tutor_profile_id,
+    ),
+    index("tutor_public_media_assets_tutor_role_status_idx").on(
+      table.tutor_profile_id,
+      table.media_role,
+      table.publication_status,
+    ),
+    uniqueIndex(
+      "tutor_public_media_assets_one_published_photo_per_tutor_idx",
+    )
+      .on(table.tutor_profile_id)
+      .where(
+        sql`${table.media_role} = 'profile_photo' and ${table.publication_status} = 'published'`,
+      ),
   ],
 );
 

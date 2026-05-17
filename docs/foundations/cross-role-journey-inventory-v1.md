@@ -847,7 +847,7 @@ The parent or guardian payer flow remains out of current scope.
 - `User sees`:
   - video error: `This video link isn't supported. Use a supported public video provider.`
   - credential rejection: `This credential needs an update before it can count as approved proof.`
-- `Task coverage`: `P2-PROFILE-001`, `P2-MEDIA-001`, `P2-TRUST-001`, `P2-REPORT-001`
+- `Task coverage`: `P2-PROFILE-001`, `P2-MEDIA-001` family (`P2-MEDIA-001-01` migration foundation; `P2-MEDIA-001-02` video provider adapters; `P2-MEDIA-001-03` credential management; `P2-MEDIA-001-04` public profile photo; `P2-MEDIA-001-05` intro-video reference; `P2-MEDIA-001-06` tutor sub-routes UI; `P2-MEDIA-001-07` gate-2 photo enforcement; `P2-MEDIA-001-08` public profile integration + CSP; `P2-MEDIA-001-10` final verification), `P2-TRUST-001`, `P2-REPORT-001`
 
 ## 6. Admin Journeys
 
@@ -915,7 +915,7 @@ The parent or guardian payer flow remains out of current scope.
   - invalid or expired credential
 - `User sees`:
   - internal confirmation: `Credential review updated.`
-- `Task coverage`: `P2-APPLY-002`, `P2-MEDIA-001`
+- `Task coverage`: `P2-APPLY-002`, `P2-MEDIA-001-09` (internal credential review panel + `setTutorCredentialReviewStatus` + `tutor_credential_reviewed` notification), with foundations from `P2-MEDIA-001-01` (storage buckets + table) and `P2-MEDIA-001-03` (credential domain module)
 
 ### J-INT-005 Public listing pause, delist, and restore
 

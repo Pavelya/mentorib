@@ -1563,7 +1563,7 @@ Add avatar upload to the `/settings` page so users can set a profile image beyon
 **Out of scope**
 
 - server-side image resizing or cropping (use client-side constraints for MVP)
-- tutor credential or media uploads (owned by `P2-MEDIA-001`)
+- tutor credential or media uploads (owned by the `P2-MEDIA-001` family — see `P2-MEDIA-001-03` for credential uploads, `P2-MEDIA-001-04` for public profile photo uploads, and `P2-MEDIA-001-05` for intro-video reference handling)
 - CDN or image optimization pipeline beyond Supabase Storage defaults
 
 **Acceptance criteria**

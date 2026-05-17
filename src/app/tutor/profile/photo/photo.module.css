@@ -1,0 +1,76 @@
+.page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--display-sm);
+}
+
+.description {
+  margin: 0;
+  color: var(--ink-700);
+  max-width: 60ch;
+}
+
+.backLink {
+  font-size: var(--body-sm);
+  text-decoration: underline;
+}
+
+.preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.previewMeta {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.previewLabel {
+  margin: 0;
+  font-weight: 600;
+}
+
+.previewHelper {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.formStack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.helperText {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}

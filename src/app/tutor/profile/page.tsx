@@ -28,6 +28,14 @@ import {
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
 import type { TutorApplicationReadinessGate } from "@/modules/tutors/application";
+import type {
+  TutorCredentialReviewStatus,
+  TutorIntroVideoPublicationStatus,
+  TutorPublicMediaPublicationStatus,
+} from "@/modules/tutors/constants";
+import { getTutorCredentialsForOwner } from "@/modules/tutors/media-credentials";
+import { getTutorPublicMediaForOwner } from "@/modules/tutors/media-public-assets";
+import { getTutorIntroVideoForOwner } from "@/modules/tutors/media-video-reference";
 import { getTutorProfileEditor } from "@/modules/tutors/tutor-profile-editor";
 
 import { TutorProfileEditorForm } from "./profile-form";
@@ -115,6 +123,18 @@ export default async function TutorProfilePage() {
     redirect(APPLY_PATH);
   }
 
+  const [credentialsDto, mediaDto, videoDto] = await Promise.all([
+    getTutorCredentialsForOwner(account),
+    getTutorPublicMediaForOwner(account),
+    getTutorIntroVideoForOwner(account),
+  ]);
+
+  const trustMediaSummary = buildTrustMediaSummary({
+    credentials: credentialsDto?.credentials ?? [],
+    profilePhotoStatus: mediaDto?.profilePhoto?.publicationStatus ?? null,
+    introVideoStatus: videoDto?.publicationStatus ?? "hidden",
+  });
+
   const publicationStatusLabel = getPublicationLabel(
     editor.publicListingStatus,
     editor.selfPausedAt,
@@ -183,6 +203,8 @@ export default async function TutorProfilePage() {
       </Panel>
 
       <ReadinessChecklistPanel gates={editor.readinessGates} />
+
+      <TrustMediaPanel summary={trustMediaSummary} />
 
       <Panel eyebrow="Edit" title="Edit your profile" tone="default">
         <TutorProfileEditorForm
@@ -297,6 +319,182 @@ function getGateActionLabel(
     default:
       return "";
   }
+}
+
+type TrustMediaSummary = {
+  credentials: {
+    total: number;
+    approved: number;
+    inReview: number;
+    needsUpdate: number;
+  };
+  profilePhotoStatus: TutorPublicMediaPublicationStatus | null;
+  introVideoStatus: TutorIntroVideoPublicationStatus;
+};
+
+function buildTrustMediaSummary(input: {
+  credentials: Array<{ reviewStatus: TutorCredentialReviewStatus }>;
+  profilePhotoStatus: TutorPublicMediaPublicationStatus | null;
+  introVideoStatus: TutorIntroVideoPublicationStatus;
+}): TrustMediaSummary {
+  let approved = 0;
+  let inReview = 0;
+  let needsUpdate = 0;
+  for (const credential of input.credentials) {
+    if (credential.reviewStatus === "approved") {
+      approved += 1;
+    } else if (
+      credential.reviewStatus === "uploaded" ||
+      credential.reviewStatus === "pending_review"
+    ) {
+      inReview += 1;
+    } else if (
+      credential.reviewStatus === "rejected" ||
+      credential.reviewStatus === "expired"
+    ) {
+      needsUpdate += 1;
+    }
+  }
+  return {
+    credentials: {
+      total: input.credentials.length,
+      approved,
+      inReview,
+      needsUpdate,
+    },
+    profilePhotoStatus: input.profilePhotoStatus,
+    introVideoStatus: input.introVideoStatus,
+  };
+}
+
+function TrustMediaPanel({ summary }: { summary: TrustMediaSummary }) {
+  const photoStatusLabel = summary.profilePhotoStatus
+    ? getProfilePhotoStatusLabel(summary.profilePhotoStatus)
+    : { label: "Not uploaded", tone: "info" as const };
+  const videoStatusLabel = getIntroVideoStatusLabel(summary.introVideoStatus);
+
+  return (
+    <Panel eyebrow="Trust & media" title="Trust & media" tone="default">
+      <Section
+        density="default"
+        description="Manage what makes your profile credible: credentials, photo, and intro video."
+        eyebrow="Summary"
+        title="Status at a glance"
+        titleAs="h2"
+      >
+        <ul className={styles.readinessList}>
+          <li>
+            <Card>
+              <div className={styles.readinessRow}>
+                <div className={styles.readinessText}>
+                  <p className={styles.readinessLabel}>Credentials</p>
+                  <p className={styles.readinessDescription}>
+                    {summary.credentials.total === 0
+                      ? "No credentials uploaded yet."
+                      : `${summary.credentials.approved} approved · ${summary.credentials.inReview} in review · ${summary.credentials.needsUpdate} needs update`}
+                  </p>
+                  <Link
+                    className={styles.readinessLink}
+                    href={"/tutor/profile/credentials" as Route}
+                  >
+                    Manage credentials
+                  </Link>
+                </div>
+                <StatusBadge
+                  tone={
+                    summary.credentials.needsUpdate > 0
+                      ? "warning"
+                      : summary.credentials.approved > 0
+                        ? "positive"
+                        : "info"
+                  }
+                >
+                  {summary.credentials.total === 0
+                    ? "Empty"
+                    : `${summary.credentials.total} on file`}
+                </StatusBadge>
+              </div>
+            </Card>
+          </li>
+          <li>
+            <Card>
+              <div className={styles.readinessRow}>
+                <div className={styles.readinessText}>
+                  <p className={styles.readinessLabel}>Profile photo</p>
+                  <p className={styles.readinessDescription}>
+                    {summary.profilePhotoStatus === "published"
+                      ? "Your photo is live on your public profile."
+                      : summary.profilePhotoStatus
+                        ? "Photo uploaded but not published yet."
+                        : "Upload a real photo to replace the initials placeholder."}
+                  </p>
+                  <Link
+                    className={styles.readinessLink}
+                    href={"/tutor/profile/photo" as Route}
+                  >
+                    Manage photo
+                  </Link>
+                </div>
+                <StatusBadge tone={photoStatusLabel.tone}>
+                  {photoStatusLabel.label}
+                </StatusBadge>
+              </div>
+            </Card>
+          </li>
+          <li>
+            <Card>
+              <div className={styles.readinessRow}>
+                <div className={styles.readinessText}>
+                  <p className={styles.readinessLabel}>Intro video</p>
+                  <p className={styles.readinessDescription}>
+                    {summary.introVideoStatus === "published"
+                      ? "Your intro video is live on your public profile."
+                      : "Add a short YouTube, Vimeo, or Loom link so students can hear you."}
+                  </p>
+                  <Link
+                    className={styles.readinessLink}
+                    href={"/tutor/profile/video" as Route}
+                  >
+                    Manage intro video
+                  </Link>
+                </div>
+                <StatusBadge tone={videoStatusLabel.tone}>
+                  {videoStatusLabel.label}
+                </StatusBadge>
+              </div>
+            </Card>
+          </li>
+        </ul>
+      </Section>
+    </Panel>
+  );
+}
+
+function getProfilePhotoStatusLabel(
+  status: TutorPublicMediaPublicationStatus,
+): { label: string; tone: "positive" | "info" | "warning" } {
+  switch (status) {
+    case "published":
+      return { label: "Published", tone: "positive" };
+    case "hidden":
+      return { label: "Hidden", tone: "warning" };
+    case "approved":
+      return { label: "Approved", tone: "info" };
+    case "pending_review":
+      return { label: "In review", tone: "info" };
+    case "uploaded":
+    default:
+      return { label: "Uploaded", tone: "info" };
+  }
+}
+
+function getIntroVideoStatusLabel(
+  status: TutorIntroVideoPublicationStatus,
+): { label: string; tone: "positive" | "info" } {
+  if (status === "published") {
+    return { label: "Published", tone: "positive" };
+  }
+  return { label: "Not published", tone: "info" };
 }
 
 function getPublicationLabel(

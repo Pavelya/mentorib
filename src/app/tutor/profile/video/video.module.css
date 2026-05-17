@@ -1,0 +1,82 @@
+.page {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.intro {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-500);
+  font-family: var(--font-mono);
+  font-size: var(--caption);
+  letter-spacing: 0.08em;
+  line-height: var(--line-utility);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--display-sm);
+}
+
+.description {
+  margin: 0;
+  color: var(--ink-700);
+  max-width: 60ch;
+}
+
+.backLink {
+  font-size: var(--body-sm);
+  text-decoration: underline;
+}
+
+.providerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.formStack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.helperText {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.embed {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.embedFrame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+}
+
+.embedLink {
+  font-size: var(--body-sm);
+  text-decoration: underline;
+}
+
+.embedMeta {
+  margin: 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}

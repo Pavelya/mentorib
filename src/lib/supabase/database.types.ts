@@ -1313,6 +1313,7 @@ export type MentorIbDatabase = {
           TutorCredentialRow,
           "credential_type" | "storage_object_path" | "title" | "tutor_profile_id"
         > & {
+          id?: string;
           credential_subject_focus_area_id?: string | null;
           credential_subject_id?: string | null;
           issuing_body?: string | null;
@@ -1325,7 +1326,7 @@ export type MentorIbDatabase = {
         Update: Partial<
           Omit<
             TutorCredentialRow,
-            "created_at" | "id" | "storage_object_path" | "title" | "tutor_profile_id" | "updated_at"
+            "created_at" | "id" | "tutor_profile_id" | "updated_at"
           >
         >;
       };

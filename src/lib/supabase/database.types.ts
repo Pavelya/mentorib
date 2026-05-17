@@ -58,6 +58,8 @@ import type {
   TutorCredentialType,
   TutorProfileVisibilityStatus,
   TutorPublicListingStatus,
+  TutorPublicMediaPublicationStatus,
+  TutorPublicMediaRole,
 } from "@/modules/tutors/constants";
 import type { TutorApplicationReviewStatus } from "@/modules/tutors/review-constants";
 
@@ -227,6 +229,18 @@ type TutorCredentialRow = {
   reviewed_at: string | null;
   storage_object_path: string;
   title: string;
+  tutor_profile_id: string;
+  updated_at: string;
+};
+
+type TutorPublicMediaAssetRow = {
+  alt_text: string | null;
+  created_at: string;
+  id: string;
+  media_role: TutorPublicMediaRole;
+  publication_status: TutorPublicMediaPublicationStatus;
+  sort_order: number;
+  storage_object_path: string;
   tutor_profile_id: string;
   updated_at: string;
 };
@@ -1424,6 +1438,25 @@ export type MentorIbDatabase = {
         Relationships: [];
         Row: TutorProfileRow;
         Update: Partial<Omit<TutorProfileRow, "app_user_id" | "created_at" | "id" | "updated_at">>;
+      };
+      tutor_public_media_assets: {
+        Insert: Pick<
+          TutorPublicMediaAssetRow,
+          "media_role" | "storage_object_path" | "tutor_profile_id"
+        > & {
+          id?: string;
+          alt_text?: string | null;
+          publication_status?: TutorPublicMediaPublicationStatus;
+          sort_order?: number;
+        };
+        Relationships: [];
+        Row: TutorPublicMediaAssetRow;
+        Update: Partial<
+          Omit<
+            TutorPublicMediaAssetRow,
+            "created_at" | "id" | "tutor_profile_id" | "updated_at"
+          >
+        >;
       };
       tutor_subject_capabilities: {
         Insert: Pick<

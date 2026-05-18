@@ -27,25 +27,12 @@ import {
   type TutorPayoutProfileRecord,
 } from "@/modules/payouts/service";
 
+import {
+  type ResumePayoutOnboardingState,
+  type StartPayoutOnboardingState,
+} from "./action-types";
+
 const EARNINGS_PATH = "/tutor/earnings";
-
-export type StartPayoutOnboardingFieldErrors = {
-  country?: string;
-};
-
-export type StartPayoutOnboardingState = {
-  code: string | null;
-  fieldErrors: StartPayoutOnboardingFieldErrors;
-  message: string | null;
-  values: { country: string };
-};
-
-export const initialStartPayoutOnboardingState: StartPayoutOnboardingState = {
-  code: null,
-  fieldErrors: {},
-  message: null,
-  values: { country: "" },
-};
 
 export async function startPayoutOnboardingAction(
   _previous: StartPayoutOnboardingState,
@@ -158,16 +145,6 @@ export async function startPayoutOnboardingAction(
     values,
   };
 }
-
-export type ResumePayoutOnboardingState = {
-  code: string | null;
-  message: string | null;
-};
-
-export const initialResumePayoutOnboardingState: ResumePayoutOnboardingState = {
-  code: null,
-  message: null,
-};
 
 export async function resumePayoutOnboardingAction(
   previousState: ResumePayoutOnboardingState,

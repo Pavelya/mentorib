@@ -20,10 +20,8 @@ import {
 } from "@/modules/tutors/constants";
 import type { TutorCredentialAdminRow } from "@/modules/tutors/media-credentials";
 
-import {
-  initialCredentialReviewActionState,
-  runTutorCredentialReviewAction,
-} from "./credential-review-actions";
+import { initialCredentialReviewActionState } from "./action-types";
+import { runTutorCredentialReviewAction } from "./credential-review-actions";
 import styles from "../tutor-reviews.module.css";
 
 type CredentialReviewPanelProps = {

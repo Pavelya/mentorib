@@ -7,9 +7,9 @@ import { Button, InlineNotice, SelectField } from "@/components/ui";
 
 import {
   initialStartPayoutOnboardingState,
-  startPayoutOnboardingAction,
   type StartPayoutOnboardingState,
-} from "./actions";
+} from "./action-types";
+import { startPayoutOnboardingAction } from "./actions";
 import styles from "./earnings.module.css";
 
 type CountryOption = {

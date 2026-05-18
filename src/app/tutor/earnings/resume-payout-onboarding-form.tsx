@@ -5,10 +5,8 @@ import { useFormStatus } from "react-dom";
 
 import { Button, InlineNotice } from "@/components/ui";
 
-import {
-  initialResumePayoutOnboardingState,
-  resumePayoutOnboardingAction,
-} from "./actions";
+import { initialResumePayoutOnboardingState } from "./action-types";
+import { resumePayoutOnboardingAction } from "./actions";
 
 type ResumePayoutOnboardingFormProps = {
   ctaLabel: string;

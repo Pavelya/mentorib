@@ -12,24 +12,13 @@ import {
   requestTutorApplicationChanges,
 } from "@/modules/tutors/application-review-service";
 
-export type TutorApplicationReviewActionState = {
-  code: string;
-  intent: ReviewIntent;
-  message: string | null;
-  successMessage: string | null;
-};
-
-const REVIEW_INTENTS = ["claim", "request_changes", "approve", "reject"] as const;
-type ReviewIntent = (typeof REVIEW_INTENTS)[number];
+import {
+  REVIEW_INTENTS,
+  type ReviewIntent,
+  type TutorApplicationReviewActionState,
+} from "./action-types";
 
 const APPLY_PATH = "/tutor/apply";
-
-export const initialReviewActionState: TutorApplicationReviewActionState = {
-  code: "idle",
-  intent: "claim",
-  message: null,
-  successMessage: null,
-};
 
 export async function runTutorApplicationReviewAction(
   _previous: TutorApplicationReviewActionState,

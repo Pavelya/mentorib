@@ -9,9 +9,9 @@ import type { MeetingPreferenceFormValues } from "@/modules/tutors/tutor-schedul
 
 import {
   initialMeetingPreferenceState,
-  updateMeetingPreferenceAction,
   type MeetingPreferenceActionState,
-} from "./actions";
+} from "./action-types";
+import { updateMeetingPreferenceAction } from "./actions";
 import styles from "./schedule.module.css";
 
 type MeetingPreferenceFormProps = {

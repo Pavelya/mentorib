@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sS -o /tmp/credentials.html -w \"%{http_code}\\\\n\" http://localhost:3000/tutor/profile/credentials)",
+      "Bash(curl -sS -o /dev/null -w \"code=%{http_code} location=%header{location}\\\\n\" http://localhost:3001/tutor/profile/credentials)"
+    ]
+  }
+}

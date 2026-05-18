@@ -18,21 +18,12 @@ import {
   type TutorProfilePhotoPublicationAction,
 } from "@/modules/tutors/media-public-assets-service";
 
+import {
+  initialTutorProfilePhotoActionState,
+  type TutorProfilePhotoActionState,
+} from "./action-types";
+
 const PHOTO_PATH = "/tutor/profile/photo" as const;
-
-export type TutorProfilePhotoActionState = {
-  code: string | null;
-  fieldErrors: Record<string, string[]>;
-  message: string | null;
-  successMessage: string | null;
-};
-
-export const initialTutorProfilePhotoActionState: TutorProfilePhotoActionState = {
-  code: null,
-  fieldErrors: {},
-  message: null,
-  successMessage: null,
-};
 
 export async function uploadTutorProfilePhotoAction(
   _previous: TutorProfilePhotoActionState,

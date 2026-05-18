@@ -13,50 +13,25 @@ import {
   MeetingPreferenceCommandError,
   SchedulePolicyCommandError,
   addAvailabilityRule,
-  emptyMeetingPreferenceFormValues,
-  emptySchedulePolicyFormValues,
   removeAvailabilityRule,
   updateMeetingPreference,
   updateSchedulePolicy,
-  type AvailabilityRuleFieldErrors,
   type AvailabilityRuleFormValues,
-  type MeetingPreferenceFieldErrors,
   type MeetingPreferenceFormValues,
-  type SchedulePolicyFieldErrors,
   type SchedulePolicyFormValues,
 } from "@/modules/tutors/tutor-schedule";
+
+import {
+  emptyAvailabilityRuleValues,
+  type AvailabilityRuleActionState,
+  type MeetingPreferenceActionState,
+  type SchedulePolicyActionState,
+} from "./action-types";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const SCHEDULE_PATH = "/tutor/schedule";
-
-export type SchedulePolicyActionState = {
-  code: string | null;
-  fieldErrors: SchedulePolicyFieldErrors;
-  message: string | null;
-  values: SchedulePolicyFormValues;
-};
-
-export type AvailabilityRuleActionState = {
-  code: string | null;
-  fieldErrors: AvailabilityRuleFieldErrors;
-  message: string | null;
-  values: AvailabilityRuleFormValues;
-};
-
-export type MeetingPreferenceActionState = {
-  code: string | null;
-  fieldErrors: MeetingPreferenceFieldErrors;
-  message: string | null;
-  values: MeetingPreferenceFormValues;
-};
-
-const emptyAvailabilityRuleValues: AvailabilityRuleFormValues = {
-  dayOfWeek: "",
-  endLocalTime: "",
-  startLocalTime: "",
-};
 
 export async function updateSchedulePolicyAction(
   _previous: SchedulePolicyActionState,
@@ -280,27 +255,6 @@ export async function updateMeetingPreferenceAction(
     values,
   };
 }
-
-export const initialSchedulePolicyState: SchedulePolicyActionState = {
-  code: null,
-  fieldErrors: {},
-  message: null,
-  values: emptySchedulePolicyFormValues,
-};
-
-export const initialAvailabilityRuleState: AvailabilityRuleActionState = {
-  code: null,
-  fieldErrors: {},
-  message: null,
-  values: emptyAvailabilityRuleValues,
-};
-
-export const initialMeetingPreferenceState: MeetingPreferenceActionState = {
-  code: null,
-  fieldErrors: {},
-  message: null,
-  values: emptyMeetingPreferenceFormValues,
-};
 
 function readSchedulePolicyValues(formData: FormData): SchedulePolicyFormValues {
   return {

@@ -33,13 +33,15 @@ import {
 import type { TutorCredentialEditorRow } from "@/modules/tutors/media-credentials";
 
 import {
-  deleteTutorCredentialAction,
   initialTutorCredentialActionState,
+  type TutorCredentialActionState,
+} from "./action-types";
+import {
+  deleteTutorCredentialAction,
   replaceTutorCredentialFileAction,
   setTutorCredentialPublicDisplayAction,
   updateTutorCredentialMetadataAction,
   uploadTutorCredentialAction,
-  type TutorCredentialActionState,
 } from "./actions";
 import styles from "./credentials.module.css";
 

@@ -15,10 +15,12 @@ import type { TutorPublicMediaPublicationStatus } from "@/modules/tutors/constan
 
 import {
   initialTutorProfilePhotoActionState,
+  type TutorProfilePhotoActionState,
+} from "./action-types";
+import {
   setTutorProfilePhotoPublicationAction,
   updateTutorProfilePhotoAltAction,
   uploadTutorProfilePhotoAction,
-  type TutorProfilePhotoActionState,
 } from "./actions";
 import styles from "./photo.module.css";
 

@@ -13,11 +13,13 @@ import {
 import type { TutorIntroVideoPublicationStatus } from "@/modules/tutors/constants";
 
 import {
-  clearTutorIntroVideoAction,
   initialTutorIntroVideoActionState,
+  type TutorIntroVideoActionState,
+} from "./action-types";
+import {
+  clearTutorIntroVideoAction,
   setTutorIntroVideoAction,
   setTutorIntroVideoPublicationAction,
-  type TutorIntroVideoActionState,
 } from "./actions";
 import styles from "./video.module.css";
 

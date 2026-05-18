@@ -20,21 +20,12 @@ import {
   type TutorCredentialUploadInput,
 } from "@/modules/tutors/media-credentials-service";
 
+import {
+  initialTutorCredentialActionState,
+  type TutorCredentialActionState,
+} from "./action-types";
+
 const CREDENTIALS_PATH = "/tutor/profile/credentials" as const;
-
-export type TutorCredentialActionState = {
-  code: string | null;
-  fieldErrors: Record<string, string[]>;
-  message: string | null;
-  successMessage: string | null;
-};
-
-export const initialTutorCredentialActionState: TutorCredentialActionState = {
-  code: null,
-  fieldErrors: {},
-  message: null,
-  successMessage: null,
-};
 
 export async function uploadTutorCredentialAction(
   _previous: TutorCredentialActionState,

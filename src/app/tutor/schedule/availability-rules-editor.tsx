@@ -10,10 +10,12 @@ import {
 } from "@/modules/tutors/tutor-schedule";
 
 import {
-  addAvailabilityRuleAction,
   initialAvailabilityRuleState,
-  removeAvailabilityRuleAction,
   type AvailabilityRuleActionState,
+} from "./action-types";
+import {
+  addAvailabilityRuleAction,
+  removeAvailabilityRuleAction,
 } from "./actions";
 import styles from "./schedule.module.css";
 

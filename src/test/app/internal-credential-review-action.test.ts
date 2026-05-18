@@ -35,10 +35,8 @@ vi.mock("@/modules/tutors/application-review-service", async () => {
   };
 });
 
-import {
-  initialCredentialReviewActionState,
-  runTutorCredentialReviewAction,
-} from "@/app/internal/tutor-reviews/[applicationId]/credential-review-actions";
+import { initialCredentialReviewActionState } from "@/app/internal/tutor-reviews/[applicationId]/action-types";
+import { runTutorCredentialReviewAction } from "@/app/internal/tutor-reviews/[applicationId]/credential-review-actions";
 
 const CREDENTIAL_ID = "44444444-4444-4444-4444-444444444444";
 

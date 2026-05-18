@@ -8,9 +8,9 @@ import type { SchedulePolicyFormValues } from "@/modules/tutors/tutor-schedule";
 
 import {
   initialSchedulePolicyState,
-  updateSchedulePolicyAction,
   type SchedulePolicyActionState,
-} from "./actions";
+} from "./action-types";
+import { updateSchedulePolicyAction } from "./actions";
 import styles from "./schedule.module.css";
 
 const COMMON_TIMEZONES = [

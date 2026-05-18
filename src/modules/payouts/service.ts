@@ -75,7 +75,9 @@ export async function loadTutorPayoutProfile(
     .maybeSingle<TutorPayoutProfileRecord>();
 
   if (error) {
-    throw new Error("Could not load the tutor payout profile.");
+    throw new Error(
+      `Could not load the tutor payout profile: ${error.message ?? "unknown error"} (code: ${error.code ?? "n/a"})`,
+    );
   }
 
   return data ?? null;

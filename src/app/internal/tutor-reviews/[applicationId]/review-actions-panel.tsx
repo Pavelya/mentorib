@@ -17,10 +17,8 @@ import type {
   TutorApplicationReviewActionKey,
 } from "@/modules/tutors/application-review";
 
-import {
-  initialReviewActionState,
-  runTutorApplicationReviewAction,
-} from "./actions";
+import { initialReviewActionState } from "./action-types";
+import { runTutorApplicationReviewAction } from "./actions";
 import styles from "../tutor-reviews.module.css";
 
 type ReviewActionsPanelProps = {

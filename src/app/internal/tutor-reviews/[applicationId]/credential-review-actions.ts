@@ -11,22 +11,9 @@ import {
   type TutorCredentialReviewActionKey,
 } from "@/modules/tutors/application-review-service";
 
-export type TutorCredentialReviewActionState = {
-  code: string;
-  credentialId: string | null;
-  intent: TutorCredentialReviewActionKey;
-  message: string | null;
-  successMessage: string | null;
-};
-
-export const initialCredentialReviewActionState: TutorCredentialReviewActionState =
-  {
-    code: "idle",
-    credentialId: null,
-    intent: "approve",
-    message: null,
-    successMessage: null,
-  };
+import {
+  type TutorCredentialReviewActionState,
+} from "./action-types";
 
 export async function runTutorCredentialReviewAction(
   _previous: TutorCredentialReviewActionState,

@@ -18,21 +18,12 @@ import {
   type TutorIntroVideoPublicationAction,
 } from "@/modules/tutors/media-video-reference-service";
 
+import {
+  initialTutorIntroVideoActionState,
+  type TutorIntroVideoActionState,
+} from "./action-types";
+
 const VIDEO_PATH = "/tutor/profile/video" as const;
-
-export type TutorIntroVideoActionState = {
-  code: string | null;
-  fieldErrors: Record<string, string[]>;
-  message: string | null;
-  successMessage: string | null;
-};
-
-export const initialTutorIntroVideoActionState: TutorIntroVideoActionState = {
-  code: null,
-  fieldErrors: {},
-  message: null,
-  successMessage: null,
-};
 
 export async function setTutorIntroVideoAction(
   _previous: TutorIntroVideoActionState,

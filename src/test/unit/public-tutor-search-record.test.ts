@@ -33,6 +33,8 @@ function buildProfile(
     hourlyRateLabel: "$60",
     priceRangeLabel: "$40–$60",
     primaryImage: null,
+    profilePhoto: null,
+    accountAvatarUrl: null,
     reviewSummary: buildEmptyPublicTutorReviewSummary(),
     seo: {
       description: "Maya Chen supports Biology HL students.",

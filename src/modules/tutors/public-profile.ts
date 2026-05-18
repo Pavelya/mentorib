@@ -27,6 +27,12 @@ import {
 } from "@/modules/reviews";
 import { loadExaminerBadgesForTutor } from "@/modules/tutors/examiner-credentials";
 import type { ExaminerBadge } from "@/modules/tutors/examiner-credentials-builder";
+import {
+  TUTOR_PUBLIC_MEDIA_BUCKET,
+  getTutorPublicMediaPublicUrl,
+} from "@/modules/tutors/media-public-assets";
+
+export { TUTOR_PUBLIC_MEDIA_BUCKET };
 
 const PUBLIC_TUTOR_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -38,6 +44,7 @@ type PublicTutorProfileRecord = {
   id: string;
   intro_video_external_id: string | null;
   intro_video_provider: string | null;
+  intro_video_publication_status: string;
   intro_video_url: string | null;
   pricing_summary: string | null;
   trial_price_minor: number | null;
@@ -79,6 +86,16 @@ type SchedulePolicyRecord = {
   tutor_profile_id: string;
 };
 
+type PublishedProfilePhotoRecord = {
+  storage_object_path: string;
+  alt_text: string | null;
+};
+
+type PublishedProfilePhoto = {
+  alt: string;
+  url: string;
+};
+
 export type PublicTutorCapabilityDto = {
   experienceSummary: string | null;
   focusArea: string;
@@ -106,6 +123,7 @@ export type PublicTutorLanguageDto = {
 };
 
 export type PublicTutorProfileDto = {
+  accountAvatarUrl: string | null;
   availability: {
     acceptingNewStudents: boolean;
     summary: string;
@@ -127,6 +145,10 @@ export type PublicTutorProfileDto = {
   hourlyRateLabel: string | null;
   priceRangeLabel: string | null;
   primaryImage: {
+    alt: string;
+    url: string;
+  } | null;
+  profilePhoto: {
     alt: string;
     url: string;
   } | null;
@@ -185,6 +207,7 @@ export async function getPublicTutorProfileBySlug(
         "public_listing_status",
         "intro_video_provider",
         "intro_video_external_id",
+        "intro_video_publication_status",
         "intro_video_url",
         "updated_at",
       ].join(", "),
@@ -203,15 +226,15 @@ export async function getPublicTutorProfileBySlug(
     return null;
   }
 
-  const displayName = await loadDisplayNameByAppUserId(profile.app_user_id);
+  const accountIdentity = await loadAccountIdentityByAppUserId(profile.app_user_id);
 
-  if (!displayName) {
+  if (!accountIdentity?.displayName) {
     return null;
   }
 
   const enrichedProfile: PublicTutorProfileWithName = {
     ...profile,
-    display_name: displayName,
+    display_name: accountIdentity.displayName,
   };
 
   const [relatedRecords, reviewSummary] = await Promise.all([
@@ -219,7 +242,14 @@ export async function getPublicTutorProfileBySlug(
     getPublicTutorReviewSummary(profile.id),
   ]);
 
-  return buildPublicTutorProfileDto(enrichedProfile, relatedRecords, reviewSummary);
+  return buildPublicTutorProfileDto(
+    enrichedProfile,
+    {
+      ...relatedRecords,
+      accountAvatarUrl: accountIdentity.avatarUrl,
+    },
+    reviewSummary,
+  );
 }
 
 export async function listPublicTutorProfileSitemapEntries(): Promise<
@@ -248,6 +278,7 @@ export async function listPublicTutorProfileSitemapEntries(): Promise<
         "public_listing_status",
         "intro_video_provider",
         "intro_video_external_id",
+        "intro_video_publication_status",
         "intro_video_url",
         "updated_at",
       ].join(", "),
@@ -323,52 +354,71 @@ type RelatedPublicTutorProfileRecords = {
   examinerBadges: ExaminerBadge[];
   languages: TutorLanguageCapabilityRecord[];
   languageRows: ReferenceLanguage[];
+  publishedProfilePhoto: PublishedProfilePhoto | null;
   schedule: SchedulePolicyRecord | null;
   subjectCapabilities: TutorSubjectCapabilityRecord[];
   subjectFocusAreas: ReferenceSubjectFocusArea[];
   subjects: ReferenceSubject[];
 };
 
+type RelatedPublicTutorProfileRecordsWithIdentity =
+  RelatedPublicTutorProfileRecords & {
+    accountAvatarUrl: string | null;
+  };
+
 async function loadPublicTutorProfileRelatedRecords(
   tutorProfileId: string,
 ): Promise<RelatedPublicTutorProfileRecords> {
   const supabase = createSupabaseServiceRoleClient();
 
-  const [subjectCapabilitiesResult, languagesResult, credentialsResult, scheduleResult] =
-    await Promise.all([
-      supabase
-        .from("tutor_subject_capabilities")
-        .select(
-          "tutor_profile_id, subject_id, subject_focus_area_id, experience_summary, display_priority",
-        )
-        .eq("tutor_profile_id", tutorProfileId)
-        .order("display_priority", { ascending: true })
-        .returns<TutorSubjectCapabilityRecord[]>(),
-      supabase
-        .from("tutor_language_capabilities")
-        .select("tutor_profile_id, language_code, display_priority")
-        .eq("tutor_profile_id", tutorProfileId)
-        .order("display_priority", { ascending: true })
-        .returns<TutorLanguageCapabilityRecord[]>(),
-      supabase
-        .from("tutor_credentials")
-        .select("tutor_profile_id, title, issuing_body")
-        .eq("tutor_profile_id", tutorProfileId)
-        .eq("review_status", "approved")
-        .eq("public_display_preference", true)
-        .returns<TutorCredentialRecord[]>(),
-      supabase
-        .from("schedule_policies")
-        .select("tutor_profile_id, timezone, is_accepting_new_students")
-        .eq("tutor_profile_id", tutorProfileId)
-        .maybeSingle<SchedulePolicyRecord>(),
-    ]);
+  const [
+    subjectCapabilitiesResult,
+    languagesResult,
+    credentialsResult,
+    scheduleResult,
+    publishedPhotoResult,
+  ] = await Promise.all([
+    supabase
+      .from("tutor_subject_capabilities")
+      .select(
+        "tutor_profile_id, subject_id, subject_focus_area_id, experience_summary, display_priority",
+      )
+      .eq("tutor_profile_id", tutorProfileId)
+      .order("display_priority", { ascending: true })
+      .returns<TutorSubjectCapabilityRecord[]>(),
+    supabase
+      .from("tutor_language_capabilities")
+      .select("tutor_profile_id, language_code, display_priority")
+      .eq("tutor_profile_id", tutorProfileId)
+      .order("display_priority", { ascending: true })
+      .returns<TutorLanguageCapabilityRecord[]>(),
+    supabase
+      .from("tutor_credentials")
+      .select("tutor_profile_id, title, issuing_body")
+      .eq("tutor_profile_id", tutorProfileId)
+      .eq("review_status", "approved")
+      .eq("public_display_preference", true)
+      .returns<TutorCredentialRecord[]>(),
+    supabase
+      .from("schedule_policies")
+      .select("tutor_profile_id, timezone, is_accepting_new_students")
+      .eq("tutor_profile_id", tutorProfileId)
+      .maybeSingle<SchedulePolicyRecord>(),
+    supabase
+      .from("tutor_public_media_assets")
+      .select("storage_object_path, alt_text")
+      .eq("tutor_profile_id", tutorProfileId)
+      .eq("media_role", "profile_photo")
+      .eq("publication_status", "published")
+      .maybeSingle<PublishedProfilePhotoRecord>(),
+  ]);
 
   if (
     subjectCapabilitiesResult.error ||
     languagesResult.error ||
     credentialsResult.error ||
-    scheduleResult.error
+    scheduleResult.error ||
+    publishedPhotoResult.error
   ) {
     throw new Error("Could not load public tutor profile details.");
   }
@@ -387,10 +437,26 @@ async function loadPublicTutorProfileRelatedRecords(
     examinerBadges,
     languages: languageCapabilities,
     languageRows,
+    publishedProfilePhoto: mapPublishedProfilePhoto(publishedPhotoResult.data ?? null),
     schedule: scheduleResult.data ?? null,
     subjectCapabilities,
     subjectFocusAreas,
     subjects,
+  };
+}
+
+function mapPublishedProfilePhoto(
+  row: PublishedProfilePhotoRecord | null,
+): PublishedProfilePhoto | null {
+  if (!row?.storage_object_path) {
+    return null;
+  }
+
+  const altText = row.alt_text?.trim();
+
+  return {
+    alt: altText && altText.length > 0 ? altText : "",
+    url: getTutorPublicMediaPublicUrl(row.storage_object_path),
   };
 }
 
@@ -479,10 +545,25 @@ async function loadLanguages(languageCodes: string[]) {
 
 function buildPublicTutorProfileDto(
   profile: PublicTutorProfileWithName,
-  relatedRecords: RelatedPublicTutorProfileRecords,
+  relatedRecords: RelatedPublicTutorProfileRecordsWithIdentity,
   reviewSummary: PublicTutorReviewSummaryDto = buildEmptyPublicTutorReviewSummary(),
 ): PublicTutorProfileDto {
-  const introVideo = buildVideoReference(profile);
+  const displayName = profile.display_name?.trim() || "Mentor IB tutor";
+  const publishedPhoto = relatedRecords.publishedProfilePhoto;
+  const profilePhotoCandidate = publishedPhoto
+    ? {
+        alt: publishedPhoto.alt || `${displayName} profile photo`,
+        url: publishedPhoto.url,
+      }
+    : null;
+  const videoCandidate = buildVideoReference(profile, {
+    photoAlt: publishedPhoto?.alt ?? null,
+  });
+  const isIntroVideoPublished =
+    profile.intro_video_publication_status === "published";
+  const candidateImageUrl =
+    profilePhotoCandidate?.url ??
+    (isIntroVideoPublished ? videoCandidate?.thumbnailUrl ?? null : null);
   const subjects = buildSubjectCapabilities(relatedRecords);
   const languages = buildLanguages(relatedRecords);
   const trustProofs = buildTrustProofs({
@@ -493,20 +574,41 @@ function buildPublicTutorProfileDto(
       profile.public_listing_status === "listed",
   });
   const availability = buildAvailabilitySummary(relatedRecords.schedule);
-  const primaryImage = introVideo?.thumbnailUrl
-    ? {
-        alt: `${profile.display_name} intro video thumbnail`,
-        url: introVideo.thumbnailUrl,
-      }
+  const bookingHref = availability.acceptingNewStudents
+    ? (`/book/${profile.public_slug}` as Route)
     : null;
 
+  const indexability = evaluateTutorProfileIndexability(
+    buildPublicRouteInput({
+      bio: profile.bio,
+      displayName,
+      hasClearCta: Boolean(bookingHref),
+      imageUrl: candidateImageUrl,
+      slug: profile.public_slug ?? "",
+      subjects: subjects.map((subject) => subject.subject),
+      trustSignals: trustProofs.map((proof) => proof.title),
+    }),
+  );
+
+  const isPublishable = indexability.isIndexable;
+  const profilePhoto = isPublishable ? profilePhotoCandidate : null;
+  const introVideo =
+    isPublishable && isIntroVideoPublished ? videoCandidate : null;
+  const primaryImage =
+    profilePhoto ??
+    (introVideo?.thumbnailUrl
+      ? {
+          alt: `${displayName} intro video thumbnail`,
+          url: introVideo.thumbnailUrl,
+        }
+      : null);
+
   return {
+    accountAvatarUrl: relatedRecords.accountAvatarUrl,
     availability,
     bio: profile.bio?.trim() ?? "",
-    bookingHref: availability.acceptingNewStudents
-      ? (`/book/${profile.public_slug}` as Route)
-      : null,
-    displayName: profile.display_name?.trim() ?? "Mentor IB tutor",
+    bookingHref,
+    displayName,
     examinerBadges: relatedRecords.examinerBadges,
     headline: normalizeOptionalText(profile.headline),
     id: profile.id,
@@ -536,10 +638,11 @@ function buildPublicTutorProfileDto(
       currencyCode: profile.currency_code,
     }),
     primaryImage,
+    profilePhoto,
     reviewSummary,
     seo: buildSeoSummary({
       bio: profile.bio ?? "",
-      displayName: profile.display_name ?? "Mentor IB tutor",
+      displayName,
       headline: profile.headline,
       imageUrl: primaryImage?.url ?? null,
       subjects,
@@ -658,6 +761,7 @@ function buildVideoReference(
     PublicTutorProfileWithName,
     "display_name" | "intro_video_external_id" | "intro_video_provider" | "intro_video_url"
   >,
+  options: { photoAlt?: string | null } = {},
 ): PublicTutorVideoReferenceDto | null {
   const externalId = profile.intro_video_external_id?.trim();
   const provider = profile.intro_video_provider?.trim();
@@ -667,7 +771,11 @@ function buildVideoReference(
   }
 
   const safeExternalId = encodeURIComponent(externalId);
-  const title = `${profile.display_name ?? "Tutor"} intro video`;
+  const displayName = profile.display_name?.trim() || "Tutor";
+  const photoAlt = options.photoAlt?.trim();
+  const baseTitle = photoAlt && photoAlt.length > 0 ? photoAlt : null;
+  const providerTitle = (label: string) =>
+    baseTitle ?? `${displayName} intro video on ${label}`;
   const watchUrl = normalizeHttpsUrl(profile.intro_video_url);
 
   switch (provider) {
@@ -676,7 +784,7 @@ function buildVideoReference(
         embedUrl: `https://www.youtube-nocookie.com/embed/${safeExternalId}`,
         provider: "YouTube",
         thumbnailUrl: `https://i.ytimg.com/vi/${safeExternalId}/hqdefault.jpg`,
-        title,
+        title: providerTitle("YouTube"),
         watchUrl: watchUrl ?? `https://www.youtube.com/watch?v=${safeExternalId}`,
       };
     case "vimeo":
@@ -684,7 +792,7 @@ function buildVideoReference(
         embedUrl: `https://player.vimeo.com/video/${safeExternalId}`,
         provider: "Vimeo",
         thumbnailUrl: null,
-        title,
+        title: providerTitle("Vimeo"),
         watchUrl: watchUrl ?? `https://vimeo.com/${safeExternalId}`,
       };
     case "loom":
@@ -692,7 +800,7 @@ function buildVideoReference(
         embedUrl: `https://www.loom.com/embed/${safeExternalId}`,
         provider: "Loom",
         thumbnailUrl: null,
-        title,
+        title: providerTitle("Loom"),
         watchUrl: watchUrl ?? `https://www.loom.com/share/${safeExternalId}`,
       };
     default:
@@ -795,21 +903,24 @@ function uniqueValues(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)));
 }
 
-async function loadDisplayNameByAppUserId(
+async function loadAccountIdentityByAppUserId(
   appUserId: string,
-): Promise<string | null> {
+): Promise<{ avatarUrl: string | null; displayName: string | null } | null> {
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("app_users")
-    .select("full_name")
+    .select("full_name, avatar_url")
     .eq("id", appUserId)
-    .maybeSingle<{ full_name: string | null }>();
+    .maybeSingle<{ avatar_url: string | null; full_name: string | null }>();
 
   if (error) {
-    throw new Error("Could not load tutor account name.");
+    throw new Error("Could not load tutor account identity.");
   }
 
-  return normalizeOptionalText(data?.full_name ?? null);
+  return {
+    avatarUrl: normalizeHttpsUrl(data?.avatar_url ?? null),
+    displayName: normalizeOptionalText(data?.full_name ?? null),
+  };
 }
 
 async function loadDisplayNamesByAppUserIds(

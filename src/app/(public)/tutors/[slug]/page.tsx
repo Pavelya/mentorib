@@ -129,11 +129,11 @@ export default async function TutorProfilePage({
           <div className={styles.heroCopy}>
             <div className={styles.identityRow}>
               <Avatar
-                alt={profile.primaryImage?.alt}
+                alt={profile.profilePhoto?.alt ?? undefined}
                 className={styles.profileAvatar}
                 name={profile.displayName}
                 size="lg"
-                src={profile.primaryImage?.url}
+                src={profile.profilePhoto?.url ?? profile.accountAvatarUrl ?? undefined}
               />
               <div className={styles.identityText}>
                 <p className={styles.eyebrow}>Public tutor profile</p>
@@ -691,16 +691,18 @@ function IntroVideoSection({ profile }: { profile: PublicTutorProfileDto }) {
     return null;
   }
 
+  const { embedUrl, provider, title, watchUrl } = profile.introVideo;
+
   return (
     <Section
       action={
         <a
           className={getButtonClassName({ size: "compact", variant: "secondary" })}
-          href={profile.introVideo.watchUrl}
+          href={watchUrl}
           rel="noreferrer"
           target="_blank"
         >
-          Watch on {profile.introVideo.provider}
+          Watch on {provider}
         </a>
       }
       aria-label={`Intro video — ${profile.displayName}`}
@@ -716,9 +718,15 @@ function IntroVideoSection({ profile }: { profile: PublicTutorProfileDto }) {
           allowFullScreen
           loading="lazy"
           referrerPolicy="strict-origin-when-cross-origin"
-          src={profile.introVideo.embedUrl}
-          title={profile.introVideo.title}
+          sandbox="allow-scripts allow-same-origin allow-presentation"
+          src={embedUrl}
+          title={title}
         />
+        <noscript>
+          <a href={watchUrl} rel="noreferrer" target="_blank">
+            Watch {profile.displayName}&apos;s intro video on {provider}
+          </a>
+        </noscript>
       </div>
     </Section>
   );

@@ -179,6 +179,14 @@ function resolveEmailDescriptor(
         ctaPath: "/tutor/overview",
         subject: "Mentor IB · Tutor application update",
       };
+    case "tutor_credential_reviewed":
+      return {
+        ctaContextNote:
+          "Manage credentials and review reviewer feedback inside Mentor IB.",
+        ctaLabel: "Open credentials",
+        ctaPath: "/tutor/profile/credentials",
+        subject: "Mentor IB · Credential review update",
+      };
     case "payout_processed":
       return {
         ctaContextNote:

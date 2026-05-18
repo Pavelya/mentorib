@@ -56,6 +56,52 @@ type TutorCredentialDbRow = {
   updated_at: string;
 };
 
+export type TutorCredentialAdminRow = TutorCredentialEditorRow;
+
+export type TutorCredentialAdminDto = {
+  tutorProfileId: string;
+  credentials: TutorCredentialAdminRow[];
+};
+
+// Admin-only credential read for the internal review panel. The signed URL
+// is generated server-side per request and is never embedded into a public
+// page — it flows to the admin-only `/internal/tutor-reviews/[applicationId]`
+// surface only. The DTO purposefully omits anything sensitive beyond what
+// the owner DTO already exposes; per § 18.1 of the file-and-media doc,
+// credential review and public media review are deliberately separate
+// review-state families even when they share tooling.
+export async function getTutorCredentialsForAdmin(
+  tutorProfileId: string,
+): Promise<TutorCredentialAdminDto> {
+  const supabase = createSupabaseServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("tutor_credentials")
+    .select(
+      "id, credential_type, title, issuing_body, storage_object_path, review_status, reviewed_at, public_display_preference, credential_subject_id, credential_subject_focus_area_id, created_at, updated_at",
+    )
+    .eq("tutor_profile_id", tutorProfileId)
+    .order("created_at", { ascending: false })
+    .returns<TutorCredentialDbRow[]>();
+
+  if (error) {
+    throw new Error("Could not load tutor credentials for admin review.");
+  }
+
+  const rows = data ?? [];
+  const credentials = await Promise.all(
+    rows.map(async (row) => {
+      const downloadUrl = await issueCredentialSignedUrl(row.storage_object_path);
+      return mapEditorRow(row, downloadUrl);
+    }),
+  );
+
+  return {
+    tutorProfileId,
+    credentials,
+  };
+}
+
 export async function getTutorCredentialsForOwner(
   account: Pick<ResolvedAuthAccount, "id">,
 ): Promise<TutorCredentialEditorDto | null> {

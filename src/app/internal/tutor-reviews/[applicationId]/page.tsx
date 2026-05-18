@@ -17,8 +17,10 @@ import { formatCurrencyFromMinorUnits } from "@/modules/pricing/money";
 import { loadTutorApplicationReviewDetail } from "@/modules/tutors/application-review-repository";
 import type { TutorApplicationReviewHistoryEntryDto } from "@/modules/tutors/application-review";
 import type { TutorApplicationStatus } from "@/modules/tutors/constants";
+import { getTutorCredentialsForAdmin } from "@/modules/tutors/media-credentials";
 import type { TutorApplicationReviewStatus } from "@/modules/tutors/review-constants";
 
+import { CredentialReviewPanel } from "./credential-review-panel";
 import { ReviewActionsPanel } from "./review-actions-panel";
 import styles from "../tutor-reviews.module.css";
 
@@ -43,6 +45,8 @@ export default async function InternalTutorReviewDetailPage({
   if (!detail) {
     notFound();
   }
+
+  const credentials = await getTutorCredentialsForAdmin(detail.applicationId);
 
   return (
     <article className={styles.page}>
@@ -141,6 +145,8 @@ export default async function InternalTutorReviewDetailPage({
               </ul>
             </Card>
           </Section>
+
+          <CredentialReviewPanel credentials={credentials.credentials} />
 
           <Section
             density="default"

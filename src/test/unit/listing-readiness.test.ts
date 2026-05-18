@@ -5,6 +5,7 @@ import { evaluateTutorProfileMinimum } from "@/modules/tutors/listing-readiness"
 const completeInput = {
   bio: "Higher-level Biology IA students; structured, exam-aware coaching.",
   displayName: "Maya Chen",
+  hasPublishedProfilePhoto: true,
   headline: "Biology HL Examiner",
   hourlyRateMinor: 6000,
   timezone: "Europe/London",
@@ -56,5 +57,26 @@ describe("evaluateTutorProfileMinimum", () => {
     });
     expect(result.passes).toBe(false);
     expect(result.missing).toContain("bio");
+  });
+
+  it("flags missing published profile photo (gate 2 'real profile photo')", () => {
+    const result = evaluateTutorProfileMinimum({
+      ...completeInput,
+      hasPublishedProfilePhoto: false,
+    });
+    expect(result.passes).toBe(false);
+    expect(result.missing).toEqual(["profilePhoto"]);
+  });
+
+  it("flags profile photo alongside other gaps without dropping them", () => {
+    const result = evaluateTutorProfileMinimum({
+      ...completeInput,
+      hasPublishedProfilePhoto: false,
+      headline: "",
+    });
+    expect(result.passes).toBe(false);
+    expect(result.missing).toEqual(
+      expect.arrayContaining(["headline", "profilePhoto"]),
+    );
   });
 });

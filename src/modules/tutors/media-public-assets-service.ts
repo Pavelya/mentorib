@@ -8,6 +8,7 @@ import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import type { TutorPublicMediaPublicationStatus } from "@/modules/tutors/constants";
 import { TUTOR_PUBLIC_MEDIA_BUCKET } from "@/modules/tutors/media-public-assets";
+import { applyTutorListingPhotoRegressionFlip } from "@/modules/tutors/tutor-profile-editor-service";
 
 const PROFILE_PATH = "/tutor/profile";
 const PHOTO_PATH = "/tutor/profile/photo";
@@ -234,6 +235,12 @@ export async function setTutorProfilePhotoPublication(
       );
     }
 
+    // Listing-readiness gate 2 fails the moment the published photo
+    // disappears; auto-flip any `listed` tutor down to `not_listed` so they
+    // are not publicly discoverable without a real photo (per
+    // tutor-listing-readiness-model §4.2 / P2-MEDIA-001-07).
+    await applyTutorListingPhotoRegressionFlip(account);
+
     revalidatePublicationPaths();
     return {
       action: "hide",
@@ -260,6 +267,8 @@ export async function setTutorProfilePhotoPublication(
   // is not yet implemented in this repo; delete the storage object
   // synchronously so we don't leak orphaned public objects.
   await removePhotoObject(existing.storage_object_path);
+
+  await applyTutorListingPhotoRegressionFlip(account);
 
   revalidatePublicationPaths();
   return { action: "remove", assetId: existing.id, publicationStatus: null };

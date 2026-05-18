@@ -60,6 +60,7 @@ vi.mock("@/modules/reference/catalog", () => ({
 
 import {
   TutorProfileEditorError,
+  applyTutorListingPhotoRegressionFlip,
   setTutorListingPublication,
   updateTutorProfile,
 } from "@/modules/tutors/tutor-profile-editor-service";
@@ -83,6 +84,7 @@ type Recorder = {
   profileUpdates: Array<Record<string, unknown>>;
   capabilityCount: number;
   hasScheduleRule: boolean;
+  hasPublishedProfilePhoto: boolean;
   scheduleTimezone: string | null;
   meetingUrl: string | null;
   meetingActive: boolean;
@@ -183,6 +185,13 @@ function buildClient(recorder: Recorder) {
               error: null,
             }).then(onFulfilled);
           }
+          if (table === "tutor_public_media_assets") {
+            return Promise.resolve({
+              count: recorder.hasPublishedProfilePhoto ? 1 : 0,
+              data: null,
+              error: null,
+            }).then(onFulfilled);
+          }
         }
         // For mutations, settle the chain like the real client.
         if (action === "update" || action === "upsert" || action === "delete") {
@@ -225,6 +234,7 @@ function makeRecorder(overrides: Partial<Recorder> = {}): Recorder {
     profileUpdates: [],
     capabilityCount: 2,
     hasScheduleRule: true,
+    hasPublishedProfilePhoto: true,
     scheduleTimezone: "Europe/Warsaw",
     meetingUrl: "https://meet.example.com/maya",
     meetingActive: true,
@@ -421,6 +431,26 @@ describe("updateTutorProfile auto-flip", () => {
     expect(mockCreateListingNotification).not.toHaveBeenCalled();
   });
 
+  it("auto-flips a listed tutor whose published profile photo is missing (gate-2 photo enforcement)", async () => {
+    const recorder = makeRecorder({
+      profile: makeProfile({ public_listing_status: "listed" }),
+      hasPublishedProfilePhoto: false,
+    });
+    mockServiceRoleClient.mockReturnValue(buildClient(recorder));
+
+    const result = await updateTutorProfile({ id: "user-1" }, validDraft);
+
+    expect(result.autoPaused).toBe(true);
+    expect(result.publicListingStatus).toBe("not_listed");
+    expect(mockCreateListingNotification.mock.calls[0][0]).toMatchObject({
+      publicListingStatus: "not_listed",
+      reason: "gate_regression",
+    });
+    expect(
+      mockCreateListingNotification.mock.calls[0][0].missingGateKeys,
+    ).toEqual(expect.arrayContaining(["profileMinimum"]));
+  });
+
   it("never touches application_status during a profile edit", async () => {
     const recorder = makeRecorder({
       profile: makeProfile({ public_listing_status: "listed" }),
@@ -432,5 +462,59 @@ describe("updateTutorProfile auto-flip", () => {
     for (const update of recorder.profileUpdates) {
       expect(update.application_status).toBeUndefined();
     }
+  });
+});
+
+describe("applyTutorListingPhotoRegressionFlip", () => {
+  it("flips listed → not_listed and enqueues notification with missingGateKeys=['profilePhoto']", async () => {
+    const recorder = makeRecorder({
+      profile: makeProfile({ public_listing_status: "listed" }),
+    });
+    mockServiceRoleClient.mockReturnValue(buildClient(recorder));
+
+    const result = await applyTutorListingPhotoRegressionFlip({ id: "user-1" });
+
+    expect(result.autoPaused).toBe(true);
+    expect(result.publicListingStatus).toBe("not_listed");
+
+    const flipUpdate = recorder.profileUpdates.find(
+      (update) => update.public_listing_status === "not_listed",
+    );
+    expect(flipUpdate).toBeDefined();
+
+    expect(mockCreateListingNotification).toHaveBeenCalledTimes(1);
+    expect(mockCreateListingNotification.mock.calls[0][0]).toMatchObject({
+      publicListingStatus: "not_listed",
+      reason: "gate_regression",
+      missingGateKeys: ["profilePhoto"],
+    });
+  });
+
+  it("does not flip or notify when the tutor is already not_listed", async () => {
+    const recorder = makeRecorder({
+      profile: makeProfile({ public_listing_status: "not_listed" }),
+    });
+    mockServiceRoleClient.mockReturnValue(buildClient(recorder));
+
+    const result = await applyTutorListingPhotoRegressionFlip({ id: "user-1" });
+
+    expect(result.autoPaused).toBe(false);
+    expect(result.publicListingStatus).toBe("not_listed");
+    expect(recorder.profileUpdates).toHaveLength(0);
+    expect(mockCreateListingNotification).not.toHaveBeenCalled();
+  });
+
+  it("does not flip an admin-held (paused) listing on photo removal", async () => {
+    const recorder = makeRecorder({
+      profile: makeProfile({ public_listing_status: "paused" }),
+    });
+    mockServiceRoleClient.mockReturnValue(buildClient(recorder));
+
+    const result = await applyTutorListingPhotoRegressionFlip({ id: "user-1" });
+
+    expect(result.autoPaused).toBe(false);
+    expect(result.publicListingStatus).toBe("paused");
+    expect(recorder.profileUpdates).toHaveLength(0);
+    expect(mockCreateListingNotification).not.toHaveBeenCalled();
   });
 });

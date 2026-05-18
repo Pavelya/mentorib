@@ -33,6 +33,7 @@ import {
   type TutorPublicListingStatus,
 } from "@/modules/tutors/constants";
 import { evaluateTutorProfileMinimum } from "@/modules/tutors/listing-readiness";
+import { hasPublishedTutorProfilePhoto } from "@/modules/tutors/media-public-assets";
 
 export type TutorListingPublicationAction = "publish" | "self_pause" | "resume";
 
@@ -214,10 +215,63 @@ export async function updateTutorProfile(
     };
   }
 
+  await applyListingAutoFlipOnRegression({
+    appUserId: profile.app_user_id,
+    missingGateKeys,
+    tutorProfileId: profile.id,
+  });
+
+  return {
+    autoPaused: true,
+    publicListingStatus: "not_listed",
+  };
+}
+
+// Flips a `listed` tutor whose published profile photo just disappeared down
+// to `not_listed` and queues the lifecycle notification with
+// `missingGateKeys: ["profilePhoto"]`. Mirrors the gate-regression path in
+// `updateTutorProfile` so the media-public-assets service does not fork a
+// parallel auto-flip lifecycle (per readiness model §5 and
+// `P2-MEDIA-001-07`).
+export async function applyTutorListingPhotoRegressionFlip(
+  account: Pick<ResolvedAuthAccount, "id">,
+): Promise<TutorListingPublicationResult> {
+  const profile = await loadEditorProfile(account.id);
+
+  if (!profile) {
+    return { autoPaused: false, publicListingStatus: "not_listed" };
+  }
+
+  if (profile.public_listing_status !== "listed") {
+    return {
+      autoPaused: false,
+      publicListingStatus: profile.public_listing_status,
+    };
+  }
+
+  await applyListingAutoFlipOnRegression({
+    appUserId: profile.app_user_id,
+    missingGateKeys: ["profilePhoto"],
+    tutorProfileId: profile.id,
+  });
+
+  return {
+    autoPaused: true,
+    publicListingStatus: "not_listed",
+  };
+}
+
+async function applyListingAutoFlipOnRegression(input: {
+  appUserId: string;
+  missingGateKeys: readonly string[];
+  tutorProfileId: string;
+}): Promise<void> {
+  const supabase = createSupabaseServiceRoleClient();
+
   const { error: flipError } = await supabase
     .from("tutor_profiles")
     .update({ public_listing_status: "not_listed" })
-    .eq("id", profile.id);
+    .eq("id", input.tutorProfileId);
 
   if (flipError) {
     throw new TutorProfileEditorError(
@@ -227,19 +281,14 @@ export async function updateTutorProfile(
   }
 
   await createTutorListingStatusChangedNotification({
-    appUserId: profile.app_user_id,
-    missingGateKeys,
+    appUserId: input.appUserId,
+    missingGateKeys: input.missingGateKeys,
     publicListingStatus: "not_listed",
     reason: "gate_regression",
-    tutorProfileId: profile.id,
+    tutorProfileId: input.tutorProfileId,
   });
 
-  await syncPublicTutorRecord(profile.id);
-
-  return {
-    autoPaused: true,
-    publicListingStatus: "not_listed",
-  };
+  await syncPublicTutorRecord(input.tutorProfileId);
 }
 
 export async function setTutorListingPublication(
@@ -415,35 +464,42 @@ async function evaluateGatesForTutor(input: {
 }): Promise<TutorApplicationReadinessGate[]> {
   const supabase = createSupabaseServiceRoleClient();
 
-  const [schedulePolicyRes, scheduleRuleCountRes, meetingPrefRes, accountRes, capabilityRes] =
-    await Promise.all([
-      supabase
-        .from("schedule_policies")
-        .select("timezone")
-        .eq("tutor_profile_id", input.tutorProfileId)
-        .maybeSingle<{ timezone: string | null }>(),
-      supabase
-        .from("availability_rules")
-        .select("id", { count: "exact", head: true })
-        .eq("tutor_profile_id", input.tutorProfileId)
-        .eq("visibility_status", "active"),
-      supabase
-        .from("tutor_meeting_preferences")
-        .select("default_meeting_url, is_active")
-        .eq("tutor_profile_id", input.tutorProfileId)
-        .maybeSingle<{ default_meeting_url: string | null; is_active: boolean }>(),
-      input.fullName === null
-        ? supabase
-            .from("tutor_profiles")
-            .select("app_user_id")
-            .eq("id", input.tutorProfileId)
-            .maybeSingle<{ app_user_id: string }>()
-        : Promise.resolve({ data: null, error: null } as const),
-      supabase
-        .from("tutor_subject_capabilities")
-        .select("id", { count: "exact", head: true })
-        .eq("tutor_profile_id", input.tutorProfileId),
-    ]);
+  const [
+    schedulePolicyRes,
+    scheduleRuleCountRes,
+    meetingPrefRes,
+    accountRes,
+    capabilityRes,
+    hasPublishedProfilePhoto,
+  ] = await Promise.all([
+    supabase
+      .from("schedule_policies")
+      .select("timezone")
+      .eq("tutor_profile_id", input.tutorProfileId)
+      .maybeSingle<{ timezone: string | null }>(),
+    supabase
+      .from("availability_rules")
+      .select("id", { count: "exact", head: true })
+      .eq("tutor_profile_id", input.tutorProfileId)
+      .eq("visibility_status", "active"),
+    supabase
+      .from("tutor_meeting_preferences")
+      .select("default_meeting_url, is_active")
+      .eq("tutor_profile_id", input.tutorProfileId)
+      .maybeSingle<{ default_meeting_url: string | null; is_active: boolean }>(),
+    input.fullName === null
+      ? supabase
+          .from("tutor_profiles")
+          .select("app_user_id")
+          .eq("id", input.tutorProfileId)
+          .maybeSingle<{ app_user_id: string }>()
+      : Promise.resolve({ data: null, error: null } as const),
+    supabase
+      .from("tutor_subject_capabilities")
+      .select("id", { count: "exact", head: true })
+      .eq("tutor_profile_id", input.tutorProfileId),
+    hasPublishedTutorProfilePhoto(input.tutorProfileId),
+  ]);
 
   const timezone =
     input.timezone ?? schedulePolicyRes.data?.timezone?.trim() ?? null;
@@ -463,6 +519,7 @@ async function evaluateGatesForTutor(input: {
   const profileMinimum = evaluateTutorProfileMinimum({
     bio: input.bio,
     displayName: fullName,
+    hasPublishedProfilePhoto,
     headline: input.headline,
     hourlyRateMinor: input.hourlyRateMinor,
     timezone,
@@ -477,8 +534,9 @@ async function evaluateGatesForTutor(input: {
     applicationStatus: "approved",
     hasMeetingLink,
     hasScheduleRules,
+    hasSubjectCapability: capabilityCount > 0,
     payoutReadinessStatus: input.payoutReadinessStatus,
-    profileMinimumComplete: profileMinimum.passes && capabilityCount > 0,
+    profileMinimumMissingFields: profileMinimum.missing,
     publicListingStatus: input.publicListingStatus,
   });
 }

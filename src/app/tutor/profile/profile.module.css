@@ -105,6 +105,15 @@
   text-decoration: underline;
 }
 
+.readinessSubItems {
+  margin: 0;
+  padding-left: var(--space-4);
+  display: grid;
+  gap: 0.25rem;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
 .errorList {
   margin: 0;
   padding-left: var(--space-4);

@@ -28,6 +28,7 @@ import {
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
 import type { TutorApplicationReadinessGate } from "@/modules/tutors/application";
+import type { ProfileMinimumField } from "@/modules/tutors/listing-readiness";
 import type {
   TutorCredentialReviewStatus,
   TutorIntroVideoPublicationStatus,
@@ -239,6 +240,16 @@ function ReadinessChecklistPanel({
                   <p className={styles.readinessDescription}>
                     {gate.description}
                   </p>
+                  {gate.missingProfileMinimumFields &&
+                  gate.missingProfileMinimumFields.length > 0 ? (
+                    <ul className={styles.readinessSubItems}>
+                      {gate.missingProfileMinimumFields.map((field) => (
+                        <li key={field}>
+                          {getProfileMinimumFieldLabel(field)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                   {getGateActionHref(gate.key) ? (
                     <Link
                       className={styles.readinessLink}
@@ -318,6 +329,25 @@ function getGateActionLabel(
       return "Open payouts";
     default:
       return "";
+  }
+}
+
+function getProfileMinimumFieldLabel(field: ProfileMinimumField): string {
+  switch (field) {
+    case "displayName":
+      return "Add your display name.";
+    case "headline":
+      return "Add a one-line headline.";
+    case "bio":
+      return "Write a short bio.";
+    case "timezone":
+      return "Set your timezone.";
+    case "hourlyRate":
+      return "Set your hourly rate.";
+    case "profilePhoto":
+      return "Publish a real profile photo.";
+    default:
+      return field;
   }
 }
 

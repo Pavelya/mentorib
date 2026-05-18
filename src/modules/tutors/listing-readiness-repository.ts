@@ -2,6 +2,7 @@ import "server-only";
 
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import type { TutorProfileMinimumInput } from "@/modules/tutors/listing-readiness";
+import { hasPublishedTutorProfilePhoto } from "@/modules/tutors/media-public-assets";
 
 export async function loadTutorProfileMinimumGateInput(
   tutorProfileId: string,
@@ -27,18 +28,20 @@ export async function loadTutorProfileMinimumGateInput(
     return null;
   }
 
-  const [scheduleResult, accountResult] = await Promise.all([
-    supabase
-      .from("schedule_policies")
-      .select("timezone")
-      .eq("tutor_profile_id", tutorProfileId)
-      .maybeSingle<{ timezone: string | null }>(),
-    supabase
-      .from("app_users")
-      .select("full_name")
-      .eq("id", data.app_user_id)
-      .maybeSingle<{ full_name: string | null }>(),
-  ]);
+  const [scheduleResult, accountResult, hasPublishedProfilePhoto] =
+    await Promise.all([
+      supabase
+        .from("schedule_policies")
+        .select("timezone")
+        .eq("tutor_profile_id", tutorProfileId)
+        .maybeSingle<{ timezone: string | null }>(),
+      supabase
+        .from("app_users")
+        .select("full_name")
+        .eq("id", data.app_user_id)
+        .maybeSingle<{ full_name: string | null }>(),
+      hasPublishedTutorProfilePhoto(tutorProfileId),
+    ]);
 
   if (scheduleResult.error) {
     throw new Error("Could not load tutor schedule timezone.");
@@ -51,6 +54,7 @@ export async function loadTutorProfileMinimumGateInput(
   return {
     bio: data.bio,
     displayName: accountResult.data?.full_name ?? null,
+    hasPublishedProfilePhoto,
     headline: data.headline,
     hourlyRateMinor: data.hourly_rate_minor,
     timezone: scheduleResult.data?.timezone ?? null,

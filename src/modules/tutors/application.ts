@@ -22,6 +22,10 @@ import {
   type TutorApplicationStatus,
   type TutorPublicListingStatus,
 } from "@/modules/tutors/constants";
+import {
+  evaluateTutorProfileMinimum,
+  type ProfileMinimumField,
+} from "@/modules/tutors/listing-readiness";
 
 const MAX_FULL_NAME_LENGTH = 80;
 const MAX_HEADLINE_LENGTH = 120;
@@ -89,6 +93,11 @@ export type TutorApplicationReadinessGate = {
     | "payoutReady"
     | "noActiveHold";
   label: string;
+  // For gate 2 ("profileMinimum") only: structured list of profile-minimum
+  // sub-fields still missing. Drives the readiness checklist's sub-item
+  // callouts (e.g. "Add a real profile photo"). Empty/undefined for other
+  // gates.
+  missingProfileMinimumFields?: readonly ProfileMinimumField[];
   state: "complete" | "in_progress" | "blocked" | "under_review";
 };
 
@@ -221,8 +230,16 @@ export async function getTutorApplication(
         applicationStatus: "not_started",
         hasMeetingLink: false,
         hasScheduleRules: false,
+        hasSubjectCapability: false,
         payoutReadinessStatus: "not_started",
-        profileMinimumComplete: false,
+        profileMinimumMissingFields: [
+          "displayName",
+          "headline",
+          "bio",
+          "timezone",
+          "hourlyRate",
+          "profilePhoto",
+        ],
         publicListingStatus: "not_listed",
       }),
       reviewNote: null,
@@ -231,14 +248,21 @@ export async function getTutorApplication(
     };
   }
 
-  const [capabilityRows, languageRows, schedulePolicy, scheduleRuleCount, meetingPreference] =
-    await Promise.all([
-      loadSubjectCapabilities(tutorProfile.id),
-      loadLanguageCapabilities(tutorProfile.id),
-      loadSchedulePolicy(tutorProfile.id),
-      loadActiveAvailabilityRuleCount(tutorProfile.id),
-      loadMeetingPreference(tutorProfile.id),
-    ]);
+  const [
+    capabilityRows,
+    languageRows,
+    schedulePolicy,
+    scheduleRuleCount,
+    meetingPreference,
+    hasPublishedProfilePhoto,
+  ] = await Promise.all([
+    loadSubjectCapabilities(tutorProfile.id),
+    loadLanguageCapabilities(tutorProfile.id),
+    loadSchedulePolicy(tutorProfile.id),
+    loadActiveAvailabilityRuleCount(tutorProfile.id),
+    loadMeetingPreference(tutorProfile.id),
+    loadHasPublishedProfilePhoto(tutorProfile.id),
+  ]);
 
   const capabilities = mapCapabilityRecords({
     capabilityRows,
@@ -267,14 +291,15 @@ export async function getTutorApplication(
     timezone,
   };
 
-  const profileMinimumComplete = evaluateProfileMinimumComplete({
+  const profileMinimumResult = evaluateTutorProfileMinimum({
     bio: draft.bio,
-    capabilityCount: capabilities.length,
-    fullName: draft.fullName,
+    displayName: draft.fullName,
+    hasPublishedProfilePhoto,
     headline: draft.headline,
     hourlyRateMinor: tutorProfile.hourly_rate_minor,
     timezone: schedulePolicy?.timezone ?? null,
   });
+  const hasSubjectCapability = capabilities.length > 0;
 
   const hasScheduleRules = scheduleRuleCount > 0;
   const hasMeetingLink =
@@ -297,8 +322,9 @@ export async function getTutorApplication(
       applicationStatus: tutorProfile.application_status,
       hasMeetingLink,
       hasScheduleRules,
+      hasSubjectCapability,
       payoutReadinessStatus: tutorProfile.payout_readiness_status,
-      profileMinimumComplete,
+      profileMinimumMissingFields: profileMinimumResult.missing,
       publicListingStatus: tutorProfile.public_listing_status,
     }),
     reviewNote: reviewerNote,
@@ -519,25 +545,6 @@ export function formatHourlyRateMajor(minor: number | null | undefined): string 
 
 export const DEFAULT_TUTOR_APPLICATION_CURRENCY = DEFAULT_PLATFORM_CURRENCY_CODE;
 
-function evaluateProfileMinimumComplete(input: {
-  bio: string;
-  capabilityCount: number;
-  fullName: string;
-  headline: string;
-  hourlyRateMinor: number | null;
-  timezone: string | null;
-}): boolean {
-  return (
-    Boolean(input.fullName.trim()) &&
-    Boolean(input.headline.trim()) &&
-    Boolean(input.bio.trim()) &&
-    Boolean(input.timezone?.trim()) &&
-    typeof input.hourlyRateMinor === "number" &&
-    input.hourlyRateMinor > 0 &&
-    input.capabilityCount > 0
-  );
-}
-
 export function buildApplicationOptions(input: {
   focusAreas: ReferenceSubjectFocusArea[];
   languages: ReferenceLanguage[];
@@ -649,8 +656,9 @@ export function buildReadinessGates(input: {
   applicationStatus: TutorApplicationStatus;
   hasMeetingLink: boolean;
   hasScheduleRules: boolean;
+  hasSubjectCapability: boolean;
   payoutReadinessStatus: PayoutReadinessStatus;
-  profileMinimumComplete: boolean;
+  profileMinimumMissingFields: readonly ProfileMinimumField[];
   publicListingStatus: TutorPublicListingStatus;
 }): TutorApplicationReadinessGate[] {
   const approvalState: TutorApplicationReadinessGate["state"] =
@@ -663,8 +671,11 @@ export function buildReadinessGates(input: {
           ? "blocked"
           : "in_progress";
 
+  const profileMinimumComplete =
+    input.profileMinimumMissingFields.length === 0 &&
+    input.hasSubjectCapability;
   const profileMinimumState: TutorApplicationReadinessGate["state"] =
-    input.profileMinimumComplete ? "complete" : "in_progress";
+    profileMinimumComplete ? "complete" : "in_progress";
 
   const scheduleState: TutorApplicationReadinessGate["state"] = input.hasScheduleRules
     ? "complete"
@@ -690,9 +701,12 @@ export function buildReadinessGates(input: {
     },
     {
       description:
-        "Display name, headline, bio, rate, timezone, and at least one subject focus are complete.",
+        "Display name, headline, bio, rate, timezone, a published profile photo, and at least one subject focus are complete.",
       key: "profileMinimum",
       label: "Profile minimum complete",
+      missingProfileMinimumFields: profileMinimumComplete
+        ? undefined
+        : input.profileMinimumMissingFields,
       state: profileMinimumState,
     },
     {
@@ -847,6 +861,24 @@ async function loadActiveAvailabilityRuleCount(
   }
 
   return count ?? 0;
+}
+
+async function loadHasPublishedProfilePhoto(
+  tutorProfileId: string,
+): Promise<boolean> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { count, error } = await supabase
+    .from("tutor_public_media_assets")
+    .select("id", { count: "exact", head: true })
+    .eq("tutor_profile_id", tutorProfileId)
+    .eq("media_role", "profile_photo")
+    .eq("publication_status", "published");
+
+  if (error) {
+    throw new Error("Could not load tutor profile photo publication state.");
+  }
+
+  return (count ?? 0) > 0;
 }
 
 async function loadMeetingPreference(

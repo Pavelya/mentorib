@@ -83,6 +83,28 @@ export async function getTutorPublicMediaForOwner(
   };
 }
 
+// Listing-readiness gate 2 ("real profile photo") asks only whether the tutor
+// currently has a published profile photo; this thin projection returns just
+// that boolean so callers do not have to load the full editor DTO and signed
+// public URL just to feed `evaluateTutorProfileMinimum`.
+export async function hasPublishedTutorProfilePhoto(
+  tutorProfileId: string,
+): Promise<boolean> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { count, error } = await supabase
+    .from("tutor_public_media_assets")
+    .select("id", { count: "exact", head: true })
+    .eq("tutor_profile_id", tutorProfileId)
+    .eq("media_role", "profile_photo")
+    .eq("publication_status", "published");
+
+  if (error) {
+    throw new Error("Could not load tutor profile photo publication state.");
+  }
+
+  return (count ?? 0) > 0;
+}
+
 export function getTutorPublicMediaPublicUrl(storageObjectPath: string): string {
   const supabase = createSupabaseServiceRoleClient();
   const { data } = supabase.storage

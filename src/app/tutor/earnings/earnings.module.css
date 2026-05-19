@@ -54,13 +54,6 @@
   font-size: var(--body-sm);
 }
 
-.requirementsList {
-  margin: 0;
-  padding-left: var(--space-4);
-  color: var(--ink-700);
-  font-size: var(--body-sm);
-}
-
 .payoutForm {
   display: grid;
   gap: var(--space-4);

@@ -204,7 +204,6 @@ function EarningsView({
   const headline = PAYOUT_READINESS_HEADLINE[earnings.payoutReadinessStatus];
   const description = PAYOUT_READINESS_DESCRIPTION[earnings.payoutReadinessStatus];
   const tone = PAYOUT_READINESS_TONE[earnings.payoutReadinessStatus];
-  const requirements = collectOpenRequirements(earnings.payoutRequirementsSummary);
   const onboardingNotice = buildOnboardingNotice(onboardingState);
   const showStartForm =
     !earnings.hasStripeAccount && earnings.applicationStatus === "approved";
@@ -212,6 +211,12 @@ function EarningsView({
     earnings.hasStripeAccount && earnings.payoutReadinessStatus !== "enabled";
   const setupBlocked =
     earnings.applicationStatus !== "approved" || !stripeConfigured;
+  const resumeCtaLabel =
+    earnings.payoutReadinessStatus === "restricted"
+      ? "Resolve in Stripe"
+      : earnings.payoutReadinessStatus === "pending_verification"
+        ? "Open Stripe dashboard"
+        : "Continue setup in Stripe";
   const countryDisplayName = earnings.payoutAccountCountry
     ? getPayoutSupportedCountryDisplayName(earnings.payoutAccountCountry) ??
       earnings.payoutAccountCountry
@@ -256,15 +261,6 @@ function EarningsView({
         label="Status"
       />
 
-      {!stripeConfigured ? (
-        <InlineNotice title="Stripe is not configured" tone="warning">
-          <p>
-            Set <code>STRIPE_SECRET_KEY</code> on the server to enable Stripe
-            Connect onboarding for tutors.
-          </p>
-        </InlineNotice>
-      ) : null}
-
       {earnings.applicationStatus !== "approved" ? (
         <InlineNotice
           title="Application approval required"
@@ -290,10 +286,8 @@ function EarningsView({
             </StatusBadge>
           </div>
           <p className={styles.checklistDescription}>
-            We pre-fill your name and email ({accountEmail}) when we create
-            your Stripe Connect Express account. Stripe collects only the
-            verification documents and bank account or debit card it needs
-            for your country.
+            We pre-fill your email ({accountEmail}) when we create your Stripe
+            account.
           </p>
           {countryDisplayName ? (
             <p className={styles.helperText}>
@@ -304,13 +298,6 @@ function EarningsView({
             <p className={styles.helperText}>
               Last status sync · {formatUtcDateTime(earnings.payoutStatusSyncedAt)}
             </p>
-          ) : null}
-          {requirements.length > 0 ? (
-            <ul className={styles.requirementsList}>
-              {requirements.map((requirement) => (
-                <li key={requirement}>{describeRequirement(requirement)}</li>
-              ))}
-            </ul>
           ) : null}
 
           {showStartForm ? (
@@ -323,11 +310,7 @@ function EarningsView({
 
           {showResumeForm ? (
             <ResumePayoutOnboardingForm
-              ctaLabel={
-                earnings.payoutReadinessStatus === "restricted"
-                  ? "Resolve in Stripe"
-                  : "Continue Stripe setup"
-              }
+              ctaLabel={resumeCtaLabel}
               disabled={setupBlocked}
             />
           ) : null}
@@ -422,60 +405,6 @@ function buildOnboardingNotice(state: string | null) {
   }
 
   return null;
-}
-
-function collectOpenRequirements(
-  summary: Record<string, unknown> | null,
-): string[] {
-  if (!summary) {
-    return [];
-  }
-
-  const open = new Set<string>();
-  const currentlyDue = summary.currently_due;
-  const pastDue = summary.past_due;
-
-  if (Array.isArray(currentlyDue)) {
-    for (const entry of currentlyDue) {
-      if (typeof entry === "string") {
-        open.add(entry);
-      }
-    }
-  }
-
-  if (Array.isArray(pastDue)) {
-    for (const entry of pastDue) {
-      if (typeof entry === "string") {
-        open.add(entry);
-      }
-    }
-  }
-
-  return Array.from(open);
-}
-
-function describeRequirement(requirement: string) {
-  if (requirement.startsWith("individual.verification")) {
-    return "Verification documents (government-issued ID)";
-  }
-
-  if (requirement.startsWith("external_account")) {
-    return "Bank account or debit card for payouts";
-  }
-
-  if (requirement.startsWith("tos_acceptance")) {
-    return "Acceptance of Stripe terms";
-  }
-
-  if (requirement.startsWith("individual.dob")) {
-    return "Date of birth";
-  }
-
-  if (requirement.startsWith("individual.address")) {
-    return "Residential address";
-  }
-
-  return requirement;
 }
 
 async function readOnboardingParam(

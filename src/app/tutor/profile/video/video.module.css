@@ -20,7 +20,7 @@
 
 .title {
   margin: 0;
-  font-size: var(--display-sm);
+  font-size: var(--title-xl);
 }
 
 .description {

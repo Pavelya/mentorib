@@ -423,99 +423,96 @@ function TrustMediaPanel({ summary }: { summary: TrustMediaSummary }) {
   const videoStatusLabel = getIntroVideoStatusLabel(summary.introVideoStatus);
 
   return (
-    <Panel eyebrow="Trust & media" title="Trust & media" tone="default">
-      <Section
-        density="default"
-        description="Manage what makes your profile credible: credentials, photo, and intro video."
-        eyebrow="Summary"
-        title="Status at a glance"
-        titleAs="h2"
-      >
-        <ul className={styles.readinessList}>
-          <li>
-            <Card>
-              <div className={styles.readinessRow}>
-                <div className={styles.readinessText}>
-                  <p className={styles.readinessLabel}>Credentials</p>
-                  <p className={styles.readinessDescription}>
-                    {summary.credentials.total === 0
-                      ? "No credentials uploaded yet."
-                      : `${summary.credentials.approved} approved · ${summary.credentials.inReview} in review · ${summary.credentials.needsUpdate} needs update`}
-                  </p>
-                  <Link
-                    className={styles.readinessLink}
-                    href={"/tutor/profile/credentials" as Route}
-                  >
-                    Manage credentials
-                  </Link>
-                </div>
-                <StatusBadge
-                  tone={
-                    summary.credentials.needsUpdate > 0
-                      ? "warning"
-                      : summary.credentials.approved > 0
-                        ? "positive"
-                        : "info"
-                  }
-                >
+    <Section
+      density="default"
+      description="Manage what makes your profile credible: credentials, photo, and intro video."
+      title="Trust & media"
+      titleAs="h2"
+    >
+      <ul className={styles.readinessList}>
+        <li>
+          <Card>
+            <div className={styles.readinessRow}>
+              <div className={styles.readinessText}>
+                <p className={styles.readinessLabel}>Credentials</p>
+                <p className={styles.readinessDescription}>
                   {summary.credentials.total === 0
-                    ? "Empty"
-                    : `${summary.credentials.total} on file`}
-                </StatusBadge>
+                    ? "No credentials uploaded yet."
+                    : `${summary.credentials.approved} approved · ${summary.credentials.inReview} in review · ${summary.credentials.needsUpdate} needs update`}
+                </p>
+                <Link
+                  className={styles.readinessLink}
+                  href={"/tutor/profile/credentials" as Route}
+                >
+                  Manage credentials
+                </Link>
               </div>
-            </Card>
-          </li>
-          <li>
-            <Card>
-              <div className={styles.readinessRow}>
-                <div className={styles.readinessText}>
-                  <p className={styles.readinessLabel}>Profile photo</p>
-                  <p className={styles.readinessDescription}>
-                    {summary.profilePhotoStatus === "published"
-                      ? "Your photo is live on your public profile."
-                      : summary.profilePhotoStatus
-                        ? "Photo uploaded but not published yet."
-                        : "Upload a real photo to replace the initials placeholder."}
-                  </p>
-                  <Link
-                    className={styles.readinessLink}
-                    href={"/tutor/profile/photo" as Route}
-                  >
-                    Manage photo
-                  </Link>
-                </div>
-                <StatusBadge tone={photoStatusLabel.tone}>
-                  {photoStatusLabel.label}
-                </StatusBadge>
+              <StatusBadge
+                tone={
+                  summary.credentials.needsUpdate > 0
+                    ? "warning"
+                    : summary.credentials.approved > 0
+                      ? "positive"
+                      : "info"
+                }
+              >
+                {summary.credentials.total === 0
+                  ? "Empty"
+                  : `${summary.credentials.total} on file`}
+              </StatusBadge>
+            </div>
+          </Card>
+        </li>
+        <li>
+          <Card>
+            <div className={styles.readinessRow}>
+              <div className={styles.readinessText}>
+                <p className={styles.readinessLabel}>Profile photo</p>
+                <p className={styles.readinessDescription}>
+                  {summary.profilePhotoStatus === "published"
+                    ? "Your photo is live on your public profile."
+                    : summary.profilePhotoStatus
+                      ? "Photo uploaded but not published yet."
+                      : "Upload a real photo to replace the initials placeholder."}
+                </p>
+                <Link
+                  className={styles.readinessLink}
+                  href={"/tutor/profile/photo" as Route}
+                >
+                  Manage photo
+                </Link>
               </div>
-            </Card>
-          </li>
-          <li>
-            <Card>
-              <div className={styles.readinessRow}>
-                <div className={styles.readinessText}>
-                  <p className={styles.readinessLabel}>Intro video</p>
-                  <p className={styles.readinessDescription}>
-                    {summary.introVideoStatus === "published"
-                      ? "Your intro video is live on your public profile."
-                      : "Add a short YouTube, Vimeo, or Loom link so students can hear you."}
-                  </p>
-                  <Link
-                    className={styles.readinessLink}
-                    href={"/tutor/profile/video" as Route}
-                  >
-                    Manage intro video
-                  </Link>
-                </div>
-                <StatusBadge tone={videoStatusLabel.tone}>
-                  {videoStatusLabel.label}
-                </StatusBadge>
+              <StatusBadge tone={photoStatusLabel.tone}>
+                {photoStatusLabel.label}
+              </StatusBadge>
+            </div>
+          </Card>
+        </li>
+        <li>
+          <Card>
+            <div className={styles.readinessRow}>
+              <div className={styles.readinessText}>
+                <p className={styles.readinessLabel}>Intro video</p>
+                <p className={styles.readinessDescription}>
+                  {summary.introVideoStatus === "published"
+                    ? "Your intro video is live on your public profile."
+                    : "Add a short YouTube, Vimeo, or Loom link so students can hear you."}
+                </p>
+                <Link
+                  className={styles.readinessLink}
+                  href={"/tutor/profile/video" as Route}
+                >
+                  Manage intro video
+                </Link>
               </div>
-            </Card>
-          </li>
-        </ul>
-      </Section>
-    </Panel>
+              <StatusBadge tone={videoStatusLabel.tone}>
+                {videoStatusLabel.label}
+              </StatusBadge>
+            </div>
+          </Card>
+        </li>
+      </ul>
+    </Section>
   );
 }
 

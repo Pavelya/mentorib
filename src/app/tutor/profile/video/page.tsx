@@ -141,7 +141,7 @@ export default async function TutorProfileVideoPage() {
         </div>
       </Section>
 
-      <Panel eyebrow="Manage" title="Your intro video" tone="default">
+      <Panel eyebrow="Manage" tone="default">
         <IntroVideoManager
           embed={
             video?.introVideo

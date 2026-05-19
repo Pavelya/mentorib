@@ -87,12 +87,7 @@ export function CredentialsManager({
 }: CredentialsManagerProps) {
   return (
     <div className={styles.formStack}>
-      <Section
-        density="default"
-        eyebrow="Add"
-        title="Add a credential"
-        titleAs="h2"
-      >
+      <Section density="default" title="Add" titleAs="h2">
         <UploadCredentialForm focusAreas={focusAreas} subjects={subjects} />
       </Section>
 

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import {
   InlineNotice,
-  Panel,
   Section,
 } from "@/components/ui";
 import {
@@ -141,23 +140,17 @@ export default async function TutorProfileCredentialsPage() {
         </p>
       </Section>
 
-      <Panel
-        eyebrow="Manage"
-        title="Your credentials"
-        tone="default"
-      >
-        <CredentialsManager
-          credentials={credentials?.credentials ?? []}
-          focusAreas={focusAreas.map((focusArea) => ({
-            id: focusArea.id,
-            label: focusArea.displayName,
-          }))}
-          subjects={subjects.map((subject) => ({
-            id: subject.id,
-            label: subject.displayName,
-          }))}
-        />
-      </Panel>
+      <CredentialsManager
+        credentials={credentials?.credentials ?? []}
+        focusAreas={focusAreas.map((focusArea) => ({
+          id: focusArea.id,
+          label: focusArea.displayName,
+        }))}
+        subjects={subjects.map((subject) => ({
+          id: subject.id,
+          label: subject.displayName,
+        }))}
+      />
     </article>
   );
 }

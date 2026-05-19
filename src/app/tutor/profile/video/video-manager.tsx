@@ -6,7 +6,6 @@ import { useFormStatus } from "react-dom";
 import {
   Button,
   InlineNotice,
-  Section,
   StatusBadge,
   TextField,
 } from "@/components/ui";
@@ -59,68 +58,38 @@ export function IntroVideoManager({
         </StatusBadge>
       </div>
 
-      <Section
-        density="default"
-        eyebrow={embed ? "Replace" : "Add"}
-        title={embed ? "Update video link" : "Paste your video link"}
-        titleAs="h2"
-      >
-        <SetVideoForm currentUrl={embed?.canonicalWatchUrl ?? ""} />
-      </Section>
+      <SetVideoForm currentUrl={embed?.canonicalWatchUrl ?? ""} />
 
       {embed ? (
-        <Section
-          density="default"
-          eyebrow="Preview"
-          title="How your intro looks"
-          titleAs="h2"
-        >
-          <div className={styles.embed}>
-            <iframe
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className={styles.embedFrame}
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              src={embed.canonicalEmbedUrl}
-              title="Tutor intro video preview"
-            />
-            <p className={styles.embedMeta}>
-              Provider: {embed.providerKey}
-            </p>
-            <a
-              className={styles.embedLink}
-              href={embed.canonicalWatchUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Open on {embed.providerKey} ↗
-            </a>
-          </div>
-        </Section>
+        <div className={styles.embed}>
+          <iframe
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className={styles.embedFrame}
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+            src={embed.canonicalEmbedUrl}
+            title="Tutor intro video preview"
+          />
+          <p className={styles.embedMeta}>
+            Provider: {embed.providerKey}
+          </p>
+          <a
+            className={styles.embedLink}
+            href={embed.canonicalWatchUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Open on {embed.providerKey} ↗
+          </a>
+        </div>
       ) : null}
 
       {embed ? (
-        <Section
-          density="default"
-          eyebrow="Publish"
-          title="Publication"
-          titleAs="h2"
-        >
-          <PublicationControls publicationStatus={publicationStatus} />
-        </Section>
+        <PublicationControls publicationStatus={publicationStatus} />
       ) : null}
 
-      {embed ? (
-        <Section
-          density="default"
-          eyebrow="Remove"
-          title="Clear video link"
-          titleAs="h2"
-        >
-          <ClearVideoForm />
-        </Section>
-      ) : null}
+      {embed ? <ClearVideoForm /> : null}
     </div>
   );
 }

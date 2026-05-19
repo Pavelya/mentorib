@@ -225,9 +225,11 @@ function PhotoUploadRow({
           : ""}
       </p>
       {photo ? (
-        <StatusBadge tone={STATUS_TONES[photo.publicationStatus]}>
-          {STATUS_LABELS[photo.publicationStatus]}
-        </StatusBadge>
+        <div className={styles.statusLine}>
+          <StatusBadge tone={STATUS_TONES[photo.publicationStatus]}>
+            {STATUS_LABELS[photo.publicationStatus]}
+          </StatusBadge>
+        </div>
       ) : null}
       {successMessage ? (
         <InlineNotice showToneLabel={false} tone="success">

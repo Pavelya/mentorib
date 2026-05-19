@@ -53,9 +53,11 @@ export function IntroVideoManager({
 }: IntroVideoManagerProps) {
   return (
     <div className={styles.formStack}>
-      <StatusBadge tone={STATUS_TONES[publicationStatus]}>
-        {STATUS_LABELS[publicationStatus]}
-      </StatusBadge>
+      <div className={styles.statusLine}>
+        <StatusBadge tone={STATUS_TONES[publicationStatus]}>
+          {STATUS_LABELS[publicationStatus]}
+        </StatusBadge>
+      </div>
 
       <Section
         density="default"

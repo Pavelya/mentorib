@@ -86,3 +86,10 @@
   color: var(--ink-700);
   font-size: var(--body-sm);
 }
+
+.statusLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}

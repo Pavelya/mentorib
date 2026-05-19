@@ -15,6 +15,7 @@ import {
   TutorPublicMediaServiceError,
   updateTutorProfilePhotoAlt,
   uploadTutorProfilePhoto,
+  applyAccountAvatarAsTutorPhoto,
   type TutorProfilePhotoPublicationAction,
 } from "@/modules/tutors/media-public-assets-service";
 
@@ -62,6 +63,23 @@ export async function updateTutorProfilePhotoAltAction(
       fieldErrors: {},
       message: null,
       successMessage: "Photo description saved.",
+    };
+  });
+}
+
+export async function applyAccountAvatarAsTutorPhotoAction(
+  _previous: TutorProfilePhotoActionState,
+  _formData: FormData,
+): Promise<TutorProfilePhotoActionState> {
+  void _formData;
+  return runPhotoOperation(async (accountId) => {
+    await applyAccountAvatarAsTutorPhoto({ id: accountId });
+    return {
+      code: "ok",
+      fieldErrors: {},
+      message: null,
+      successMessage:
+        "Account avatar copied as your tutor profile photo. Publish it when you're ready.",
     };
   });
 }

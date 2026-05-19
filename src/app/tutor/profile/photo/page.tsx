@@ -122,6 +122,7 @@ export default async function TutorProfilePhotoPage() {
 
       <Panel eyebrow="Manage" title="Your profile photo" tone="default">
         <ProfilePhotoManager
+          accountAvatarUrl={account.avatar_url ?? null}
           displayName={displayName}
           photo={
             photo

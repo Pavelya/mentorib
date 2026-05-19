@@ -34,3 +34,10 @@ export { Switch, type SwitchProps } from "./switch";
 export { TabBar } from "./tab-bar";
 export { Textarea } from "./textarea";
 export { TextField } from "./text-field";
+export {
+  WeeklyHourGrid,
+  makeSlotKey,
+  parseSlotKey,
+  type SlotKey,
+  type WeeklyHourGridProps,
+} from "./weekly-hour-grid";

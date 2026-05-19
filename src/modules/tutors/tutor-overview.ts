@@ -12,6 +12,7 @@ import {
   type TutorApplicationStatus,
   type TutorProfileVisibilityStatus,
 } from "@/modules/tutors/constants";
+import { getTutorPublicMediaForOwner } from "@/modules/tutors/media-public-assets";
 
 const PENDING_REQUEST_LIMIT = 5;
 const UPCOMING_LESSON_LIMIT = 3;
@@ -126,6 +127,7 @@ export type TutorOverviewReadinessDto = {
 };
 
 export type TutorOverviewProfileDto = {
+  avatarUrl: string | null;
   displayName: string;
   headline: string | null;
 };
@@ -147,7 +149,7 @@ export type TutorOverviewDto = {
 };
 
 export async function getTutorOverview(
-  account: Pick<ResolvedAuthAccount, "full_name" | "id">,
+  account: Pick<ResolvedAuthAccount, "avatar_url" | "full_name" | "id">,
 ): Promise<TutorOverviewDto> {
   const tutorProfile = await loadTutorProfile(account.id);
 
@@ -155,9 +157,10 @@ export async function getTutorOverview(
     return buildEmptyOverview("no_profile");
   }
 
-  const [pendingRows, upcomingRows] = await Promise.all([
+  const [pendingRows, upcomingRows, publicMedia] = await Promise.all([
     loadPendingRequestRows(tutorProfile.id),
     loadUpcomingLessonRows(tutorProfile.id),
+    getTutorPublicMediaForOwner(account),
   ]);
 
   const lessonRows: LessonRecord[] = [...pendingRows, ...upcomingRows];
@@ -187,6 +190,8 @@ export async function getTutorOverview(
     openIssues,
     pendingRequests,
     profile: {
+      avatarUrl:
+        publicMedia?.profilePhoto?.publicUrl ?? account.avatar_url ?? null,
       displayName: trimToNull(account.full_name) ?? "Mentor IB tutor",
       headline: trimToNull(tutorProfile.headline),
     },
@@ -246,6 +251,7 @@ export function buildPreviewTutorOverview(): TutorOverviewDto {
       },
     ],
     profile: {
+      avatarUrl: null,
       displayName: "Maya Chen",
       headline: "IB History HL Examiner",
     },
@@ -559,6 +565,7 @@ function buildEmptyOverview(state: "no_profile"): TutorOverviewDto {
     openIssues: [],
     pendingRequests: [],
     profile: {
+      avatarUrl: null,
       displayName: "Mentor IB tutor",
       headline: null,
     },

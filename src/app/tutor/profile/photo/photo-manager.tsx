@@ -1,7 +1,12 @@
 "use client";
 
-import { useActionState, useId, useMemo } from "react";
-import { useFormStatus } from "react-dom";
+import {
+  useActionState,
+  useRef,
+  useState,
+  useTransition,
+  type ChangeEvent,
+} from "react";
 
 import {
   Avatar,
@@ -9,7 +14,6 @@ import {
   InlineNotice,
   Section,
   StatusBadge,
-  TextField,
 } from "@/components/ui";
 import type { TutorPublicMediaPublicationStatus } from "@/modules/tutors/constants";
 
@@ -19,10 +23,16 @@ import {
 } from "./action-types";
 import {
   setTutorProfilePhotoPublicationAction,
-  updateTutorProfilePhotoAltAction,
   uploadTutorProfilePhotoAction,
+  applyAccountAvatarAsTutorPhotoAction,
 } from "./actions";
 import styles from "./photo.module.css";
+
+const ACCEPT_ATTRIBUTE = "image/jpeg,image/png,image/webp";
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES_DESCRIPTION = "5 MB";
+const FILE_TYPE_DESCRIPTION = "JPEG, PNG, or WebP";
 
 type PhotoState = {
   altText: string | null;
@@ -31,6 +41,7 @@ type PhotoState = {
 };
 
 type ProfilePhotoManagerProps = {
+  accountAvatarUrl: string | null;
   displayName: string;
   photo: PhotoState | null;
 };
@@ -55,6 +66,7 @@ const STATUS_TONES: Record<
 };
 
 export function ProfilePhotoManager({
+  accountAvatarUrl,
   displayName,
   photo,
 }: ProfilePhotoManagerProps) {
@@ -66,48 +78,12 @@ export function ProfilePhotoManager({
         title="How your hero image looks"
         titleAs="h2"
       >
-        <div className={styles.preview}>
-          <Avatar
-            alt={photo?.altText ?? `${displayName} profile photo`}
-            name={displayName}
-            size="lg"
-            src={photo?.publicUrl}
-          />
-          <div className={styles.previewMeta}>
-            <p className={styles.previewLabel}>{displayName}</p>
-            <p className={styles.previewHelper}>
-              {photo
-                ? "Same crop and size used on your public profile hero."
-                : "No photo uploaded yet. Initials will show as a placeholder."}
-            </p>
-            {photo ? (
-              <StatusBadge tone={STATUS_TONES[photo.publicationStatus]}>
-                {STATUS_LABELS[photo.publicationStatus]}
-              </StatusBadge>
-            ) : null}
-          </div>
-        </div>
+        <PhotoUploadRow
+          accountAvatarUrl={accountAvatarUrl}
+          displayName={displayName}
+          photo={photo}
+        />
       </Section>
-
-      <Section
-        density="default"
-        eyebrow={photo ? "Replace" : "Upload"}
-        title={photo ? "Upload a new photo" : "Upload a photo"}
-        titleAs="h2"
-      >
-        <UploadPhotoForm currentAlt={photo?.altText ?? ""} />
-      </Section>
-
-      {photo ? (
-        <Section
-          density="default"
-          eyebrow="Description"
-          title="Photo description"
-          titleAs="h2"
-        >
-          <UpdateAltForm currentAlt={photo.altText ?? ""} />
-        </Section>
-      ) : null}
 
       {photo ? (
         <Section
@@ -123,69 +99,157 @@ export function ProfilePhotoManager({
   );
 }
 
-function UploadPhotoForm({ currentAlt }: { currentAlt: string }) {
-  const [state, formAction] = useActionState(
+function PhotoUploadRow({
+  accountAvatarUrl,
+  displayName,
+  photo,
+}: ProfilePhotoManagerProps) {
+  const [uploadState, uploadAction, uploadPending] = useActionState(
     uploadTutorProfilePhotoAction,
     initialTutorProfilePhotoActionState,
   );
-  return (
-    <form action={formAction} className={styles.formStack}>
-      <ActionStateNotices state={state} successTitle="Photo uploaded" />
-      <FileField
-        accept="image/jpeg,image/png,image/webp"
-        description="JPEG, PNG, or WebP up to 5 MB."
-        error={fieldError(state, "file")}
-        label="Photo file"
-        name="file"
-        required
-      />
-      <TextField
-        defaultValue={currentAlt}
-        description="A short description that screen readers and assistive tech read aloud. Required before publishing."
-        error={fieldError(state, "altText")}
-        label="Photo description"
-        maxLength={200}
-        name="alt_text"
-        placeholder="e.g. Smiling teacher in a classroom"
-      />
-      <div className={styles.actionRow}>
-        <SubmitButton label="Upload photo" />
-      </div>
-    </form>
-  );
-}
-
-function UpdateAltForm({ currentAlt }: { currentAlt: string }) {
-  const [state, formAction] = useActionState(
-    updateTutorProfilePhotoAltAction,
+  const [applyAvatarState, applyAvatarAction, applyAvatarPending] = useActionState(
+    applyAccountAvatarAsTutorPhotoAction,
     initialTutorProfilePhotoActionState,
   );
+  const [clientError, setClientError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isPending = uploadPending || applyAvatarPending;
+
+  const previewUrl = photo?.publicUrl ?? accountAvatarUrl ?? undefined;
+  const previewAlt = photo?.altText?.trim()
+    ? photo.altText
+    : `${displayName} profile photo`;
+
+  const serverState =
+    applyAvatarState.code === "ok" || applyAvatarState.message
+      ? applyAvatarState
+      : uploadState;
+  const noticeMessage = clientError ?? serverState.message;
+  const noticeTone: "actionNeeded" | "warning" | "success" = clientError
+    ? "actionNeeded"
+    : serverState.code === "ok"
+      ? "success"
+      : serverState.code === "validation_failed"
+        ? "actionNeeded"
+        : "warning";
+  const successMessage =
+    !clientError && serverState.code === "ok"
+      ? serverState.successMessage
+      : null;
+
+  function handleUploadClick() {
+    setClientError(null);
+    fileInputRef.current?.click();
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    setClientError(null);
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+    const validationError = validateClientPhoto(file);
+    if (validationError) {
+      setClientError(validationError);
+      return;
+    }
+    const formData = new FormData();
+    formData.set("file", file);
+    startTransition(() => {
+      uploadAction(formData);
+    });
+  }
+
+  function handleUseAccountAvatar() {
+    setClientError(null);
+    const formData = new FormData();
+    startTransition(() => {
+      applyAvatarAction(formData);
+    });
+  }
+
   return (
-    <form action={formAction} className={styles.formStack}>
-      <ActionStateNotices state={state} successTitle="Description saved" />
-      <TextField
-        defaultValue={currentAlt}
-        description="Update the description without uploading a new file."
-        error={fieldError(state, "altText")}
-        label="Photo description"
-        maxLength={200}
-        name="alt_text"
-      />
-      <div className={styles.actionRow}>
-        <SubmitButton label="Save description" variant="secondary" />
+    <div className={styles.uploadBlock}>
+      <div className={styles.uploadRow}>
+        <Avatar
+          alt={previewAlt}
+          className={styles.previewAvatar}
+          name={displayName}
+          size="lg"
+          src={previewUrl}
+        />
+        <input
+          accept={ACCEPT_ATTRIBUTE}
+          aria-hidden="true"
+          className={styles.srOnly}
+          onChange={handleFileChange}
+          ref={fileInputRef}
+          tabIndex={-1}
+          type="file"
+        />
+        <div className={styles.uploadActions}>
+          <Button
+            disabled={isPending}
+            onClick={handleUploadClick}
+            size="compact"
+            type="button"
+            variant="secondary"
+          >
+            {uploadPending
+              ? "Uploading"
+              : photo
+                ? "Replace photo"
+                : "Upload photo"}
+          </Button>
+          {!photo && accountAvatarUrl ? (
+            <Button
+              disabled={isPending}
+              onClick={handleUseAccountAvatar}
+              size="compact"
+              type="button"
+              variant="ghost"
+            >
+              {applyAvatarPending ? "Copying" : "Use my account avatar"}
+            </Button>
+          ) : null}
+        </div>
       </div>
-    </form>
+      <p className={styles.helperText}>
+        {FILE_TYPE_DESCRIPTION} · up to {MAX_BYTES_DESCRIPTION}
+        {!photo && accountAvatarUrl
+          ? ' · or copy the avatar from your account settings with "Use my account avatar".'
+          : ""}
+      </p>
+      {photo ? (
+        <StatusBadge tone={STATUS_TONES[photo.publicationStatus]}>
+          {STATUS_LABELS[photo.publicationStatus]}
+        </StatusBadge>
+      ) : null}
+      {successMessage ? (
+        <InlineNotice showToneLabel={false} tone="success">
+          <p>{successMessage}</p>
+        </InlineNotice>
+      ) : null}
+      {noticeMessage && !successMessage ? (
+        <InlineNotice showToneLabel={false} tone={noticeTone}>
+          <p>{noticeMessage}</p>
+        </InlineNotice>
+      ) : null}
+    </div>
   );
 }
 
 function PublicationControls({ photo }: { photo: PhotoState }) {
-  const [state, formAction] = useActionState(
+  const [state, formAction, pending] = useActionState(
     setTutorProfilePhotoPublicationAction,
     initialTutorProfilePhotoActionState,
   );
-
   const isPublished = photo.publicationStatus === "published";
-  const action: "publish" | "hide" = isPublished ? "hide" : "publish";
+  const toggleAction: "publish" | "hide" = isPublished ? "hide" : "publish";
   const buttonLabel = isPublished ? "Hide photo" : "Publish photo";
 
   return (
@@ -198,30 +262,29 @@ function PublicationControls({ photo }: { photo: PhotoState }) {
       <ActionStateNotices state={state} successTitle="Publication updated" />
       <div className={styles.actionRow}>
         <form action={formAction}>
-          <input name="action" type="hidden" value={action} />
-          <SubmitButton label={buttonLabel} />
+          <input name="action" type="hidden" value={toggleAction} />
+          <Button
+            aria-busy={pending}
+            disabled={pending}
+            type="submit"
+            variant="primary"
+          >
+            {pending ? "Saving" : buttonLabel}
+          </Button>
         </form>
         <form action={formAction}>
           <input name="action" type="hidden" value="remove" />
-          <SubmitButton label="Remove photo" variant="danger" />
+          <Button
+            aria-busy={pending}
+            disabled={pending}
+            type="submit"
+            variant="danger"
+          >
+            {pending ? "Saving" : "Remove photo"}
+          </Button>
         </form>
       </div>
     </div>
-  );
-}
-
-function SubmitButton({
-  label,
-  variant = "primary",
-}: {
-  label: string;
-  variant?: "primary" | "secondary" | "ghost" | "danger";
-}) {
-  const { pending } = useFormStatus();
-  return (
-    <Button aria-busy={pending} disabled={pending} type="submit" variant={variant}>
-      {pending ? "Saving" : label}
-    </Button>
   );
 }
 
@@ -255,64 +318,16 @@ function ActionStateNotices({
   );
 }
 
-function FileField({
-  accept,
-  description,
-  error,
-  label,
-  name,
-  required,
-}: {
-  accept: string;
-  description?: string;
-  error?: string;
-  label: string;
-  name: string;
-  required?: boolean;
-}) {
-  const id = useId();
-  const describedBy = useMemo(
-    () =>
-      [
-        description ? `${id}-description` : null,
-        error ? `${id}-error` : null,
-      ]
-        .filter(Boolean)
-        .join(" ") || undefined,
-    [description, error, id],
-  );
-  return (
-    <div className={styles.formStack}>
-      <label htmlFor={id}>
-        <strong>{label}</strong>
-      </label>
-      {description ? (
-        <p className={styles.helperText} id={`${id}-description`}>
-          {description}
-        </p>
-      ) : null}
-      <input
-        accept={accept}
-        aria-describedby={describedBy}
-        aria-invalid={error ? true : undefined}
-        id={id}
-        name={name}
-        required={required}
-        type="file"
-      />
-      {error ? (
-        <p className={styles.helperText} id={`${id}-error`} role="alert">
-          {error}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function fieldError(
-  state: TutorProfilePhotoActionState,
-  key: string,
-): string | undefined {
-  const list = state.fieldErrors[key];
-  return list && list.length > 0 ? list[0] : undefined;
+function validateClientPhoto(file: File): string | null {
+  if (
+    !ALLOWED_MIME_TYPES.includes(
+      file.type as (typeof ALLOWED_MIME_TYPES)[number],
+    )
+  ) {
+    return `Use a ${FILE_TYPE_DESCRIPTION} image for your profile photo.`;
+  }
+  if (file.size > MAX_BYTES) {
+    return `Choose an image under ${MAX_BYTES_DESCRIPTION}.`;
+  }
+  return null;
 }

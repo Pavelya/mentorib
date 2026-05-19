@@ -1,0 +1,113 @@
+.scroller {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-page);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 4rem repeat(var(--weekly-grid-day-count), minmax(0, 1fr));
+  min-width: 32rem;
+}
+
+.row {
+  display: contents;
+}
+
+.cornerCell {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  background: var(--surface-section);
+  border-right: 1px solid var(--ink-300);
+  border-bottom: 1px solid var(--ink-300);
+}
+
+.columnHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: var(--space-1);
+  background: var(--surface-section);
+  border-right: 1px solid var(--ink-300);
+  border-bottom: 1px solid var(--ink-300);
+  color: var(--ink-700);
+  font-size: var(--utility-sm);
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+.columnHeader:last-child {
+  border-right: none;
+}
+
+.rowHeader {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: var(--space-1);
+  background: var(--surface-section);
+  border-right: 1px solid var(--ink-300);
+  border-bottom: 1px solid var(--ink-300);
+  color: var(--ink-700);
+  font-size: var(--utility-sm);
+  font-family: var(--font-mono);
+}
+
+.cell {
+  display: block;
+  min-height: 2.25rem;
+  padding: var(--space-1);
+  background: var(--surface-page);
+  border: 0;
+  border-right: 1px solid var(--ink-300);
+  border-bottom: 1px solid var(--ink-300);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.cell:where(:last-child) {
+  border-right: none;
+}
+
+.cell:where(:hover):not(:disabled) {
+  background: var(--paper-1);
+}
+
+.cell[data-selected="true"] {
+  background: var(--state-selected-surface);
+  box-shadow: inset 0 0 0 1px var(--forest-500);
+}
+
+.cell[data-selected="true"]:where(:hover):not(:disabled) {
+  background: var(--state-selected-surface);
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: -2px;
+  box-shadow: var(--focus-ring);
+  z-index: 3;
+}
+
+.cell:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.scroller[data-disabled="true"] {
+  opacity: 0.7;
+}

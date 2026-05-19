@@ -81,7 +81,8 @@ export async function uploadTutorProfilePhoto(
 ): Promise<TutorProfilePhotoMutationResult> {
   const mime = assertAllowedMime(file);
   assertWithinSize(file);
-  const normalizedAlt = normalizeAltTextInput(altText);
+  const normalizedAlt =
+    normalizeAltTextInput(altText) ?? (await buildDefaultAltText(account));
 
   const tutorProfileId = await loadOwnedTutorProfileId(account);
 
@@ -144,6 +145,60 @@ export async function uploadTutorProfilePhoto(
   return { assetId, publicationStatus: "uploaded" };
 }
 
+export async function applyAccountAvatarAsTutorPhoto(
+  account: Pick<ResolvedAuthAccount, "id">,
+): Promise<TutorProfilePhotoMutationResult> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("app_users")
+    .select("avatar_url")
+    .eq("id", account.id)
+    .maybeSingle<{ avatar_url: string | null }>();
+
+  if (error) {
+    throw new TutorPublicMediaServiceError(
+      "persist_failed",
+      "We couldn't read your account avatar. Please try again in a moment.",
+    );
+  }
+  if (!data?.avatar_url) {
+    throw new TutorPublicMediaServiceError(
+      "no_account_avatar",
+      "Upload an avatar in account settings first, then return here.",
+    );
+  }
+
+  const response = await fetch(data.avatar_url, { cache: "no-store" });
+  if (!response.ok) {
+    throw new TutorPublicMediaServiceError(
+      "fetch_failed",
+      "We couldn't copy your account avatar right now. Please try again.",
+    );
+  }
+
+  const rawMime = (response.headers.get("content-type") ?? "").toLowerCase();
+  if (
+    !(TUTOR_PROFILE_PHOTO_ALLOWED_MIME_TYPES as readonly string[]).includes(
+      rawMime,
+    )
+  ) {
+    throw new TutorPublicMediaServiceError(
+      "validation_failed",
+      "Your account avatar must be JPEG, PNG, or WebP to use as your profile photo.",
+    );
+  }
+  const mime = rawMime as TutorProfilePhotoAllowedMimeType;
+
+  const arrayBuffer = await response.arrayBuffer();
+  const file = new File(
+    [arrayBuffer],
+    `account-avatar.${MIME_EXTENSIONS[mime]}`,
+    { type: mime },
+  );
+
+  return uploadTutorProfilePhoto(account, file, null);
+}
+
 export async function updateTutorProfilePhotoAlt(
   account: Pick<ResolvedAuthAccount, "id">,
   altText: string | null,
@@ -179,22 +234,27 @@ export async function setTutorProfilePhotoPublication(
   const existing = await loadOwnedPhotoRowOrThrow(account);
 
   if (action === "publish") {
+    const supabase = createSupabaseServiceRoleClient();
+
+    // Accessibility § 13.1: informative images get meaningful alt text.
+    // Older rows (or rows imported via "Use account avatar") may still have
+    // a null alt_text — backfill it from the user's full name so publish
+    // succeeds without forcing a description prompt in the UI.
     if (!existing.alt_text || !existing.alt_text.trim()) {
-      // Accessibility § 13.1: informative images get meaningful alt text;
-      // publication of a profile photo without alt text is rejected so
-      // assistive tech users still get a meaningful description.
-      throw new TutorPublicMediaServiceError(
-        "validation_failed",
-        "Add a short description of your photo before publishing.",
-        {
-          fieldErrors: {
-            altText: ["Add a short description of your photo before publishing."],
-          },
-        },
-      );
+      const fallbackAlt = await buildDefaultAltText(account);
+      const { error: altError } = await supabase
+        .from("tutor_public_media_assets")
+        .update({ alt_text: fallbackAlt })
+        .eq("id", existing.id);
+      if (altError) {
+        throw new TutorPublicMediaServiceError(
+          "persist_failed",
+          "We couldn't publish that photo right now. Please try again in a moment.",
+        );
+      }
+      existing.alt_text = fallbackAlt;
     }
 
-    const supabase = createSupabaseServiceRoleClient();
     const { error } = await supabase
       .from("tutor_public_media_assets")
       .update({ publication_status: "published" })
@@ -345,6 +405,20 @@ function normalizeAltTextInput(value: string | null | undefined): string | null 
   }
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
+}
+
+async function buildDefaultAltText(
+  account: Pick<ResolvedAuthAccount, "id">,
+): Promise<string> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data } = await supabase
+    .from("app_users")
+    .select("full_name")
+    .eq("id", account.id)
+    .maybeSingle<{ full_name: string | null }>();
+
+  const fullName = data?.full_name?.trim();
+  return fullName ? `${fullName} tutor public avatar` : "Tutor public avatar";
 }
 
 function assertAllowedMime(file: File): TutorProfilePhotoAllowedMimeType {

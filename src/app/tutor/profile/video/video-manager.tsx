@@ -79,7 +79,7 @@ export function IntroVideoManager({
               allowFullScreen
               className={styles.embedFrame}
               loading="lazy"
-              referrerPolicy="no-referrer"
+              referrerPolicy="strict-origin-when-cross-origin"
               src={embed.canonicalEmbedUrl}
               title="Tutor intro video preview"
             />

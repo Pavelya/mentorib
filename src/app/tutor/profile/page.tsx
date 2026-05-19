@@ -243,11 +243,24 @@ function ReadinessChecklistPanel({
                   {gate.missingProfileMinimumFields &&
                   gate.missingProfileMinimumFields.length > 0 ? (
                     <ul className={styles.readinessSubItems}>
-                      {gate.missingProfileMinimumFields.map((field) => (
-                        <li key={field}>
-                          {getProfileMinimumFieldLabel(field)}
-                        </li>
-                      ))}
+                      {gate.missingProfileMinimumFields.map((field) => {
+                        const subHref = getProfileMinimumFieldHref(field);
+                        const label = getProfileMinimumFieldLabel(field);
+                        return (
+                          <li key={field}>
+                            {subHref ? (
+                              <Link
+                                className={styles.readinessLink}
+                                href={subHref as Route}
+                              >
+                                {label}
+                              </Link>
+                            ) : (
+                              label
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : null}
                   {getGateActionHref(gate.key) ? (
@@ -329,6 +342,15 @@ function getGateActionLabel(
       return "Open payouts";
     default:
       return "";
+  }
+}
+
+function getProfileMinimumFieldHref(field: ProfileMinimumField): string | null {
+  switch (field) {
+    case "profilePhoto":
+      return "/tutor/profile/photo";
+    default:
+      return null;
   }
 }
 

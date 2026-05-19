@@ -87,6 +87,18 @@ function makeRecorder(initial?: {
 }
 
 function buildClient(recorder: Recorder) {
+  function appUsersQuery() {
+    const builder: Record<string, unknown> = {};
+    builder.select = () => chainable;
+    builder.eq = () => chainable;
+    builder.maybeSingle = async () => ({
+      data: { full_name: null },
+      error: null,
+    });
+    const chainable = builder as typeof builder;
+    return chainable;
+  }
+
   function tutorProfilesQuery() {
     let filterAppUserId: string | null = null;
     const builder: Record<string, unknown> = {};
@@ -277,6 +289,7 @@ function buildClient(recorder: Recorder) {
 
   return {
     from(table: string) {
+      if (table === "app_users") return appUsersQuery();
       if (table === "tutor_profiles") return tutorProfilesQuery();
       if (table === "tutor_public_media_assets")
         return tutorPublicMediaAssetsQuery();
@@ -508,31 +521,41 @@ describe("setTutorProfilePhotoPublication: publish", () => {
     expect(mockRevalidatePath).toHaveBeenCalledWith("/tutor/overview");
   });
 
-  it("rejects publish when alt_text is missing", async () => {
+  it("backfills alt_text from the user's full name on publish when missing", async () => {
     const recorder = makeRecorder({
       photos: [makePhotoRow({ publication_status: "uploaded", alt_text: null })],
     });
     mockServiceRoleClient.mockReturnValue(buildClient(recorder));
 
-    await expect(
-      setTutorProfilePhotoPublication({ id: APP_USER_ID }, "publish"),
-    ).rejects.toMatchObject({
-      code: "validation_failed",
-      fieldErrors: expect.objectContaining({ altText: expect.any(Array) }),
-    });
+    const result = await setTutorProfilePhotoPublication(
+      { id: APP_USER_ID },
+      "publish",
+    );
 
-    expect(recorder.photos.get(ASSET_ID)?.publication_status).toBe("uploaded");
+    expect(result).toMatchObject({
+      action: "publish",
+      publicationStatus: "published",
+    });
+    const row = recorder.photos.get(ASSET_ID);
+    expect(row?.publication_status).toBe("published");
+    expect(row?.alt_text).toBeTruthy();
   });
 
-  it("rejects publish when alt_text is whitespace-only", async () => {
+  it("backfills alt_text on publish when stored value is whitespace-only", async () => {
     const recorder = makeRecorder({
       photos: [makePhotoRow({ publication_status: "uploaded", alt_text: "   " })],
     });
     mockServiceRoleClient.mockReturnValue(buildClient(recorder));
 
-    await expect(
-      setTutorProfilePhotoPublication({ id: APP_USER_ID }, "publish"),
-    ).rejects.toMatchObject({ code: "validation_failed" });
+    const result = await setTutorProfilePhotoPublication(
+      { id: APP_USER_ID },
+      "publish",
+    );
+
+    expect(result.publicationStatus).toBe("published");
+    expect(recorder.photos.get(ASSET_ID)?.alt_text?.trim().length).toBeGreaterThan(
+      0,
+    );
   });
 
   it("surfaces conflict when another asset is already published", async () => {

@@ -162,6 +162,7 @@ function renderOverviewPage({
       ) : null}
 
       <PersonSummary
+        avatarSrc={overview.profile.avatarUrl ?? undefined}
         descriptor={
           overview.profile.headline ??
           "Your operational view across pending requests and upcoming lessons."

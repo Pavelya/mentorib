@@ -2,6 +2,7 @@ export { Avatar } from "./avatar";
 export { Button, getButtonClassName } from "./button";
 export { Card, type CardProps } from "./card";
 export { Chip, type ChipProps, type ChipTone } from "./chip";
+export { ConfirmDialog, type ConfirmDialogProps } from "./confirm-dialog";
 export { FileField, type FileFieldProps } from "./file-field";
 export { Flag, type FlagCode } from "./flag";
 export { GoogleMark } from "./google-mark";

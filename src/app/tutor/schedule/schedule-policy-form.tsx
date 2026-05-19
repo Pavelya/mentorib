@@ -3,7 +3,14 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { Button, InlineNotice, Switch, TextField } from "@/components/ui";
+import {
+  Button,
+  Chip,
+  ConfirmDialog,
+  InlineNotice,
+  Switch,
+  TextField,
+} from "@/components/ui";
 import type { SchedulePolicyFormValues } from "@/modules/tutors/tutor-schedule";
 
 import {
@@ -62,6 +69,32 @@ function SchedulePolicyFormBody({
   state: SchedulePolicyActionState;
 }) {
   const [values, setValues] = useState(state.values);
+  const [pauseDialogOpen, setPauseDialogOpen] = useState(false);
+
+  const pendingIsAccepting = values.isAcceptingNewStudents === "true";
+
+  function handleToggle(next: boolean) {
+    if (!next) {
+      setPauseDialogOpen(true);
+      return;
+    }
+    setValues((current) => ({
+      ...current,
+      isAcceptingNewStudents: "true",
+    }));
+  }
+
+  function confirmPause() {
+    setValues((current) => ({
+      ...current,
+      isAcceptingNewStudents: "false",
+    }));
+    setPauseDialogOpen(false);
+  }
+
+  function cancelPause() {
+    setPauseDialogOpen(false);
+  }
 
   return (
     <form action={action} className={styles.form}>
@@ -83,16 +116,51 @@ function SchedulePolicyFormBody({
         value={values.isAcceptingNewStudents}
       />
 
-      <Switch
-        checked={values.isAcceptingNewStudents === "true"}
-        disabled={disabled}
-        label="Accepting new students"
-        onCheckedChange={(next) =>
-          setValues((current) => ({
-            ...current,
-            isAcceptingNewStudents: next ? "true" : "false",
-          }))
+      <div
+        className={[
+          styles.acceptingRow,
+          pendingIsAccepting ? "" : styles.acceptingRowPaused,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <Switch
+          checked={pendingIsAccepting}
+          disabled={disabled}
+          label={
+            <span className={styles.acceptingLabel}>
+              Accepting new students
+              {pendingIsAccepting ? null : (
+                <Chip size="compact" tone="warning">
+                  Paused
+                </Chip>
+              )}
+            </span>
+          }
+          onCheckedChange={handleToggle}
+        />
+        {pendingIsAccepting ? null : (
+          <p className={styles.acceptingHint}>
+            No new bookings will be accepted while this is off. Save the form
+            to apply.
+          </p>
+        )}
+      </div>
+
+      <ConfirmDialog
+        cancelLabel="Keep accepting"
+        confirmLabel="Pause new bookings"
+        confirmVariant="danger"
+        description={
+          <p>
+            Students won&apos;t be able to book lessons with you until you
+            turn this back on. Your existing bookings are not affected.
+          </p>
         }
+        onCancel={cancelPause}
+        onConfirm={confirmPause}
+        open={pauseDialogOpen}
+        title="Pause new student bookings?"
       />
 
       <details className={styles.advanced} open={openAdvanced}>

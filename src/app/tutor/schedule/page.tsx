@@ -114,6 +114,19 @@ export default async function TutorSchedulePage() {
         </InlineNotice>
       ) : null}
 
+      {schedule.state === "ready" &&
+      !schedule.policy.isAcceptingNewStudents ? (
+        <InlineNotice
+          title="You're not accepting new students"
+          tone="warning"
+        >
+          <p>
+            Students can&apos;t book lessons until you turn &ldquo;Accepting
+            new students&rdquo; back on in Booking policy.
+          </p>
+        </InlineNotice>
+      ) : null}
+
       <Panel
         description="Click an hour to mark it as available. Click again to unmark."
         title="Weekly availability"

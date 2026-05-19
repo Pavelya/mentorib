@@ -3,7 +3,13 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { Button, InlineNotice, SelectField, TextField } from "@/components/ui";
+import {
+  Button,
+  InlineNotice,
+  SelectField,
+  Switch,
+  TextField,
+} from "@/components/ui";
 import type { SchedulePolicyFormValues } from "@/modules/tutors/tutor-schedule";
 
 import {
@@ -205,23 +211,23 @@ function SchedulePolicyFormBody({
           type="number"
           value={values.weeklyCapacity}
         />
-        <div className={styles.toggleRow}>
-          <label className={styles.toggleLabel}>
-            <input
-              checked={values.isAcceptingNewStudents === "true"}
-              disabled={disabled}
-              name="isAcceptingNewStudents"
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  isAcceptingNewStudents: event.target.checked ? "true" : "false",
-                }))
-              }
-              type="checkbox"
-              value="true"
-            />
-            Accepting new students
-          </label>
+        <div>
+          <input
+            name="isAcceptingNewStudents"
+            type="hidden"
+            value={values.isAcceptingNewStudents}
+          />
+          <Switch
+            checked={values.isAcceptingNewStudents === "true"}
+            disabled={disabled}
+            label="Accepting new students"
+            onCheckedChange={(next) =>
+              setValues((current) => ({
+                ...current,
+                isAcceptingNewStudents: next ? "true" : "false",
+              }))
+            }
+          />
         </div>
       </div>
 

@@ -4,7 +4,6 @@ import {
   useActionState,
   useEffect,
   useId,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -13,6 +12,7 @@ import { useFormStatus } from "react-dom";
 import {
   Button,
   Card,
+  FileField,
   InlineNotice,
   Menu,
   MenuItem,
@@ -534,60 +534,6 @@ function ActionStateNotices({
         </InlineNotice>
       ) : null}
     </>
-  );
-}
-
-function FileField({
-  accept,
-  description,
-  error,
-  label,
-  name,
-  required,
-}: {
-  accept: string;
-  description?: string;
-  error?: string;
-  label: string;
-  name: string;
-  required?: boolean;
-}) {
-  const id = useId();
-  const describedBy = useMemo(
-    () =>
-      [
-        description ? `${id}-description` : null,
-        error ? `${id}-error` : null,
-      ]
-        .filter(Boolean)
-        .join(" ") || undefined,
-    [description, error, id],
-  );
-  return (
-    <div className={styles.formStack}>
-      <label htmlFor={id}>
-        <strong>{label}</strong>
-      </label>
-      {description ? (
-        <p className={styles.itemMeta} id={`${id}-description`}>
-          {description}
-        </p>
-      ) : null}
-      <input
-        accept={accept}
-        aria-describedby={describedBy}
-        aria-invalid={error ? true : undefined}
-        id={id}
-        name={name}
-        required={required}
-        type="file"
-      />
-      {error ? (
-        <p className={styles.itemMeta} id={`${id}-error`} role="alert">
-          {error}
-        </p>
-      ) : null}
-    </div>
   );
 }
 

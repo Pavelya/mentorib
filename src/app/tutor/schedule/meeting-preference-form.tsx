@@ -3,7 +3,8 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { Button, InlineNotice, SelectField, TextField } from "@/components/ui";
+import { Button, Chip, InlineNotice, TextField } from "@/components/ui";
+import { detectMeetingProviderFromUrl } from "@/modules/tutors/meeting-provider-detect";
 import type { ReferenceMeetingProvider } from "@/modules/reference/catalog";
 import type { MeetingPreferenceFormValues } from "@/modules/tutors/tutor-schedule";
 
@@ -32,7 +33,6 @@ export function MeetingPreferenceForm({
   const state = normalizeState(rawState, initialValues);
   const formStateKey = [
     state.code ?? "idle",
-    state.values.preferredProvider,
     state.values.defaultMeetingUrl,
   ].join(":");
 
@@ -59,6 +59,10 @@ function MeetingPreferenceFormBody({
   state: MeetingPreferenceActionState;
 }) {
   const [values, setValues] = useState(state.values);
+  const detected = detectMeetingProviderFromUrl(
+    values.defaultMeetingUrl,
+    providerOptions,
+  );
 
   return (
     <form action={action} className={styles.form}>
@@ -75,38 +79,21 @@ function MeetingPreferenceFormBody({
         </InlineNotice>
       ) : null}
 
-      <p className={styles.helperText}>
-        Choose your default meeting provider and a secure https:// link. Mentor
-        IB seeds each booked lesson with this access; meeting links stay
-        private to lesson participants.
-      </p>
+      <input
+        name="preferredProvider"
+        type="hidden"
+        value={detected?.providerKey ?? ""}
+      />
+      <input name="displayLabel" type="hidden" value="" />
 
-      <div className={styles.fieldGrid}>
-        <SelectField
-          disabled={disabled}
-          error={state.fieldErrors.preferredProvider}
-          label="Meeting provider"
-          name="preferredProvider"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              preferredProvider: event.target.value,
-            }))
-          }
-          value={values.preferredProvider}
-        >
-          <option value="">No default</option>
-          {providerOptions.map((option) => (
-            <option key={option.providerKey} value={option.providerKey}>
-              {option.displayName}
-            </option>
-          ))}
-        </SelectField>
-
+      <div className={styles.meetingUrlField}>
         <TextField
           disabled={disabled}
-          description="Use a secure https:// meeting URL."
-          error={state.fieldErrors.defaultMeetingUrl}
+          description="Paste the join link Mentor IB seeds into every lesson."
+          error={
+            state.fieldErrors.defaultMeetingUrl ??
+            state.fieldErrors.preferredProvider
+          }
           label="Default meeting URL"
           name="defaultMeetingUrl"
           onChange={(event) =>
@@ -119,24 +106,11 @@ function MeetingPreferenceFormBody({
           type="url"
           value={values.defaultMeetingUrl}
         />
-      </div>
-
-      <div className={styles.fieldRow}>
-        <TextField
-          disabled={disabled}
-          description="Optional friendly label shown to lesson participants."
-          error={state.fieldErrors.displayLabel}
-          label="Display label"
-          maxLength={80}
-          name="displayLabel"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              displayLabel: event.target.value,
-            }))
-          }
-          value={values.displayLabel}
-        />
+        {detected ? (
+          <Chip size="compact" tone="info">
+            {detected.displayName}
+          </Chip>
+        ) : null}
       </div>
 
       <div className={styles.formActions}>

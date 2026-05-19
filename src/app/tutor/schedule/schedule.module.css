@@ -101,6 +101,64 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.zoneNotice {
+  margin: 0 0 var(--space-3) 0;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+}
+
+.meetingUrlField {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.advanced {
+  display: grid;
+  gap: var(--space-3);
+  border-top: 1px solid var(--ink-300);
+  padding-top: var(--space-3);
+}
+
+.advancedSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  cursor: pointer;
+  list-style: none;
+  color: var(--ink-900);
+}
+
+.advancedSummary::-webkit-details-marker {
+  display: none;
+}
+
+.advancedSummary::marker {
+  content: "";
+}
+
+.advancedSummary:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.advancedTitle {
+  font-weight: 600;
+  font-size: var(--body-md);
+}
+
+.advancedHint {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+}
+
+.advancedFields {
+  display: grid;
+  gap: var(--space-4);
+}
+
 @media (max-width: 767px) {
   .fieldGrid,
   .addRuleFields {

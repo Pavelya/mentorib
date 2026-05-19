@@ -3,13 +3,7 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import {
-  Button,
-  InlineNotice,
-  SelectField,
-  Switch,
-  TextField,
-} from "@/components/ui";
+import { Button, InlineNotice, Switch, TextField } from "@/components/ui";
 import type { SchedulePolicyFormValues } from "@/modules/tutors/tutor-schedule";
 
 import {
@@ -18,26 +12,6 @@ import {
 } from "./action-types";
 import { updateSchedulePolicyAction } from "./actions";
 import styles from "./schedule.module.css";
-
-const COMMON_TIMEZONES = [
-  "UTC",
-  "Europe/London",
-  "Europe/Berlin",
-  "Europe/Warsaw",
-  "Europe/Madrid",
-  "Africa/Cairo",
-  "Asia/Dubai",
-  "Asia/Kolkata",
-  "Asia/Singapore",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-  "America/Halifax",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "Pacific/Auckland",
-] as const;
 
 type SchedulePolicyFormProps = {
   disabled: boolean;
@@ -55,15 +29,22 @@ export function SchedulePolicyForm({
   const state = normalizeState(rawState, initialValues);
   const formStateKey = [
     state.code ?? "idle",
-    state.values.timezone,
+    state.values.isAcceptingNewStudents,
     state.values.minimumNoticeMinutes,
   ].join(":");
+  const hasAdvancedError =
+    Boolean(state.fieldErrors.minimumNoticeMinutes) ||
+    Boolean(state.fieldErrors.bufferBeforeMinutes) ||
+    Boolean(state.fieldErrors.bufferAfterMinutes) ||
+    Boolean(state.fieldErrors.dailyCapacity) ||
+    Boolean(state.fieldErrors.weeklyCapacity);
 
   return (
     <SchedulePolicyFormBody
       key={formStateKey}
       action={formAction}
       disabled={disabled}
+      openAdvanced={hasAdvancedError}
       state={state}
     />
   );
@@ -72,14 +53,15 @@ export function SchedulePolicyForm({
 function SchedulePolicyFormBody({
   action,
   disabled,
+  openAdvanced,
   state,
 }: {
   action: (formData: FormData) => void;
   disabled: boolean;
+  openAdvanced: boolean;
   state: SchedulePolicyActionState;
 }) {
   const [values, setValues] = useState(state.values);
-  const timezoneOptions = buildTimezoneOptions(values.timezone);
 
   return (
     <form action={action} className={styles.form}>
@@ -94,142 +76,127 @@ function SchedulePolicyFormBody({
         </InlineNotice>
       ) : null}
 
-      <div className={styles.fieldRow}>
-        <SelectField
-          disabled={disabled}
-          error={state.fieldErrors.timezone}
-          label="Booking timezone"
-          name="timezone"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              timezone: event.target.value,
-            }))
-          }
-          value={values.timezone}
-        >
-          {timezoneOptions.map((option) => (
-            <option key={option} value={option}>
-              {option.replaceAll("_", " ")}
-            </option>
-          ))}
-        </SelectField>
-      </div>
+      <input name="timezone" type="hidden" value={values.timezone} />
+      <input
+        name="isAcceptingNewStudents"
+        type="hidden"
+        value={values.isAcceptingNewStudents}
+      />
 
-      <div className={styles.fieldGrid}>
-        <TextField
-          disabled={disabled}
-          description="Minimum lead time before a lesson can start (in minutes)."
-          error={state.fieldErrors.minimumNoticeMinutes}
-          inputMode="numeric"
-          label="Minimum notice"
-          min={0}
-          name="minimumNoticeMinutes"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              minimumNoticeMinutes: event.target.value,
-            }))
-          }
-          required
-          type="number"
-          value={values.minimumNoticeMinutes}
-        />
-        <TextField
-          disabled={disabled}
-          description="Daily lesson cap (leave blank for no cap)."
-          error={state.fieldErrors.dailyCapacity}
-          inputMode="numeric"
-          label="Daily lesson capacity"
-          min={1}
-          name="dailyCapacity"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              dailyCapacity: event.target.value,
-            }))
-          }
-          type="number"
-          value={values.dailyCapacity}
-        />
-      </div>
+      <Switch
+        checked={values.isAcceptingNewStudents === "true"}
+        disabled={disabled}
+        label="Accepting new students"
+        onCheckedChange={(next) =>
+          setValues((current) => ({
+            ...current,
+            isAcceptingNewStudents: next ? "true" : "false",
+          }))
+        }
+      />
 
-      <div className={styles.fieldGrid}>
-        <TextField
-          disabled={disabled}
-          description="Buffer reserved before each lesson (in minutes)."
-          error={state.fieldErrors.bufferBeforeMinutes}
-          inputMode="numeric"
-          label="Buffer before"
-          min={0}
-          name="bufferBeforeMinutes"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              bufferBeforeMinutes: event.target.value,
-            }))
-          }
-          required
-          type="number"
-          value={values.bufferBeforeMinutes}
-        />
-        <TextField
-          disabled={disabled}
-          description="Buffer reserved after each lesson (in minutes)."
-          error={state.fieldErrors.bufferAfterMinutes}
-          inputMode="numeric"
-          label="Buffer after"
-          min={0}
-          name="bufferAfterMinutes"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              bufferAfterMinutes: event.target.value,
-            }))
-          }
-          required
-          type="number"
-          value={values.bufferAfterMinutes}
-        />
-      </div>
+      <details className={styles.advanced} open={openAdvanced}>
+        <summary className={styles.advancedSummary}>
+          <span className={styles.advancedTitle}>Advanced booking rules</span>
+          <span className={styles.advancedHint}>
+            8-hour notice, no caps by default.
+          </span>
+        </summary>
 
-      <div className={styles.fieldGrid}>
-        <TextField
-          disabled={disabled}
-          description="Weekly lesson cap (leave blank for no cap)."
-          error={state.fieldErrors.weeklyCapacity}
-          inputMode="numeric"
-          label="Weekly lesson capacity"
-          min={1}
-          name="weeklyCapacity"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              weeklyCapacity: event.target.value,
-            }))
-          }
-          type="number"
-          value={values.weeklyCapacity}
-        />
-        <div>
-          <input
-            name="isAcceptingNewStudents"
-            type="hidden"
-            value={values.isAcceptingNewStudents}
-          />
-          <Switch
-            checked={values.isAcceptingNewStudents === "true"}
-            disabled={disabled}
-            label="Accepting new students"
-            onCheckedChange={(next) =>
-              setValues((current) => ({
-                ...current,
-                isAcceptingNewStudents: next ? "true" : "false",
-              }))
-            }
-          />
+        <div className={styles.advancedFields}>
+          <div className={styles.fieldGrid}>
+            <TextField
+              disabled={disabled}
+              error={state.fieldErrors.minimumNoticeMinutes}
+              inputMode="numeric"
+              label="Minimum notice (minutes)"
+              min={0}
+              name="minimumNoticeMinutes"
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  minimumNoticeMinutes: event.target.value,
+                }))
+              }
+              required
+              type="number"
+              value={values.minimumNoticeMinutes}
+            />
+            <TextField
+              disabled={disabled}
+              error={state.fieldErrors.dailyCapacity}
+              inputMode="numeric"
+              label="Daily lesson capacity"
+              min={1}
+              name="dailyCapacity"
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  dailyCapacity: event.target.value,
+                }))
+              }
+              type="number"
+              value={values.dailyCapacity}
+            />
+          </div>
+
+          <div className={styles.fieldGrid}>
+            <TextField
+              disabled={disabled}
+              error={state.fieldErrors.bufferBeforeMinutes}
+              inputMode="numeric"
+              label="Buffer before (minutes)"
+              min={0}
+              name="bufferBeforeMinutes"
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  bufferBeforeMinutes: event.target.value,
+                }))
+              }
+              required
+              type="number"
+              value={values.bufferBeforeMinutes}
+            />
+            <TextField
+              disabled={disabled}
+              error={state.fieldErrors.bufferAfterMinutes}
+              inputMode="numeric"
+              label="Buffer after (minutes)"
+              min={0}
+              name="bufferAfterMinutes"
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  bufferAfterMinutes: event.target.value,
+                }))
+              }
+              required
+              type="number"
+              value={values.bufferAfterMinutes}
+            />
+          </div>
+
+          <div className={styles.fieldGrid}>
+            <TextField
+              disabled={disabled}
+              error={state.fieldErrors.weeklyCapacity}
+              inputMode="numeric"
+              label="Weekly lesson capacity"
+              min={1}
+              name="weeklyCapacity"
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  weeklyCapacity: event.target.value,
+                }))
+              }
+              type="number"
+              value={values.weeklyCapacity}
+            />
+          </div>
         </div>
-      </div>
+      </details>
 
       <div className={styles.formActions}>
         <SaveButton disabled={disabled} />
@@ -246,16 +213,6 @@ function SaveButton({ disabled }: { disabled: boolean }) {
       {pending ? "Saving" : "Save schedule"}
     </Button>
   );
-}
-
-function buildTimezoneOptions(currentValue: string) {
-  const options = new Set<string>(COMMON_TIMEZONES);
-
-  if (currentValue) {
-    options.add(currentValue);
-  }
-
-  return Array.from(options).sort((left, right) => left.localeCompare(right));
 }
 
 function normalizeState(

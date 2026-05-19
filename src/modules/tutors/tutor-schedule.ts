@@ -359,8 +359,9 @@ export async function updateMeetingPreference(
     );
   }
 
-  const provider = values.preferredProvider.trim() || null;
   const url = values.defaultMeetingUrl.trim() || null;
+  const detectedProvider = values.preferredProvider.trim();
+  const provider = url ? detectedProvider || "other" : detectedProvider || null;
   const label = values.displayLabel.trim() || null;
   const supabase = createSupabaseServiceRoleClient();
 
@@ -649,16 +650,11 @@ function validateMeetingPreferenceValues(
   const provider = values.preferredProvider.trim();
   const url = values.defaultMeetingUrl.trim();
 
-  if (provider && !providerOptions.some((option) => option.providerKey === provider)) {
+  if (
+    provider &&
+    !providerOptions.some((option) => option.providerKey === provider)
+  ) {
     errors.preferredProvider = "Choose a meeting provider from the list.";
-  }
-
-  if (provider && !url) {
-    errors.defaultMeetingUrl = "Add the meeting link your students should join.";
-  }
-
-  if (url && !provider) {
-    errors.preferredProvider = "Choose the meeting provider for this link.";
   }
 
   if (url && !/^https:\/\/.+/.test(url)) {

@@ -94,8 +94,7 @@ export default async function TutorSchedulePage() {
   }
 
   const schedule = await getTutorSchedule(account);
-  const localTimezoneLabel = getTimezoneLabel(timezone);
-  const policyTimezoneLabel = getTimezoneLabel(schedule.policy.timezone);
+  const policyTimezoneLabel = getTimezoneLabel(timezone);
 
   return (
     <article className={styles.page}>
@@ -104,9 +103,7 @@ export default async function TutorSchedulePage() {
       <header className={styles.intro}>
         <h1 className={styles.title}>Schedule</h1>
         <p className={styles.description}>
-          Manage when students can request lessons and how the join link is
-          shared. Times are shown in {policyTimezoneLabel}; your device is in{" "}
-          {localTimezoneLabel}.
+          Manage when students can request lessons and how they join.
         </p>
       </header>
 
@@ -119,11 +116,31 @@ export default async function TutorSchedulePage() {
         </InlineNotice>
       ) : null}
 
-      <Panel
-        description="Set the timezone, lead time, and capacity that shape when students can book."
-        title="Booking policy"
-        tone="raised"
-      >
+      <Panel title="Weekly availability" tone="raised">
+        <p className={styles.zoneNotice}>
+          Showing your local time ({policyTimezoneLabel}).
+        </p>
+        <AvailabilityRulesEditor
+          disabled={schedule.state === "no_profile"}
+          rules={schedule.availabilityRules}
+          timezoneLabel={policyTimezoneLabel}
+        />
+      </Panel>
+
+      <Panel title="Default meeting link" tone="raised">
+        <MeetingPreferenceForm
+          disabled={schedule.state === "no_profile"}
+          initialValues={{
+            defaultMeetingUrl: schedule.meetingPreference.defaultMeetingUrl ?? "",
+            displayLabel: schedule.meetingPreference.displayLabel ?? "",
+            preferredProvider:
+              schedule.meetingPreference.preferredProvider ?? "",
+          }}
+          providerOptions={schedule.meetingProviderOptions}
+        />
+      </Panel>
+
+      <Panel title="Booking policy" tone="raised">
         <SchedulePolicyForm
           disabled={schedule.state === "no_profile"}
           initialValues={{
@@ -137,41 +154,12 @@ export default async function TutorSchedulePage() {
               ? "true"
               : "false",
             minimumNoticeMinutes: String(schedule.policy.minimumNoticeMinutes),
-            timezone: schedule.policy.timezone,
+            timezone,
             weeklyCapacity:
               schedule.policy.weeklyCapacity != null
                 ? String(schedule.policy.weeklyCapacity)
                 : "",
           }}
-        />
-      </Panel>
-
-      <Panel
-        description="Recurring weekly windows expressed in your booking timezone."
-        title="Weekly availability"
-        tone="raised"
-      >
-        <AvailabilityRulesEditor
-          disabled={schedule.state === "no_profile"}
-          rules={schedule.availabilityRules}
-          timezoneLabel={policyTimezoneLabel}
-        />
-      </Panel>
-
-      <Panel
-        description="The default meeting link Mentor IB uses to seed each lesson's join surface."
-        title="Default meeting link"
-        tone="raised"
-      >
-        <MeetingPreferenceForm
-          disabled={schedule.state === "no_profile"}
-          initialValues={{
-            defaultMeetingUrl: schedule.meetingPreference.defaultMeetingUrl ?? "",
-            displayLabel: schedule.meetingPreference.displayLabel ?? "",
-            preferredProvider:
-              schedule.meetingPreference.preferredProvider ?? "",
-          }}
-          providerOptions={schedule.meetingProviderOptions}
         />
       </Panel>
     </article>

@@ -3,7 +3,6 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import {
-  ContextChipRow,
   LessonSummary,
   PersonSummary,
   ScreenState,
@@ -34,6 +33,7 @@ import {
   isRestrictedAccount,
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
+import { getTutorApplication } from "@/modules/tutors/application";
 import {
   buildPreviewTutorOverview,
   getTutorOverview,
@@ -43,7 +43,6 @@ import {
 } from "@/modules/tutors/tutor-overview";
 
 import {
-  buildReadinessChips,
   getIssueCaseLabel,
   getIssueTypeLabel,
   mapLessonStatusToSummary,
@@ -57,6 +56,7 @@ export default async function TutorOverviewPage() {
 
   if (!isSupabaseAuthConfigured()) {
     return renderOverviewPage({
+      hasOpenReadinessGate: false,
       overview: buildPreviewTutorOverview(),
       previewNotice: true,
       timezone,
@@ -116,19 +116,37 @@ export default async function TutorOverviewPage() {
 
   const overview = await getTutorOverview(account);
 
-  return renderOverviewPage({ overview, previewNotice: false, timezone });
+  const hasOpenReadinessGate =
+    overview.state === "ready"
+      ? await loadHasOpenReadinessGate(account)
+      : false;
+
+  return renderOverviewPage({
+    hasOpenReadinessGate,
+    overview,
+    previewNotice: false,
+    timezone,
+  });
+}
+
+async function loadHasOpenReadinessGate(
+  account: Parameters<typeof getTutorApplication>[0],
+): Promise<boolean> {
+  const application = await getTutorApplication(account);
+  return application.readinessGates.some((gate) => gate.state !== "complete");
 }
 
 function renderOverviewPage({
+  hasOpenReadinessGate,
   overview,
   previewNotice,
   timezone,
 }: {
+  hasOpenReadinessGate: boolean;
   overview: TutorOverviewDto;
   previewNotice: boolean;
   timezone: string;
 }) {
-  const readinessChips = buildReadinessChips(overview.readiness);
   const timezoneLabel = getTimezoneLabel(timezone);
 
   return (
@@ -163,44 +181,25 @@ function renderOverviewPage({
 
       <PersonSummary
         avatarSrc={overview.profile.avatarUrl ?? undefined}
-        descriptor={
-          overview.profile.headline ??
-          "Your operational view across pending requests and upcoming lessons."
-        }
+        descriptor={overview.profile.headline ?? undefined}
         eyebrow="Tutor overview"
         meta={[`Local timezone: ${timezoneLabel}`]}
         name={overview.profile.displayName}
         variant="header"
       />
 
-      <ContextChipRow items={readinessChips} label="Readiness" />
-
-      {overview.readiness.applicationStatus === "approved" &&
-      overview.readiness.payoutReadinessStatus !== "enabled" ? (
-        <InlineNotice
-          title={
-            overview.readiness.payoutReadinessStatus === "restricted"
-              ? "Payout setup needs attention"
-              : "Finish payout setup to go live"
-          }
-          tone={
-            overview.readiness.payoutReadinessStatus === "restricted"
-              ? "actionNeeded"
-              : "warning"
-          }
-        >
-          <p>
-            Set up Stripe Connect Express to start receiving lesson payments.
-          </p>
+      {hasOpenReadinessGate ? (
+        <InlineNotice title="Finish setup to go live" tone="warning">
+          <p>Your public listing has open items waiting on you.</p>
           <p className={styles.actionRow}>
             <Link
               className={getButtonClassName({
                 size: "compact",
                 variant: "secondary",
               })}
-              href={"/tutor/earnings" as Route}
+              href={"/tutor/profile" as Route}
             >
-              Open earnings
+              Finish setup
             </Link>
           </p>
         </InlineNotice>

@@ -147,8 +147,7 @@ export default async function TutorProfilePage() {
         <p className={styles.eyebrow}>Tutor profile</p>
         <h1 className={styles.title}>Your public profile</h1>
         <p className={styles.description}>
-          Keep your headline, bio, subjects, and rate current. Mentor IB
-          students see this on your public profile.
+          What students see when they find you.
         </p>
       </header>
 
@@ -157,7 +156,7 @@ export default async function TutorProfilePage() {
         title="Public listing"
         tone={editor.adminHold ? "soft" : "forest"}
       >
-        <p className={styles.statusLine}>
+        <div className={styles.statusLine}>
           <StatusBadge tone={publicationStatusLabel.tone}>
             {publicationStatusLabel.label}
           </StatusBadge>
@@ -166,7 +165,21 @@ export default async function TutorProfilePage() {
               Public URL · /tutors/{editor.publicSlug}
             </span>
           ) : null}
-        </p>
+          {editor.publicSlug ? (
+            <Link
+              className={getButtonClassName({
+                size: "compact",
+                variant: "secondary",
+              })}
+              href={`/tutors/${editor.publicSlug}` as Route}
+              prefetch={false}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Preview public profile
+            </Link>
+          ) : null}
+        </div>
         {editor.adminHold ? (
           <InlineNotice
             title={
@@ -185,22 +198,6 @@ export default async function TutorProfilePage() {
             selfPausedAt={editor.selfPausedAt}
           />
         )}
-        <div className={styles.actionRow}>
-          {editor.publicSlug ? (
-            <Link
-              className={getButtonClassName({
-                size: "compact",
-                variant: "secondary",
-              })}
-              href={`/tutors/${editor.publicSlug}` as Route}
-              prefetch={false}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Preview public profile
-            </Link>
-          ) : null}
-        </div>
       </Panel>
 
       <ReadinessChecklistPanel gates={editor.readinessGates} />

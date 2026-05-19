@@ -70,6 +70,26 @@
   justify-content: flex-end;
 }
 
+.navGroups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.navGroup {
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-subtle);
+}
+
+.navGroup:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
 .main {
   padding: var(--space-8) 0 var(--space-12);
 }
@@ -176,6 +196,15 @@
 
   .nav {
     justify-content: flex-start;
+  }
+
+  .navGroups {
+    justify-content: flex-start;
+  }
+
+  .navGroup {
+    padding-left: 0;
+    border-left: none;
   }
 
   .main {

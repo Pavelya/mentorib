@@ -5,6 +5,7 @@ import type { RouteFamilyKey } from "@/lib/routing/route-families";
 export type NavItem = {
   href: Route;
   label: string;
+  group?: string;
 };
 
 export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
@@ -37,12 +38,15 @@ export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
     { href: "/lessons", label: "Lessons" },
   ],
   tutor: [
-    { href: "/tutor/overview", label: "Overview" },
-    { href: "/tutor/profile" as Route, label: "Profile" },
-    { href: "/tutor/lessons", label: "Lessons" },
-    { href: "/tutor/schedule", label: "Schedule" },
-    { href: "/tutor/messages", label: "Messages" },
-    { href: "/tutor/earnings", label: "Earnings" },
+    { href: "/tutor/overview", label: "Overview", group: "Workspace" },
+    { href: "/tutor/lessons", label: "Lessons", group: "Workspace" },
+    { href: "/tutor/schedule", label: "Schedule", group: "Workspace" },
+    { href: "/tutor/messages", label: "Messages", group: "Workspace" },
+    { href: "/tutor/profile" as Route, label: "Profile", group: "Profile" },
+    { href: "/tutor/profile/credentials" as Route, label: "Credentials", group: "Profile" },
+    { href: "/tutor/profile/photo" as Route, label: "Photo", group: "Profile" },
+    { href: "/tutor/profile/video" as Route, label: "Video", group: "Profile" },
+    { href: "/tutor/earnings", label: "Earnings", group: "Money" },
   ],
   internal: [
     { href: "/internal", label: "Internal Home" },

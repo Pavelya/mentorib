@@ -2,9 +2,10 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Panel, TabBar } from "@/components/ui";
+import { Panel } from "@/components/ui";
 import type { NavItem } from "@/lib/routing/navigation";
 
+import { AppFrameNav } from "./app-frame-nav";
 import styles from "./app-frame.module.css";
 
 export type AppFrameFooterLink = {
@@ -51,15 +52,7 @@ export function AppFrame({
           </div>
 
           {navItems.length > 0 ? (
-            <TabBar
-              ariaLabel={`${eyebrow} navigation`}
-              className={styles.nav}
-              items={navItems.map((item) => ({
-                href: item.href,
-                id: item.href,
-                label: item.label,
-              }))}
-            />
+            <AppFrameNav ariaLabel={`${eyebrow} navigation`} items={navItems} />
           ) : null}
         </div>
       </header>

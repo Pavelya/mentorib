@@ -8,23 +8,27 @@ import { ensureAuthAccount } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { coalesceSlotsToAvailabilityRules } from "@/modules/tutors/availability-grid";
 import {
   AvailabilityRuleCommandError,
   MeetingPreferenceCommandError,
   SchedulePolicyCommandError,
   addAvailabilityRule,
   removeAvailabilityRule,
+  replaceAvailabilityRules,
   updateMeetingPreference,
   updateSchedulePolicy,
   type AvailabilityRuleFormValues,
   type MeetingPreferenceFormValues,
   type SchedulePolicyFormValues,
 } from "@/modules/tutors/tutor-schedule";
+import type { SlotKey } from "@/components/ui/weekly-hour-grid";
 
 import {
   emptyAvailabilityRuleValues,
   type AvailabilityRuleActionState,
   type MeetingPreferenceActionState,
+  type ReplaceAvailabilityRulesActionState,
   type SchedulePolicyActionState,
 } from "./action-types";
 
@@ -158,6 +162,86 @@ export async function addAvailabilityRuleAction(
     fieldErrors: {},
     message: "Availability window added.",
     values: emptyAvailabilityRuleValues,
+  };
+}
+
+const SLOT_KEY_PATTERN = /^[0-6]:(?:[0-9]|1[0-9]|2[0-3])$/;
+
+export async function replaceAvailabilityRulesAction(
+  _previous: ReplaceAvailabilityRulesActionState,
+  formData: FormData,
+): Promise<ReplaceAvailabilityRulesActionState> {
+  if (!isSupabaseAuthConfigured()) {
+    return {
+      code: "auth_unconfigured",
+      message:
+        "Schedule editing is not available until Supabase auth is configured.",
+    };
+  }
+
+  const rawSlots = readFormString(formData, "slots");
+  let parsedSlots: SlotKey[];
+
+  try {
+    const decoded = JSON.parse(rawSlots) as unknown;
+
+    if (!Array.isArray(decoded)) {
+      throw new Error("Expected an array of slot keys.");
+    }
+
+    parsedSlots = decoded.map((entry) => {
+      if (typeof entry !== "string" || !SLOT_KEY_PATTERN.test(entry)) {
+        throw new Error("Invalid slot key.");
+      }
+      return entry as SlotKey;
+    });
+  } catch {
+    return {
+      code: "invalid_slots",
+      message: "We couldn't read your selection. Refresh and try again.",
+    };
+  }
+
+  let redirectPath: Route | null = null;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email?.trim()) {
+      redirectPath = buildAuthSignInPath(SCHEDULE_PATH) as Route;
+    } else {
+      const account = await ensureAuthAccount(user);
+      const rules = coalesceSlotsToAvailabilityRules(new Set(parsedSlots));
+      await replaceAvailabilityRules(account, rules);
+    }
+  } catch (error) {
+    if (error instanceof AvailabilityRuleCommandError) {
+      return {
+        code: error.code,
+        message: error.message,
+      };
+    }
+
+    return {
+      code: "availability_rules_replace_failed",
+      message:
+        "We couldn't save your availability yet. Please try again in a moment.",
+    };
+  }
+
+  if (redirectPath) {
+    redirect(redirectPath);
+  }
+
+  revalidatePath(SCHEDULE_PATH);
+
+  return {
+    code: "success",
+    message: "Availability saved.",
   };
 }
 

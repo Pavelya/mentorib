@@ -73,6 +73,22 @@ describe("coalesceSlotsToAvailabilityRules", () => {
   });
 });
 
+describe("legacy sub-hour rule normalization round-trip", () => {
+  it("rewrites a 09:15-09:45 legacy rule into a whole-hour 09:00-10:00 row on the next save", () => {
+    const legacy = [
+      { dayOfWeek: 1, startLocalTime: "09:15", endLocalTime: "09:45" },
+    ];
+
+    const coalesced = coalesceSlotsToAvailabilityRules(
+      expandAvailabilityRulesToSlots(legacy),
+    );
+
+    expect(coalesced).toEqual([
+      { dayOfWeek: 1, startLocalTime: "09:00", endLocalTime: "10:00" },
+    ]);
+  });
+});
+
 describe("availability-grid helpers — idempotency", () => {
   it("coalesceSlotsToAvailabilityRules(expandAvailabilityRulesToSlots(rules)) is idempotent for whole-hour input", () => {
     const rules = [

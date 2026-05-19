@@ -8,7 +8,6 @@ import {
   ensureAuthAccount,
 } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
-import { getTimezoneLabel } from "@/lib/datetime";
 import { getCurrentUserTimezone } from "@/lib/datetime/server";
 import { routeFamilies } from "@/lib/routing/route-families";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
@@ -94,7 +93,6 @@ export default async function TutorSchedulePage() {
   }
 
   const schedule = await getTutorSchedule(account);
-  const policyTimezoneLabel = getTimezoneLabel(timezone);
 
   return (
     <article className={styles.page}>
@@ -116,14 +114,15 @@ export default async function TutorSchedulePage() {
         </InlineNotice>
       ) : null}
 
-      <Panel title="Weekly availability" tone="raised">
-        <p className={styles.zoneNotice}>
-          Showing your local time ({policyTimezoneLabel}).
-        </p>
+      <Panel
+        description="Click an hour to mark it as available. Click again to unmark."
+        title="Weekly availability"
+        tone="raised"
+      >
         <AvailabilityRulesEditor
           disabled={schedule.state === "no_profile"}
           rules={schedule.availabilityRules}
-          timezoneLabel={policyTimezoneLabel}
+          timezone={timezone}
         />
       </Panel>
 

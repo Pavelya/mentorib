@@ -304,6 +304,63 @@ export async function removeAvailabilityRule(
     .eq("tutor_profile_id", tutorProfile.id);
 }
 
+export type AvailabilityRuleInput = {
+  dayOfWeek: number;
+  endLocalTime: string;
+  startLocalTime: string;
+};
+
+export async function replaceAvailabilityRules(
+  account: Pick<ResolvedAuthAccount, "id">,
+  rules: ReadonlyArray<AvailabilityRuleInput>,
+) {
+  const tutorProfile = await loadTutorProfile(account.id);
+
+  if (!tutorProfile) {
+    throw new AvailabilityRuleCommandError(
+      "tutor_profile_missing",
+      "Create your tutor profile before saving availability.",
+    );
+  }
+
+  const supabase = createSupabaseServiceRoleClient();
+
+  const { error: deleteError } = await supabase
+    .from("availability_rules")
+    .delete()
+    .eq("tutor_profile_id", tutorProfile.id);
+
+  if (deleteError) {
+    throw new AvailabilityRuleCommandError(
+      "availability_rules_replace_failed",
+      "We couldn't save your availability yet. Please try again in a moment.",
+    );
+  }
+
+  if (rules.length === 0) {
+    return;
+  }
+
+  const { error: insertError } = await supabase
+    .from("availability_rules")
+    .insert(
+      rules.map((rule) => ({
+        tutor_profile_id: tutorProfile.id,
+        day_of_week: rule.dayOfWeek,
+        start_local_time: normalizeTimeOfDay(rule.startLocalTime),
+        end_local_time: normalizeTimeOfDay(rule.endLocalTime),
+        visibility_status: "active" as const,
+      })),
+    );
+
+  if (insertError) {
+    throw new AvailabilityRuleCommandError(
+      "availability_rules_replace_failed",
+      "We couldn't save your availability yet. Please try again in a moment.",
+    );
+  }
+}
+
 export type MeetingPreferenceFormValues = {
   defaultMeetingUrl: string;
   displayLabel: string;

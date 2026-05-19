@@ -30,6 +30,17 @@ export type MeetingPreferenceActionState = {
   values: MeetingPreferenceFormValues;
 };
 
+export type ReplaceAvailabilityRulesActionState = {
+  code: string | null;
+  message: string | null;
+};
+
+export const initialReplaceAvailabilityRulesState: ReplaceAvailabilityRulesActionState =
+  {
+    code: null,
+    message: null,
+  };
+
 export const emptyAvailabilityRuleValues: AvailabilityRuleFormValues = {
   dayOfWeek: "",
   endLocalTime: "",

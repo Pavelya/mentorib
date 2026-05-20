@@ -73,7 +73,7 @@ export default async function TutorEarningsPage({
       <article className={styles.page}>
         <InlineNotice
           className={styles.notice}
-          title="Tutor earnings preview"
+          title="Earnings preview"
           tone="info"
         >
           <p>
@@ -107,7 +107,7 @@ export default async function TutorEarningsPage({
   if (!account) {
     return (
       <article className={styles.page}>
-        <InlineNotice title="Tutor earnings unavailable" tone="warning">
+        <InlineNotice title="Earnings unavailable" tone="warning">
           <p>
             We could not load your account context. Refresh the page or sign in
             again to continue.
@@ -141,14 +141,13 @@ export default async function TutorEarningsPage({
     return (
       <article className={styles.page}>
         <PersonSummary
-          descriptor="Set up your tutor profile to unlock the earnings view and Stripe Connect onboarding."
           eyebrow="Tutor earnings"
           name={account.full_name?.trim() || "Mentor IB tutor"}
           variant="header"
         />
         <InlineNotice
           className={styles.notice}
-          title="Tutor profile not set up"
+          title="Profile not set up"
           tone="warning"
         >
           <p>
@@ -235,7 +234,6 @@ function EarningsView({
       ) : null}
 
       <PersonSummary
-        descriptor="Track Stripe Connect onboarding status, payout readiness, and lesson earnings in one place."
         eyebrow="Tutor earnings"
         name={earnings.profileDisplayName}
         variant="header"

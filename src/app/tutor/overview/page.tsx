@@ -86,7 +86,7 @@ export default async function TutorOverviewPage() {
       <article className={styles.page}>
         <InlineNotice
           className={styles.notice}
-          title="Tutor overview unavailable"
+          title="Overview unavailable"
           tone="warning"
         >
           <p>
@@ -156,7 +156,7 @@ function renderOverviewPage({
       {previewNotice ? (
         <InlineNotice
           className={styles.notice}
-          title="Tutor overview preview"
+          title="Overview preview"
           tone="info"
         >
           <p>
@@ -169,7 +169,7 @@ function renderOverviewPage({
       {overview.state === "no_profile" ? (
         <InlineNotice
           className={styles.notice}
-          title="Tutor profile not set up"
+          title="Profile not set up"
           tone="warning"
         >
           <p>

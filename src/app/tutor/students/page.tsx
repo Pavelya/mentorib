@@ -110,7 +110,7 @@ export default async function TutorStudentsPage({
       <article className={styles.page}>
         <InlineNotice
           className={styles.notice}
-          title="Tutor students unavailable"
+          title="Students unavailable"
           tone="warning"
         >
           <p>
@@ -185,7 +185,6 @@ function renderStudentsPage({
       <TimezoneNotice timezone={timezone} />
 
       <PersonSummary
-        descriptor="Identity-first view of your teaching relationships. Continue lessons and conversations without switching context."
         eyebrow="My students"
         name="Students"
         variant="header"
@@ -194,7 +193,7 @@ function renderStudentsPage({
       {previewNotice ? (
         <InlineNotice
           className={styles.notice}
-          title="Tutor students preview"
+          title="Students preview"
           tone="info"
         >
           <p>
@@ -207,7 +206,7 @@ function renderStudentsPage({
       {roster.state === "no_profile" ? (
         <InlineNotice
           className={styles.notice}
-          title="Tutor profile not set up"
+          title="Profile not set up"
           tone="warning"
         >
           <p>

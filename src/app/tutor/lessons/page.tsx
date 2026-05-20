@@ -70,7 +70,7 @@ export default async function TutorLessonsPage() {
       <article className={styles.page}>
         <InlineNotice
           className={styles.notice}
-          title="Tutor lessons unavailable"
+          title="Lessons unavailable"
           tone="warning"
         >
           <p>
@@ -123,7 +123,7 @@ function renderLessonsPage({
       {previewNotice ? (
         <InlineNotice
           className={styles.notice}
-          title="Tutor lessons preview"
+          title="Lessons preview"
           tone="info"
         >
           <p>
@@ -137,7 +137,7 @@ function renderLessonsPage({
       {list.state === "no_profile" ? (
         <InlineNotice
           className={styles.notice}
-          title="Tutor profile not set up"
+          title="Profile not set up"
           tone="warning"
         >
           <p>
@@ -160,7 +160,6 @@ function renderLessonsPage({
         emptyTitle="No pending requests"
         lessons={pendingRequests}
         showExpiry
-        subtitle="Accept or decline before the request expires."
         timezone={timezone}
         title="Pending requests"
       />
@@ -169,7 +168,6 @@ function renderLessonsPage({
         emptyDescription="Confirmed lessons appear here so you can prepare and join from one place."
         emptyTitle="No upcoming lessons"
         lessons={upcoming}
-        subtitle="Confirmed lessons you have ahead."
         timezone={timezone}
         title="Upcoming lessons"
       />
@@ -201,7 +199,7 @@ function LessonGroup({
   emptyTitle: string;
   lessons: TutorLessonListItemDto[];
   showExpiry?: boolean;
-  subtitle: string;
+  subtitle?: string;
   timezone: string;
   title: string;
 }) {

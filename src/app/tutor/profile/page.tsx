@@ -53,7 +53,7 @@ export default async function TutorProfilePage() {
     return (
       <article className={styles.page}>
         <TimezoneNotice timezone={timezone} />
-        <InlineNotice title="Tutor profile preview" tone="info">
+        <InlineNotice title="Profile preview" tone="info">
           <p>
             Live profile editing connects once Supabase auth is configured.
             Sign in to manage your tutor profile.
@@ -83,7 +83,7 @@ export default async function TutorProfilePage() {
   if (!account) {
     return (
       <article className={styles.page}>
-        <InlineNotice title="Tutor profile unavailable" tone="warning">
+        <InlineNotice title="Profile unavailable" tone="warning">
           <p>
             We could not load your account context. Refresh the page or sign in
             again to continue.

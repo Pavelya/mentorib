@@ -47,7 +47,7 @@ export default async function TutorApplyPage() {
     return (
       <article className={styles.page}>
         <TimezoneNotice timezone={timezone} />
-        <InlineNotice title="Tutor application preview" tone="info">
+        <InlineNotice title="Application preview" tone="info">
           <p>
             Live application data connects once Supabase auth is configured.
             Sign in to start or continue your tutor application.
@@ -78,7 +78,7 @@ export default async function TutorApplyPage() {
   if (!account) {
     return (
       <article className={styles.page}>
-        <InlineNotice title="Tutor application unavailable" tone="warning">
+        <InlineNotice title="Application unavailable" tone="warning">
           <p>
             We could not load your account context. Refresh the page or sign in
             again to continue.

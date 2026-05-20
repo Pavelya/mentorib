@@ -55,7 +55,7 @@ type PersonSummaryProps = HTMLAttributes<HTMLElement> & {
   action?: ReactNode;
   avatarSrc?: string;
   badges?: PersonSummaryBadge[];
-  descriptor: ReactNode;
+  descriptor?: ReactNode;
   eyebrow?: ReactNode;
   meta?: string[];
   name: string;
@@ -188,7 +188,9 @@ export function PersonSummary({
         <div className={styles.personHeader}>
           <div className={styles.personTitleBlock}>
             <h3 className={styles.title}>{name}</h3>
-            <p className={styles.personDescriptor}>{descriptor}</p>
+            {descriptor ? (
+              <p className={styles.personDescriptor}>{descriptor}</p>
+            ) : null}
           </div>
 
           {action ? <div className={styles.actionSlot}>{action}</div> : null}

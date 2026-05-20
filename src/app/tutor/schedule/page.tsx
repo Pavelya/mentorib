@@ -33,7 +33,7 @@ export default async function TutorSchedulePage() {
     return (
       <article className={styles.page}>
         <TimezoneNotice timezone={timezone} />
-        <InlineNotice title="Tutor schedule preview" tone="info">
+        <InlineNotice title="Schedule preview" tone="info">
           <p>
             Live schedule editing connects once Supabase auth is configured.
             Sign in to manage availability and your default meeting link.
@@ -64,7 +64,7 @@ export default async function TutorSchedulePage() {
   if (!account) {
     return (
       <article className={styles.page}>
-        <InlineNotice title="Tutor schedule unavailable" tone="warning">
+        <InlineNotice title="Schedule unavailable" tone="warning">
           <p>
             We could not load your account context. Refresh the page or sign in
             again to continue.
@@ -106,7 +106,7 @@ export default async function TutorSchedulePage() {
       </header>
 
       {schedule.state === "no_profile" ? (
-        <InlineNotice title="Tutor profile not set up" tone="warning">
+        <InlineNotice title="Profile not set up" tone="warning">
           <p>
             Your tutor profile has not been created yet. Finish the application
             flow before saving schedule settings.

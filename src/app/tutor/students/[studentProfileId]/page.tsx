@@ -109,7 +109,7 @@ export default async function TutorStudentDetailPage({
       <article className={styles.page}>
         <InlineNotice
           className={styles.notice}
-          title="Tutor student unavailable"
+          title="Student unavailable"
           tone="warning"
         >
           <p>
@@ -148,7 +148,7 @@ export default async function TutorStudentDetailPage({
         <BackLink href={backHref} />
         <InlineNotice
           className={styles.notice}
-          title="Tutor profile not set up"
+          title="Profile not set up"
           tone="warning"
         >
           <p>
@@ -209,7 +209,7 @@ function renderDetailPage({
       {previewNotice ? (
         <InlineNotice
           className={styles.notice}
-          title="Tutor student preview"
+          title="Student preview"
           tone="info"
         >
           <p>

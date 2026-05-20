@@ -177,7 +177,7 @@ function SchedulePolicyFormBody({
               disabled={disabled}
               error={state.fieldErrors.minimumNoticeMinutes}
               inputMode="numeric"
-              label="Minimum notice (minutes)"
+              label="Minimum notice"
               min={0}
               name="minimumNoticeMinutes"
               onChange={(event) =>
@@ -213,7 +213,7 @@ function SchedulePolicyFormBody({
               disabled={disabled}
               error={state.fieldErrors.bufferBeforeMinutes}
               inputMode="numeric"
-              label="Buffer before (minutes)"
+              label="Buffer before"
               min={0}
               name="bufferBeforeMinutes"
               onChange={(event) =>
@@ -230,7 +230,7 @@ function SchedulePolicyFormBody({
               disabled={disabled}
               error={state.fieldErrors.bufferAfterMinutes}
               inputMode="numeric"
-              label="Buffer after (minutes)"
+              label="Buffer after"
               min={0}
               name="bufferAfterMinutes"
               onChange={(event) =>

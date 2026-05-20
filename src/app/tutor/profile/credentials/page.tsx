@@ -2,10 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
-import {
-  InlineNotice,
-  Section,
-} from "@/components/ui";
+import { InlineNotice } from "@/components/ui";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
@@ -118,27 +115,14 @@ export default async function TutorProfileCredentialsPage() {
         <p className={styles.eyebrow}>Trust &amp; media</p>
         <h1 className={styles.title}>Credentials</h1>
         <p className={styles.description}>
-          Upload teaching qualifications, examiner certificates, and degree
-          evidence. Approved credentials become public trust proof on your
-          profile — the raw files stay private.
+          Upload qualifications, examiner certificates, and degree evidence.
+          Once approved, the public profile shows a derived line like &ldquo;IB
+          examiner — Mathematics&rdquo; — the raw files stay private.
         </p>
         <Link className={styles.backLink} href={"/tutor/profile" as Route}>
           ← Back to your profile
         </Link>
       </header>
-
-      <Section
-        density="default"
-        eyebrow="Why this matters"
-        title="What students see"
-        titleAs="h2"
-      >
-        <p className={styles.description}>
-          Mentor IB never publishes credential files. Once a reviewer approves a
-          credential, the public profile shows a derived line such as &ldquo;IB
-          examiner — Mathematics&rdquo; — no document, no images.
-        </p>
-      </Section>
 
       <CredentialsManager
         credentials={credentials?.credentials ?? []}

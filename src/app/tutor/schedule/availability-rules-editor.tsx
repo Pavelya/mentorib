@@ -3,7 +3,6 @@
 import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { TimezoneNotice } from "@/components/datetime";
 import {
   Button,
   InlineNotice,
@@ -28,13 +27,11 @@ const DAY_LABELS = [0, 1, 2, 3, 4, 5, 6].map(getDayOfWeekLabel);
 type AvailabilityRulesEditorProps = {
   disabled: boolean;
   rules: readonly TutorScheduleAvailabilityRuleDto[];
-  timezone: string;
 };
 
 export function AvailabilityRulesEditor({
   disabled,
   rules,
-  timezone,
 }: AvailabilityRulesEditorProps) {
   const [rawState, formAction] = useActionState(
     replaceAvailabilityRulesAction,
@@ -70,8 +67,6 @@ export function AvailabilityRulesEditor({
 
   return (
     <div className={styles.fieldsetGrid}>
-      <TimezoneNotice body="Showing your local time." timezone={timezone} />
-
       {state.message ? (
         <InlineNotice
           title={

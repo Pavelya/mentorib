@@ -118,8 +118,6 @@ function renderLessonsPage({
 
   return (
     <article className={styles.page}>
-      <TimezoneNotice timezone={timezone} />
-
       {previewNotice ? (
         <InlineNotice
           className={styles.notice}
@@ -146,6 +144,17 @@ function renderLessonsPage({
           </p>
         </InlineNotice>
       ) : null}
+
+      <header className={styles.intro}>
+        <p className={styles.eyebrow}>Tutor lessons</p>
+        <h1 className={styles.title}>Lessons</h1>
+        <p className={styles.description}>
+          Review pending requests, prepare upcoming sessions, and look back on
+          completed work.
+        </p>
+      </header>
+
+      <TimezoneNotice timezone={timezone} />
 
       {!hasAny && list.state !== "no_profile" ? (
         <ScreenState

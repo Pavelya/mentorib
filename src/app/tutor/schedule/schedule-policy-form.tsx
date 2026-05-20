@@ -9,7 +9,6 @@ import {
   ConfirmDialog,
   InlineNotice,
   Switch,
-  TextField,
 } from "@/components/ui";
 import type { SchedulePolicyFormValues } from "@/modules/tutors/tutor-schedule";
 
@@ -39,19 +38,12 @@ export function SchedulePolicyForm({
     state.values.isAcceptingNewStudents,
     state.values.minimumNoticeMinutes,
   ].join(":");
-  const hasAdvancedError =
-    Boolean(state.fieldErrors.minimumNoticeMinutes) ||
-    Boolean(state.fieldErrors.bufferBeforeMinutes) ||
-    Boolean(state.fieldErrors.bufferAfterMinutes) ||
-    Boolean(state.fieldErrors.dailyCapacity) ||
-    Boolean(state.fieldErrors.weeklyCapacity);
 
   return (
     <SchedulePolicyFormBody
       key={formStateKey}
       action={formAction}
       disabled={disabled}
-      openAdvanced={hasAdvancedError}
       state={state}
     />
   );
@@ -60,12 +52,10 @@ export function SchedulePolicyForm({
 function SchedulePolicyFormBody({
   action,
   disabled,
-  openAdvanced,
   state,
 }: {
   action: (formData: FormData) => void;
   disabled: boolean;
-  openAdvanced: boolean;
   state: SchedulePolicyActionState;
 }) {
   const [values, setValues] = useState(state.values);
@@ -163,108 +153,31 @@ function SchedulePolicyFormBody({
         title="Pause new student bookings?"
       />
 
-      <details className={styles.advanced} open={openAdvanced}>
-        <summary className={styles.advancedSummary}>
-          <span className={styles.advancedTitle}>Advanced booking rules</span>
-          <span className={styles.advancedHint}>
-            8-hour notice, no caps by default.
-          </span>
-        </summary>
-
-        <div className={styles.advancedFields}>
-          <div className={styles.fieldGrid}>
-            <TextField
-              disabled={disabled}
-              error={state.fieldErrors.minimumNoticeMinutes}
-              inputMode="numeric"
-              label="Minimum notice"
-              min={0}
-              name="minimumNoticeMinutes"
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  minimumNoticeMinutes: event.target.value,
-                }))
-              }
-              required
-              type="number"
-              value={values.minimumNoticeMinutes}
-            />
-            <TextField
-              disabled={disabled}
-              error={state.fieldErrors.dailyCapacity}
-              inputMode="numeric"
-              label="Daily lesson capacity"
-              min={1}
-              name="dailyCapacity"
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  dailyCapacity: event.target.value,
-                }))
-              }
-              type="number"
-              value={values.dailyCapacity}
-            />
-          </div>
-
-          <div className={styles.fieldGrid}>
-            <TextField
-              disabled={disabled}
-              error={state.fieldErrors.bufferBeforeMinutes}
-              inputMode="numeric"
-              label="Buffer before"
-              min={0}
-              name="bufferBeforeMinutes"
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  bufferBeforeMinutes: event.target.value,
-                }))
-              }
-              required
-              type="number"
-              value={values.bufferBeforeMinutes}
-            />
-            <TextField
-              disabled={disabled}
-              error={state.fieldErrors.bufferAfterMinutes}
-              inputMode="numeric"
-              label="Buffer after"
-              min={0}
-              name="bufferAfterMinutes"
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  bufferAfterMinutes: event.target.value,
-                }))
-              }
-              required
-              type="number"
-              value={values.bufferAfterMinutes}
-            />
-          </div>
-
-          <div className={styles.fieldGrid}>
-            <TextField
-              disabled={disabled}
-              error={state.fieldErrors.weeklyCapacity}
-              inputMode="numeric"
-              label="Weekly lesson capacity"
-              min={1}
-              name="weeklyCapacity"
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  weeklyCapacity: event.target.value,
-                }))
-              }
-              type="number"
-              value={values.weeklyCapacity}
-            />
-          </div>
-        </div>
-      </details>
+      <input
+        name="minimumNoticeMinutes"
+        type="hidden"
+        value={values.minimumNoticeMinutes}
+      />
+      <input
+        name="dailyCapacity"
+        type="hidden"
+        value={values.dailyCapacity}
+      />
+      <input
+        name="bufferBeforeMinutes"
+        type="hidden"
+        value={values.bufferBeforeMinutes}
+      />
+      <input
+        name="bufferAfterMinutes"
+        type="hidden"
+        value={values.bufferAfterMinutes}
+      />
+      <input
+        name="weeklyCapacity"
+        type="hidden"
+        value={values.weeklyCapacity}
+      />
 
       <div className={styles.formActions}>
         <SaveButton disabled={disabled} />

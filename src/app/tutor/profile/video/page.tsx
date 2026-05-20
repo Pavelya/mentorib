@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
@@ -116,9 +115,6 @@ export default async function TutorProfileVideoPage() {
           Paste a link to a short intro video. We embed it on your public
           profile so students can hear how you explain things.
         </p>
-        <Link className={styles.backLink} href={"/tutor/profile" as Route}>
-          ← Back to your profile
-        </Link>
       </header>
 
       <Section

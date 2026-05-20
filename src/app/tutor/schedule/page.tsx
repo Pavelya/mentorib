@@ -96,14 +96,15 @@ export default async function TutorSchedulePage() {
 
   return (
     <article className={styles.page}>
-      <TimezoneNotice timezone={timezone} />
-
       <header className={styles.intro}>
+        <p className={styles.eyebrow}>Tutor schedule</p>
         <h1 className={styles.title}>Schedule</h1>
         <p className={styles.description}>
           Manage when students can request lessons and how they join.
         </p>
       </header>
+
+      <TimezoneNotice timezone={timezone} />
 
       {schedule.state === "no_profile" ? (
         <InlineNotice title="Profile not set up" tone="warning">
@@ -135,7 +136,6 @@ export default async function TutorSchedulePage() {
         <AvailabilityRulesEditor
           disabled={schedule.state === "no_profile"}
           rules={schedule.availabilityRules}
-          timezone={timezone}
         />
       </Panel>
 

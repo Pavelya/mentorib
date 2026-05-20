@@ -188,7 +188,6 @@ function renderDetailPage({
 }) {
   return (
     <article className={styles.page}>
-      <TimezoneNotice timezone={timezone} />
       <BackLink href={backHref} />
 
       <PersonSummary
@@ -205,6 +204,8 @@ function renderDetailPage({
         name={relationship.displayName}
         variant="header"
       />
+
+      <TimezoneNotice timezone={timezone} />
 
       {previewNotice ? (
         <InlineNotice

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
@@ -119,9 +118,6 @@ export default async function TutorProfileCredentialsPage() {
           Once approved, the public profile shows a derived line like &ldquo;IB
           examiner — Mathematics&rdquo; — the raw files stay private.
         </p>
-        <Link className={styles.backLink} href={"/tutor/profile" as Route}>
-          ← Back to your profile
-        </Link>
       </header>
 
       <CredentialsManager

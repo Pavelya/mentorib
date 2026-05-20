@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
-import { TimezoneNotice } from "@/components/datetime";
 import {
   Card,
   Chip,
@@ -19,7 +18,6 @@ import {
   ensureAuthAccount,
 } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
-import { getCurrentUserTimezone } from "@/lib/datetime/server";
 import { routeFamilies } from "@/lib/routing/route-families";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -48,12 +46,9 @@ const PROFILE_PATH = "/tutor/profile" as const;
 const APPLY_PATH = "/tutor/apply" as const;
 
 export default async function TutorProfilePage() {
-  const timezone = await getCurrentUserTimezone();
-
   if (!isSupabaseAuthConfigured()) {
     return (
       <article className={styles.page}>
-        <TimezoneNotice timezone={timezone} />
         <InlineNotice title="Profile preview" tone="info">
           <p>
             Live profile editing connects once Supabase auth is configured.

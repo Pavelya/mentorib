@@ -29,11 +29,6 @@
   max-width: 60ch;
 }
 
-.backLink {
-  font-size: var(--body-sm);
-  text-decoration: underline;
-}
-
 .providerRow {
   display: flex;
   flex-wrap: wrap;

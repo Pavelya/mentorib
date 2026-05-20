@@ -147,12 +147,8 @@ function renderOverviewPage({
   previewNotice: boolean;
   timezone: string;
 }) {
-  const timezoneLabel = getTimezoneLabel(timezone);
-
   return (
     <article className={styles.page}>
-      <TimezoneNotice timezone={timezone} />
-
       {previewNotice ? (
         <InlineNotice
           className={styles.notice}
@@ -179,14 +175,15 @@ function renderOverviewPage({
         </InlineNotice>
       ) : null}
 
-      <PersonSummary
-        avatarSrc={overview.profile.avatarUrl ?? undefined}
-        descriptor={overview.profile.headline ?? undefined}
-        eyebrow="Tutor overview"
-        meta={[`Local timezone: ${timezoneLabel}`]}
-        name={overview.profile.displayName}
-        variant="header"
-      />
+      <header className={styles.intro}>
+        <p className={styles.eyebrow}>Tutor overview</p>
+        <h1 className={styles.title}>Overview</h1>
+        <p className={styles.description}>
+          Your operational hub for requests, upcoming lessons, and open issues.
+        </p>
+      </header>
+
+      <TimezoneNotice timezone={timezone} />
 
       {hasOpenReadinessGate ? (
         <InlineNotice title="Finish setup to go live" tone="warning">

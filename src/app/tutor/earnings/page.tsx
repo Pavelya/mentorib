@@ -1,10 +1,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
-import {
-  ContextChipRow,
-  PersonSummary,
-} from "@/components/continuity";
+import { ContextChipRow } from "@/components/continuity";
 import {
   Card,
   InlineNotice,
@@ -140,11 +137,14 @@ export default async function TutorEarningsPage({
   if (!profileRecord) {
     return (
       <article className={styles.page}>
-        <PersonSummary
-          eyebrow="Tutor earnings"
-          name={account.full_name?.trim() || "Mentor IB tutor"}
-          variant="header"
-        />
+        <header className={styles.intro}>
+          <p className={styles.eyebrow}>Tutor earnings</p>
+          <h1 className={styles.title}>Earnings</h1>
+          <p className={styles.description}>
+            Track captured lesson payments and your Stripe Connect payout
+            readiness.
+          </p>
+        </header>
         <InlineNotice
           className={styles.notice}
           title="Profile not set up"
@@ -233,11 +233,14 @@ function EarningsView({
         </InlineNotice>
       ) : null}
 
-      <PersonSummary
-        eyebrow="Tutor earnings"
-        name={earnings.profileDisplayName}
-        variant="header"
-      />
+      <header className={styles.intro}>
+        <p className={styles.eyebrow}>Tutor earnings</p>
+        <h1 className={styles.title}>Earnings</h1>
+        <p className={styles.description}>
+          Track captured lesson payments and your Stripe Connect payout
+          readiness.
+        </p>
+      </header>
 
       <ContextChipRow
         items={[

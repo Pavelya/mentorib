@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
@@ -115,9 +114,6 @@ export default async function TutorProfilePhotoPage() {
           A clear photo helps students recognise you. Mentor IB shows your
           published photo on your public profile and search results.
         </p>
-        <Link className={styles.backLink} href={"/tutor/profile" as Route}>
-          ← Back to your profile
-        </Link>
       </header>
 
       <Panel eyebrow="Manage" tone="default">

@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 
-import { TimezoneNotice } from "@/components/datetime";
 import {
   Card,
   Chip,
@@ -20,7 +19,6 @@ import {
 } from "@/lib/auth/account-service";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import { formatUtcDateTime, getTimezoneLabel } from "@/lib/datetime";
-import { getCurrentUserTimezone } from "@/lib/datetime/server";
 import { routeFamilies } from "@/lib/routing/route-families";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -42,12 +40,9 @@ import styles from "./apply.module.css";
 const APPLY_PATH = "/tutor/apply" as const;
 
 export default async function TutorApplyPage() {
-  const timezone = await getCurrentUserTimezone();
-
   if (!isSupabaseAuthConfigured()) {
     return (
       <article className={styles.page}>
-        <TimezoneNotice timezone={timezone} />
         <InlineNotice title="Application preview" tone="info">
           <p>
             Live application data connects once Supabase auth is configured.

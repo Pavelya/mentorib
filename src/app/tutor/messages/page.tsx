@@ -130,6 +130,7 @@ function renderMessagesPage({
   if (!hasConversations && !thread) {
     return (
       <article className={styles.page}>
+        <TutorMessagesIntro />
         <ScreenState
           description="Conversations stay attached to a student relationship. They show up here once a student reaches out or you accept a booking request."
           hints={[
@@ -146,6 +147,7 @@ function renderMessagesPage({
 
   return (
     <article className={styles.page}>
+      <TutorMessagesIntro />
       {thread ? (
         <MarkConversationRead
           conversationId={thread.conversation.id}
@@ -183,6 +185,7 @@ function renderPreviewMessagesPage({
           below previews the conversation list and thread surfaces.
         </p>
       </InlineNotice>
+      <TutorMessagesIntro />
       <ConversationShell
         basePath={MESSAGES_BASE_PATH}
         conversations={list.conversations}
@@ -235,6 +238,18 @@ function renderComposerSlot(thread: MessageThreadDto) {
       conversationId={thread.conversation.id}
       counterpartName={counterpartName}
     />
+  );
+}
+
+function TutorMessagesIntro() {
+  return (
+    <header className={styles.intro}>
+      <p className={styles.eyebrow}>Tutor messages</p>
+      <h1 className={styles.title}>Messages</h1>
+      <p className={styles.description}>
+        Conversations stay attached to each student relationship.
+      </p>
+    </header>
   );
 }
 

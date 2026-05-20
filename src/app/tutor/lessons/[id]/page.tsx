@@ -166,8 +166,6 @@ function renderDetailPage({
 
   return (
     <article className={styles.page}>
-      <TimezoneNotice timezone={timezone} />
-
       {previewNotice ? (
         <InlineNotice
           className={styles.notice}
@@ -184,6 +182,16 @@ function renderDetailPage({
       <p className={styles.backLink}>
         <Link href={LESSONS_BASE_PATH as Route}>← Back to lessons</Link>
       </p>
+
+      <header className={styles.intro}>
+        <p className={styles.eyebrow}>Tutor lessons</p>
+        <h1 className={styles.title}>Lesson detail</h1>
+        <p className={styles.description}>
+          Review the session, manage meeting access, and handle any issues.
+        </p>
+      </header>
+
+      <TimezoneNotice timezone={timezone} />
 
       <LessonSummary
         details={buildLessonDetails(detail)}

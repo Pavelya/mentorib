@@ -29,11 +29,6 @@
   max-width: 60ch;
 }
 
-.backLink {
-  font-size: var(--body-sm);
-  text-decoration: underline;
-}
-
 .uploadBlock {
   display: grid;
   gap: var(--space-3);

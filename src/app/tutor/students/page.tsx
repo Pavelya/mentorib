@@ -182,13 +182,15 @@ function renderStudentsPage({
 
   return (
     <article className={styles.page}>
-      <TimezoneNotice timezone={timezone} />
+      <header className={styles.intro}>
+        <p className={styles.eyebrow}>Tutor students</p>
+        <h1 className={styles.title}>Students</h1>
+        <p className={styles.description}>
+          The students you&apos;re working with on Mentor IB.
+        </p>
+      </header>
 
-      <PersonSummary
-        eyebrow="My students"
-        name="Students"
-        variant="header"
-      />
+      <TimezoneNotice timezone={timezone} />
 
       {previewNotice ? (
         <InlineNotice

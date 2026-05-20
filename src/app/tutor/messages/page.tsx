@@ -136,6 +136,7 @@ function renderMessagesPage({
             "Threads live across lessons, not per session.",
             "You can block or report any participant from inside the thread.",
           ]}
+          icon="messageSquare"
           kind="empty"
           title="No conversations yet"
         />

@@ -508,6 +508,7 @@ function EmptyRosterState({
         </Link>
       }
       description="Once you accept a lesson request, that student will appear here so you can continue the relationship."
+      icon="users"
       kind="empty"
       title="No students yet"
     />

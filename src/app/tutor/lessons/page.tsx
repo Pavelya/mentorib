@@ -150,6 +150,7 @@ function renderLessonsPage({
       {!hasAny && list.state !== "no_profile" ? (
         <ScreenState
           description="Lesson requests and confirmed lessons appear here so you can review pending requests, prepare upcoming sessions, and look back on completed work."
+          icon="calendar"
           kind="empty"
           title="No lessons yet"
         />

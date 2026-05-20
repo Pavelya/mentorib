@@ -1,5 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
+import { Icon, type IconKey } from "@/components/ui/icon";
+
 import styles from "./screen-state.module.css";
 
 type ScreenStateKind = "empty" | "loading" | "error";
@@ -8,6 +10,7 @@ type ScreenStateProps = HTMLAttributes<HTMLElement> & {
   action?: ReactNode;
   description: ReactNode;
   hints?: string[];
+  icon?: IconKey;
   kind: ScreenStateKind;
   title: ReactNode;
 };
@@ -27,6 +30,7 @@ export function ScreenState({
   className,
   description,
   hints = [],
+  icon,
   kind,
   title,
   ...props
@@ -39,6 +43,7 @@ export function ScreenState({
       role={SCREEN_STATE_ROLE[kind]}
     >
       <div className={styles.header}>
+        {icon ? <Icon className={styles.icon} name={icon} /> : null}
         <h3 className={styles.title}>{title}</h3>
         <p className={styles.description}>{description}</p>
       </div>

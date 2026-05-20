@@ -266,6 +266,7 @@ function PendingRequestsSection({
           </Link>
         }
         description="Lesson requests from students will show here so you can accept or decline before they expire."
+        icon="calendar"
         kind="empty"
         title="No requests waiting"
       />

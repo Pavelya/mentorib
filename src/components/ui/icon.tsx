@@ -21,6 +21,7 @@ import {
   Landmark,
   Leaf,
   type LucideIcon,
+  MessageSquare,
   MessagesSquare,
   MoreHorizontal,
   MoreVertical,
@@ -33,6 +34,7 @@ import {
   Star,
   ThumbsUp,
   TrendingUp,
+  Users,
   Video,
   X,
 } from "lucide-react";
@@ -55,6 +57,7 @@ const iconRegistry = {
   history: Landmark,
   math_aa: Sigma,
   math_ai: ChartBar,
+  messageSquare: MessageSquare,
   moreHorizontal: MoreHorizontal,
   moreVertical: MoreVertical,
   pause: Pause,
@@ -72,6 +75,7 @@ const iconRegistry = {
   studentRole: GraduationCap,
   tok: MessagesSquare,
   tutorRole: Presentation,
+  users: Users,
   video: Video,
   x: X,
 } satisfies Record<string, LucideIcon>;

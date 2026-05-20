@@ -21,6 +21,7 @@
 .title {
   margin: 0;
   font-size: var(--title-xl);
+  line-height: var(--line-tight);
 }
 
 .description {

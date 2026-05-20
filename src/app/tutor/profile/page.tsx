@@ -6,13 +6,14 @@ import { TimezoneNotice } from "@/components/datetime";
 import {
   Card,
   Chip,
+  Icon,
   InlineNotice,
   Panel,
   Section,
   StatusBadge,
   getButtonClassName,
 } from "@/components/ui";
-import type { ChipTone } from "@/components/ui";
+import type { ChipTone, IconKey } from "@/components/ui";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
@@ -270,6 +271,7 @@ function ReadinessChecklistPanel({
                   ) : null}
                 </div>
                 <Chip size="compact" tone={getGateChipTone(gate.state)}>
+                  <Icon name={getGateChipIcon(gate.state)} size={14} />
                   {getGateChipLabel(gate.state)}
                 </Chip>
               </div>
@@ -306,6 +308,20 @@ function getGateChipTone(state: TutorApplicationReadinessGate["state"]): ChipTon
     case "in_progress":
     default:
       return "default";
+  }
+}
+
+function getGateChipIcon(state: TutorApplicationReadinessGate["state"]): IconKey {
+  switch (state) {
+    case "complete":
+      return "check";
+    case "under_review":
+      return "clock";
+    case "blocked":
+      return "alertTriangle";
+    case "in_progress":
+    default:
+      return "circleDashed";
   }
 }
 
@@ -433,19 +449,26 @@ function TrustMediaPanel({ summary }: { summary: TrustMediaSummary }) {
         <li>
           <Card>
             <div className={styles.readinessRow}>
-              <div className={styles.readinessText}>
-                <p className={styles.readinessLabel}>Credentials</p>
-                <p className={styles.readinessDescription}>
-                  {summary.credentials.total === 0
-                    ? "No credentials uploaded yet."
-                    : `${summary.credentials.approved} approved · ${summary.credentials.inReview} in review · ${summary.credentials.needsUpdate} needs update`}
-                </p>
-                <Link
-                  className={styles.readinessLink}
-                  href={"/tutor/profile/credentials" as Route}
-                >
-                  Manage credentials
-                </Link>
+              <div className={styles.trustMediaLead}>
+                <Icon
+                  className={styles.trustMediaIcon}
+                  name="fileText"
+                  size={24}
+                />
+                <div className={styles.readinessText}>
+                  <p className={styles.readinessLabel}>Credentials</p>
+                  <p className={styles.readinessDescription}>
+                    {summary.credentials.total === 0
+                      ? "No credentials uploaded yet."
+                      : `${summary.credentials.approved} approved · ${summary.credentials.inReview} in review · ${summary.credentials.needsUpdate} needs update`}
+                  </p>
+                  <Link
+                    className={styles.readinessLink}
+                    href={"/tutor/profile/credentials" as Route}
+                  >
+                    Manage credentials
+                  </Link>
+                </div>
               </div>
               <StatusBadge
                 tone={
@@ -466,21 +489,28 @@ function TrustMediaPanel({ summary }: { summary: TrustMediaSummary }) {
         <li>
           <Card>
             <div className={styles.readinessRow}>
-              <div className={styles.readinessText}>
-                <p className={styles.readinessLabel}>Profile photo</p>
-                <p className={styles.readinessDescription}>
-                  {summary.profilePhotoStatus === "published"
-                    ? "Your photo is live on your public profile."
-                    : summary.profilePhotoStatus
-                      ? "Photo uploaded but not published yet."
-                      : "Upload a real photo to replace the initials placeholder."}
-                </p>
-                <Link
-                  className={styles.readinessLink}
-                  href={"/tutor/profile/photo" as Route}
-                >
-                  Manage photo
-                </Link>
+              <div className={styles.trustMediaLead}>
+                <Icon
+                  className={styles.trustMediaIcon}
+                  name="camera"
+                  size={24}
+                />
+                <div className={styles.readinessText}>
+                  <p className={styles.readinessLabel}>Profile photo</p>
+                  <p className={styles.readinessDescription}>
+                    {summary.profilePhotoStatus === "published"
+                      ? "Your photo is live on your public profile."
+                      : summary.profilePhotoStatus
+                        ? "Photo uploaded but not published yet."
+                        : "Upload a real photo to replace the initials placeholder."}
+                  </p>
+                  <Link
+                    className={styles.readinessLink}
+                    href={"/tutor/profile/photo" as Route}
+                  >
+                    Manage photo
+                  </Link>
+                </div>
               </div>
               <StatusBadge tone={photoStatusLabel.tone}>
                 {photoStatusLabel.label}
@@ -491,19 +521,26 @@ function TrustMediaPanel({ summary }: { summary: TrustMediaSummary }) {
         <li>
           <Card>
             <div className={styles.readinessRow}>
-              <div className={styles.readinessText}>
-                <p className={styles.readinessLabel}>Intro video</p>
-                <p className={styles.readinessDescription}>
-                  {summary.introVideoStatus === "published"
-                    ? "Your intro video is live on your public profile."
-                    : "Add a short YouTube, Vimeo, or Loom link so students can hear you."}
-                </p>
-                <Link
-                  className={styles.readinessLink}
-                  href={"/tutor/profile/video" as Route}
-                >
-                  Manage intro video
-                </Link>
+              <div className={styles.trustMediaLead}>
+                <Icon
+                  className={styles.trustMediaIcon}
+                  name="video"
+                  size={24}
+                />
+                <div className={styles.readinessText}>
+                  <p className={styles.readinessLabel}>Intro video</p>
+                  <p className={styles.readinessDescription}>
+                    {summary.introVideoStatus === "published"
+                      ? "Your intro video is live on your public profile."
+                      : "Add a short YouTube, Vimeo, or Loom link so students can hear you."}
+                  </p>
+                  <Link
+                    className={styles.readinessLink}
+                    href={"/tutor/profile/video" as Route}
+                  >
+                    Manage intro video
+                  </Link>
+                </div>
               </div>
               <StatusBadge tone={videoStatusLabel.tone}>
                 {videoStatusLabel.label}

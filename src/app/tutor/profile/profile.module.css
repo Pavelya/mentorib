@@ -89,6 +89,20 @@
   min-width: 0;
 }
 
+.trustMediaLead {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+
+.trustMediaIcon {
+  flex-shrink: 0;
+  color: var(--ink-700);
+  margin-top: 0.15rem;
+}
+
 .readinessLabel {
   margin: 0;
   font-weight: 600;

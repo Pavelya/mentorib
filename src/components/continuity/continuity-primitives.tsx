@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
-import { Avatar, StatusBadge } from "@/components/ui";
+import { Avatar, Icon, type IconKey, StatusBadge } from "@/components/ui";
 
 import styles from "./continuity-primitives.module.css";
 
@@ -96,15 +96,18 @@ const PERSON_STATE_META: Record<
   verified: { label: "Verified", tone: "trust" },
 };
 
-const LESSON_STATUS_META: Record<LessonSummaryStatus, { label: string; tone: StatusTone }> = {
-  accepted: { label: "Accepted", tone: "positive" },
-  cancelled: { label: "Cancelled", tone: "destructive" },
-  completed: { label: "Completed", tone: "info" },
-  declined: { label: "Declined", tone: "destructive" },
-  in_progress: { label: "In progress", tone: "positive" },
-  pending: { label: "Pending", tone: "warning" },
-  reviewed: { label: "Reviewed", tone: "trust" },
-  upcoming: { label: "Upcoming", tone: "positive" },
+const LESSON_STATUS_META: Record<
+  LessonSummaryStatus,
+  { icon: IconKey; label: string; tone: StatusTone }
+> = {
+  accepted: { icon: "check", label: "Accepted", tone: "positive" },
+  cancelled: { icon: "ban", label: "Cancelled", tone: "destructive" },
+  completed: { icon: "checkCircle", label: "Completed", tone: "info" },
+  declined: { icon: "x", label: "Declined", tone: "destructive" },
+  in_progress: { icon: "play", label: "In progress", tone: "positive" },
+  pending: { icon: "clock", label: "Pending", tone: "warning" },
+  reviewed: { icon: "reviewed", label: "Reviewed", tone: "trust" },
+  upcoming: { icon: "calendar", label: "Upcoming", tone: "positive" },
 };
 
 function cx(...classNames: Array<string | false | null | undefined>) {
@@ -244,7 +247,10 @@ export function LessonSummary({
         </div>
 
         <div className={styles.surfaceSignals}>
-          <StatusBadge tone={statusMeta.tone}>{statusMeta.label}</StatusBadge>
+          <StatusBadge tone={statusMeta.tone}>
+            <Icon name={statusMeta.icon} size={14} />
+            {statusMeta.label}
+          </StatusBadge>
           {action ? <div className={styles.actionSlot}>{action}</div> : null}
         </div>
       </div>

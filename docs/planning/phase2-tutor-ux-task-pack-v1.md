@@ -74,6 +74,7 @@ Tasks on the same step can run in parallel. Complete all tasks in a step before 
 | 4 | `P2-TUX-001-11` | `ready` | `P2` | Tutor copy pass (remove tech jargon, dedupe titles, shorten helper text) |
 | 4 | `P2-TUX-001-12` | `ready` | `P2` | Icon usage pass — readiness gates, lesson statuses, section eyebrows |
 | 4 | `P2-TUX-001-13` | `ready` | `P3` | Empty-state visuals across `/tutor/lessons`, `/tutor/students`, `/tutor/messages` |
+| 4 | `P2-TUX-001-15` | `ready` | `P2` | Page-intro structure consistency across every `/tutor/**` route (eyebrow / title / description, timezone banner placement, back-link policy, avatar policy) |
 | 5 | `P2-TUX-001-14` | `ready` | `P2` | Final verification: walk every `/tutor/**` route on desktop + mobile, confirm all subtasks |
 
 ## 5. Detailed tasks
@@ -762,13 +763,112 @@ The tutor surface is almost entirely text. The user asked for visuals using only
 - `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`
 - manual: each empty state renders the icon at the same size and alignment
 
+### 5.15 `P2-TUX-001-15` Page-intro structure consistency across `/tutor/**`
+
+**Status:** `ready` · **Priority:** `P2`
+**Depends on:** `P2-TUX-001-05` (nav grouping) and `P2-TUX-001-06` (Overview vs Profile IA split). Best run after `P2-TUX-001-07` (heading cleanup) and `P2-TUX-001-11` (copy pass) so the structural decisions are not fighting with stale copy or duplicated headings. Should land before `P2-TUX-001-14` (final verification).
+
+**Problem**
+
+Each `/tutor/**` route currently invents its own page-intro region. As of 2026-05-20:
+
+- `/tutor/profile/credentials` uses `<header className={styles.intro}>` with **eyebrow + h1 + description + back-link**. This is the cleanest pattern and reads correctly as "category → page → one-line context → escape".
+- `/tutor/profile`, `/tutor/profile/photo`, `/tutor/profile/video`, `/tutor/apply` use the same `header.intro` pattern but **without** the back link and **without** the timezone banner.
+- `/tutor/schedule` uses `header.intro` with **no eyebrow**, just an h1 + description; the `TimezoneNotice` renders **above** the intro, so the page reads as "(timezone banner) → page title", which buries the title.
+- `/tutor/lessons` has **no page intro at all** — it renders `TimezoneNotice` immediately, then the lesson-group `Section`s. There is no eyebrow / title region on this page.
+- `/tutor/overview`, `/tutor/students`, `/tutor/students/[studentProfileId]`, `/tutor/earnings` use `PersonSummary variant="header"` as the page intro. On `/tutor/overview` this duplicates the timezone (the `TimezoneNotice` above the header and the `meta={["Local timezone: …"]}` row inside `PersonSummary` are the same value). On `/tutor/students` and `/tutor/earnings` the descriptor was removed by `P2-TUX-001-11`, so the `PersonSummary` is now mostly a heavy avatar slot around a single name.
+- Back-link CTAs ("← Back to your profile") exist on `/tutor/profile/credentials` and `/tutor/profile/photo` / `/tutor/profile/video` but not on `/tutor/profile` or the workspace routes. After `P2-TUX-001-05` made the nav rail group sub-pages explicitly, the back link is redundant in most places.
+- Avatar usage is inconsistent: `PersonSummary` header carries it on Overview, Students, Earnings; the `header.intro` pattern does not show an avatar at all. There is no documented rule about which surfaces should foreground the tutor's identity.
+
+The user-facing symptom is that walking from `/tutor/overview` to `/tutor/lessons` to `/tutor/schedule` to `/tutor/profile/credentials` feels like four different products. This task standardises the intro region.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md` § 5 (reuse-before-extend), § 7 (copy discipline), § 8 (consistency checklist)
+- `docs/design-system/component-specs-core-v1.md` § 9 (`PersonSummary`)
+- `docs/design-system/component-specs-phase2-v1.md` (`Section`, `Panel`, hero anatomy)
+- `docs/design-system/component-inventory-v1.md` § 3 (existing primitives) and § 4 (`AppFrame`)
+- this doc's `P2-TUX-001-05` (nav grouping) and `P2-TUX-001-06` (Overview vs Profile split) — both shape what the intro region needs to carry
+
+**Canonical decision (binding for this task)**
+
+Adopt **one** intro shape for every `/tutor/**` route, in this exact order from top of the page down:
+
+1. (Optional) inline notice rail — `Account access limited`, `Profile not set up`, `<page> preview`, `<page> unavailable`. These render above the intro because they gate the rest of the page.
+2. **Page intro block** — eyebrow + h1 + one-line description.
+3. (Optional) `TimezoneNotice` — only on routes where local-time interpretation is load-bearing (`/tutor/schedule`, `/tutor/lessons`, `/tutor/lessons/[id]`, `/tutor/overview`, `/tutor/students/[studentProfileId]`). Renders **directly below the intro block**, never above it.
+4. Page body.
+
+The intro block has two approved variants:
+
+- **Identity intro** (`PersonSummary variant="header"`): used only when the page foregrounds the tutor's own identity. Approved surfaces: `/tutor/overview`, `/tutor/profile`. Carries the eyebrow ("Tutor overview" / "Tutor profile"), the tutor's display name as the h1-equivalent, the avatar, and no `meta` line that duplicates the `TimezoneNotice` below.
+- **Section intro** (`<header className={styles.intro}>` with `.eyebrow` + `.title` + `.description`): used for every other tutor surface (Schedule, Lessons, Lessons/[id], Students, Students/[id], Messages, Earnings, Apply, Profile/Photo, Profile/Video, Profile/Credentials). No avatar; the route is about the workspace area, not the person.
+
+The "Tutor earnings" header that uses `PersonSummary` today is migrated to the section-intro pattern: eyebrow "Tutor earnings" + h1 "Earnings" (or equivalent) + one-line description. Same for `/tutor/students` and `/tutor/students/[studentProfileId]` — the roster page is about the list, not the tutor's avatar.
+
+**Back-link policy (binding)**
+
+With `P2-TUX-001-05`'s grouped nav rail, every `/tutor/profile/*` sub-page is one click from `/tutor/profile` via the rail. Inline back-link CTAs become redundant chrome.
+
+- **Remove** the `← Back to your profile` link from `/tutor/profile/credentials`, `/tutor/profile/photo`, `/tutor/profile/video`.
+- **Keep** the existing back-link on `/tutor/students/[studentProfileId]` and `/tutor/lessons/[id]` — those are detail routes one level below a list, and the rail does not surface the parent list as a tab in the detail view.
+
+**TimezoneNotice placement (binding)**
+
+- Move the `TimezoneNotice` to render **after** the page intro block on every surface that uses it today.
+- Remove the `meta={["Local timezone: …"]}` entry from the `PersonSummary` on `/tutor/overview` so the timezone shows up exactly once per page.
+- Routes that do not depend on local-time interpretation (`/tutor/profile`, `/tutor/profile/credentials`, `/tutor/profile/photo`, `/tutor/profile/video`, `/tutor/earnings`, `/tutor/apply`, `/tutor/messages`) drop the `TimezoneNotice` entirely. They never display lesson times.
+
+**Avatar policy (binding)**
+
+The avatar appears only on `/tutor/overview` and `/tutor/profile` — the two surfaces where the page subject is the tutor. Every other route uses the section-intro pattern with no avatar slot. `/tutor/profile/photo` does **not** show an avatar in its intro; the photo it manages is the page subject, rendered in the body of the page, not at the top.
+
+**Scope — concrete edits**
+
+For each route, normalise the top of the page to match the canonical structure above. Touch only the page-intro region; do not change the page body unless deleting an intro-zone fragment that the body relied on.
+
+- `/tutor/overview` ([page.tsx](src/app/tutor/overview/page.tsx)): keep `PersonSummary variant="header"`; remove the `meta` line that duplicates the timezone; move `TimezoneNotice` to render below the `PersonSummary`.
+- `/tutor/profile` ([page.tsx](src/app/tutor/profile/page.tsx)): no avatar today, but the page is about the tutor's listing — promote the existing `header.intro` to a `PersonSummary` identity intro (eyebrow "Tutor profile" + name + avatar) so it matches `/tutor/overview`. No `TimezoneNotice` here.
+- `/tutor/profile/credentials`, `/tutor/profile/photo`, `/tutor/profile/video` ([page.tsx](src/app/tutor/profile/credentials/page.tsx) and siblings): keep section-intro pattern; remove back-link.
+- `/tutor/schedule` ([page.tsx](src/app/tutor/schedule/page.tsx)): add an eyebrow ("Tutor schedule") to the existing `header.intro`; move `TimezoneNotice` to render directly below the intro.
+- `/tutor/lessons` ([page.tsx](src/app/tutor/lessons/page.tsx)): add the missing section intro (eyebrow "Tutor lessons" + title "Lessons" + one-line description); move `TimezoneNotice` below it.
+- `/tutor/lessons/[id]` ([page.tsx](src/app/tutor/lessons/[id]/page.tsx)): keep the existing back link to the lesson list; add a section intro above the lesson detail body if missing; `TimezoneNotice` below the intro.
+- `/tutor/students` ([page.tsx](src/app/tutor/students/page.tsx)): replace the bare `PersonSummary` (post-`-11` it has no descriptor and no avatar value-add) with a section intro: eyebrow "Tutor students" + h1 "Students" + one-line description.
+- `/tutor/students/[studentProfileId]` ([page.tsx](src/app/tutor/students/[studentProfileId]/page.tsx)): the student identity is the page subject — `PersonSummary variant="header"` is correct here. Keep the existing back link to the roster. `TimezoneNotice` renders below the intro.
+- `/tutor/earnings` ([page.tsx](src/app/tutor/earnings/page.tsx)): migrate from `PersonSummary` header to section intro (eyebrow "Tutor earnings" + h1 "Earnings" + one-line description). No `TimezoneNotice`.
+- `/tutor/apply` ([page.tsx](src/app/tutor/apply/page.tsx)): already section-intro; verify spacing matches the others. No `TimezoneNotice`.
+- `/tutor/messages`: align to section-intro if it is not already; no `TimezoneNotice`.
+
+**Out of scope**
+
+- changing the page body of any tutor surface
+- adding a new DS primitive (the section-intro pattern stays as the existing `header.intro` + `styles.eyebrow` / `styles.title` / `styles.description` CSS modules; if a future task wants to lift this into a DS `PageHeader` primitive, that is a separate escalation)
+- changing the nav rail or its grouping — that work landed in `P2-TUX-001-05`
+- restyling `PersonSummary`, `TimezoneNotice`, or any DS primitive
+- adding avatars to routes other than `/tutor/overview` and `/tutor/profile`
+- introducing a new "back to list" pattern beyond the two existing detail-route uses
+
+**Acceptance criteria**
+
+- every `/tutor/**` route renders one of the two approved intro shapes at the top, in the canonical order documented above
+- `TimezoneNotice` either appears once on a page (below the intro) or not at all; no route renders it above the intro
+- `/tutor/overview` no longer shows the timezone twice
+- back links exist only on the two approved detail routes (`/tutor/lessons/[id]`, `/tutor/students/[studentProfileId]`)
+- avatars appear only on `/tutor/overview` and `/tutor/profile`
+- no new DS primitives are added; no route-local card / chip / panel CSS is introduced
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- manual: walk every `/tutor/**` route at 1280px, 768px, and 360px and confirm the intro region matches the canonical shape
+
 ### 5.14 `P2-TUX-001-14` Final verification
 
 **Status:** `ready` · **Priority:** `P2`
 
 **Goal**
 
-End-to-end walkthrough that the previous thirteen subtasks landed without regression and that no new DS or copy drift was introduced.
+End-to-end walkthrough that the previous fourteen subtasks landed without regression and that no new DS or copy drift was introduced.
 
 **Required source docs**
 
@@ -785,6 +885,10 @@ End-to-end walkthrough that the previous thirteen subtasks landed without regres
   - no Stripe internal field names are rendered
   - the nav rail shows the three groups
   - the readiness vocabulary appears only on `/tutor/profile`
+  - the page-intro region matches the canonical shape from `P2-TUX-001-15`: identity intro only on `/tutor/overview` and `/tutor/profile`, section intro everywhere else
+  - `TimezoneNotice` renders below the intro (never above) and only on routes that display lesson times
+  - inline back-link CTAs exist only on `/tutor/lessons/[id]` and `/tutor/students/[studentProfileId]`
+  - avatars appear in the intro region only on `/tutor/overview` and `/tutor/profile`
 - update `docs/planning/phase2-task-pack-v1.md` § 10 table with a footnote that the tutor UX polish pack landed (link to this doc)
 - update `docs/design-system/component-inventory-v1.md` if any subtask added a primitive (`FileField`, possibly `CalendarGrid` if `-09` was implemented)
 - close `P2-TUX-001` parent in this file with a one-paragraph close note under § 6

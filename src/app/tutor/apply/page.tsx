@@ -6,13 +6,14 @@ import { TimezoneNotice } from "@/components/datetime";
 import {
   Card,
   Chip,
+  Icon,
   InlineNotice,
   Panel,
   Section,
   StatusBadge,
   getButtonClassName,
 } from "@/components/ui";
-import type { ChipTone } from "@/components/ui";
+import type { ChipTone, IconKey } from "@/components/ui";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
@@ -422,6 +423,7 @@ function ReadinessGatesPanel({
                   </p>
                 </div>
                 <Chip size="compact" tone={getGateChipTone(gate.state)}>
+                  <Icon name={getGateChipIcon(gate.state)} size={14} />
                   {getGateChipLabel(gate.state)}
                 </Chip>
               </div>
@@ -475,6 +477,20 @@ function getGateChipTone(state: TutorApplicationReadinessGate["state"]): ChipTon
     case "in_progress":
     default:
       return "default";
+  }
+}
+
+function getGateChipIcon(state: TutorApplicationReadinessGate["state"]): IconKey {
+  switch (state) {
+    case "complete":
+      return "check";
+    case "under_review":
+      return "clock";
+    case "blocked":
+      return "alertTriangle";
+    case "in_progress":
+    default:
+      return "circleDashed";
   }
 }
 

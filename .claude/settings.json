@@ -4,7 +4,13 @@
       "Bash(curl -sS -o /tmp/credentials.html -w \"%{http_code}\\\\n\" http://localhost:3000/tutor/profile/credentials)",
       "Bash(curl -sS -o /dev/null -w \"code=%{http_code} location=%header{location}\\\\n\" http://localhost:3001/tutor/profile/credentials)",
       "Bash(node -e \"const l = require\\('lucide-react'\\); ['Calendar','Play','CircleCheck','CheckCircle2','X','Ban','AlertTriangle','Loader','FileText','Camera','Video','Award','BadgeCheck','CircleDashed','CalendarClock'].forEach\\(n => console.log\\(n, n in l\\)\\);\")",
-      "Bash(wait b73p9skv5 *)"
+      "Bash(wait b73p9skv5 *)",
+      "Bash(sed -n '80,100p' /Users/pavel/mentorib/src/app/tutor/profile/photo/photo.module.css)",
+      "Bash(sed -n '50,70p' /Users/pavel/mentorib/src/app/tutor/profile/video/video.module.css)",
+      "Bash(awk '/### 5.5/,/### 5.6/' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)",
+      "Bash(awk '/### 5.15/,/### /' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)",
+      "Bash(awk '/### 5.15/,/### 5./' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)",
+      "Bash(awk '/### 5.6/,/### 5.7/' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)"
     ]
   }
 }

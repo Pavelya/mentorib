@@ -2,8 +2,9 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Panel } from "@/components/ui";
+import { Avatar, Panel } from "@/components/ui";
 import type { NavItem } from "@/lib/routing/navigation";
+import type { ViewerIdentity } from "@/lib/identity/viewer";
 
 import { AppFrameNav } from "./app-frame-nav";
 import styles from "./app-frame.module.css";
@@ -23,6 +24,7 @@ type AppFrameProps = {
   children: ReactNode;
   showHero?: boolean;
   tone?: "public" | "private" | "minimal";
+  viewer?: ViewerIdentity;
 };
 
 export function AppFrame({
@@ -35,6 +37,7 @@ export function AppFrame({
   children,
   showHero = true,
   tone = "private",
+  viewer,
 }: AppFrameProps) {
   const frameClassName =
     tone === "minimal" ? `${styles.frame} ${styles.minimal}` : styles.frame;
@@ -53,6 +56,21 @@ export function AppFrame({
 
           {navItems.length > 0 ? (
             <AppFrameNav ariaLabel={`${eyebrow} navigation`} items={navItems} />
+          ) : null}
+
+          {viewer ? (
+            <Link
+              aria-label="Open account settings"
+              className={styles.viewerLink}
+              href={viewer.settingsHref}
+            >
+              <Avatar
+                decorative
+                name={viewer.displayName}
+                size="sm"
+                src={viewer.avatarUrl ?? undefined}
+              />
+            </Link>
           ) : null}
         </div>
       </header>

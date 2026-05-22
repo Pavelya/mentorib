@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { loadViewerIdentity } from "@/lib/identity/viewer-loader";
 import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
@@ -14,7 +15,9 @@ type AccountLayoutProps = {
   children: ReactNode;
 };
 
-export default function AccountLayout({ children }: AccountLayoutProps) {
+export default async function AccountLayout({ children }: AccountLayoutProps) {
+  const viewer = await loadViewerIdentity();
+
   return (
     <AppFrame
       description="Manage your profile, notifications, privacy, and billing in one place."
@@ -24,6 +27,7 @@ export default function AccountLayout({ children }: AccountLayoutProps) {
       showHero={false}
       title="Account"
       tone="minimal"
+      viewer={viewer ?? undefined}
     >
       {children}
     </AppFrame>

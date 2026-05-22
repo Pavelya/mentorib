@@ -1,7 +1,7 @@
 # Mentor IB Phase 2 Tutor UX/UI Polish Task Pack v1
 
-**Date:** 2026-05-18
-**Status:** `ready` — concrete polish pack for the `/tutor/**` surfaces after the `P2-MEDIA-001` family closed. Implementation lives in the subtasks below; each subtask is independently `ready` and individually verifiable.
+**Date:** 2026-05-18 (closed 2026-05-22)
+**Status:** `done` — concrete polish pack for the `/tutor/**` surfaces after the `P2-MEDIA-001` family closed. All fifteen subtasks shipped; final verification under `P2-TUX-001-14`. See § 6. Implementation lives in the subtasks below; each subtask is independently `ready` and individually verifiable.
 **Scope:** every page under `src/app/tutor/**` plus the shared shell wiring (`src/components/shell/app-frame.tsx`, `src/lib/routing/navigation.ts`). No new functional flows — the goal is to align the existing tutor surfaces with the design system, simplify copy, hide irrelevant operator detail, and reduce visual weight so the daily tutor experience feels deliberate and easy.
 
 ## 1. Why this pack exists
@@ -75,7 +75,7 @@ Tasks on the same step can run in parallel. Complete all tasks in a step before 
 | 4 | `P2-TUX-001-12` | `ready` | `P2` | Icon usage pass — readiness gates, lesson statuses, section eyebrows |
 | 4 | `P2-TUX-001-13` | `ready` | `P3` | Empty-state visuals across `/tutor/lessons`, `/tutor/students`, `/tutor/messages` |
 | 4 | `P2-TUX-001-15` | `ready` | `P2` | Page-intro structure consistency across every `/tutor/**` route (eyebrow / title / description, timezone banner placement, back-link policy, avatar policy) |
-| 5 | `P2-TUX-001-14` | `ready` | `P2` | Final verification: walk every `/tutor/**` route on desktop + mobile, confirm all subtasks |
+| 5 | `P2-TUX-001-14` | `done` | `P2` | Final verification: walk every `/tutor/**` route on desktop + mobile, confirm all subtasks |
 
 ## 5. Detailed tasks
 
@@ -900,7 +900,7 @@ End-to-end walkthrough that the previous fourteen subtasks landed without regres
 
 ## 6. Closure notes
 
-Reserved for `P2-TUX-001-14` to write when the pack closes.
+**`P2-TUX-001` parent — closed 2026-05-22.** All fifteen subtasks (`-01` through `-15`) shipped and verified individually; `-14` is this final pass. Each `/tutor/**` route now resolves the canonical `--title-xl` token for its page title, presents content-sized `StatusBadge` pills (no row stretching on photo/video), uses the DS `FileField` primitive for credential upload, replaces the bare booking-policy checkbox with the DS `Switch`, exposes the three-group nav rail (Workspace / Profile / Money) with the previously-orphaned profile sub-routes promoted to first-class items, and presents the `WeeklyHourGrid` editor on `/tutor/schedule` with advanced booking caps collapsed by default. Readiness vocabulary lives once on `/tutor/profile`; the only payout-status surface that still renders text is `/tutor/earnings` (Stripe internal field names removed); and the page-intro shape — eyebrow / title / one-line description, with `TimezoneNotice` directly below when present — is consistent across every workspace, profile, money, and detail route. Back-link CTAs survive only on `/tutor/lessons/[id]` and `/tutor/students/[studentProfileId]`. Two new DS primitives landed and are documented in `docs/design-system/component-inventory-v1.md`: `FileField` (`-03`) and `WeeklyHourGrid` (`-08-01`). No new vendors, reference data, or domain modules were introduced. `pnpm test:e2e` was not run: no public, auth, `robots.ts`, or `sitemap.ts` surface was touched by the pack.
 
 ## 7. Manual smoke checklist for the human (to run after each subtask)
 

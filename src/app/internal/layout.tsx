@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
+import { resolveViewerIdentity } from "@/lib/identity/viewer";
 import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
@@ -16,7 +17,8 @@ type InternalLayoutProps = {
 };
 
 export default async function InternalLayout({ children }: InternalLayoutProps) {
-  await requireInternalAdminAccount();
+  const account = await requireInternalAdminAccount();
+  const viewer = resolveViewerIdentity(account);
 
   return (
     <AppFrame
@@ -24,6 +26,7 @@ export default async function InternalLayout({ children }: InternalLayoutProps) 
       eyebrow="Internal routes"
       navItems={navigationByFamily.internal}
       title="Internal operations share the same app shell"
+      viewer={viewer}
     >
       {children}
     </AppFrame>

@@ -70,6 +70,31 @@
   justify-content: flex-end;
 }
 
+.viewerLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border-radius: 999px;
+  color: inherit;
+  text-decoration: none;
+  line-height: 0;
+}
+
+.viewerLink:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    0 0 0 1px var(--focus-outline);
+}
+
+@media (pointer: coarse) {
+  .viewerLink {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 .navGroups {
   display: flex;
   flex-wrap: wrap;

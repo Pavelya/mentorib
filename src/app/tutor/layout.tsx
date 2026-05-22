@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { loadViewerIdentity } from "@/lib/identity/viewer-loader";
 import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
@@ -14,7 +15,9 @@ type TutorLayoutProps = {
   children: ReactNode;
 };
 
-export default function TutorLayout({ children }: TutorLayoutProps) {
+export default async function TutorLayout({ children }: TutorLayoutProps) {
+  const viewer = await loadViewerIdentity();
+
   return (
     <AppFrame
       description="Tutor-mode operational routes."
@@ -22,6 +25,7 @@ export default function TutorLayout({ children }: TutorLayoutProps) {
       navItems={navigationByFamily.tutor}
       showHero={false}
       title="Tutor"
+      viewer={viewer ?? undefined}
     >
       {children}
     </AppFrame>

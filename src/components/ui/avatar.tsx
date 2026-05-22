@@ -3,6 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState, type HTMLAttributes } from "react";
 
+import { getInitials } from "@/lib/identity/initials";
+
 import styles from "./avatar.module.css";
 
 type AvatarProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
@@ -12,13 +14,6 @@ type AvatarProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
   size?: "sm" | "md" | "lg";
   src?: string;
 };
-
-function getInitials(name: string) {
-  const segments = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-  const initials = segments.map((segment) => segment[0]?.toUpperCase() ?? "").join("");
-
-  return initials || "?";
-}
 
 export function Avatar({
   alt,

@@ -204,12 +204,15 @@ Bad parallel examples:
 | 3 | `P2-MEDIA-001-08` | `ready` | `P1` | 1 | Public profile integration (M2 hero + M4 embed) + CSP `frame-src` + `images.remotePatterns` |
 | 3 | `P2-MEDIA-001-09` | `ready` | `P1` | 1 | Internal credential review panel + `setTutorCredentialReviewStatus` + `tutor_credential_reviewed` notification |
 | 3 | `P2-MEDIA-001-10` | `ready` | `P1` | 1 | Final verification of `P2-MEDIA-001` scope (closes parent) |
+| 3 | `P2-SHELL-001` | `ready` | `P2` | 3 | Header viewer avatar across every signed-in route family (link to `/settings`, image → initials → email-char fallback) |
 | 3 | `P2-OPS-001` | `draft` | `P2` | 3 | Admin trust and report-management internal surfaces |
 | 3 | `P2-OPS-003` | `draft` | `P2` | 3 | Admin reference-data and policy broadcast management |
 | 4 | `P2-OPS-002` | `draft` | `P2` | 3 | Admin user detail and finance intervention surfaces |
 | 4 | `P2-DISPUTE-001` | `draft` | `P2` | 3 | Lesson-issue internal review and dispute resolution surface |
 | 5 | `P2-DSR-001` | `draft` | `P2` | 3 | Data subject request implementation |
 | 6 | `P2-QUALITY-001` | `ready` | `P2` | 4 | Phase 2 verification and operational hardening pass |
+
+> **Footnote — tutor UX polish.** The follow-on pack [`P2-TUX-001`](./phase2-tutor-ux-task-pack-v1.md) (subtasks `-01` … `-15`) landed end-to-end on 2026-05-22. It applied DS-first cleanup, copy discipline, nav grouping, schedule simplification, and page-intro consistency across every `/tutor/**` route after `P2-MEDIA-001` closed. No new domain modules, vendors, or reference data were introduced. Final verification ran under `P2-TUX-001-14`.
 
 ## 11. Detailed Tasks
 
@@ -1281,6 +1284,123 @@ Verify end-to-end that the full original scope of `P2-MEDIA-001` is delivered by
 - The two Supabase Storage buckets (`tutor-credentials` private, `tutor-public-media` public) are created by the migration; verify on the Supabase dashboard that the policies match the migration's intent before any tutor uploads in production.
 - After deploy, every existing `approved` tutor without a published profile photo will have gate 2 fail and any currently `listed` row will not auto-delist (auto-flip only triggers on a write). Decide before deploy whether to (a) leave existing listed tutors as-is until they next edit, (b) run a one-time backfill that re-evaluates gates and flips offending rows to `not_listed`, or (c) grandfather existing listings via a temporary `legacy_photo_exempt_until` timestamp. The default in this task is (a); changing it is a separate decision outside the task's scope.
 - No new environment variables are required; CSP and `images.remotePatterns` changes ship in `next.config.ts`.
+
+## 11.4a `P2-SHELL-001` Header viewer avatar across every signed-in route family
+
+**Status:** `ready`
+**Priority:** `P2`
+**Wave:** 3
+**Depends on:** `P1-FOUND-001` (AppFrame shell), `P1-AUTH-002` (account resolution + `ensureAuthAccount`). Lands cleanly without `P2-MEDIA-001` — the tutor M2 *public profile* photo is a separate asset class and is not the source for the header avatar.
+
+**Goal**
+
+Show the signed-in viewer's identity in the `AppFrame` top header — a single, consistent avatar element on every authenticated route family — and make clicking it a one-step path to `/settings`. The avatar resolves through a deterministic fallback chain so it never collapses to an empty glyph, never invents an image, and never duplicates the per-page `PersonSummary` / page-intro avatar that some surfaces already render.
+
+Today the header carries the brand mark, the route-family eyebrow, and the navigation rail, but no viewer identity affordance. Anywhere the tutor or student needs to manage their account, change their password, set their timezone, or upload a profile picture they must navigate via the nav rail or footer; on tutor surfaces the only avatar shown is the per-page `PersonSummary` avatar (Overview, Profile, Lessons/[id], Students/[studentProfileId]) which is about the *page subject*, not the *viewer*. The two concepts have collided more than once during Phase 1 — this task separates them by reserving the header avatar slot for the viewer.
+
+**Required source docs**
+
+- `docs/design-system/agent-ui-rules.md` § 5 (reuse before restyling), § 7 (copy discipline), § 8 (consistency checklist)
+- `docs/design-system/component-inventory-v1.md` § 3 (`Avatar`) and § 4 (`AppFrame` API)
+- `docs/design-system/component-specs-core-v1.md` § 9 (`PersonSummary` vs `Avatar` distinction)
+- `docs/design-system/design-system-spec-final-v1.md` (header anatomy, touch-target sizing)
+- `docs/architecture/route-layout-implementation-map-v1.md` (which layouts mount `AppFrame` per family)
+- `docs/architecture/accessibility-and-inclusive-ux-architecture-v1.md` § 6 (focusable navigational chrome — visible focus ring, touch target ≥ 44px on touch devices, accessible name)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (D1/D2 viewer projection — name + email + avatar URL are the public-safe identity fields)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-ACC-001 account-settings entry; J-TUT-016 and J-STU-* journeys that visit `/settings` from inside their workspace)
+- `CLAUDE.md` (DS-first; no route-local chrome)
+
+**Existing repo anchors to reuse (do not duplicate or fork)**
+
+- `src/components/ui/avatar.tsx` — already implements the `name → initials` fallback (`getInitials(name)`), `src` → image, `src` → fail → initials chain, and `sm` / `md` / `lg` sizing. **Do not** alter this primitive's API except to add a `getInitials` export (or factor it into `src/lib/identity/initials.ts`) so the email-first-char fallback can compose the same string algorithm.
+- `src/components/shell/app-frame.tsx` — the only place the header markup lives; extend its props rather than adding viewer wiring per-route.
+- `src/lib/auth/account-service.ts` (`ensureAuthAccount`, `ResolvedAuthAccount`) — already returns `full_name`, `email`, `avatar_url`. Use this once per layout, project to a small `ViewerIdentity` DTO, pass into `AppFrame`.
+- `src/modules/accounts/avatar.ts` — already owns the upload/clear flow that writes `app_users.avatar_url`. The header reads, never writes.
+- `src/app/(student)/layout.tsx`, `src/app/tutor/layout.tsx`, `src/app/(account)/layout.tsx`, `src/app/internal/layout.tsx`, `src/app/(public)/layout.tsx` — every layout that mounts `AppFrame`. Each must resolve the viewer once and hand it down; per-page resolution is not allowed (it would duplicate the DB hit and could disagree between header and page body).
+
+**Scope**
+
+1. **DS extension — `AppFrame` viewer slot (one primitive update):**
+   - Extend `AppFrameProps` with `viewer?: ViewerIdentity` where `ViewerIdentity = { displayName: string; avatarUrl: string | null; settingsHref: Route }`. Default `settingsHref` resolves to `"/settings" as Route`; passing it through keeps the contract testable and lets the auth layout omit it.
+   - Render the viewer slot in `app-frame.tsx` only when `viewer` is present. Slot lives **inside `.headerInner`, after `<AppFrameNav>`**, right-aligned via existing flex tokens (`justify-content: space-between` on `.headerInner` already places the nav block left and the new slot right). At narrow widths the nav wraps below the brand block and the avatar stays pinned top-right next to the brand block.
+   - Slot markup: `<Link href={settingsHref} aria-label={ariaLabel} className={styles.viewerLink}><Avatar size="sm" decorative name={displayName} src={avatarUrl ?? undefined} /></Link>`. The `Link` carries the accessible name; the `Avatar` is `decorative` so screen readers don't double-announce. `ariaLabel` is composed in the AppFrame using copy "Open account settings" (no name interpolation — the link is about the *destination*, not the identity).
+   - Touch target ≥ 44 × 44px on coarse pointers. The visible `Avatar` size stays `sm` (32px per the existing token); the surrounding `<Link>` pads to 44px on `@media (pointer: coarse)`. Reuse `--space-` tokens; no new ones.
+   - Focus ring: reuse the existing `--focus-ring` / `--focus-outline` tokens already consumed by `AppFrameNav` items. No new focus token.
+   - **No menu, no popover, no overlay.** The link is a plain navigation jump to `/settings`. A later task may compose `Popover` + `Menu` from `P2-DS-MENU-001` into an "account menu" (Settings, Switch role, Sign out) — explicitly out of scope here.
+   - Update [docs/design-system/component-inventory-v1.md](../design-system/component-inventory-v1.md) § 4 `AppFrame` entry to document the new `viewer` prop and the slot's anatomy.
+
+2. **Identity resolution helper:**
+   - Add `src/lib/identity/viewer.ts` exporting `resolveViewerIdentity(account: ResolvedAuthAccount): ViewerIdentity` that returns `{ displayName, avatarUrl, settingsHref: "/settings" }`. `displayName` is computed by:
+     1. `account.full_name?.trim()` if non-empty, else
+     2. the email local-part with the first character upper-cased (e.g. `2pavelya@gmail.com` → `2pavelya`, displayed as `2pavelya`). The `Avatar` primitive then runs `getInitials("2pavelya")` and renders `"2"` as the glyph — which is the user-requested "email 1st char" behaviour, achieved without forking the Avatar fallback.
+     3. If `account.email` is also empty (should be unreachable — `ensureAuthAccount` rejects empty emails), display `"?"` (already the Avatar primitive's final fallback).
+   - Co-locate a Vitest unit suite `src/lib/identity/__tests__/viewer.test.ts` covering: full_name present; full_name blank → email local-part; full_name blank + email with leading digit → digit shown; non-Latin name (e.g. "李 小明") → first character of first segment.
+   - Make `getInitials` an `export`ed helper from `src/components/ui/avatar.tsx` (or move to `src/lib/identity/initials.ts` and import from both `avatar.tsx` and the viewer test) so the algorithm has one home.
+
+3. **Per-family layout wiring:**
+   - `src/app/(student)/layout.tsx`, `src/app/tutor/layout.tsx`, `src/app/(account)/layout.tsx`, `src/app/internal/layout.tsx`: call `ensureAuthAccount` (already used downstream by every page), guard with `isSupabaseAuthConfigured()` + `requiresRoleSelection` + `isRestrictedAccount` per the existing route-family policies, and on the happy path pass `viewer={resolveViewerIdentity(account)}` to `AppFrame`. Restricted / unauthenticated branches render `AppFrame` **without** the viewer prop, so the slot disappears rather than rendering a broken state. Do not introduce a new account-service call — reuse `ensureAuthAccount`.
+   - `src/app/(public)/layout.tsx`: the public family runs server-rendered and SEO-sensitive; today it does not resolve the viewer at the layout level (and must remain so for cache stability and SEO). For Phase 2 the **public header keeps no viewer slot** — signed-in students/tutors who land on a public page still reach `/settings` via their workspace nav. Document this trade-off in the task report.
+   - `src/app/auth/layout.tsx`, `src/app/setup/layout.tsx`: never pass a viewer. Sign-in and role-setup surfaces deliberately omit identity chrome (the viewer is mid-flow and `/settings` is not yet usable). The slot is absent.
+
+4. **Tutor surface reconciliation (no functional change):**
+   - The per-page `PersonSummary` avatars on `/tutor/overview`, `/tutor/lessons/[id]`, `/tutor/students/[studentProfileId]`, and any `(student)/**` analog stay exactly as `P2-TUX-001-15` shipped them. The header viewer avatar is the *viewer's* identity (top-right); the page-intro avatar is the *page subject's* identity (inside `<main>`). The two are intentionally different surfaces and must not be merged.
+   - On `/tutor/students/[studentProfileId]` the page-subject avatar is a *student's*, not the viewer's — confirming that "page subject ≠ viewer" is the load-bearing distinction here.
+   - Audit the `(account)/settings` route specifically: clicking the header avatar should not loop the user to the same page they're already on. Implementation note (non-binding): keep the link unconditional (the browser handles same-page navigation gracefully); the audit is just to confirm there is no flicker or duplicate request — record the result in the report.
+
+5. **Position and size — binding decisions:**
+   - **Position:** top-right of `<AppFrameHeader>`, inside `.headerInner`, after the navigation rail. Wraps under the brand block at `< 640px` widths but stays right-aligned within its row.
+   - **Size:** `Avatar size="sm"` (32px image diameter, current token). No header-specific size variant is added.
+   - **Touch target:** 44 × 44px hit-box on coarse pointers via padding on the wrapping `<Link>`; no DS token change.
+   - **Reserved space:** when no viewer is rendered (signed-out / setup / auth flows), the header collapses gracefully via the existing flex behaviour — do not reserve a placeholder slot.
+
+**Out of scope**
+
+- An account-menu popover (Settings / Switch role / Sign out). When `P2-DS-MENU-001` ships and the product is ready, that is a follow-on task that composes `Popover` + `Menu` around the same viewer slot — file it as `P2-SHELL-002` (header account menu) at that point.
+- Editing the avatar from the header. Avatar upload, replace, and clear stay on `/settings/account-avatar` per the existing flow.
+- Showing the *public tutor profile photo* (M2) in the header. M2 is a public marketing surface; the header avatar is a private identity surface and reads `app_users.avatar_url`. They are intentionally different.
+- Showing role badges, online-status dots, or unread-count indicators on or near the avatar — those are Phase 3 dashboard ideas, not this task.
+- Public route family header. `(public)/layout.tsx` stays viewer-free for SEO + cache stability; revisit if and only if a logged-in personalized public surface is introduced.
+- Renaming or restyling the existing `Avatar` primitive sizes; adding new sizes; adding `xs` or `xl` variants.
+- Changing the navigation rail behaviour, the brand block, or the footer.
+- Auto-deriving an avatar image from gravatar / oauth providers — the only source is `app_users.avatar_url` written by the existing settings upload flow.
+
+**Acceptance criteria**
+
+- Every signed-in route family that mounts `AppFrame` (student, tutor, account, internal) renders the viewer avatar in the top-right of the header on every page in that family. No per-page opt-in or opt-out.
+- The avatar is a `<Link>` to `/settings`, has an accessible name `"Open account settings"`, is keyboard-focusable, and shows the existing `--focus-ring` outline on focus.
+- The avatar source is **only** `app_users.avatar_url`. When that is null or fails to load, the `Avatar` primitive's existing fallback renders initials computed from `displayName`; when `full_name` is null/empty, `displayName` falls through to the email local-part (so the rendered initial is the email's first character).
+- Clicking the avatar navigates to `/settings`. No popover, no menu, no overlay is mounted.
+- On `(public)`, `auth`, and `setup` route families the slot is absent. The header markup does not reserve empty space for it.
+- No new DS primitive, no new token, no route-local avatar markup. `pnpm lint:arch` continues to pass.
+- The page-intro / `PersonSummary` avatars shipped by `P2-TUX-001-15` and earlier are unchanged. The header avatar does not visually conflict with them at any breakpoint (1280 / 768 / 360).
+- `getInitials` (or the equivalent helper) has exactly one definition in the codebase; the Vitest suite for `resolveViewerIdentity` passes against the four documented cases above.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- New Vitest unit suite for `resolveViewerIdentity` (`src/lib/identity/__tests__/viewer.test.ts`).
+- `pnpm test:e2e` is **not** required — no public route, `robots.ts`, `sitemap.ts`, or auth entry rendering changes; the logged-out Playwright smoke suite has no coverage to add. Record this in the task report.
+- Manual smoke: signed-in tutor walks `/tutor/overview` → `/tutor/profile` → `/tutor/profile/photo` → `/tutor/schedule` → `/tutor/earnings` and confirms the header avatar is present, identical, and clickable on every screen; clicks it once on `/tutor/profile` and lands on `/settings`. Repeats once on `(student)/match` and once on `/internal`.
+- Accessibility smoke: tab into the header from page top; the focus order is brand → nav items → viewer avatar → first focusable element of `<main>`. The avatar's accessible name is `"Open account settings"`.
+- Identity-fallback smoke: create or impersonate three accounts — (a) `full_name = "Pavel Yampolsky"` with no `avatar_url` → glyph reads `"PY"`; (b) `full_name = null`, `email = "alex@example.com"` → glyph reads `"A"`; (c) `full_name = null`, `email = "2pavelya@gmail.com"` → glyph reads `"2"` (the user-named "email 1st char" case).
+
+**Required manual operational steps**
+
+- None — no migrations, no env vars, no provider/dashboard configuration. The task is shell + DS only.
+
+**Local testing checklist for the human**
+
+- sign in as any role and load each `AppFrame` family at least once → header avatar present, top-right, click navigates to `/settings`
+- on `/settings`, upload an avatar via the existing account-avatar form → reload any tutor or student page → header avatar now renders the image, with the same fallback to initials if the image 404s
+- sign out and load `/` (public) → no header avatar; load `/auth/sign-in` and `/setup/role` → no header avatar
+- visit a tutor page at 360px width → header wraps but the avatar remains in the right-hand cluster (top of header) and stays tappable with a 44px hit-box
+
+**Notes for the implementing agent**
+
+- The biggest hidden risk is *duplicate viewer resolution*. Avoid the pattern where the layout calls `ensureAuthAccount` and a downstream page calls it again on the same request: thread the resolved account through `React.cache`-wrapped helpers if a clean handoff isn't obvious. (`ensureAuthAccount` is already idempotent per-request via Supabase server client memoization in `createSupabaseServerClient`, but verify.)
+- Resist the urge to grow `ViewerIdentity` to carry role, timezone, or unread counts. Each of those has its own canonical owner and adding them here invites drift. Only `displayName`, `avatarUrl`, and `settingsHref` belong on this DTO.
+- Do not add a `displayName` column to `app_users`. The derivation is pure UI — keep it in `src/lib/identity/viewer.ts`.
+- If `AppFrameNav` grows so wide on mobile that the avatar wraps to a third row at 360px, that is an acceptable transitional state — the avatar must still be reachable in the tab order, but visual polish on `< 480px` widths is deferred.
 
 ## 11.5 `P2-TRUST-001` Lesson-linked review capture and publication flow
 

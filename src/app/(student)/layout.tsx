@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
+import { loadViewerIdentity } from "@/lib/identity/viewer-loader";
 import { buildNonIndexableSectionMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
@@ -14,7 +15,9 @@ type StudentLayoutProps = {
   children: ReactNode;
 };
 
-export default function StudentLayout({ children }: StudentLayoutProps) {
+export default async function StudentLayout({ children }: StudentLayoutProps) {
+  const viewer = await loadViewerIdentity();
+
   return (
     <AppFrame
       description="Student-mode shell for the problem-led match flow, booking path, and continuity surfaces."
@@ -23,6 +26,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
       navItems={navigationByFamily.student}
       showHero={false}
       title="Student workflow inside the shared product"
+      viewer={viewer ?? undefined}
     >
       {children}
     </AppFrame>

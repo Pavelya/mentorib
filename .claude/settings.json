@@ -10,7 +10,8 @@
       "Bash(awk '/### 5.5/,/### 5.6/' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)",
       "Bash(awk '/### 5.15/,/### /' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)",
       "Bash(awk '/### 5.15/,/### 5./' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)",
-      "Bash(awk '/### 5.6/,/### 5.7/' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)"
+      "Bash(awk '/### 5.6/,/### 5.7/' /Users/pavel/mentorib/docs/planning/phase2-tutor-ux-task-pack-v1.md)",
+      "Bash(grep -n \"^### \\\\|^| \\\\`\" /Users/pavel/mentorib/docs/design-system/component-inventory-v1.md)"
     ]
   }
 }

@@ -31,6 +31,7 @@ export {
 } from "./popover";
 export { Section, type SectionProps } from "./section";
 export { SelectField } from "./select-field";
+export { StarRating, type StarRatingProps } from "./star-rating";
 export { StatusBadge } from "./status-badge";
 export { Switch, type SwitchProps } from "./switch";
 export { TabBar } from "./tab-bar";

@@ -1,0 +1,72 @@
+.display {
+  align-items: center;
+  display: inline-flex;
+  gap: 2px;
+}
+
+.starFilled {
+  color: var(--success-500);
+}
+
+.starEmpty {
+  color: var(--border-strong);
+}
+
+.group {
+  align-items: center;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+}
+
+.legend {
+  color: var(--ink-900);
+  font-size: var(--body-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+  padding: 0;
+}
+
+.legendHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.starOption {
+  align-items: center;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  padding: var(--space-1);
+}
+
+.starInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.starOption:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger-500);
+  font-size: var(--body-sm);
+  line-height: var(--line-body);
+}

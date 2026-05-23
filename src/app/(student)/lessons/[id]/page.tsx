@@ -11,6 +11,7 @@ import {
   InlineNotice,
   Panel,
   Section,
+  StarRating,
   StatusBadge,
   getButtonClassName,
 } from "@/components/ui";
@@ -390,22 +391,16 @@ function ReviewSection({
 }
 
 function ExistingReviewSummary({ review }: { review: ReviewSummaryDto }) {
-  const filledStars = "★".repeat(review.ratingValue);
-  const emptyStars = "☆".repeat(Math.max(0, REVIEW_MAX_RATING - review.ratingValue));
-
   return (
     <div className={styles.reviewSummary}>
       <div className={styles.reviewSummaryHeader}>
         <StatusBadge tone="positive">Review published</StatusBadge>
-        <span
+        <StarRating
           aria-label={`Rated ${review.ratingValue} out of ${REVIEW_MAX_RATING}`}
-          className={styles.reviewStarsInline}
-        >
-          <span aria-hidden="true">
-            {filledStars}
-            <span className={styles.emptyStars}>{emptyStars}</span>
-          </span>
-        </span>
+          max={REVIEW_MAX_RATING}
+          mode="display"
+          value={review.ratingValue}
+        />
       </div>
       {review.comment ? (
         <p className={styles.noteText}>{review.comment}</p>

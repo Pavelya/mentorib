@@ -5,9 +5,9 @@ import { useFormStatus } from "react-dom";
 
 import {
   Button,
-  Icon,
   InlineNotice,
   SelectField,
+  StarRating,
   StatusBadge,
   Textarea,
 } from "@/components/ui";
@@ -15,7 +15,6 @@ import type { LessonIssueType } from "@/modules/lessons/constants";
 import {
   REVIEW_COMMENT_MAX_LENGTH,
   REVIEW_MAX_RATING,
-  REVIEW_MIN_RATING,
 } from "@/modules/reviews";
 
 import {
@@ -265,11 +264,6 @@ const initialReviewState: SubmitReviewActionState = {
   values: { comment: "", lessonId: "", rating: "" },
 };
 
-const RATING_VALUES: readonly number[] = Array.from(
-  { length: REVIEW_MAX_RATING - REVIEW_MIN_RATING + 1 },
-  (_, index) => REVIEW_MIN_RATING + index,
-);
-
 export function SubmitTutorReviewForm({
   lessonId,
   tutorDisplayName,
@@ -278,9 +272,9 @@ export function SubmitTutorReviewForm({
     submitTutorReviewAction,
     initialReviewState,
   );
-  const [rating, setRating] = useState<number | null>(() => {
+  const [rating, setRating] = useState<number>(() => {
     const parsed = Number.parseInt(state.values.rating, 10);
-    return Number.isFinite(parsed) ? parsed : null;
+    return Number.isFinite(parsed) ? parsed : 0;
   });
   const succeeded = state.code === "submitted";
 
@@ -299,41 +293,15 @@ export function SubmitTutorReviewForm({
 
       {!succeeded ? (
         <>
-          <fieldset className={styles.ratingGroup}>
-            <legend className={styles.ratingGroupLegend}>
-              How was your lesson with {tutorDisplayName}?
-            </legend>
-            {RATING_VALUES.map((value) => {
-              const isFilled = rating !== null && value <= rating;
-              return (
-                <label className={styles.ratingStarLabel} key={value}>
-                  <input
-                    aria-label={`${value} ${value === 1 ? "star" : "stars"}`}
-                    checked={rating === value}
-                    name="rating"
-                    onChange={() => setRating(value)}
-                    type="radio"
-                    value={value}
-                  />
-                  <Icon
-                    className={
-                      isFilled
-                        ? styles.ratingStarIconFilled
-                        : styles.ratingStarIcon
-                    }
-                    filled={isFilled}
-                    name="star"
-                    size={28}
-                  />
-                </label>
-              );
-            })}
-          </fieldset>
-          {state.fieldErrors.rating ? (
-            <p className={styles.bodyText} role="alert">
-              {state.fieldErrors.rating}
-            </p>
-          ) : null}
+          <StarRating
+            error={state.fieldErrors.rating}
+            legend={`How was your lesson with ${tutorDisplayName}?`}
+            max={REVIEW_MAX_RATING}
+            mode="input"
+            name="rating"
+            onChange={setRating}
+            value={rating}
+          />
 
           <Textarea
             defaultValue={state.values.comment}

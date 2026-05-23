@@ -10,6 +10,7 @@ import {
   getButtonClassName,
   InlineNotice,
   Panel,
+  Section,
   StatusBadge,
 } from "@/components/ui";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
@@ -343,14 +344,15 @@ function CompareColumn({
   ];
 
   return (
-    <article
+    <Panel
+      as="article"
       aria-labelledby={`compare-tutor-${match.candidateId}`}
-      className={styles.column}
+      eyebrow={`Rank #${match.rankPosition}`}
+      tone="warm"
     >
       <header className={styles.columnHeader}>
-        <p className={styles.columnRank}>Rank #{match.rankPosition}</p>
         <h2
-          className={styles.categoryValue}
+          className={styles.columnTitle}
           id={`compare-tutor-${match.candidateId}`}
         >
           {match.tutor.displayName}
@@ -363,14 +365,18 @@ function CompareColumn({
         </div>
       </header>
 
-      <ul className={styles.categoryList}>
+      <div className={styles.categoryList}>
         {categories.map((category) => (
-          <li className={styles.category} key={category.id}>
-            <p className={styles.categoryLabel}>{category.label}</p>
+          <Section
+            density="compact"
+            divider="top"
+            eyebrow={category.label}
+            key={category.id}
+          >
             <CompareCategoryValue category={category} />
-          </li>
+          </Section>
         ))}
-      </ul>
+      </div>
 
       <div className={styles.actionStack}>
         {match.bookingHref ? (
@@ -432,7 +438,7 @@ function CompareColumn({
           </form>
         )}
       </div>
-    </article>
+    </Panel>
   );
 }
 

@@ -36,11 +36,11 @@
 
 .backLink {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--body-sm);
 }
 
 .backLink a {
-  color: var(--color-text-strong);
+  color: var(--ink-900);
   text-decoration: none;
 }
 
@@ -59,16 +59,16 @@
 
 .bodyText {
   margin: 0;
-  color: var(--color-text-strong);
-  font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+  line-height: var(--line-body);
 }
 
 .noteText {
   margin: 0;
-  color: var(--color-text-strong);
-  font-size: var(--text-md);
-  line-height: var(--leading-relaxed);
+  color: var(--ink-900);
+  font-size: var(--body-md);
+  line-height: var(--line-body);
   white-space: pre-wrap;
 }
 

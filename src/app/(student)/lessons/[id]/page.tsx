@@ -403,7 +403,7 @@ function ExistingReviewSummary({ review }: { review: ReviewSummaryDto }) {
         >
           <span aria-hidden="true">
             {filledStars}
-            <span style={{ color: "var(--color-border-strong)" }}>{emptyStars}</span>
+            <span className={styles.emptyStars}>{emptyStars}</span>
           </span>
         </span>
       </div>

@@ -9,11 +9,11 @@
 
 .backLink {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--body-sm);
 }
 
 .backLink a {
-  color: var(--color-text-strong);
+  color: var(--ink-900);
   text-decoration: none;
 }
 
@@ -32,16 +32,16 @@
 
 .bodyText {
   margin: 0;
-  color: var(--color-text-strong);
-  font-size: var(--text-sm);
-  line-height: var(--leading-relaxed);
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+  line-height: var(--line-body);
 }
 
 .noteText {
   margin: 0;
-  color: var(--color-text-strong);
-  font-size: var(--text-md);
-  line-height: var(--leading-relaxed);
+  color: var(--ink-900);
+  font-size: var(--body-md);
+  line-height: var(--line-body);
   white-space: pre-wrap;
 }
 
@@ -93,8 +93,8 @@
 }
 
 .ratingGroupLegend {
-  color: var(--color-text-strong);
-  font-size: var(--text-sm);
+  color: var(--ink-900);
+  font-size: var(--body-sm);
   font-weight: 600;
   margin-bottom: var(--space-1);
   padding: 0;
@@ -119,17 +119,16 @@
 }
 
 .ratingStarIcon {
-  color: var(--color-border-strong);
+  color: var(--border-strong);
 }
 
 .ratingStarIconFilled {
-  color: var(--color-status-positive, var(--color-accent, currentColor));
+  color: var(--success-500);
 }
 
 .ratingStarLabel:focus-within .ratingStarIcon,
 .ratingStarLabel:hover .ratingStarIcon {
-  outline: 2px solid var(--color-accent, currentColor);
-  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
   border-radius: 4px;
 }
 
@@ -149,5 +148,9 @@
   align-items: center;
   display: inline-flex;
   gap: 2px;
-  color: var(--color-status-positive, var(--color-accent, currentColor));
+  color: var(--success-500);
+}
+
+.emptyStars {
+  color: var(--border-strong);
 }

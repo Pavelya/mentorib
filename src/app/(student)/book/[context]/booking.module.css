@@ -63,14 +63,14 @@
 .metricLabel {
   margin: 0 0 0.25rem;
   color: var(--ink-500);
-  font-size: 0.82rem;
+  font-size: var(--caption);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .metricValue {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--body-md);
   font-weight: 600;
 }
 
@@ -98,14 +98,14 @@
 .summaryLabel {
   margin: 0;
   color: var(--ink-500);
-  font-size: 0.82rem;
+  font-size: var(--caption);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .summaryValue {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: var(--title-md);
   font-weight: 700;
 }
 

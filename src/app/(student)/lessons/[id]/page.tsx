@@ -72,6 +72,7 @@ import {
   STUDENT_ISSUE_TYPE_OPTIONS,
   SubmitTutorReviewForm,
 } from "./lesson-actions-client";
+import surfaceStyles from "../../student-surfaces.module.css";
 import styles from "./lesson-detail.module.css";
 
 const LESSONS_BASE_PATH = "/lessons" as const;
@@ -198,6 +199,18 @@ function renderDetailPage({
 
   return (
     <article className={styles.page}>
+      <p className={styles.backLink}>
+        <Link href={LESSONS_BASE_PATH as Route}>← Back to lessons</Link>
+      </p>
+
+      <header className={surfaceStyles.intro}>
+        <p className={surfaceStyles.eyebrow}>Lesson</p>
+        <h1 className={surfaceStyles.title}>Lesson detail</h1>
+        <p className={surfaceStyles.description}>
+          Schedule, meeting link, cancellation, and reschedule for this lesson.
+        </p>
+      </header>
+
       <TimezoneNotice timezone={timezone} />
 
       {previewNotice ? (
@@ -212,10 +225,6 @@ function renderDetailPage({
           </p>
         </InlineNotice>
       ) : null}
-
-      <p className={styles.backLink}>
-        <Link href={LESSONS_BASE_PATH as Route}>← Back to lessons</Link>
-      </p>
 
       <LessonSummary
         action={

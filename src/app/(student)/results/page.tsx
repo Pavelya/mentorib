@@ -37,6 +37,7 @@ import {
 } from "@/modules/lessons/shortlist";
 import { Chip, Panel, TabBar, getButtonClassName, InlineNotice } from "@/components/ui";
 
+import surfaceStyles from "../student-surfaces.module.css";
 import styles from "./results.module.css";
 import { QueuedResultsRefresh } from "./queued-results-refresh";
 
@@ -159,8 +160,18 @@ function renderResultsPage({
 
   return (
     <article className={styles.page}>
+      <header className={surfaceStyles.intro}>
+        <p className={surfaceStyles.eyebrow}>Match results</p>
+        <h1 className={surfaceStyles.title}>Your tutor results</h1>
+        <p className={surfaceStyles.description}>
+          Fit-ranked tutors based on the IB need you just submitted.
+        </p>
+      </header>
+
       {results.currentNeed ? (
         <>
+          {!hasNoMatchesState ? <TimezoneNotice timezone={results.currentNeed.timezone} /> : null}
+
           <NeedSummaryBar
             action={
               <Link
@@ -176,8 +187,6 @@ function renderResultsPage({
             qualifiers={results.currentNeed.qualifiers}
             state={results.state === "queued" ? "draft" : "active"}
           />
-
-          {!hasNoMatchesState ? <TimezoneNotice timezone={results.currentNeed.timezone} /> : null}
         </>
       ) : null}
 

@@ -30,6 +30,7 @@ import {
   type StudentLessonListItemDto,
 } from "@/modules/lessons/student-lessons";
 
+import surfaceStyles from "../student-surfaces.module.css";
 import { ISSUE_CASE_LABELS, mapLessonStatusToSummary } from "./lesson-presentation";
 import styles from "./lessons.module.css";
 
@@ -113,6 +114,15 @@ function renderLessonsPage({
 }) {
   return (
     <article className={styles.page}>
+      <header className={surfaceStyles.intro}>
+        <p className={surfaceStyles.eyebrow}>Lessons</p>
+        <h1 className={surfaceStyles.title}>Your lessons</h1>
+        <p className={surfaceStyles.description}>
+          Past, upcoming, and pending lesson requests with this Mentor IB tutor
+          pool.
+        </p>
+      </header>
+
       <TimezoneNotice timezone={timezone} />
 
       {previewNotice ? (

@@ -35,6 +35,7 @@ import {
   type ShortlistStateDto,
 } from "@/modules/lessons/shortlist";
 
+import surfaceStyles from "../student-surfaces.module.css";
 import styles from "./saved.module.css";
 
 export default async function SavedPage() {
@@ -137,8 +138,21 @@ function renderSavedPage({
 
   return (
     <article className={styles.page}>
+      <header className={surfaceStyles.intro}>
+        <p className={surfaceStyles.eyebrow}>Saved tutors</p>
+        <h1 className={surfaceStyles.title}>Your shortlist</h1>
+        <p className={surfaceStyles.description}>
+          Saved tutors stay here across sessions. Promote a few into compare for a
+          closer read.
+        </p>
+      </header>
+
       {results.currentNeed ? (
         <>
+          {hasSaved ? (
+            <TimezoneNotice timezone={results.currentNeed.timezone} />
+          ) : null}
+
           <NeedSummaryBar
             action={
               <Link
@@ -154,10 +168,6 @@ function renderSavedPage({
             qualifiers={results.currentNeed.qualifiers}
             state={results.state === "queued" ? "draft" : "active"}
           />
-
-          {hasSaved ? (
-            <TimezoneNotice timezone={results.currentNeed.timezone} />
-          ) : null}
         </>
       ) : null}
 

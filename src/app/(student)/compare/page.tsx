@@ -40,6 +40,7 @@ import {
 } from "@/modules/lessons/shortlist";
 import { toggleCompareAction } from "@/modules/lessons/shortlist-actions";
 
+import surfaceStyles from "../student-surfaces.module.css";
 import styles from "./compare.module.css";
 
 export const metadata: Metadata = {
@@ -147,8 +148,21 @@ function renderComparePage({
 
   return (
     <article className={styles.page}>
+      <header className={surfaceStyles.intro}>
+        <p className={surfaceStyles.eyebrow}>Compare</p>
+        <h1 className={surfaceStyles.title}>Side by side</h1>
+        <p className={surfaceStyles.description}>
+          Up to three tutors. The same need context stays attached on every
+          column.
+        </p>
+      </header>
+
       {results.currentNeed ? (
         <>
+          {hasCompared ? (
+            <TimezoneNotice timezone={results.currentNeed.timezone} />
+          ) : null}
+
           <NeedSummaryBar
             action={
               <Link
@@ -167,10 +181,6 @@ function renderComparePage({
             qualifiers={results.currentNeed.qualifiers}
             state={results.state === "queued" ? "draft" : "active"}
           />
-
-          {hasCompared ? (
-            <TimezoneNotice timezone={results.currentNeed.timezone} />
-          ) : null}
         </>
       ) : null}
 

@@ -188,7 +188,7 @@ export function MatchFlowForm({
   const currentStepErrorMessage = getCurrentStepErrorMessage(currentStep, fieldErrors);
 
   return (
-    <section className={styles.page} aria-labelledby="match-flow-title">
+    <section className={styles.page} aria-labelledby="match-flow-step-question">
       {!canSubmit ? (
         <InlineNotice title="Matching setup required" tone="warning">
           <p>
@@ -208,9 +208,9 @@ export function MatchFlowForm({
         <div className={styles.progressTopline}>
           <div className={styles.progressIntro}>
             <p className={styles.eyebrow}>Quick match</p>
-            <h1 id="match-flow-title" ref={titleRef}>
+            <h2 id="match-flow-step-question" ref={titleRef}>
               {currentQuestion}
-            </h1>
+            </h2>
           </div>
 
           <p className={styles.progressStepLabel}>
@@ -258,7 +258,7 @@ export function MatchFlowForm({
         <HiddenMatchInputs values={values} />
 
         <div className={styles.formGrid}>
-          <Panel as="section" aria-labelledby="match-flow-title">
+          <Panel as="section" aria-labelledby="match-flow-step-question">
             {currentStepErrorMessage ? (
               <InlineNotice title="Complete this step" tone="actionNeeded">
                 <p>{currentStepErrorMessage}</p>

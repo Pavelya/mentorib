@@ -15,7 +15,22 @@ import {
 } from "@/modules/accounts/account-state";
 import { loadDiscoveryOptions } from "@/modules/reference/discovery";
 
+import surfaceStyles from "../student-surfaces.module.css";
 import { MatchFlowForm } from "./match-flow-form";
+
+function MatchPageIntro() {
+  return (
+    <header className={surfaceStyles.intro}>
+      <p className={surfaceStyles.eyebrow}>Match flow</p>
+      <h1 id="match-flow-title" className={surfaceStyles.title}>
+        Tell us about your IB request
+      </h1>
+      <p className={surfaceStyles.description}>
+        Three quick steps. Your need stays attached through results and booking.
+      </p>
+    </header>
+  );
+}
 
 export default async function MatchPage() {
   const fallbackTimezone = await getCurrentUserTimezone();
@@ -27,12 +42,15 @@ export default async function MatchPage() {
 
   if (!isSupabaseAuthConfigured()) {
     return (
-      <MatchFlowForm
-        canSubmit={false}
-        initialLanguageCode={fallbackLanguageCode}
-        initialTimezone={fallbackTimezone}
-        optionsByField={optionsByField}
-      />
+      <>
+        <MatchPageIntro />
+        <MatchFlowForm
+          canSubmit={false}
+          initialLanguageCode={fallbackLanguageCode}
+          initialTimezone={fallbackTimezone}
+          optionsByField={optionsByField}
+        />
+      </>
     );
   }
 
@@ -63,6 +81,7 @@ export default async function MatchPage() {
             in again to continue.
           </p>
         </InlineNotice>
+        <MatchPageIntro />
         <MatchFlowForm
           canSubmit={false}
           initialLanguageCode={fallbackLanguageCode}
@@ -79,12 +98,15 @@ export default async function MatchPage() {
 
   if (isRestrictedAccount(account)) {
     return (
-      <InlineNotice title="Account access limited" tone="warning">
-        <p>
-          This account cannot start a new match flow right now. Review your
-          account status and try again later.
-        </p>
-      </InlineNotice>
+      <>
+        <InlineNotice title="Account access limited" tone="warning">
+          <p>
+            This account cannot start a new match flow right now. Review your
+            account status and try again later.
+          </p>
+        </InlineNotice>
+        <MatchPageIntro />
+      </>
     );
   }
 
@@ -93,15 +115,18 @@ export default async function MatchPage() {
   }
 
   return (
-    <MatchFlowForm
-      canSubmit
-      initialLanguageCode={resolveInitialLanguageCode(
-        account.preferred_language_code,
-        optionsByField,
-      )}
-      initialTimezone={account.timezone}
-      optionsByField={optionsByField}
-    />
+    <>
+      <MatchPageIntro />
+      <MatchFlowForm
+        canSubmit
+        initialLanguageCode={resolveInitialLanguageCode(
+          account.preferred_language_code,
+          optionsByField,
+        )}
+        initialTimezone={account.timezone}
+        optionsByField={optionsByField}
+      />
+    </>
   );
 }
 

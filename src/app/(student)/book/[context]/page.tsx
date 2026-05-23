@@ -24,6 +24,7 @@ import {
   isBookingContextNotFound,
 } from "@/modules/lessons/booking";
 
+import surfaceStyles from "../../student-surfaces.module.css";
 import { BookingForm } from "./booking-form";
 import styles from "./booking.module.css";
 
@@ -86,29 +87,26 @@ export default async function BookingPage({
 
   return (
     <article className={styles.page}>
-      <header className={styles.pageHeader}>
-        <Panel
-          className={styles.hero}
-          description="The tutor, need, schedule rules, and request expiry stay attached here so the payment authorization step does not feel like a restart."
-          eyebrow="Booking handoff"
-          title="Confirm the lesson request before Stripe takes over."
-          titleAs="h1"
-          titleClassName={styles.heroTitle}
-        />
-
-        {bookingContext.need ? (
-          <NeedSummaryBar
-            label="Current need"
-            mode="editable"
-            need={bookingContext.need.headline}
-            qualifiers={bookingContext.need.qualifiers}
-            state={bookingContext.need.status === "booked" ? "locked" : "active"}
-            variant="stacked"
-          />
-        ) : null}
+      <header className={surfaceStyles.intro}>
+        <p className={surfaceStyles.eyebrow}>Booking</p>
+        <h1 className={surfaceStyles.title}>Request lesson</h1>
+        <p className={surfaceStyles.description}>
+          Confirm the slot and continue into Stripe Checkout for authorization.
+        </p>
       </header>
 
       <TimezoneNotice timezone={account.timezone} />
+
+      {bookingContext.need ? (
+        <NeedSummaryBar
+          label="Current need"
+          mode="editable"
+          need={bookingContext.need.headline}
+          qualifiers={bookingContext.need.qualifiers}
+          state={bookingContext.need.status === "booked" ? "locked" : "active"}
+          variant="stacked"
+        />
+      ) : null}
 
       {checkoutState === "cancelled" ? (
         <InlineNotice title="Authorization step cancelled" tone="warning">

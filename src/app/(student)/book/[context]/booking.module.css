@@ -39,23 +39,19 @@
   font-weight: 600;
 }
 
-.metricGrid {
+.metricList {
+  margin: 0;
   display: grid;
   gap: var(--space-3);
 }
 
-.metricLabel {
-  margin: 0 0 0.25rem;
-  color: var(--ink-500);
-  font-size: var(--caption);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.summaryRow {
+  display: grid;
+  gap: 0.25rem;
 }
 
-.metricValue {
+.summaryRow dd {
   margin: 0;
-  font-size: var(--body-md);
-  font-weight: 600;
 }
 
 .resultGrid {

@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { NeedSummaryBar, PersonSummary } from "@/components/continuity";
 import { TimezoneNotice } from "@/components/datetime";
-import { Card, InlineNotice, Panel, Section, getButtonClassName } from "@/components/ui";
+import { InlineNotice, Panel, Section, getButtonClassName } from "@/components/ui";
 import {
   buildPostSignInRedirect,
   ensureAuthAccount,
@@ -264,24 +264,24 @@ export default async function BookingPage({
             tone="raised"
           >
             <Section density="compact">
-              <div className={styles.metricGrid}>
-                <Card>
-                  <p className={styles.metricLabel}>Lesson length</p>
-                  <p className={styles.metricValue}>
+              <dl className={styles.metricList}>
+                <div className={styles.summaryRow}>
+                  <dt className={styles.summaryLabel}>Lesson length</dt>
+                  <dd className={styles.summaryValue}>
                     {bookingContext.sessionDurationMinutes} minutes
-                  </p>
-                </Card>
-                <Card>
-                  <p className={styles.metricLabel}>Authorization</p>
-                  <p className={styles.metricValue}>
+                  </dd>
+                </div>
+                <div className={styles.summaryRow}>
+                  <dt className={styles.summaryLabel}>Authorization</dt>
+                  <dd className={styles.summaryValue}>
                     {bookingContext.priceLabel ?? "Pricing not ready"}
-                  </p>
-                </Card>
-                <Card>
-                  <p className={styles.metricLabel}>Current slot count</p>
-                  <p className={styles.metricValue}>{bookingContext.slotOptions.length}</p>
-                </Card>
-              </div>
+                  </dd>
+                </div>
+                <div className={styles.summaryRow}>
+                  <dt className={styles.summaryLabel}>Current slot count</dt>
+                  <dd className={styles.summaryValue}>{bookingContext.slotOptions.length}</dd>
+                </div>
+              </dl>
 
               <ul className={styles.policyList}>
                 {bookingContext.bookingPolicy.map((line) => (

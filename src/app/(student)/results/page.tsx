@@ -16,7 +16,6 @@ import {
   buildPostSignInRedirect,
   ensureAuthAccount,
 } from "@/lib/auth/account-service";
-import { formatUtcDateTime } from "@/lib/datetime";
 import { getCurrentUserTimezone } from "@/lib/datetime/server";
 import { routeFamilies } from "@/lib/routing/route-families";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
@@ -156,8 +155,6 @@ function renderResultsPage({
   const hasNoMatchesState =
     (results.state === "ready" || results.state === "preview") &&
     results.matches.length === 0;
-  const countLabel =
-    visibleMatches.length === 1 ? "1 tutor fit" : `${visibleMatches.length} tutor fits`;
 
   return (
     <article className={styles.page}>
@@ -191,52 +188,7 @@ function renderResultsPage({
         </>
       ) : null}
 
-      {hasNoMatchesState ? (
-        <NoMatchesState results={results} />
-      ) : (
-        <div className={styles.headerGrid}>
-          <Panel
-            description={buildSummaryDescription({
-              count: visibleMatches.length,
-              filter,
-              results,
-              sort,
-            })}
-            eyebrow="Tutor results"
-            title={buildSummaryTitle(results, countLabel)}
-            tone="warm"
-          >
-            <ul className={styles.summaryList}>
-              <li>Fit reasoning stays primary, with the need context still visible above.</li>
-              <li>
-                Tutor profiles and booking use the same result context instead of a generic
-                card wall.
-              </li>
-              {results.currentNeed?.note ? <li>Student note: {results.currentNeed.note}</li> : null}
-              <li>
-                {results.run.createdAt
-                  ? `Latest match run started ${formatUtcDateTime(results.run.createdAt, {
-                      timezone: results.currentNeed?.timezone,
-                    })}.`
-                  : "Results will appear here once the match run is ready."}
-              </li>
-            </ul>
-          </Panel>
-
-          <Panel
-            description="The next step should feel like a continuation of the same decision, not a restart."
-            eyebrow="Handoff"
-            title="Profiles and booking keep the match context"
-            tone="mist"
-          >
-            <ul className={styles.handoffList}>
-              <li>Open a tutor profile to review proof and teaching style without losing the fit rationale.</li>
-              <li>Booking links use the candidate context so the selected match survives the handoff.</li>
-              <li>Compare remains lightweight and secondary to the main fit-based decision.</li>
-            </ul>
-          </Panel>
-        </div>
-      )}
+      {hasNoMatchesState ? <NoMatchesState results={results} /> : null}
 
       {results.state === "ready" && shortlistState && !hasNoMatchesState ? (
         <CompareReadinessNotice
@@ -522,60 +474,6 @@ function getAvailabilityPriority(match: MatchResultCardDto) {
   }
 
   return score;
-}
-
-function buildSummaryDescription({
-  count,
-  filter,
-  results,
-  sort,
-}: {
-  count: number;
-  filter: ResultsFilter;
-  results: MatchResultsPageDto;
-  sort: ResultsSort;
-}) {
-  if (results.state === "preview") {
-    return "Results route preview using the D4 match DTO shape until live auth and match data are configured.";
-  }
-
-  if (results.state === "queued") {
-    return "The latest matching run has been created, but tutor rows are not ready yet.";
-  }
-
-  if (results.state === "failed") {
-    return "The last run failed before it could produce a result set.";
-  }
-
-  if (results.state === "empty") {
-    return "Start from the guided match flow to generate a fit-ranked result set.";
-  }
-
-  const filterLabel =
-    filter === "high-confidence"
-      ? "high-confidence only"
-      : filter === "available-soon"
-        ? "available-soon only"
-        : "all active results";
-  const sortLabel = sort === "availability" ? "availability first" : "best-fit order";
-
-  return `${count} cards shown from ${filterLabel}, sorted by ${sortLabel}.`;
-}
-
-function buildSummaryTitle(results: MatchResultsPageDto, countLabel: string) {
-  switch (results.state) {
-    case "empty":
-      return "Ready for the first fit-ranked result set";
-    case "failed":
-      return "The latest match run needs another try";
-    case "preview":
-      return "Previewing the fit-first results layout";
-    case "queued":
-      return "Matching is still preparing tutor fits";
-    case "ready":
-    default:
-      return countLabel;
-  }
 }
 
 function resolveRowShortlistState(

@@ -10,7 +10,7 @@ import {
   type MatchRowShortlistState,
 } from "@/components/continuity";
 import { TimezoneNotice } from "@/components/datetime";
-import { Panel, getButtonClassName, InlineNotice } from "@/components/ui";
+import { getButtonClassName, InlineNotice } from "@/components/ui";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import {
   buildPostSignInRedirect,
@@ -131,9 +131,6 @@ function renderSavedPage({
   const savedMatches = results.matches.filter((match) =>
     savedIds.has(match.candidateId),
   );
-  const compareCount = shortlistState?.comparedCandidateIds.length ?? 0;
-  const compareCap = shortlistState?.compareCap ?? 0;
-  const hasComparing = compareCount > 0;
   const hasNoLearningNeed = !results.currentNeed;
   const hasSaved = savedMatches.length > 0;
 
@@ -171,51 +168,6 @@ function renderSavedPage({
           />
         </>
       ) : null}
-
-      <div className={styles.summaryGrid}>
-        <Panel
-          description={buildSummaryDescription({
-            isPreview,
-            results,
-            savedCount: savedMatches.length,
-          })}
-          eyebrow="Saved tutors"
-          title={buildSummaryTitle(savedMatches.length)}
-          tone="warm"
-        >
-          <ul className={styles.summaryList}>
-            <li>Saved tutors stay here across sessions and devices.</li>
-            <li>
-              Move tutors into compare from any saved row to weigh up to
-              {" "}
-              {compareCap || 3} side by side.
-            </li>
-            <li>Open a saved tutor profile to review proof without losing your shortlist.</li>
-          </ul>
-        </Panel>
-
-        <Panel
-          description="Compare lives inside Saved so the shortlist and the side-by-side view stay one decision."
-          eyebrow="Compare"
-          title={
-            hasComparing
-              ? `Comparing ${compareCount} of ${compareCap} tutors`
-              : `Pick up to ${compareCap || 3} to compare`
-          }
-          tone="mist"
-        >
-          <ul className={styles.handoffList}>
-            <li>Save what fits, then promote a few into compare for a closer read.</li>
-            <li>Compare keeps the same need context and never adds a separate decision.</li>
-          </ul>
-          <Link
-            className={getButtonClassName({ size: "compact" })}
-            href="/compare"
-          >
-            {hasComparing ? "Open compare" : "View compare"}
-          </Link>
-        </Panel>
-      </div>
 
       {hasSaved && shortlistState ? (
         <CompareReadinessNotice
@@ -303,40 +255,6 @@ function resolveRowShortlistState(
     isCompareFull: state.isCompareFull,
     isShortlisted: entry?.isShortlisted ?? false,
   };
-}
-
-function buildSummaryTitle(savedCount: number) {
-  if (savedCount === 0) {
-    return "Your saved tutors live here";
-  }
-  if (savedCount === 1) {
-    return "1 saved tutor";
-  }
-  return `${savedCount} saved tutors`;
-}
-
-function buildSummaryDescription({
-  isPreview,
-  results,
-  savedCount,
-}: {
-  isPreview: boolean;
-  results: MatchResultsPageDto;
-  savedCount: number;
-}) {
-  if (isPreview) {
-    return "Preview of the saved tutors surface using the match DTO shape until live auth is configured.";
-  }
-
-  if (results.state === "queued") {
-    return "The latest matching run is still preparing tutor fits — saved tutors will appear once results are ready.";
-  }
-
-  if (savedCount === 0) {
-    return "Save tutors from your match results to come back to them later without losing context.";
-  }
-
-  return "Saved tutors stay here across sessions, with the same fit reasoning that surfaced in results.";
 }
 
 function buildPreviewShortlistState(

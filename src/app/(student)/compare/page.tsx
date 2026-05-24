@@ -146,8 +146,7 @@ function renderComparePage({
   const comparedMatches = orderForCompare(
     results.matches.filter((match) => comparedIds.has(match.candidateId)),
   ).slice(0, compareCap);
-  const compareCount = comparedMatches.length;
-  const hasCompared = compareCount > 0;
+  const hasCompared = comparedMatches.length > 0;
   const hasLearningNeed = Boolean(results.currentNeed);
 
   return (
@@ -187,60 +186,6 @@ function renderComparePage({
           />
         </>
       ) : null}
-
-      <div className={styles.summaryGrid}>
-        <Panel
-          description={buildSummaryDescription({
-            compareCount,
-            isPreview,
-            results,
-          })}
-          eyebrow="Compare"
-          title={buildSummaryTitle(compareCount, compareCap)}
-          tone="warm"
-        >
-          <ul className={styles.summaryList}>
-            <li>
-              Compare keeps the same active need so the side-by-side review never
-              starts a new decision.
-            </li>
-            <li>
-              Up to {compareCap} tutors can sit here at once. Remove one to make
-              room for another candidate.
-            </li>
-            <li>
-              Booking and profile actions stay on each column, so the next step
-              is never buried.
-            </li>
-          </ul>
-        </Panel>
-
-        <Panel
-          description="Saved is where the shortlist lives. Compare is the closer read."
-          eyebrow="Handoff"
-          title="Pick a tutor to book, or refine the shortlist"
-          tone="mist"
-        >
-          <ul className={styles.handoffList}>
-            <li>
-              Book directly from a column once one tutor is clearly the better
-              fit.
-            </li>
-            <li>
-              Return to saved tutors any time without losing the comparison.
-            </li>
-          </ul>
-          <Link
-            className={getButtonClassName({
-              size: "compact",
-              variant: "secondary",
-            })}
-            href="/saved"
-          >
-            Back to saved
-          </Link>
-        </Panel>
-      </div>
 
       {shortlistState ? (
         <CompareReadinessNotice
@@ -545,40 +490,6 @@ function CompareEmptyState({
 
 function orderForCompare(matches: MatchResultCardDto[]) {
   return [...matches].sort((left, right) => left.rankPosition - right.rankPosition);
-}
-
-function buildSummaryTitle(compareCount: number, compareCap: number) {
-  if (compareCount === 0) {
-    return `Pick up to ${compareCap} tutors to compare`;
-  }
-  if (compareCount === 1) {
-    return "1 tutor in compare";
-  }
-  return `${compareCount} tutors side by side`;
-}
-
-function buildSummaryDescription({
-  compareCount,
-  isPreview,
-  results,
-}: {
-  compareCount: number;
-  isPreview: boolean;
-  results: MatchResultsPageDto;
-}) {
-  if (isPreview) {
-    return "Preview of the compare surface using the match DTO shape until live auth is configured.";
-  }
-
-  if (results.state === "queued") {
-    return "The latest matching run is still preparing tutor fits — compared tutors will appear once results are ready.";
-  }
-
-  if (compareCount === 0) {
-    return "Add tutors from saved or match results to read them side by side without losing the need context.";
-  }
-
-  return "Each column uses the same fit reasoning that surfaced in results, ordered by rank.";
 }
 
 function buildPreviewShortlistState(

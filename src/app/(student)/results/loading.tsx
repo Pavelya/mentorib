@@ -19,22 +19,6 @@ export default function ResultsLoading() {
         </div>
       </Panel>
 
-      <section className={styles.headerGrid}>
-        <Panel as="section">
-          <span className={[styles.skeleton, styles.kicker].join(" ")} />
-          <span className={[styles.skeleton, styles.panelTitle].join(" ")} />
-          <span className={[styles.skeleton, styles.panelLine].join(" ")} />
-          <span className={[styles.skeleton, styles.panelLineShort].join(" ")} />
-        </Panel>
-
-        <Panel as="section">
-          <span className={[styles.skeleton, styles.kicker].join(" ")} />
-          <span className={[styles.skeleton, styles.panelTitleShort].join(" ")} />
-          <span className={[styles.skeleton, styles.panelLine].join(" ")} />
-          <span className={[styles.skeleton, styles.panelLineShort].join(" ")} />
-        </Panel>
-      </section>
-
       <section className={styles.list} aria-hidden="true">
         {skeletonRows.map((row) => (
           <Panel as="article" key={row}>

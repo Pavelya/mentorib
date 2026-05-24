@@ -1,3 +1,4 @@
+export { CompareReadinessNotice } from "./compare-readiness-notice";
 export {
   ContextChipRow,
   LessonSummary,

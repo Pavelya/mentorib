@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { redirect } from "next/navigation";
 
 import {
+  CompareReadinessNotice,
   MatchRow,
   NeedSummaryBar,
   ScreenState,
@@ -238,7 +239,11 @@ function renderResultsPage({
       )}
 
       {results.state === "ready" && shortlistState && !hasNoMatchesState ? (
-        <CompareSummary state={shortlistState} />
+        <CompareReadinessNotice
+          className={styles.notice}
+          origin="results"
+          state={shortlistState}
+        />
       ) : null}
 
       {results.state === "ready" || results.state === "preview" ? (
@@ -592,39 +597,3 @@ function resolveRowShortlistState(
   };
 }
 
-function CompareSummary({ state }: { state: ShortlistStateDto }) {
-  const compareCount = state.comparedCandidateIds.length;
-  const hasComparing = compareCount > 0;
-  const tone = state.isCompareFull ? "warning" : hasComparing ? "success" : "info";
-  const title = state.isCompareFull
-    ? `Compare is full · ${compareCount} of ${state.compareCap}`
-    : hasComparing
-      ? `Comparing ${compareCount} of ${state.compareCap} tutors`
-      : `Pick up to ${state.compareCap} tutors to compare`;
-
-  return (
-    <InlineNotice
-      aria-live="polite"
-      className={styles.notice}
-      showToneLabel={false}
-      title={title}
-      tone={tone}
-    >
-      <p>
-        {state.isCompareFull
-          ? "Remove a tutor from compare before adding another. Saved tutors stay on this page."
-          : hasComparing
-            ? "Open compare to see them side by side, or keep refining your shortlist here."
-            : "Use Save to keep tutors on this page, or Compare to line a few up side by side."}
-      </p>
-      <div className={styles.noticeActions}>
-        <Link
-          className={getButtonClassName({ size: "compact", variant: "secondary" })}
-          href="/compare"
-        >
-          {hasComparing ? "Open compare" : "View compare"}
-        </Link>
-      </div>
-    </InlineNotice>
-  );
-}

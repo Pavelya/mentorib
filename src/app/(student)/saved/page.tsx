@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import {
+  CompareReadinessNotice,
   MatchRow,
   NeedSummaryBar,
   ScreenState,
@@ -217,7 +218,11 @@ function renderSavedPage({
       </div>
 
       {hasSaved && shortlistState ? (
-        <CompareReadiness state={shortlistState} />
+        <CompareReadinessNotice
+          className={styles.notice}
+          origin="saved"
+          state={shortlistState}
+        />
       ) : null}
 
       {hasSaved ? (
@@ -242,41 +247,6 @@ function renderSavedPage({
   );
 }
 
-function CompareReadiness({ state }: { state: ShortlistStateDto }) {
-  const compareCount = state.comparedCandidateIds.length;
-  const tone = state.isCompareFull ? "warning" : compareCount > 0 ? "success" : "info";
-  const title = state.isCompareFull
-    ? `Compare is full · ${compareCount} of ${state.compareCap}`
-    : compareCount > 0
-      ? `Comparing ${compareCount} of ${state.compareCap} tutors`
-      : `Pick up to ${state.compareCap} tutors to compare`;
-
-  return (
-    <InlineNotice
-      aria-live="polite"
-      className={styles.notice}
-      showToneLabel={false}
-      title={title}
-      tone={tone}
-    >
-      <p>
-        {state.isCompareFull
-          ? "Remove a tutor from compare before adding another. Saved tutors stay on this page."
-          : compareCount > 0
-            ? "Open compare to see them side by side, or keep refining your shortlist here."
-            : "Use Compare on any saved row to line a few tutors up side by side."}
-      </p>
-      <div className={styles.noticeActions}>
-        <Link
-          className={getButtonClassName({ size: "compact", variant: "secondary" })}
-          href="/compare"
-        >
-          {compareCount > 0 ? "Open compare" : "View compare"}
-        </Link>
-      </div>
-    </InlineNotice>
-  );
-}
 
 function SavedEmptyState({ hasLearningNeed }: { hasLearningNeed: boolean }) {
   if (!hasLearningNeed) {

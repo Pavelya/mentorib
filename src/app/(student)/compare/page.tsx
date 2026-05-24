@@ -4,7 +4,11 @@ import type { Route } from "next";
 import type { CSSProperties } from "react";
 import { redirect } from "next/navigation";
 
-import { NeedSummaryBar, ScreenState } from "@/components/continuity";
+import {
+  CompareReadinessNotice,
+  NeedSummaryBar,
+  ScreenState,
+} from "@/components/continuity";
 import { TimezoneNotice } from "@/components/datetime";
 import {
   getButtonClassName,
@@ -239,9 +243,10 @@ function renderComparePage({
       </div>
 
       {shortlistState ? (
-        <CompareStateNotice
-          compareCap={compareCap}
-          compareCount={compareCount}
+        <CompareReadinessNotice
+          className={styles.notice}
+          origin="compare"
+          state={shortlistState}
         />
       ) : null}
 
@@ -494,64 +499,6 @@ function CompareCategoryValue({ category }: { category: CompareCategory }) {
   }
 
   return <p className={styles.categoryValue}>{category.value}</p>;
-}
-
-function CompareStateNotice({
-  compareCap,
-  compareCount,
-}: {
-  compareCap: number;
-  compareCount: number;
-}) {
-  if (compareCount === 0) {
-    return (
-      <InlineNotice
-        aria-live="polite"
-        className={styles.notice}
-        showToneLabel={false}
-        title={`Pick up to ${compareCap} tutors to compare`}
-        tone="info"
-      >
-        <p>
-          Use Compare on saved tutors or match results to line a few up side by
-          side.
-        </p>
-        <div className={styles.noticeActions}>
-          <Link
-            className={getButtonClassName({
-              size: "compact",
-              variant: "secondary",
-            })}
-            href="/saved"
-          >
-            Open saved
-          </Link>
-        </div>
-      </InlineNotice>
-    );
-  }
-
-  const isFull = compareCount >= compareCap;
-  const tone = isFull ? "warning" : "success";
-  const title = isFull
-    ? `Compare is full · ${compareCount} of ${compareCap}`
-    : `Comparing ${compareCount} of ${compareCap} tutors`;
-
-  return (
-    <InlineNotice
-      aria-live="polite"
-      className={styles.notice}
-      showToneLabel={false}
-      title={title}
-      tone={tone}
-    >
-      <p>
-        {isFull
-          ? "Remove a tutor from compare before adding another. Saved tutors stay on the saved page."
-          : "Each column keeps the same need context. Book directly when one fit is clear."}
-      </p>
-    </InlineNotice>
-  );
 }
 
 function CompareEmptyState({

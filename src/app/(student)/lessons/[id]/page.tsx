@@ -313,7 +313,7 @@ function ReportSection({
   const { content } = report;
 
   return (
-    <Panel eyebrow="Lesson recap" title="Lesson recap from your tutor">
+    <Panel eyebrow="Lesson recap">
       <Section density="compact">
         <p className={styles.bodyText}>
           Your tutor shared this recap after the lesson. It builds on what you
@@ -321,33 +321,31 @@ function ReportSection({
         </p>
 
         {content.goalSummary ? (
-          <Section density="compact" divider="top" eyebrow="Lesson goal">
-            <p className={styles.noteText}>{content.goalSummary}</p>
-          </Section>
+          <p className={styles.noteText}>
+            <strong>Lesson goal — </strong>
+            {content.goalSummary}
+          </p>
         ) : null}
 
         {content.coverageSummary ? (
-          <Section density="compact" divider="top" eyebrow="What we covered">
-            <p className={styles.noteText}>{content.coverageSummary}</p>
-          </Section>
+          <p className={styles.noteText}>
+            <strong>What we covered — </strong>
+            {content.coverageSummary}
+          </p>
         ) : null}
 
         {content.studentConfidenceSignal ? (
-          <Section
-            density="compact"
-            divider="top"
-            eyebrow="Confidence and understanding"
-          >
-            <p className={styles.noteText}>
-              {content.studentConfidenceSignal}
-            </p>
-          </Section>
+          <p className={styles.noteText}>
+            <strong>Confidence — </strong>
+            {content.studentConfidenceSignal}
+          </p>
         ) : null}
 
         {content.nextStepsSummary ? (
-          <Section density="compact" divider="top" eyebrow="Next steps">
-            <p className={styles.noteText}>{content.nextStepsSummary}</p>
-          </Section>
+          <p className={styles.noteText}>
+            <strong>Next steps — </strong>
+            {content.nextStepsSummary}
+          </p>
         ) : null}
 
         {report.reportStatus === "acknowledged" ? (
@@ -374,7 +372,7 @@ function ReviewSection({
   previewNotice: boolean;
 }) {
   return (
-    <Panel eyebrow="Lesson review" title="Tell other students what worked">
+    <Panel eyebrow="Lesson review">
       <Section density="compact">
         {previewNotice ? (
           <InlineNotice tone="info" title="Review preview">
@@ -430,11 +428,7 @@ function ContextSection({ detail }: { detail: StudentLessonDetailDto }) {
   ].filter((value): value is { label: string; tone: "info" | "trust" | "support" } => value !== null);
 
   return (
-    <Panel
-      eyebrow="Lesson context"
-      title="Subject and request"
-      tone="soft"
-    >
+    <Panel eyebrow="Lesson context" tone="soft">
       <Section density="compact">
         {chips.length > 0 ? (
           <ul className={styles.chipRow}>
@@ -481,12 +475,16 @@ function MeetingAccessSection({
   const accessTone = meeting.accessStatus === "ready" ? "positive" : "warning";
 
   return (
-    <Panel eyebrow="Meeting access" title={meeting.displayLabel ?? methodLabel}>
+    <Panel eyebrow="Meeting access" title={methodLabel}>
       <Section density="compact">
         <div className={styles.meetingHeader}>
           <StatusBadge tone={accessTone}>{accessHint}</StatusBadge>
           {meeting.provider ? <Chip tone="info">{meeting.provider}</Chip> : null}
         </div>
+
+        {meeting.displayLabel ? (
+          <p className={styles.bodyText}>{meeting.displayLabel}</p>
+        ) : null}
 
         {meeting.meetingUrl ? (
           <a
@@ -519,7 +517,7 @@ function CalendarSection({
   previewNotice: boolean;
 }) {
   return (
-    <Panel eyebrow="Add to calendar" title="Keep this lesson visible">
+    <Panel eyebrow="Add to calendar">
       <Section density="compact">
         <p className={styles.bodyText}>
           Add this lesson to the calendar you already use. The export reflects the
@@ -564,7 +562,7 @@ function CancellationSection({
 }) {
   if (!policy.cancellable) {
     return (
-      <Panel eyebrow="Cancellation" title="Cancellation closed">
+      <Panel title="Cancellation closed">
         <p className={styles.bodyText}>{policy.reason}</p>
       </Panel>
     );
@@ -574,7 +572,7 @@ function CancellationSection({
   const outcomeTone = cancellationOutcomeTone(policy);
 
   return (
-    <Panel eyebrow="Cancellation" title="Cancel this lesson">
+    <Panel title="Cancel this lesson">
       <Section density="compact">
         {previewNotice ? (
           <InlineNotice tone="info" title="Cancellation preview">

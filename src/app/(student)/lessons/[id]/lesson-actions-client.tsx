@@ -156,7 +156,7 @@ export function RescheduleLessonForm({
       </p>
 
       {state.message ? (
-        <InlineNotice title="We couldn't reschedule" tone="actionNeeded">
+        <InlineNotice title="Reschedule failed" tone="actionNeeded">
           <p>{state.message}</p>
         </InlineNotice>
       ) : null}

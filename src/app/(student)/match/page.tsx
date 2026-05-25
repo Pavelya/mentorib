@@ -75,7 +75,7 @@ export default async function MatchPage() {
   if (!account) {
     return (
       <>
-        <InlineNotice title="Match flow unavailable" tone="warning">
+        <InlineNotice title="Match unavailable" tone="warning">
           <p>
             We could not load your student context yet. Refresh the page or sign
             in again to continue.

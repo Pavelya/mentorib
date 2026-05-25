@@ -694,9 +694,8 @@ function IssueSection({
 
         {!isIssueEntryEligible ? (
           <p className={styles.bodyText}>
-            Issue reporting opens after the tutor accepts and stays available through
-            the 24-hour window after the lesson ends. Use this surface — not the chat
-            thread — when something goes wrong with a session.
+            Report a session problem here — not in the chat. Issue reporting opens
+            after the tutor accepts and closes 24 hours after the lesson ends.
           </p>
         ) : previewNotice ? (
           <InlineNotice tone="info" title="Issue reporting preview">

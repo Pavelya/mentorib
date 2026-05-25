@@ -109,13 +109,13 @@ export default async function BookingPage({
       ) : null}
 
       {checkoutState === "cancelled" ? (
-        <InlineNotice title="Authorization step cancelled" tone="warning">
+        <InlineNotice title="Booking cancelled in Stripe" tone="warning">
           <p>Your lesson request was not submitted. You can choose a slot and try again.</p>
         </InlineNotice>
       ) : null}
 
       {checkoutState === "error" ? (
-        <InlineNotice title="Booking return failed" tone="warning">
+        <InlineNotice title="Couldn't confirm Stripe return" tone="warning">
           <p>
             We couldn&apos;t confirm the Stripe return yet. Refresh the page or try the
             request again.
@@ -131,15 +131,10 @@ export default async function BookingPage({
         >
           <div className={styles.resultGrid}>
             <p className={styles.resultMeta}>
-              {bookingOutcome.scheduledLabel} with {bookingOutcome.tutorName}
-            </p>
-            <p className={styles.resultMeta}>
-              Hold amount: {bookingOutcome.priceLabel}. Request expires at{" "}
-              {bookingOutcome.requestExpiresLabel}.
-            </p>
-            <p className={styles.resultMeta}>
-              Lesson status: {bookingOutcome.lessonStatus}. Payment status:{" "}
-              {bookingOutcome.paymentStatus}.
+              Your request is with <strong>{bookingOutcome.tutorName}</strong> for{" "}
+              <strong>{bookingOutcome.scheduledLabel}</strong>. We placed a{" "}
+              <strong>{bookingOutcome.priceLabel}</strong> hold — Stripe captures it only
+              if the tutor accepts.
             </p>
           </div>
           <div className={styles.actionRow}>
@@ -233,7 +228,7 @@ export default async function BookingPage({
           ) : null}
 
           {bookingContext.status === "no_slots" ? (
-            <InlineNotice title="No live slots right now" tone="warning">
+            <InlineNotice title="No bookable slots" tone="warning">
               <p>
                 We couldn&apos;t find a bookable slot inside the current notice window and
                 conflict rules.

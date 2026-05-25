@@ -71,7 +71,7 @@ export default async function SavedPage() {
 
   if (!account) {
     return (
-      <InlineNotice title="Saved tutors unavailable" tone="warning">
+      <InlineNotice title="Saved unavailable" tone="warning">
         <p>
           We could not load your student context yet. Refresh the page or sign in
           again to continue.

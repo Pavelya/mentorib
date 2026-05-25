@@ -190,7 +190,7 @@ export function MatchFlowForm({
   return (
     <section className={styles.page} aria-labelledby="match-flow-step-question">
       {!canSubmit ? (
-        <InlineNotice title="Matching setup required" tone="warning">
+        <InlineNotice title="Match setup required" tone="warning">
           <p>
             You can review the flow, but saving answers is not available in this
             environment yet.
@@ -495,7 +495,6 @@ function FormPendingOverlay() {
     >
       <Panel
         className={styles.pendingPanel}
-        description="You'll land on the results screen as soon as your request is saved."
         eyebrow="Opening results"
         title="We're getting your tutor matches ready."
         tone="warm"

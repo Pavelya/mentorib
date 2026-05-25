@@ -184,8 +184,8 @@ function renderPreviewMessagesPage({
         tone="info"
       >
         <p>
-          Live messaging connects once Supabase auth is configured. The shared shell
-          below previews the conversation list and thread surfaces.
+          Live messaging is paused in this preview. The shell below shows the list and
+          thread layout.
         </p>
       </InlineNotice>
       <ConversationShell

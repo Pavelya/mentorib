@@ -21,7 +21,6 @@ export default async function StudentLayout({ children }: StudentLayoutProps) {
   return (
     <AppFrame
       description="Student-mode shell for the problem-led match flow, booking path, and continuity surfaces."
-      eyebrow="Student routes"
       footerNote=""
       navItems={navigationByFamily.student}
       showHero={false}

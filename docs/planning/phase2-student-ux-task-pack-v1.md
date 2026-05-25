@@ -1189,11 +1189,11 @@ Markup + behaviour:
 Per the `-14` ADR, the four-tab core per family is (final wording is the implementing agent's call within `agent-ui-rules.md` § 7):
 
 - **Student core** (4 + More):
-  - Match (`/match`, `studentRole` or new `compass` glyph)
-  - Results (`/results`, `users`)
+  - Get Matched (`/match`, `studentRole` or new `compass` glyph)
+  - My matches (`/results`, `users`)
   - Lessons (`/lessons`, `calendar`)
   - Messages (`/messages`, `messageSquare`)
-  - More → opens menu with: Browse (`/tutors`), Saved (`/saved`), Compare (`/compare`)
+  - More → opens menu with: Find Tutors (`/tutors`), Saved (`/saved`), Compare (`/compare`)
 - **Tutor core** (4 + More):
   - Overview (`/tutor/overview`, `tutorRole`)
   - Lessons (`/tutor/lessons`, `calendar`)
@@ -1296,7 +1296,7 @@ The public family is the only `AppFrame` consumer that does not get a bottom doc
 **Scope**
 
 - on `< 768px`, the public layout hides the inline top nav and renders a `<button>` with a hamburger icon at the leading edge of the top bar (left of the brand wordmark, or right of it — decide once; placement matches the `AvatarMenu` mirror so the two interactive elements bracket the brand)
-- clicking the hamburger opens a DS `Popover` (full-width sheet at this breakpoint) containing the seven public nav items as a vertical list (`Home`, `Find Tutors`, `Get Matched`, `How It Works`, `Trust & Safety`, `Become a Tutor`, `Support`)
+- clicking the hamburger opens a DS `Popover` (full-width sheet at this breakpoint) containing the four trimmed public nav items as a vertical list (`Home`, `Find Tutors`, `Get Matched`, `Become a Tutor`). `How It Works`, `Trust & Safety`, and `Support` live in the public footer (per `P2-SUX-001-16-5`) and are **not** duplicated in the drawer
 - when signed in, the same drawer optionally surfaces the "switch to your workspace" link at the top — a one-line shortcut to `/results` (student) or `/tutor/overview` (tutor) so the public surface is not a dead end for signed-in users. If signed out, the drawer ends with a `Sign in` link
 - keyboard model: `Esc` closes; focus traps inside the drawer while open; opening moves focus to the first item; closing returns focus to the hamburger button (DS `Popover` already implements these guarantees)
 - the hamburger button uses an `Icon` from the registry. If no `menu` glyph exists in the registry, add one in the same commit. Never inline `<svg>`

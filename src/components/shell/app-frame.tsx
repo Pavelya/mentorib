@@ -17,7 +17,7 @@ export type AppFrameFooterLink = {
 };
 
 type AppFrameProps = {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description: string;
   footerLinks?: AppFrameFooterLink[];
@@ -53,11 +53,14 @@ export function AppFrame({
             <Link className={styles.brand} href="/">
               Mentor IB
             </Link>
-            <p className={styles.eyebrow}>{eyebrow}</p>
+            {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
           </div>
 
           {navItems.length > 0 ? (
-            <AppFrameNav ariaLabel={`${eyebrow} navigation`} items={navItems} />
+            <AppFrameNav
+              ariaLabel={eyebrow ? `${eyebrow} navigation` : "Primary navigation"}
+              items={navItems}
+            />
           ) : null}
 
           {viewer ? (

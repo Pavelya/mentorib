@@ -159,8 +159,8 @@ function renderResultsPage({
   return (
     <article className={styles.page}>
       <header className={surfaceStyles.intro}>
-        <p className={surfaceStyles.eyebrow}>Match results</p>
-        <h1 className={surfaceStyles.title}>Your tutor results</h1>
+        <p className={surfaceStyles.eyebrow}>Matches</p>
+        <h1 className={surfaceStyles.title}>Your matches</h1>
         <p className={surfaceStyles.description}>
           Fit-ranked tutors based on the IB need you just submitted.
         </p>
@@ -296,7 +296,7 @@ function renderResultsPage({
           <Panel
             description="We saved your request and are preparing the shortlist now."
             eyebrow="Matching"
-            title="Your tutor results are on the way"
+            title="Your matches are on the way"
             tone="warm"
           >
             <div aria-hidden="true" className={styles.loadingPreview}>

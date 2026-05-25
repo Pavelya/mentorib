@@ -13,10 +13,7 @@ export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
     { href: "/", label: "Home" },
     { href: "/tutors" as Route, label: "Find Tutors" },
     { href: "/match", label: "Get Matched" },
-    { href: "/how-it-works", label: "How It Works" },
-    { href: "/trust-and-safety", label: "Trust & Safety" },
     { href: "/become-a-tutor", label: "Become a Tutor" },
-    { href: "/support", label: "Support" },
   ],
   auth: [
     { href: "/auth/sign-in", label: "Sign In" },
@@ -30,9 +27,9 @@ export const navigationByFamily: Record<RouteFamilyKey, NavItem[]> = {
     { href: "/billing", label: "Billing" },
   ],
   student: [
-    { href: "/match", label: "Match", group: "Find" },
-    { href: "/results", label: "Results", group: "Find" },
-    { href: "/tutors" as Route, label: "Browse", group: "Find" },
+    { href: "/match", label: "Get Matched", group: "Find" },
+    { href: "/results", label: "My matches", group: "Find" },
+    { href: "/tutors" as Route, label: "Find Tutors", group: "Find" },
     { href: "/saved", label: "Saved", group: "Decide" },
     { href: "/compare", label: "Compare", group: "Decide" },
     { href: "/lessons", label: "Lessons", group: "Use" },

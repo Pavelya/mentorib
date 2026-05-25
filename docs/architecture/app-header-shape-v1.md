@@ -57,7 +57,7 @@ This shape is owned by a single DS shell composition — `AppHeader` — exporte
 
 These rules are binding on every `AppFrame` consumer. Subtasks `-15` through `-19` implement against them; reviewers reject any deviation that is not first ratified by amending this ADR.
 
-1. **Brand block** (brand wordmark + route-family eyebrow) is always on the leading edge. The eyebrow is dropped on mobile (only the wordmark remains).
+1. **Brand block** (brand wordmark + route-family eyebrow where the family declares one) is always on the leading edge. The eyebrow is optional per family — public and account declare one; student, tutor, and internal do not. The eyebrow is dropped on mobile (only the wordmark remains).
 2. **Nav** lives in the top bar on desktop and in the bottom dock on mobile. The top bar's nav is hidden on mobile via the same `< 768px` breakpoint that switches to the bottom dock. The bottom dock is hidden on desktop. No simultaneous display, no wrapping across rows.
 3. **Avatar** sits on the trailing edge of the top bar on every viewport. It is a `<button>` that opens `AvatarMenu` (a DS popover) — it is **not** a direct link. The menu items are the Account family routes plus `Sign out`. The avatar always renders when `viewer` is present; if not signed in, the slot renders a `Sign in` `Button` instead.
 4. **Mobile bottom nav** carries up to **five** slots: four primary destinations from the route family + a `More` slot that opens a DS `Menu` listing the family's overflow items. The exact 4-tab split per family is locked in § 5 below.
@@ -75,15 +75,15 @@ The mobile bottom dock is "core + More". Each private family picks four primary 
 
 | Slot | Label | Href | Icon (registry key) |
 | --- | --- | --- | --- |
-| 1 | Match | `/match` | `studentRole` (or new `compass` glyph — registry decision belongs to `-17`) |
-| 2 | Results | `/results` | `users` |
+| 1 | Get Matched | `/match` | `studentRole` (or new `compass` glyph — registry decision belongs to `-17`) |
+| 2 | My matches | `/results` | `users` |
 | 3 | Lessons | `/lessons` | `calendar` |
 | 4 | Messages | `/messages` | `messageSquare` |
 | 5 | More → menu | — | `moreHorizontal` |
 
-`More` menu contents: Browse (`/tutors`), Saved (`/saved`), Compare (`/compare`).
+`More` menu contents: Find Tutors (`/tutors`), Saved (`/saved`), Compare (`/compare`).
 
-Rationale: these four are the only destinations the user reaches every session. `Match` is the front door, `Results` is the primary review surface, `Lessons` is the work, and `Messages` is the relationship — match → results → lessons → messages is the canonical student arc. `Browse`, `Saved`, and `Compare` are discovery-side affordances that the same user does *not* touch every session, so they live one tap deeper.
+Rationale: these four are the only destinations the user reaches every session. `Get Matched` is the front door, `My matches` is the primary review surface, `Lessons` is the work, and `Messages` is the relationship — match → results → lessons → messages is the canonical student arc. `Find Tutors`, `Saved`, and `Compare` are discovery-side affordances that the same user does *not* touch every session, so they live one tap deeper.
 
 ### 5.2 Tutor family core
 
@@ -101,7 +101,7 @@ Rationale: tutors live in Overview (their dashboard) and Lessons (their work tod
 
 ### 5.3 Public family
 
-No bottom dock. On mobile, the seven public nav items collapse into a hamburger drawer (implemented in `-19`). On desktop, the inline nav obeys the single-row overflow rule from § 4.5.
+No bottom dock. The top nav carries four conversion-focused items: `Home`, `Find Tutors`, `Get Matched`, `Become a Tutor`. Reassurance content (`How It Works`, `Trust & Safety`, `Support`) lives in the public footer on every page, not in the top nav. On mobile, the four nav items collapse into a hamburger drawer (implemented in `-19`); footer links are not duplicated in the drawer. On desktop, the inline nav obeys the single-row overflow rule from § 4.5.
 
 ### 5.4 Account family
 

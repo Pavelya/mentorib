@@ -1,22 +1,16 @@
-import type { Route } from "next";
-
 import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 
 export type ViewerIdentity = {
   avatarUrl: string | null;
   displayName: string;
-  settingsHref: Route;
 };
 
 type ViewerSource = Pick<ResolvedAuthAccount, "avatar_url" | "email" | "full_name">;
-
-const SETTINGS_HREF = "/settings" as Route;
 
 export function resolveViewerIdentity(account: ViewerSource): ViewerIdentity {
   return {
     avatarUrl: account.avatar_url,
     displayName: resolveDisplayName(account),
-    settingsHref: SETTINGS_HREF,
   };
 }
 

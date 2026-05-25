@@ -1,0 +1,30 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.trigger:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    0 0 0 1px var(--focus-outline);
+}
+
+@media (pointer: coarse) {
+  .trigger {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+.signOutForm {
+  display: none;
+}

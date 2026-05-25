@@ -91,6 +91,7 @@ Tasks on the same step can run in parallel. Complete all tasks in a step before 
 | 6 | `P2-SUX-001-14` | `done` | `P1` | Canonical `AppHeader` spec — one shape everywhere (brand · nav · avatar), avatar always present when signed in |
 | 6 | `P2-SUX-001-15` | `done` | `P1` | Always load `viewer` across every `AppFrame` consumer, including the `(public)` family |
 | 7 | `P2-SUX-001-16` | `ready` | `P1` | DS `AvatarMenu` (popover) — avatar opens a menu instead of linking straight to `/settings`; account routes accessible without losing the role nav |
+| 7 | `P2-SUX-001-16-5` | `ready` | `P1` | Nav-label + eyebrow + public-nav-trim cleanup — align same-href labels across families, drop meaningless eyebrows on private families, move public reassurance links into the footer |
 | 7 | `P2-SUX-001-17` | `ready` | `P1` | DS `BottomNav` primitive + adoption for student and tutor families on `< 768px` |
 | 7 | `P2-SUX-001-18` | `ready` | `P1` | Desktop single-row header guarantee — collapse overflow into a `MoreMenu` instead of wrapping into stacked pill rows |
 | 7 | `P2-SUX-001-19` | `ready` | `P2` | Public family mobile chrome — hamburger drawer instead of wrapped pill rows |
@@ -1025,10 +1026,121 @@ Markup:
 - Vitest unit test for `AvatarMenu`: opens on click, focuses first item, closes on `Esc`, navigates with arrows
 - manual: sign in, click avatar from `/tutors`, `/results`, `/tutor/overview`, `/settings`; confirm the menu opens in all four places and the surrounding nav rail does not change
 
+### 5.16-5 `P2-SUX-001-16-5` Nav-label + eyebrow + public-nav-trim cleanup
+
+**Status:** `ready` · **Priority:** `P1`
+**Depends on:** `P2-SUX-001-14` (the ADR these changes amend), `P2-SUX-001-15` (viewer slot present on every consumer). Lands **before** `-17` and `-19` so those subtasks consume the trimmed list and renamed labels directly instead of having to relabel afterwards.
+
+**Problem**
+
+The header is now consistent in *shape* across families (per `P2-SUX-001-14`/`-15`), but the *labels* and the *content* of the nav still drift in three concrete ways that confuse users:
+
+1. **Same href, different label.** [src/lib/routing/navigation.ts](../../src/lib/routing/navigation.ts) lists the same destination under two labels depending on the family:
+   - `/tutors` → `Find Tutors` in `public`, `Browse` in `student`
+   - `/match` → `Get Matched` in `public`, `Match` in `student`
+   The reasoning recorded in `P2-SUX-001-05` ("the public tutor index is the student's 'open browse' surface") asks the user to learn two words for one destination. They click `Browse`, land on a page titled `Find Tutors`, and lose trust in the nav.
+2. **`Results` is a generic label.** The student nav exposes `/results` as `Results`, and the page H1 today is `Your tutor results` ([src/app/(student)/results/page.tsx](../../src/app/(student)/results/page.tsx)). To a first-time user, "Results" reads as "search results". The natural pair with `/match` (the action) is "my matches" (the outcome).
+3. **Implementation labels leak into the eyebrow.** [src/app/(student)/layout.tsx](../../src/app/(student)/layout.tsx) passes `eyebrow="Student routes"`, [src/app/tutor/layout.tsx](../../src/app/tutor/layout.tsx) passes `eyebrow="Tutor"`, [src/app/internal/layout.tsx](../../src/app/internal/layout.tsx) passes `eyebrow="Internal routes"`. None of these convey product meaning to a user — the active item in the nav already tells them which family they are in. `IB tutor matching` (public) and `Your account` (account) are user-meaningful and stay.
+
+In addition, the public family's persistent top nav today carries **seven** items, mixing high-conversion CTAs (Home, Find Tutors, Get Matched, Become a Tutor) with reassurance content (How It Works, Trust & Safety, Support). Industry standard for marketing surfaces is to keep top nav for conversion and push reassurance content into the footer — that also makes the `-18` single-row guarantee trivial at every viewport and gives the `-19` hamburger a shorter drawer.
+
+**Required source docs**
+
+- [docs/architecture/app-header-shape-v1.md](../architecture/app-header-shape-v1.md) — § 4 binding rules, § 5.1 student core, § 5.3 public family note (this task amends them)
+- [docs/design-system/component-inventory-v1.md](../design-system/component-inventory-v1.md) § 4 (`AppFrame`, `AppHeader`, `BottomNav` entries that cite the old labels)
+- [docs/design-system/agent-ui-rules.md](../design-system/agent-ui-rules.md) § 7 (copy discipline)
+- [docs/architecture/route-layout-implementation-map-v1.md](../architecture/route-layout-implementation-map-v1.md) § 14 (shared navigation rules)
+- [src/lib/routing/navigation.ts](../../src/lib/routing/navigation.ts) — the data source
+- existing layout files: `src/app/(public)/layout.tsx`, `src/app/(student)/layout.tsx`, `src/app/tutor/layout.tsx`, `src/app/(account)/layout.tsx`, `src/app/internal/layout.tsx`
+- `src/components/shell/app-frame.tsx` — `eyebrow` prop is required today; this task makes it optional
+
+**Scope**
+
+This task delivers four bundled changes plus the doc amendments that keep `-14`, `-17`, and `-19` aligned.
+
+1. **Align same-href labels in [src/lib/routing/navigation.ts](../../src/lib/routing/navigation.ts).** Rename three student-nav entries so the label matches the public canonical:
+   - `{ href: "/match", label: "Match", group: "Find" }` → `{ href: "/match", label: "Get Matched", group: "Find" }`
+   - `{ href: "/results", label: "Results", group: "Find" }` → `{ href: "/results", label: "My matches", group: "Find" }`
+   - `{ href: "/tutors" as Route, label: "Browse", group: "Find" }` → `{ href: "/tutors" as Route, label: "Find Tutors", group: "Find" }`
+   The student group labels (`Find` / `Decide` / `Use`) from `P2-SUX-001-05` stay unchanged. Tutor, account, and internal navs are unchanged.
+2. **Trim the public top nav to conversion items only.** Update the `public` entry in `navigationByFamily` to:
+   ```ts
+   public: [
+     { href: "/", label: "Home" },
+     { href: "/tutors" as Route, label: "Find Tutors" },
+     { href: "/match", label: "Get Matched" },
+     { href: "/become-a-tutor", label: "Become a Tutor" },
+   ],
+   ```
+   Move `How It Works`, `Trust & Safety` into the public footer. `Support` is already in the footer.
+3. **Update [src/app/(public)/layout.tsx](../../src/app/(public)/layout.tsx) `footerLinks`** so the three reassurance pages are reachable on every public page:
+   ```ts
+   footerLinks={[
+     { href: "/how-it-works", label: "How It Works" },
+     { href: "/trust-and-safety", label: "Trust & Safety" },
+     { href: "/support", label: "Support" },
+     { href: "/privacy-policy", label: "Privacy policy" },
+     { href: "/terms", label: "Terms" },
+   ]}
+   ```
+   Order is conversion-context first (how/trust/support), then legal (privacy/terms).
+4. **Drop meaningless eyebrows on private families and make the prop optional.**
+   - In [src/components/shell/app-frame.tsx](../../src/components/shell/app-frame.tsx), change `eyebrow: string` to `eyebrow?: string` on `AppFrameProps`. In the header markup, conditionally render the `<p className={styles.eyebrow}>{eyebrow}</p>` line only when `eyebrow` is a non-empty string. In the hero panel branch (`showHero` true), pass `eyebrow` only when set — but note every current layout passes `showHero={false}`, so the hero branch is dead today; do not add new hero coverage here.
+   - In [src/app/(student)/layout.tsx](../../src/app/(student)/layout.tsx), [src/app/tutor/layout.tsx](../../src/app/tutor/layout.tsx), [src/app/internal/layout.tsx](../../src/app/internal/layout.tsx): remove the `eyebrow` prop entirely from the `<AppFrame>` call.
+   - [src/app/(public)/layout.tsx](../../src/app/(public)/layout.tsx) keeps `eyebrow="IB tutor matching"` (marketing tagline, conveys product positioning).
+   - [src/app/(account)/layout.tsx](../../src/app/(account)/layout.tsx) keeps `eyebrow="Your account"` (tells the user they are in personal-settings scope).
+5. **Align the `/results` page surface to the new label.** In [src/app/(student)/results/page.tsx](../../src/app/(student)/results/page.tsx):
+   - Page H1 `Your tutor results` → `Your matches`
+   - Eyebrow chrome `MATCH RESULTS` (where it appears as a `Section`/`Panel` eyebrow) → `MATCHES`
+   - Metadata title (if route-level metadata sets one) → `My matches`
+   - Do **not** rename the route segment, the DTOs, or the route handlers — only user-visible copy moves. `loadResultsPageData`, `ResultsListDto`, `match_results` table, and the `/results` URL all keep their existing names.
+
+**Doc amendments (binding for `-17` and `-19`)**
+
+6. **Amend [docs/architecture/app-header-shape-v1.md](../architecture/app-header-shape-v1.md).**
+   - § 5.1 (Student family core) table: update the labels — `Match` → `Get Matched`, `Results` → `My matches`. Update the `More` menu line to read `Find Tutors (/tutors), Saved (/saved), Compare (/compare)`. Adjust the rationale paragraph so the named labels match.
+   - § 5.3 (Public family): replace the seven-item assumption with the trimmed four-item nav, and note that How It Works / Trust & Safety / Support live in the footer on every public page.
+   - § 4 binding rule 1 (brand block): adjust the "route-family eyebrow" sentence to "where the family declares one" — the eyebrow is optional per family.
+7. **Amend [docs/design-system/component-inventory-v1.md](../design-system/component-inventory-v1.md) § 4.**
+   - `AppHeader` row: replace the example dock list `Match / Results / Lessons / Messages / More` with `Get Matched / My matches / Lessons / Messages / More`.
+   - `BottomNav` row: same label substitution in the student-core sentence.
+   - `AppFrame` row: note that `eyebrow` is now optional (`eyebrow?: string`).
+8. **Amend `P2-SUX-001-17`** (this same file, § 5.17): in the binding student-core table, replace `Match` with `Get Matched`, `Results` with `My matches`, and in the `More` menu list replace `Browse (/tutors)` with `Find Tutors (/tutors)`. Public-family note already says "no `BottomNav`" — unchanged.
+9. **Amend `P2-SUX-001-19`** (this same file, § 5.19): the hamburger-drawer item list currently reads `Home, Find Tutors, Get Matched, How It Works, Trust & Safety, Become a Tutor, Support`. Replace with the trimmed four-item list (`Home, Find Tutors, Get Matched, Become a Tutor`) and note that How It Works / Trust & Safety / Support live in the footer rather than the drawer.
+
+**Out of scope**
+
+- Changing the URL paths themselves (`/match`, `/results`, `/tutors` all keep their current routes — only user-visible labels move)
+- Renaming DTOs, repositories, or DB tables that internally use "results" or "match"
+- Adding new public surfaces or removing existing public pages — `/how-it-works`, `/trust-and-safety`, `/support` keep their routes and SEO posture, they just leave the top nav
+- Touching the tutor family's nav labels (no same-href drift there)
+- Adding role-aware nav variants ("if signed in as a tutor, show a different label") — separate concern, escalate before adding
+- Adding a notification badge or unread count on any nav slot
+- Reworking the footer DS surface chrome — `footerLinks` already accepts the new entries; no new component
+
+**Acceptance criteria**
+
+- `grep -n '"Browse"\|"Results"\|"Match"' src/lib/routing/navigation.ts` returns no results for the **student** family entries pointing at `/tutors`, `/results`, `/match` respectively. (`"Match"` may still appear elsewhere as a string — only the student-family entries change.)
+- The student family's `navigationByFamily.student` lists `Get Matched`, `My matches`, `Find Tutors`, `Saved`, `Compare`, `Lessons`, `Messages` in that order, grouped per `P2-SUX-001-05`.
+- The public family's `navigationByFamily.public` is exactly four entries: `Home`, `Find Tutors`, `Get Matched`, `Become a Tutor`.
+- Every public page renders How It Works, Trust & Safety, Support, Privacy policy, and Terms in the footer.
+- `eyebrow` is optional in `AppFrameProps`. `(student)`, `tutor`, `internal` layouts do not pass it. `(public)` passes `"IB tutor matching"`; `(account)` passes `"Your account"`.
+- `/results` H1 reads `Your matches`. No instance of `Your tutor results` remains in `src/app/(student)/results/**`.
+- The `-14` ADR, the inventory § 4, and the `-17`/`-19` task specs in this same pack are updated to reference the new labels and the trimmed public nav.
+- All previously-passing routes still resolve. `/how-it-works`, `/trust-and-safety`, `/support` remain reachable.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `pnpm test:e2e` (public smoke covers footer rendering and confirms the trimmed top nav still surfaces every public route through footer links). If a smoke assertion hard-codes the seven-item nav list, update it in the same task
+- manual at 1280px: walk `/` → `/tutors` → `/match` → `/results` → `/lessons`; confirm the nav label for `/tutors` reads `Find Tutors` on both public and student, the nav label for `/match` reads `Get Matched` on both, and `/results` reads `My matches` in the student nav and as the page H1
+- manual: load a public page, confirm How It Works / Trust & Safety / Support appear in the footer and not in the top nav
+- manual at 768px and 360px: header is single-line (the trim makes this comfortable on the public family; private families are unchanged at this stage — `-17`/`-18` finish the breakpoint behavior)
+
 ### 5.17 `P2-SUX-001-17` DS `BottomNav` primitive + adoption for student and tutor
 
 **Status:** `ready` · **Priority:** `P1`
-**Depends on:** `P2-SUX-001-14`, `P2-SUX-001-05` (student nav grouping)
+**Depends on:** `P2-SUX-001-14`, `P2-SUX-001-05` (student nav grouping), `P2-SUX-001-16-5` (canonical labels for the student dock)
 
 **Problem**
 

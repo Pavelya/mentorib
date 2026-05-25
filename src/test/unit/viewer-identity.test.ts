@@ -13,7 +13,6 @@ describe("resolveViewerIdentity", () => {
 
     expect(viewer.displayName).toBe("Pavel Yampolsky");
     expect(viewer.avatarUrl).toBe("https://example.com/me.jpg");
-    expect(viewer.settingsHref).toBe("/settings");
     expect(getInitials(viewer.displayName)).toBe("PY");
   });
 

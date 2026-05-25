@@ -2,13 +2,14 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Avatar, Panel, getButtonClassName } from "@/components/ui";
+import { Panel, getButtonClassName } from "@/components/ui";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import type { NavItem } from "@/lib/routing/navigation";
 import type { ViewerIdentity } from "@/lib/identity/viewer";
 
 import { AppFrameNav } from "./app-frame-nav";
 import styles from "./app-frame.module.css";
+import { AvatarMenu, DEFAULT_AVATAR_MENU_ITEMS } from "./avatar-menu";
 
 export type AppFrameFooterLink = {
   href: Route;
@@ -60,18 +61,7 @@ export function AppFrame({
           ) : null}
 
           {viewer ? (
-            <Link
-              aria-label="Open account settings"
-              className={styles.viewerLink}
-              href={viewer.settingsHref}
-            >
-              <Avatar
-                decorative
-                name={viewer.displayName}
-                size="sm"
-                src={viewer.avatarUrl ?? undefined}
-              />
-            </Link>
+            <AvatarMenu items={DEFAULT_AVATAR_MENU_ITEMS} viewer={viewer} />
           ) : (
             <Link
               className={getButtonClassName({ size: "compact", variant: "secondary" })}

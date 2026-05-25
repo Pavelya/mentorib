@@ -214,6 +214,7 @@ function SavedEmptyState({ hasLearningNeed }: { hasLearningNeed: boolean }) {
           "Saving keeps the shortlist with you across sessions and devices.",
           "Compare lives inside Saved once you have a few candidates.",
         ]}
+        icon="star"
         kind="empty"
         title="No saved tutors yet"
       />
@@ -232,6 +233,7 @@ function SavedEmptyState({ hasLearningNeed }: { hasLearningNeed: boolean }) {
         "Use Save on any result row to add a tutor here.",
         "Compare lives inside Saved once you have a few candidates.",
       ]}
+      icon="star"
       kind="empty"
       title="No saved tutors yet"
     />

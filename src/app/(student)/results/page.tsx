@@ -267,6 +267,7 @@ function renderResultsPage({
                 "Try returning to all results first.",
                 "If you still do not see the right fit, refine the learning need.",
               ]}
+              icon="circleDashed"
               kind="empty"
               title="No tutors match this filtered view"
             />
@@ -282,6 +283,7 @@ function renderResultsPage({
             "The route keeps the need summary visible once you submit it.",
             "You can refine the need later without losing the results layout.",
           ]}
+          icon="circleDashed"
           kind="empty"
           title="No active learning need yet"
         />
@@ -324,6 +326,7 @@ function renderResultsPage({
             "Try resubmitting the need from the match flow.",
             "If the problem continues, refresh and try again in a moment.",
           ]}
+          icon="alertTriangle"
           kind="error"
           title="We could not finish this match run"
         />

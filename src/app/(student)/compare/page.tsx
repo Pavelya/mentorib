@@ -464,6 +464,7 @@ function CompareEmptyState({
           "Compare lives next to saved, so the shortlist and the closer read stay one decision.",
           "Up to three tutors can sit in compare at once.",
         ]}
+        icon="users"
         kind="empty"
         title="No tutors in compare yet"
       />
@@ -482,6 +483,7 @@ function CompareEmptyState({
         "Use Compare on any saved tutor row to add them to this view.",
         "Compare is capped at three tutors so the side-by-side read stays focused.",
       ]}
+      icon="users"
       kind="empty"
       title="No tutors in compare yet"
     />

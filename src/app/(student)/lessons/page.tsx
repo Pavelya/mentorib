@@ -146,6 +146,7 @@ function renderLessonsPage({
             </Link>
           }
           description="Once a tutor accepts your lesson request, the session shows up here with the meeting link, lesson notes, and a way to flag any issue."
+          icon="calendar"
           kind="empty"
           title="No lessons yet"
         />

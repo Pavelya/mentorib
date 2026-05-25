@@ -1,4 +1,10 @@
 export { Avatar } from "./avatar";
+export {
+  BottomNav,
+  type BottomNavItem,
+  type BottomNavOverflowItem,
+  type BottomNavProps,
+} from "./bottom-nav";
 export { Button, getButtonClassName } from "./button";
 export { Card, type CardProps } from "./card";
 export { Chip, type ChipProps, type ChipTone } from "./chip";

@@ -22,7 +22,10 @@ export default async function StudentLayout({ children }: StudentLayoutProps) {
     <AppFrame
       description="Student-mode shell for the problem-led match flow, booking path, and continuity surfaces."
       footerNote=""
-      navItems={navigationByFamily.student}
+      bottomNavAriaLabel="Student primary navigation"
+      bottomNavItems={navigationByFamily.student.bottomNav}
+      bottomNavOverflowItems={navigationByFamily.student.bottomNavOverflow}
+      navItems={navigationByFamily.student.items}
       showHero={false}
       title="Student workflow inside the shared product"
       viewer={viewer ?? undefined}

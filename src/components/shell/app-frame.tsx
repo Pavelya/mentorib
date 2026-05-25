@@ -2,7 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Panel, getButtonClassName } from "@/components/ui";
+import { BottomNav, type BottomNavItem, Panel, getButtonClassName } from "@/components/ui";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import type { NavItem } from "@/lib/routing/navigation";
 import type { ViewerIdentity } from "@/lib/identity/viewer";
@@ -23,6 +23,9 @@ type AppFrameProps = {
   footerLinks?: AppFrameFooterLink[];
   footerNote?: string;
   navItems?: NavItem[];
+  bottomNavItems?: BottomNavItem[];
+  bottomNavOverflowItems?: NavItem[];
+  bottomNavAriaLabel?: string;
   children: ReactNode;
   showHero?: boolean;
   tone?: "public" | "private" | "minimal";
@@ -36,14 +39,30 @@ export function AppFrame({
   footerLinks = [],
   footerNote = "",
   navItems = [],
+  bottomNavItems,
+  bottomNavOverflowItems,
+  bottomNavAriaLabel,
   children,
   showHero = true,
   tone = "private",
   viewer,
 }: AppFrameProps) {
-  const frameClassName =
-    tone === "minimal" ? `${styles.frame} ${styles.minimal}` : styles.frame;
+  const hasBottomNav = (bottomNavItems?.length ?? 0) > 0;
+  const frameClassName = [
+    styles.frame,
+    tone === "minimal" ? styles.minimal : "",
+    hasBottomNav ? styles.frameWithBottomNav : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   const heroTone = tone === "public" ? "warm" : tone === "minimal" ? "soft" : "raised";
+  const desktopNavClassName = [styles.desktopNav, hasBottomNav ? styles.hideOnMobile : ""]
+    .filter(Boolean)
+    .join(" ");
+  const overflowNavItems: NavItem[] | undefined =
+    bottomNavOverflowItems && bottomNavOverflowItems.length > 0
+      ? bottomNavOverflowItems
+      : undefined;
 
   return (
     <div className={frameClassName}>
@@ -57,10 +76,12 @@ export function AppFrame({
           </div>
 
           {navItems.length > 0 ? (
-            <AppFrameNav
-              ariaLabel={eyebrow ? `${eyebrow} navigation` : "Primary navigation"}
-              items={navItems}
-            />
+            <div className={desktopNavClassName}>
+              <AppFrameNav
+                ariaLabel={eyebrow ? `${eyebrow} navigation` : "Primary navigation"}
+                items={navItems}
+              />
+            </div>
           ) : null}
 
           {viewer ? (
@@ -99,6 +120,18 @@ export function AppFrame({
           {children}
         </div>
       </main>
+
+      {hasBottomNav ? (
+        <BottomNav
+          aria-label={bottomNavAriaLabel ?? "Primary navigation"}
+          items={bottomNavItems!}
+          overflowItems={
+            overflowNavItems
+              ? overflowNavItems.map((item) => ({ href: item.href, label: item.label }))
+              : undefined
+          }
+        />
+      ) : null}
 
       {footerNote || footerLinks.length > 0 ? (
         <footer className={styles.footer}>

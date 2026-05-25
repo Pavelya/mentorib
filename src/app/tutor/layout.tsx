@@ -21,7 +21,10 @@ export default async function TutorLayout({ children }: TutorLayoutProps) {
   return (
     <AppFrame
       description="Tutor-mode operational routes."
-      navItems={navigationByFamily.tutor}
+      bottomNavAriaLabel="Tutor primary navigation"
+      bottomNavItems={navigationByFamily.tutor.bottomNav}
+      bottomNavOverflowItems={navigationByFamily.tutor.bottomNavOverflow}
+      navItems={navigationByFamily.tutor.items}
       showHero={false}
       title="Tutor"
       viewer={viewer ?? undefined}

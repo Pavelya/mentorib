@@ -12,6 +12,20 @@
   background: var(--surface-page);
 }
 
+.desktopNav {
+  display: contents;
+}
+
+@media (max-width: 767px) {
+  .hideOnMobile {
+    display: none;
+  }
+
+  .frameWithBottomNav .main {
+    padding-bottom: calc(env(safe-area-inset-bottom) + var(--space-16));
+  }
+}
+
 .header {
   border-bottom: 1px solid var(--border-subtle);
   background: rgb(252 250 244 / 0.9);

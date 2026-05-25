@@ -27,7 +27,7 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
         { href: "/terms", label: "Terms" },
       ]}
       footerNote="Mentor IB helps students and parents move from a specific IB need to a tutor who fits."
-      navItems={navigationByFamily.public}
+      navItems={navigationByFamily.public.items}
       showHero={false}
       title="One ecosystem. Match-first guidance."
       tone="public"

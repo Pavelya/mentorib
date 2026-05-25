@@ -87,9 +87,9 @@ Tasks on the same step can run in parallel. Complete all tasks in a step before 
 | 3 | `P2-SUX-001-10` | `ready` | `P2` | Booking sidebar simplification — drop nested `Card`s, lift policy/consent under one `Section` |
 | 4 | `P2-SUX-001-11` | `ready` | `P2` | Student copy pass (InlineNotice titles, redundant subtitles, "X unavailable" cleanup) |
 | 4 | `P2-SUX-001-12` | `ready` | `P2` | Icon usage pass — readiness signals on results, saved, compare, lessons; `ScreenState icon` adopted on all four student empty states |
-| 5 | `P2-SUX-001-13` | `ready` | `P2` | First-wave verification: walk every `/(student)/**` route on desktop + mobile, confirm subtasks `-01` through `-12` |
-| 6 | `P2-SUX-001-14` | `ready` | `P1` | Canonical `AppHeader` spec — one shape everywhere (brand · nav · avatar), avatar always present when signed in |
-| 6 | `P2-SUX-001-15` | `ready` | `P1` | Always load `viewer` across every `AppFrame` consumer, including the `(public)` family |
+| 5 | `P2-SUX-001-13` | `done` | `P2` | First-wave verification: walk every `/(student)/**` route on desktop + mobile, confirm subtasks `-01` through `-12` |
+| 6 | `P2-SUX-001-14` | `done` | `P1` | Canonical `AppHeader` spec — one shape everywhere (brand · nav · avatar), avatar always present when signed in |
+| 6 | `P2-SUX-001-15` | `done` | `P1` | Always load `viewer` across every `AppFrame` consumer, including the `(public)` family |
 | 7 | `P2-SUX-001-16` | `ready` | `P1` | DS `AvatarMenu` (popover) — avatar opens a menu instead of linking straight to `/settings`; account routes accessible without losing the role nav |
 | 7 | `P2-SUX-001-17` | `ready` | `P1` | DS `BottomNav` primitive + adoption for student and tutor families on `< 768px` |
 | 7 | `P2-SUX-001-18` | `ready` | `P1` | Desktop single-row header guarantee — collapse overflow into a `MoreMenu` instead of wrapping into stacked pill rows |
@@ -769,7 +769,7 @@ Specific spots that read well with icons today but do not have them:
 
 ### 5.13 `P2-SUX-001-13` First-wave verification
 
-**Status:** `ready` · **Priority:** `P2`
+**Status:** `done` · **Priority:** `P2`
 
 **Goal**
 
@@ -805,7 +805,7 @@ End-to-end walkthrough that the previous twelve subtasks (`-01` through `-12`) l
 
 ### 5.14 `P2-SUX-001-14` Canonical `AppHeader` spec
 
-**Status:** `ready` · **Priority:** `P1`
+**Status:** `done` · **Priority:** `P1`
 
 **Problem**
 
@@ -902,7 +902,7 @@ No code lands in this task. Subtasks `-15` through `-19` implement against this 
 
 ### 5.15 `P2-SUX-001-15` Always load `viewer` across every `AppFrame` consumer
 
-**Status:** `ready` · **Priority:** `P1`
+**Status:** `done` · **Priority:** `P1`
 **Depends on:** none (can run in parallel with `-14`, but final code lands after `-14`)
 
 **Problem**
@@ -1673,7 +1673,7 @@ End-to-end walkthrough that the Account family work (`-21` through `-27`) landed
 
 ## 6. Closure notes
 
-`P2-SUX-001` parent is open. Update this section when `-13` lands.
+**First wave (subtasks `-01` through `-13`) — closed 2026-05-25.** The first wave of `P2-SUX-001` landed end-to-end. The lesson-detail token vocabulary was migrated to `--ink-*` / `--body-*` / `--line-body` on both student and tutor sides (`-01`), the route-local Unicode-star markup was replaced by a single DS `StarRating` primitive (`-02`), `/compare`'s route-local `.column` Card recreation was rebuilt on the DS `Card` / `Panel` surface (`-03`), `/book/[context]`'s route-local hero typography and metric literals were removed (`-04`), the student nav grouped into Find / Decide / Use with `/compare` promoted to a first-class rail entry (`-05`), every `/(student)/**` route now carries the canonical eyebrow + h1 + description page intro followed by `TimezoneNotice` (`-06`), the three near-duplicate compare-readiness summaries collapsed into one `CompareReadinessNotice` continuity composer (`-07`), the "summary + handoff" Panel pairs on `/results` / `/saved` / `/compare` were removed (`-08`), lesson-detail headings deduped (`-09`), the booking sidebar simplified into one `Section` (`-10`), the student copy pass tightened `InlineNotice` titles and removed redundant subtitles (`-11`), and the icon usage pass adopted `ScreenState icon` on every student empty state (`-12`). End-to-end verification under `-13` confirmed every `/(student)/**` route renders one page title, the canonical intro, the timezone notice directly below the intro, three nav groups with `/compare` reachable in one click, registry icons on every empty/error state, no Unicode-character star markup, no raw `lessonStatus` / `paymentStatus` enum strings, and no inline `style={{ … }}` on text rendering paths. The parent task remains open through the cross-family header pack (`-14` … `-20`) and the Account-family pack (`-21` … `-28`); their closure notes append here as each wave lands.
 
 ## 7. Manual smoke checklist for the human (to run after each subtask)
 

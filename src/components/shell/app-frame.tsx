@@ -2,7 +2,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Avatar, Panel } from "@/components/ui";
+import { Avatar, Panel, getButtonClassName } from "@/components/ui";
+import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import type { NavItem } from "@/lib/routing/navigation";
 import type { ViewerIdentity } from "@/lib/identity/viewer";
 
@@ -71,7 +72,14 @@ export function AppFrame({
                 src={viewer.avatarUrl ?? undefined}
               />
             </Link>
-          ) : null}
+          ) : (
+            <Link
+              className={getButtonClassName({ size: "compact", variant: "secondary" })}
+              href={buildAuthSignInPath() as Route}
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </header>
 

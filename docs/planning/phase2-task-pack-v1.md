@@ -213,6 +213,8 @@ Bad parallel examples:
 | 6 | `P2-QUALITY-001` | `ready` | `P2` | 4 | Phase 2 verification and operational hardening pass |
 
 > **Footnote — tutor UX polish.** The follow-on pack [`P2-TUX-001`](./phase2-tutor-ux-task-pack-v1.md) (subtasks `-01` … `-15`) landed end-to-end on 2026-05-22. It applied DS-first cleanup, copy discipline, nav grouping, schedule simplification, and page-intro consistency across every `/tutor/**` route after `P2-MEDIA-001` closed. No new domain modules, vendors, or reference data were introduced. Final verification ran under `P2-TUX-001-14`.
+>
+> **Footnote — student UX polish (first wave).** The mirror pack [`P2-SUX-001`](./phase2-student-ux-task-pack-v1.md) first wave (subtasks `-01` … `-13`) landed end-to-end on 2026-05-25. It carried the same DS-first cleanup, copy discipline, page-intro consistency, and nav grouping (Find / Decide / Use, with `/compare` promoted to first-class) across every `/(student)/**` route, lifted three route-local primitives into the DS (`StarRating`, `CompareReadinessNotice`, the lesson-detail token vocabulary), and adopted `ScreenState icon` on every student empty state. No new domain modules, vendors, or reference data were introduced. The cross-family header pack and the Account-family pack (subtasks `-14` … `-28`) remain open in the same doc.
 
 ## 11. Detailed Tasks
 

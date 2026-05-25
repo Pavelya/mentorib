@@ -538,6 +538,8 @@ This is especially important for:
 
 ## 14. Shared Navigation And Mode Rules
 
+**Header shape:** the cross-route-family header shape (brand block, top-bar nav, avatar menu, mobile bottom dock, public hamburger drawer, desktop single-row overflow rule, and the four-tab mobile cores for the student and tutor families) is governed by `docs/architecture/app-header-shape-v1.md`. That ADR is binding on every `AppFrame` consumer and supersedes the layout-by-layout phrasing in §§ 9.1–9.7 of this map where the two conflict. Update the ADR (not this map) when the header shape needs to change.
+
 Mentor IB should feel like one product with different modes, not two products.
 
 That means:

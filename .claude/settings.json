@@ -17,7 +17,13 @@
       "WebSearch",
       "WebFetch(domain:www.ibmatch.com)",
       "Bash(curl -sS -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36\" https://www.ibmatch.com/sitemap.xml -o /tmp/ibmatch_sitemap.xml)",
-      "Bash(git -C /Users/pavel/mentorib log --oneline -5 -- src/components/continuity/continuity-primitives.tsx src/app/\\\\\\(student\\\\\\)/lessons/lesson-presentation.ts)"
+      "Bash(git -C /Users/pavel/mentorib log --oneline -5 -- src/components/continuity/continuity-primitives.tsx src/app/\\\\\\(student\\\\\\)/lessons/lesson-presentation.ts)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/tutors)",
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(git stash *)",
+      "Bash(kill 21621)",
+      "Bash(curl -sf -o /dev/null http://localhost:3000/tutors)",
+      "Bash(curl -s http://localhost:3000/tutors)"
     ]
   }
 }

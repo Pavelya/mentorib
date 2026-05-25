@@ -68,7 +68,7 @@ export function AppFrame({
     <div className={frameClassName}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <div className={styles.brandBlock}>
+          <div className={[styles.brandBlock, styles.brandSlot].join(" ")}>
             <Link className={styles.brand} href="/">
               Mentor IB
             </Link>
@@ -84,16 +84,18 @@ export function AppFrame({
             </div>
           ) : null}
 
-          {viewer ? (
-            <AvatarMenu items={DEFAULT_AVATAR_MENU_ITEMS} viewer={viewer} />
-          ) : (
-            <Link
-              className={getButtonClassName({ size: "compact", variant: "secondary" })}
-              href={buildAuthSignInPath() as Route}
-            >
-              Sign in
-            </Link>
-          )}
+          <div className={styles.trailingSlot}>
+            {viewer ? (
+              <AvatarMenu items={DEFAULT_AVATAR_MENU_ITEMS} viewer={viewer} />
+            ) : (
+              <Link
+                className={getButtonClassName({ size: "compact", variant: "secondary" })}
+                href={buildAuthSignInPath() as Route}
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

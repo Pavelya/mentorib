@@ -3,6 +3,8 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import type { AdminActionKey } from "@/modules/admin/actions";
+import { recordAdminAction } from "@/modules/admin/audit-service";
 import { createNotification, NOTIFICATION_OBJECT_TYPES } from "@/modules/notifications/service";
 import { scheduleNotificationEmailDelivery } from "@/modules/notifications/email-delivery";
 import { logEmailEvent } from "@/lib/email/logging";
@@ -146,6 +148,33 @@ async function runReviewTransition(
     );
   }
 
+  try {
+    await recordAdminAction({
+      action: resolveApplicationAuditActionKey(action),
+      actorAppUserId: input.reviewerAppUserId,
+      afterState: { applicationStatus: nextStatus },
+      beforeState: { applicationStatus: profile.application_status },
+      reason: internalNote ?? null,
+      targetId: profile.id,
+      targetType: "tutor_application",
+    });
+  } catch (auditError) {
+    // Roll back both the status flip and the audit-review row so the
+    // tutor_application_reviews trail does not contain orphan rows that
+    // never made it into admin_action_logs.
+    await supabase
+      .from("tutor_profiles")
+      .update({ application_status: profile.application_status })
+      .eq("id", profile.id);
+    await supabase
+      .from("tutor_application_reviews")
+      .delete()
+      .eq("tutor_profile_id", profile.id)
+      .eq("review_status", resolveReviewStatusForAction(action))
+      .eq("reviewer_app_user_id", input.reviewerAppUserId);
+    throw auditError;
+  }
+
   if (action === "approve") {
     const { error: roleError } = await supabase
       .from("user_roles")
@@ -154,7 +183,8 @@ async function runReviewTransition(
       .eq("role", "tutor");
 
     if (roleError) {
-      // Roll back both: status and the audit row.
+      // Roll back the status flip, the application_reviews audit row, and
+      // the admin_action_logs row so all three stay consistent.
       await supabase
         .from("tutor_profiles")
         .update({ application_status: profile.application_status })
@@ -165,6 +195,13 @@ async function runReviewTransition(
         .eq("tutor_profile_id", profile.id)
         .eq("review_status", "approved")
         .eq("reviewer_app_user_id", input.reviewerAppUserId);
+      await supabase
+        .from("admin_action_logs")
+        .delete()
+        .eq("action_key", "tutor_application.approve")
+        .eq("actor_app_user_id", input.reviewerAppUserId)
+        .eq("target_id", profile.id)
+        .eq("target_type", "tutor_application");
       throw new TutorApplicationReviewError(
         "role_activation_failed",
         "We couldn't activate the tutor role. The application status was rolled back.",
@@ -210,6 +247,21 @@ async function loadProfileById(
   }
 
   return data ?? null;
+}
+
+function resolveApplicationAuditActionKey(
+  action: TutorApplicationReviewActionKey,
+): AdminActionKey {
+  switch (action) {
+    case "claim":
+      return "tutor_application.claim";
+    case "approve":
+      return "tutor_application.approve";
+    case "request_changes":
+      return "tutor_application.request_changes";
+    case "reject":
+      return "tutor_application.reject";
+  }
 }
 
 function sanitizeNote(value: string | null | undefined): string | null {
@@ -438,6 +490,43 @@ export async function setTutorCredentialReviewStatus(
       "credential_audit_insert_failed",
       "We couldn't record the credential decision. Please try again.",
     );
+  }
+
+  try {
+    await recordAdminAction({
+      action: "tutor_credential.set_review_status",
+      actorAppUserId: input.reviewerAppUserId,
+      afterState: {
+        action: input.action,
+        reviewStatus: nextReviewStatus,
+      },
+      beforeState: { reviewStatus: credential.review_status },
+      reason: internalNote ?? null,
+      targetId: credential.id,
+      targetType: "tutor_credential",
+    });
+  } catch (auditError) {
+    // Roll back the credential transition AND the credential audit row so
+    // admin_action_logs stays the canonical record of intent.
+    await supabase
+      .from("tutor_credentials")
+      .update({
+        review_status: credential.review_status,
+        reviewed_at: credential.reviewed_at,
+      })
+      .eq("id", credential.id);
+    await supabase
+      .from("tutor_application_reviews")
+      .delete()
+      .eq("tutor_profile_id", credential.tutor_profile_id)
+      .eq("review_status", auditReviewStatus)
+      .eq("reviewer_app_user_id", input.reviewerAppUserId)
+      .eq("internal_note", buildCredentialAuditInternalNote({
+        credentialId: credential.id,
+        action: input.action,
+        note: internalNote,
+      }));
+    throw auditError;
   }
 
   await dispatchCredentialReviewedNotification({

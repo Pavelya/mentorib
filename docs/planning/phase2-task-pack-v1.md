@@ -205,12 +205,13 @@ Bad parallel examples:
 | 3 | `P2-MEDIA-001-09` | `ready` | `P1` | 1 | Internal credential review panel + `setTutorCredentialReviewStatus` + `tutor_credential_reviewed` notification |
 | 3 | `P2-MEDIA-001-10` | `ready` | `P1` | 1 | Final verification of `P2-MEDIA-001` scope (closes parent) |
 | 3 | `P2-SHELL-001` | `ready` | `P2` | 3 | Header viewer avatar across every signed-in route family (link to `/settings`, image → initials → email-char fallback) |
-| 3 | `P2-OPS-001` | `draft` | `P2` | 3 | Admin trust and report-management internal surfaces |
-| 3 | `P2-OPS-003` | `draft` | `P2` | 3 | Admin reference-data and policy broadcast management |
-| 4 | `P2-OPS-002` | `draft` | `P2` | 3 | Admin user detail and finance intervention surfaces |
-| 4 | `P2-DISPUTE-001` | `draft` | `P2` | 3 | Lesson-issue internal review and dispute resolution surface |
-| 5 | `P2-DSR-001` | `draft` | `P2` | 3 | Data subject request implementation |
-| 6 | `P2-QUALITY-001` | `ready` | `P2` | 4 | Phase 2 verification and operational hardening pass |
+| 3 | `P2-OPS-000` | `ready` | `P2` | 3 | Internal admin foundations: `admin_action_logs` audit table, `moderation_cases` case table, audit helper, `/internal` hub page |
+| 4 | `P2-OPS-001` | `ready` | `P2` | 3 | Admin trust, report, and public-content-takedown internal surfaces |
+| 4 | `P2-OPS-003` | `ready` | `P2` | 3 | Admin reference-data label and policy-broadcast management (label-edit-only; no slug/key/row creation) |
+| 5 | `P2-OPS-002` | `ready` | `P2` | 3 | Admin user detail, tutor-listing pause/delist, and finance-intervention surfaces |
+| 5 | `P2-DISPUTE-001` | `ready` | `P2` | 3 | Lesson-issue internal review and dispute resolution surface (reuses shared case infra from `P2-OPS-000`) |
+| 6 | `P2-DSR-001` | `draft` | `P2` | 3 | Data subject request implementation |
+| 7 | `P2-QUALITY-001` | `ready` | `P2` | 4 | Phase 2 verification and operational hardening pass |
 
 > **Footnote — tutor UX polish.** The follow-on pack [`P2-TUX-001`](./phase2-tutor-ux-task-pack-v1.md) (subtasks `-01` … `-15`) landed end-to-end on 2026-05-22. It applied DS-first cleanup, copy discipline, nav grouping, schedule simplification, and page-intro consistency across every `/tutor/**` route after `P2-MEDIA-001` closed. No new domain modules, vendors, or reference data were introduced. Final verification ran under `P2-TUX-001-14`.
 >
@@ -1775,188 +1776,489 @@ Tests:
 - The conversation list filter is intentionally client-side: it operates over the already-loaded participant-scoped list so it cannot leak rows the server would have hidden.
 - Mute/archive UI consumes the `OverflowMenuTrigger` + `Menu` primitives delivered by `P2-DS-MENU-001`. Filter chips consume `Chip` with the `pressed` state delivered by the same task. The reaction picker on each message consumes `Popover` (the picker is a button row inside a popover, not a `Menu`, because reactions are not menu items in the ARIA sense — they are toggle buttons; `role="group"` with `aria-label="React with"` is the recommended ARIA wrapper).
 
-## 11.8 `P2-OPS-001` Admin trust and report-management internal surfaces
+## 11.7a Shared admin-surface conventions (binding on every `/internal/**` task)
 
-**Status:** `draft`
+This subsection is non-optional context for `P2-OPS-000`, `P2-OPS-001`, `P2-OPS-002`, `P2-OPS-003`, `P2-DISPUTE-001`, and `P2-DSR-001`. The goal is to prevent the admin lane from drifting into a parallel design system, parallel auth model, or generic everything-app. The `/internal/tutor-reviews` surface shipped by `P2-APPLY-002` is the canonical pattern for every later admin task — copy its shape rather than reinventing.
+
+**Authoritative architectural reference**
+
+- `docs/architecture/admin-and-moderation-architecture-v1.md` is the binding governance doc for this lane. Sections §6 (capability families), §7 (route boundary), §8 (dual-layer access + sensitive-field rule), §9 (queue model), §12 (case model), §14 (public takedown), §15 (notes + evidence), §16 (audit), and §17 (privacy boundary) apply to every admin task and are not re-listed under each task below.
+
+**Reuse, not reinvention**
+
+- Every `/internal/**` page gates access through `requireInternalAdminAccount` (`src/lib/auth/internal-access.ts`). It returns `notFound()` for non-admins per the boundary-error contract — do not introduce a parallel admin guard, do not show a visible `403` shell, do not relax the gate to `auth-only`.
+- Every `/internal/**` page mounts inside the existing `src/app/internal/layout.tsx` and uses the existing `AppFrame` with `navigationByFamily.internal.items`. New internal pages must extend `src/lib/routing/navigation.ts` `internal` family items — do not introduce a parallel internal shell, sidebar, or breadcrumb component.
+- Every admin queue surface follows the two-page shape proven by `/internal/tutor-reviews`: a list page (filter chips, counts, oldest-first pagination, link-only rows) and a detail page (`[id]` route) where decisions are made. The detail page composes a read-only summary `Panel` plus an actions `Panel` driven by a state-machine Server Action. Do not invent inline-editable list rows, modal-driven editors, or single-page combined queues.
+- Every admin form uses Server Actions colocated next to the page (`actions.ts`), Zod-validates input, runs through a domain service module under `src/modules/**`, and writes through the existing service-role path. No internal `/api/*` page-data endpoints. No raw Drizzle calls from the page file.
+
+**Design-system reuse (DS-first is binding)**
+
+- Admin pages compose only existing DS primitives: `Panel`, `Section`, `Card`, `Chip` (with `pressed` for filter state), `StatusBadge`, `Avatar`, `Icon`, `Flag`, `InlineNotice`, `Button`, `TextField`, `Textarea`, `SelectField`, `Switch`, `Popover`, `Menu`, `MenuItem`, `OverflowMenuTrigger`, `ConfirmDialog`. Icons through `src/components/ui/icon.tsx`; flags through `src/components/ui/flag.tsx`.
+- No route-local `.card`, `.chip`, `.panel`, `.menu`, or toggle CSS. No inline SVGs. If an admin task needs a new DS variant, extend the DS in the same commit and update `docs/design-system/component-inventory-v1.md` (and `docs/design-system/tokens-cheatsheet-v1.md` if tokens change) per the `agent-ui-rules.md` rule. `pnpm lint:arch` must pass.
+- Copy is operational and supportive (matching the `/internal/tutor-reviews` tone). No adversarial or jargon-heavy phrasing in user-facing notifications fanned out from admin actions.
+
+**Audit is mandatory**
+
+- Every privileged write action emits an `admin_action_logs` row in the same transaction as the state mutation (provided by `P2-OPS-000`). Helper: `recordAdminAction({ actor, action, targetType, targetId, beforeState, afterState, reason })`. An admin write that does not write an audit row is incorrect — `P2-QUALITY-001`'s audit-coverage audit will catch this.
+- The audit row is the source of truth for "who did what when". Do not introduce a parallel per-domain log table unless a domain already has one for product-visible reasons (e.g., `tutor_application_reviews` is the audit trail for the application domain because applicants need to read parts of it).
+
+**Capability gating**
+
+- The current implementation uses a single `admin` row in `user_roles` as the gate (consistent with `P2-APPLY-002`). The architecture's capability-family separation (§6.2) is acknowledged as a later refactor — admin tasks must not block on it, but they also must not assume one capability is the same as another at the database level.
+- Every admin task documents which capability family it conceptually belongs to (support, tutor-review, trust-and-safety, finance, platform). When the capability split lands later, the boundaries will already be drawn.
+
+**DTO rule**
+
+- Admin reads are `D7` (admin scope per `data-dto-and-query-boundary-map-v1.md` §21). Never expose `internal_note`, raw reviewer email, raw counterpart contact info, raw credential file content, raw message bodies (unless the case explicitly attaches them as evidence), or unrelated tutors'/users' data. Each task's verification must include a DTO-leak inspection step.
+
+**Notification rule**
+
+- User-facing fan-out from admin actions goes through the existing notification boundary (`createNotification` / lifecycle helpers). Payloads never carry `internal_note` or reviewer identity. Mandatory categories (`MANDATORY_NOTIFICATION_TYPES` from `P2-NOTIF-PREF-001`) still dispatch regardless of preference state — admin-driven lifecycle outcomes belong in the mandatory set.
+
+**Anti-drift list (every admin task is bound by these)**
+
+- Do not introduce a generic `/internal/dashboard` or admin-home everything-page beyond what `P2-OPS-000` ships as the hub.
+- Do not introduce a SQL console, raw-row editor, or unbounded user search; every read is purpose-scoped per §18.
+- Do not create a parallel "admin design system" folder.
+- Do not create new reference-data rows or new vocabulary slugs from the admin UI (locked down by `P2-OPS-003`).
+- Do not bypass `recordAdminAction` for any privileged write.
+- Do not let an admin page silently widen DTO scope on a domain it does not own — admin tasks may extend a domain's DTOs only by adding an admin-only field family in the same domain module, never by reading raw rows in a page file.
+
+## 11.8 `P2-OPS-000` Internal admin foundations: audit log, shared moderation case table, internal hub
+
+**Status:** `ready`
 **Priority:** `P2`
 **Wave:** 3
-**Depends on:** `P1-MSG-002`, `P2-APPLY-002`
+**Depends on:** `P2-APPLY-002`
 
 **Goal**
 
-Implement the first internal admin trust surfaces so abuse reports, blocks, and trust workflows are handled inside clear privileged boundaries rather than ad hoc manual processes.
+Land the small set of shared admin foundations that every later `/internal/**` task depends on: the canonical `admin_action_logs` audit table referenced as out-of-scope in `P2-APPLY-002` (see the migration header at `supabase/migrations/20260517120000_tutor_application_reviews_baseline.sql`), a shared `moderation_cases` table that `P2-OPS-001` and `P2-DISPUTE-001` both build on (per architecture §12.6 "operational lesson cases may share internal queue infrastructure with abuse or trust cases"), a `recordAdminAction` helper that wraps audit writes inside the same transaction as the state change, and a real `/internal` hub page that replaces the current placeholder with a queue-counts overview linking out to the existing `/internal/tutor-reviews` queue and the queues that later tasks will add.
+
+This task ships **shared infrastructure only**. It does not add a moderation queue UI (owned by `P2-OPS-001`), a dispute queue UI (owned by `P2-DISPUTE-001`), a reference-data editor (owned by `P2-OPS-003`), or a user-detail page (owned by `P2-OPS-002`). It exists so those tasks can be implemented without each one re-deciding how audit logging and case storage work.
 
 **Required source docs**
 
-- `docs/architecture/admin-and-moderation-architecture-v1.md`
-- `docs/data/auth-and-authorization-matrix-v1.md`
-- `docs/data/database-rls-boundaries-v1.md`
-- `docs/data/data-dto-and-query-boundary-map-v1.md`
-- `docs/data/sql-function-and-trigger-boundaries-v1.md`
-- `docs/data/lesson-issue-and-dispute-model-v1.md`
+- `docs/architecture/admin-and-moderation-architecture-v1.md` (§§ 8.4 write-action rule, 9 queue architecture, 12 case model, 16 audit rule)
+- `docs/data/auth-and-authorization-matrix-v1.md` (§§ 8.6 internal admin routes; `admin_action_logs` posture)
+- `docs/data/database-rls-boundaries-v1.md` (Type C internal-only RLS posture — mirror `tutor_application_reviews`)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (§§ 9, 21 — admin D7 DTO rules)
+- `docs/data/database-change-review-checklist-v1.md` and `docs/data/migration-conventions-v1.md`
+- `docs/data/drizzle-schema-and-query-conventions-v1.md` (module placement)
+- `docs/design-system/agent-ui-rules.md` (DS-first)
+
+**Existing repo anchors to reuse**
+
+- `src/lib/auth/internal-access.ts` — `requireInternalAdminAccount`, the canonical admin gate.
+- `src/app/internal/layout.tsx`, `src/app/internal/page.tsx` — current shell and placeholder hub.
+- `src/lib/routing/navigation.ts` — `navigationByFamily.internal.items`.
+- `src/modules/tutors/application-review-repository.ts` and `src/modules/tutors/application-review-service.ts` — the canonical command/query split for an admin domain. Mirror this structure under `src/modules/admin/**`.
+- `supabase/migrations/20260517120000_tutor_application_reviews_baseline.sql` — RLS shape to mirror for the two new tables.
 
 **Scope**
 
-- `/internal/moderation`
-- report queue and case handling
-- block/report review context
-- lesson-issue case review for conflicting claims (disputes in `under_review` state require admin resolution)
-- trust-case lifecycle visibility
-- explicit internal action boundaries
-- refund and payout consequence execution from resolved disputes
+Database layer (one migration in `supabase/migrations/`):
+
+- Create `admin_action_logs`: `id uuid pk`, `actor_app_user_id uuid not null references app_users(id) on delete restrict`, `action_key text not null` (free-form, validated by code-level allowlist in `src/modules/admin/actions.ts`), `target_type text not null` (e.g., `tutor_application`, `moderation_case`, `user`, `reference_data_item`, `policy_notice`), `target_id text not null` (string so it can hold UUID, slug, or composite id), `before_state jsonb null`, `after_state jsonb null`, `reason text null` (operator-visible note; never user-visible), `created_at timestamptz not null default now()`. Indexes on `(actor_app_user_id, created_at)`, `(target_type, target_id, created_at)`, `(action_key, created_at)`. RLS enabled with admin-only read (mirroring `tutor_application_reviews_select_internal` posture); inserts only through service-role.
+- Create `moderation_cases`: `id uuid pk`, `case_kind text not null check (case_kind in ('report','block','lesson_issue','public_content_takedown'))`, `case_status text not null check (case_status in ('queued','under_review','resolved','dismissed','escalated')) default 'queued'`, `reporter_app_user_id uuid null references app_users(id) on delete set null`, `subject_kind text not null check (subject_kind in ('app_user','tutor_profile','message','conversation','lesson_booking'))`, `subject_id uuid not null`, `triggering_event_kind text null`, `triggering_event_id uuid null`, `priority smallint not null default 0`, `claimed_by_app_user_id uuid null references app_users(id) on delete set null`, `claimed_at timestamptz null`, `resolved_by_app_user_id uuid null references app_users(id) on delete set null`, `resolved_at timestamptz null`, `resolution_kind text null check (resolution_kind in ('uphold','reject','split','dismiss','no_action','escalated_to_legal'))`, `internal_summary text null` (admin-only), `created_at`/`updated_at` with the existing `set_updated_at` trigger. Indexes on `(case_status, priority desc, created_at)` and `(subject_kind, subject_id)`. RLS admin-only same as above.
+- Create `moderation_case_notes`: `id uuid pk`, `case_id uuid not null references moderation_cases(id) on delete cascade`, `author_app_user_id uuid not null references app_users(id) on delete restrict`, `body text not null`, `created_at timestamptz not null default now()`. RLS admin-only. This is the §15.1 "internal notes" surface — never appears in any public DTO or notification payload.
+- Smoke test under `supabase/tests/database/smoke/admin_foundations_baseline.test.sql`: table shape, RLS (admin-only read; anon/auth denied across all verbs), index presence, FK behavior on user deletion.
+
+Domain layer (new `src/modules/admin/`):
+
+- `schema.ts` — Drizzle declarations for the three tables.
+- `actions.ts` — `ADMIN_ACTION_KEYS` allowlist and `AdminActionKey` type. Initial entries: `tutor_application.claim`, `tutor_application.approve`, `tutor_application.request_changes`, `tutor_application.reject`, `tutor_credential.set_review_status`. Later tasks extend this list — every privileged write action must register its key here in the same commit it ships.
+- `audit-service.ts` — `recordAdminAction({ actor, action, targetType, targetId, beforeState?, afterState?, reason? })` writes one `admin_action_logs` row through the service-role client. Must be invoked from inside the same domain Server Action that mutates the target state, ideally in the same transaction. Provide a tagged-template helper for `before`/`after` snapshots so domain services do not need to re-serialize rows manually.
+- `moderation-case-repository.ts` — read helpers: `loadCaseQueue({ filters, pagination })`, `loadCaseDetail(caseId)`. Return `D7` DTOs only — no raw subject rows, no triggering-content bodies; the detail DTO carries shaped subject summaries via cross-domain summary functions (e.g., `getPublicTutorProfileSummary(tutorId)` from the tutors module). Subject content (e.g., reported message body) is fetched lazily through a dedicated `loadCaseEvidence(caseId)` call so the queue list never pulls evidence.
+- `moderation-case-service.ts` — command helpers: `openCase({ caseKind, subject, reporterAppUserId?, triggeringEvent? })`, `claimCase(caseId, actor)`, `addCaseNote(caseId, actor, body)`, `resolveCase(caseId, actor, { resolutionKind, internalSummary?, reason? })`, `dismissCase(caseId, actor, reason)`. Every command writes an `admin_action_logs` row via `recordAdminAction`. State transitions go through a small state-machine helper (mirroring the application-review state machine); illegal transitions return a `conflict` boundary error and do not mutate.
+
+Backfill — wire `P2-APPLY-002` to the new audit log:
+
+- Update `src/modules/tutors/application-review-service.ts` so each of `claimForReview`, `requestChanges`, `approveApplication`, `rejectApplication` writes a corresponding `admin_action_logs` row via `recordAdminAction` in the same transaction as the existing `tutor_application_reviews` write. Add the four action keys to the `ADMIN_ACTION_KEYS` allowlist.
+- Update `src/app/internal/tutor-reviews/[applicationId]/credential-review-actions.ts` similarly for `setTutorCredentialReviewStatus` (shipped by `P2-MEDIA-001-09`).
+- This backfill is in scope here — without it, the audit-coverage rule in `P2-QUALITY-001` would already fail the day this task ships.
+
+UI — `/internal` hub:
+
+- Replace the `RoutePlaceholder` in `src/app/internal/page.tsx` with a real hub page that uses `requireInternalAdminAccount`, then composes a single `Panel` per queue family (tutor-review queue counts, moderation case counts by `case_kind`, reference-data pending changes count if applicable later) using `Card`/`StatusBadge`. Each Panel links to the owning queue route. Initially the only live count is the tutor-review queue (because that's the only queue that exists); the other Panels render with a "No queue mounted yet" empty state but reserve their slot so later tasks can wire counts without restructuring the page. Empty-state copy comes from the DS `ScreenState` continuity primitive.
+- No new DS primitives; no route-local card/chip/panel CSS.
+
+Admin-account bootstrap (operational, not UI):
+
+- Today there is **no path** to grant the first admin: `admin` is a valid `role` in `user_roles` per the baseline migration (`accounts_identity_schema_baseline.sql:49`), `requireInternalAdminAccount` gates on an active `admin` row, but nothing in the repo creates one. Once this task ships, `/internal` is unreachable to any human until an admin row exists.
+- Ship `scripts/grant-admin.ts <email>` as part of this task. The script:
+  - uses the service-role client; refuses to run if `SUPABASE_SERVICE_ROLE_KEY` is not set
+  - resolves `app_users.id` by email (fails fast with a clear message if the user has not signed up yet — admin candidates must complete normal signup first; this script does not create auth users)
+  - upserts a row into `user_roles` with `role = 'admin'`, `role_status = 'active'`; idempotent on `(app_user_id, role)`
+  - writes one `admin_action_logs` row with `actor_app_user_id = <granted user's id>`, `action_key = 'admin_role.bootstrap'`, `target_type = 'app_user'`, `target_id = <granted user's id>`, `reason = 'Initial admin bootstrap via grant-admin script'`. The self-actor pattern is the canonical audit shape for first-admin bootstrap (no prior admin exists to be the actor) and is the only situation where `admin_role.bootstrap` may be invoked
+  - logs a structured one-line confirmation and exits 0 on success; non-zero on any failure
+- Add `admin_role.bootstrap` and `admin_role.grant`/`admin_role.revoke` to `ADMIN_ACTION_KEYS` (the latter two are reserved for the UI actions added by `P2-OPS-002`; declaring them here keeps the audit vocabulary in one place).
+- This script is **bootstrap only**. Steady-state grant/revoke happens through the UI in `P2-OPS-002` (admin-grants-admin via the user-detail page). The script is documented as a one-time-per-environment operational step in the task report.
+- Add a Vitest unit test that mocks the service-role client and verifies: (a) the script refuses to run without `SUPABASE_SERVICE_ROLE_KEY`, (b) the script fails clearly when the email does not resolve to an `app_user`, (c) on success, both the `user_roles` upsert and the `admin_action_logs` insert are issued (and roll back together on simulated failure).
 
 **Out of scope**
 
-- one giant internal everything-app
-- generalized customer-support tooling
-- automated trust judgments without explicit review policy
+- moderation queue UI, dispute queue UI, reference-data editor UI, or user-detail page (all owned by later tasks).
+- a capability split beyond the existing single `admin` row in `user_roles` (architecture §6.2 is a later refactor).
+- AI-assisted action proposals (architecture §16.4) — those will route through this same audit helper when introduced.
+- automatic case opening from product flows (e.g., from a future Report action). Case-opening Server Actions exist; wiring them to product surfaces lives in `P2-OPS-001`.
+- a UI for browsing `admin_action_logs` itself. The audit table is queried via DB for compliance review in MVP; a viewer surface is a Phase 3 candidate.
+- creating auth users (the bootstrap script never creates an `app_users` row — admin candidates must complete normal signup first).
+- a UI for granting/revoking the admin role to other users (owned by `P2-OPS-002`; this task only ships the action keys in `ADMIN_ACTION_KEYS` so the audit vocabulary is centralized).
 
 **Acceptance criteria**
 
-- internal trust surfaces stay inside privileged route and DTO boundaries
-- actions are auditable and stateful
-- sensitive fields are more restricted than ordinary support data
-- block and report workflows remain consistent with the message and trust architectures
-- lesson-issue review outcomes can trigger the approved refund, payout, and notification paths
+- The migration creates `admin_action_logs`, `moderation_cases`, `moderation_case_notes` with the canonical RLS posture; anonymous and authenticated non-admin roles cannot read or write any of the three; only the service-role / server path writes.
+- `src/modules/admin/audit-service.ts` exports `recordAdminAction` and `ADMIN_ACTION_KEYS`; the four `tutor_application_reviews` Server Actions and `setTutorCredentialReviewStatus` write to `admin_action_logs` on success and roll back the audit row if the underlying state change rolls back.
+- `src/modules/admin/moderation-case-service.ts` exports the five command helpers and an exhaustive state-machine; illegal transitions return `conflict` and do not mutate state.
+- The `/internal` hub renders with the tutor-review counter live, returns `notFound` for non-admins, and uses only existing DS primitives.
+- `scripts/grant-admin.ts <email>` exists, refuses to run without `SUPABASE_SERVICE_ROLE_KEY`, fails clearly when the email does not resolve to a signed-up `app_user`, and on success writes both the `user_roles` upsert and the self-actor `admin_action_logs` row.
+- `ADMIN_ACTION_KEYS` includes `admin_role.bootstrap`, `admin_role.grant`, `admin_role.revoke` (the latter two reserved for the `P2-OPS-002` UI).
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`, and the new DB smoke all pass. No `pnpm test:e2e` change required.
+- Vitest coverage includes: (a) the case state machine, (b) `recordAdminAction` writes on success and rolls back on failure (verify by inducing a transaction error), (c) DTO-leak check on `loadCaseQueue` (no `internal_summary`, no raw subject rows, no `created_by` email), (d) the grant-admin script's three failure/success branches.
+
+**Verification**
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test`
+- `supabase/tests/database/smoke/admin_foundations_baseline.test.sql`
+- Manual: complete normal signup with a developer email; run `pnpm tsx scripts/grant-admin.ts <that-email>`; sign in and confirm `/internal` renders the hub. Sign in as a different (non-admin) user and confirm `/internal` returns 404.
+
+**Required manual steps**
+
+- After the migration applies, run `pnpm tsx scripts/grant-admin.ts <your-email>` once per environment (local, preview, production) to grant the first admin. The target email must already correspond to a signed-up `app_user` — sign up normally first if needed. Subsequent admins are added through the `P2-OPS-002` user-detail UI; the script is bootstrap-only and is not the routine path.
+
+## 11.9 `P2-OPS-001` Admin trust, report, and public-content-takedown internal surfaces
+
+**Status:** `ready`
+**Priority:** `P2`
+**Wave:** 3
+**Depends on:** `P1-MSG-002`, `P2-APPLY-002`, `P2-OPS-000`, `P2-GROW-001`
+
+**Capability family:** trust-and-safety moderation (per architecture §6.2).
+
+**Goal**
+
+Implement the first internal trust-and-safety surface so user reports, block context, and public-content takedowns are handled through the shared moderation case model from `P2-OPS-000` rather than ad hoc manual processes. This task adds the queue and detail UI plus the product-side hooks that *open* cases when reports or takedown requests arrive — but reuses every piece of infrastructure (`moderation_cases`, `moderation_case_notes`, `admin_action_logs`, `recordAdminAction`, the case state machine, the `/internal` hub) shipped by `P2-OPS-000`.
+
+This task is bound by `11.7a Shared admin-surface conventions`. Read that subsection before reading this task. The task does not restate conventions it inherits.
+
+**Required source docs**
+
+- `docs/architecture/admin-and-moderation-architecture-v1.md` (§§ 12 case model, 13 block architecture, 14 public takedown, 15 internal notes, 17 safety and privacy boundary, 18 internal search and lookup)
+- `docs/architecture/message-architecture-v1.md` (block + report enforcement boundaries that this UI links to)
+- `docs/data/auth-and-authorization-matrix-v1.md` (block/report/message-related table posture)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (D7 admin DTO rules)
+- `docs/data/lesson-issue-and-dispute-model-v1.md` (only as context — the lesson-issue review surface is owned by `P2-DISPUTE-001`)
+- `docs/architecture/seo-and-ai-discoverability-v1.md` (sitemap and robots coordination for public takedowns per §14.3)
+
+**Existing repo anchors to reuse**
+
+- `/internal/tutor-reviews` queue + detail (`src/app/internal/tutor-reviews/**`) — the canonical two-page admin pattern. Mirror its layout, filter chips, oldest-first ordering, and detail-page Panel composition. Do not invent a different shape.
+- `src/modules/admin/moderation-case-service.ts` and `moderation-case-repository.ts` from `P2-OPS-000` — every privileged write goes through these.
+- `src/modules/admin/audit-service.ts` `recordAdminAction` — every state mutation calls it.
+- `src/app/sitemap.ts` and `src/modules/tutors/public-profile.ts` — the public-takedown action coordinates with these to remove a tutor from the sitemap and from the cached public profile read path when the case kind is `public_content_takedown`.
+- `src/modules/messages/access.ts` — the existing `user_blocks` table (`blocker_app_user_id`, `blocked_app_user_id`, `block_status` with `UserBlockStatus` enum) and `loadActiveBlockState` helper. The case-detail "Existing blocks involving this subject" Panel reads through a new admin-only `loadBlocksInvolvingSubject(subjectKind, subjectId)` query that lives in the admin module and returns `D7`-shaped rows; it does not call `loadActiveBlockState` (which is participant-scoped).
+- `src/modules/search/public-tutor-indexer.ts` — `removePublicTutorRecord(tutorId)` is shipped (`P2-GROW-001`). The public-takedown uphold path calls it directly; there is no "Algolia not present" fallback to worry about.
+
+**Scope**
+
+- New routes:
+  - `/internal/moderation` — queue list page. Filter chips by `case_kind` (report / block / public_content_takedown — the `lesson_issue` kind is hidden here and surfaced by `P2-DISPUTE-001`) and by `case_status` (default `queued` + `under_review`). Reuses the `Chip pressed` filter pattern and DS list/card rows from `/internal/tutor-reviews`.
+  - `/internal/moderation/[caseId]` — detail page with: subject summary `Panel` (composed via `D7` DTOs from the owning domain), reporter summary `Panel` (only the reporter's display name + the report's free-text reason; never the reporter's email or other contact), triggering-evidence `Panel` (loaded lazily through `loadCaseEvidence` — message body, message URL, or tutor public-profile URL only), notes section using `addCaseNote`, and an actions Panel driven by `claimCase`/`addCaseNote`/`resolveCase`/`dismissCase`. Action menus use `OverflowMenuTrigger` + `Menu`.
+- Product-side hooks (open the case from product surfaces):
+  - "Report this conversation" / "Report this message" — there is no `user_reports` or report-product surface in the repo today; this task ships the minimum-viable surface end-to-end. UI: a `ConfirmDialog`-driven `OverflowMenuTrigger` action attached to message rows and conversation headers in the existing `src/app/(student)/messages` and `src/app/tutor/messages` surfaces, using only existing DS primitives. Server Action: `openCase({ caseKind: 'report', subject: { kind: 'message' | 'conversation', id }, reporterAppUserId, triggeringEvent, reporterReason })` from the admin module — `reporterReason` is captured in `moderation_cases.internal_summary` initially and copied into a `moderation_case_notes` row authored by the reporter through a service-role write (the notes table is admin-only-readable, so the reporter's reason is captured durably without exposing other operators' notes). No new DS primitive.
+  - Block surface — the block model itself is owned by `P1-MSG-002` and lives in `user_blocks` (`blocker_app_user_id`, `blocked_app_user_id`, `block_status` per `UserBlockStatus`). This task surfaces *visibility* of blocks for admins inside the case detail (a small "Existing blocks involving this subject" Panel) when a moderation case involves a `subject_kind` of `app_user`. It does not introduce new block actions or change block enforcement.
+  - "Request public profile takedown" — admin-initiated only in MVP. A Server Action `openPublicContentTakedownCase({ tutorProfileId, reason })` opens a case with `case_kind = 'public_content_takedown'` and `subject_kind = 'tutor_profile'`. Resolution with `resolution_kind = 'uphold'` flips `tutor_profiles.public_listing_status` to `delisted` (admin hold), revalidates `/tutors/[slug]`, removes the tutor from `sitemap.ts`, and calls `removePublicTutorRecord(tutorId)` from `src/modules/search/public-tutor-indexer.ts`. Resolution with `resolution_kind = 'reject'` or `dismiss` makes no public-state change.
+- Sensitive-field hygiene (§8.3, §15):
+  - The case-detail DTO never exposes the reporter's contact info, internal notes from *other* cases, or full credential-file contents. Evidence references stick to public IDs and bounded summaries.
+  - `internal_summary` and `moderation_case_notes.body` are admin-only and never enter any user-facing notification payload.
+- Notifications:
+  - On `resolveCase` for `case_kind = 'report'` with `resolution_kind in ('uphold', 'reject')`, send a generic acknowledgement notification to the reporter (in-app only, mandatory category). No details about the resolved party are leaked.
+  - On `resolveCase` for `case_kind = 'public_content_takedown'` with `resolution_kind = 'uphold'`, the existing tutor-listing notification (`tutor_listing_status_changed` introduced by `P2-PROFILE-001`) fires with `reason: 'admin_takedown'` and no `missingGateKeys`. Tutor copy is the canonical paused/delisted message from `tutor-listing-readiness-model-v1.md` §5.2.
+
+**Out of scope**
+
+- the lesson-issue review queue and refund/payout consequence execution — owned by `P2-DISPUTE-001` (it reuses this task's `moderation_cases` rows with `case_kind = 'lesson_issue'`)
+- generalized customer-support tooling, inbound email triage, or chat-with-user surfaces
+- automated trust judgments or risk scoring
+- a tutor-profile takedown initiated by a non-admin actor (e.g., a self-service "report this tutor" public-flow) — that requires a public report-product entry and is deferred
+- a separate admin block management UI (the block model lives in messaging; this task only renders blocks read-only in case context)
+- a public-search-index admin viewer — coordination with `P2-GROW-001` is via the indexer call, not a new UI
+
+**Acceptance criteria**
+
+- Queue and detail routes follow the `/internal/tutor-reviews` two-page DS-first pattern; no route-local card/chip/panel/menu CSS, no new DS primitives.
+- Every queue read returns `D7` admin DTOs; DTO-leak inspection confirms no reporter contact info, no unrelated case notes, no raw message bodies in list rows (evidence loads only on the detail page through `loadCaseEvidence`).
+- Every privileged write (`claimCase`, `resolveCase`, `dismissCase`, `addCaseNote`, `openPublicContentTakedownCase`) writes an `admin_action_logs` row via `recordAdminAction` and goes through the case state machine; illegal transitions return `conflict` and do not mutate.
+- Public-takedown uphold flips `public_listing_status` to `delisted`, revalidates `/tutors/[slug]`, removes the tutor from the sitemap, and (if Algolia is present) removes the record from the index — all in one transaction or compensated cleanly if a downstream call fails.
+- Reporter acknowledgement and tutor delist notifications never carry `internal_note`, `internal_summary`, or reviewer identity.
+- `/internal/moderation` is reachable only via `requireInternalAdminAccount`; non-admins receive `notFound()`.
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test` pass. `pnpm test:e2e` is not required (no public route surface). The new tutor-listing notification path is unit-tested. The state machine is unit-tested.
+
+**Verification**
+
+- privilege check: signed-out and non-admin users 404 on both routes.
+- DTO-leak inspection on queue and detail responses.
+- audit coverage check: every write action key used by this task is present in `ADMIN_ACTION_KEYS` and produces a row.
+- sitemap regression test: after a takedown uphold, the tutor's URL no longer appears in `sitemap.ts` output.
+
+## 11.10 `P2-OPS-002` Admin user detail, tutor-listing pause/delist, and finance-intervention surfaces
+
+**Status:** `ready`
+**Priority:** `P2`
+**Wave:** 3
+**Depends on:** `P1-DATA-001`, `P2-OPS-000`, `P2-OPS-001`, `P2-PROFILE-001`, `P2-GROW-001`
+
+**Capability family:** support operations + finance operations (per architecture §6.2; the two are surfaced on the same route in MVP but the action set distinguishes them).
+
+**Goal**
+
+Implement the internal user-detail surface and the privileged actions that the architecture marks admin-only — most importantly the **admin-side tutor-listing pause/delist** action referenced by `P2-PROFILE-001` (§5.2 of `tutor-listing-readiness-model-v1.md`) and `J-INT-005` of the cross-role journey inventory, which currently has no owning task. Without this task there is no UI path to flip `public_listing_status` to `paused` or `delisted`. This task also adds the finance-intervention recording surface (payout hold marker, refund anomaly note) but stops short of executing Stripe writes — those go through the existing `P1-TUTOR-005` payout service paths.
+
+This task is bound by `11.7a Shared admin-surface conventions`.
+
+**Required source docs**
+
+- `docs/architecture/admin-and-moderation-architecture-v1.md` (§§ 8 access control, 10.4 public profile gate, 18 internal search and lookup, 19 incident and emergency action)
+- `docs/data/auth-and-authorization-matrix-v1.md` (user, role, and finance table posture)
+- `docs/data/data-dto-and-query-boundary-map-v1.md` (D7 admin DTOs)
+- `docs/data/tutor-listing-readiness-model-v1.md` (§5.2 — admin-owned `paused`/`delisted` transitions and tutor-facing messages)
+- `docs/foundations/cross-role-journey-inventory-v1.md` (J-INT-005 admin-owned listing-pause flows)
+- `docs/architecture/route-layout-implementation-map-v1.md` (§7.7 internal family)
+
+**Existing repo anchors to reuse**
+
+- `src/lib/auth/internal-access.ts` admin gate.
+- `src/modules/admin/audit-service.ts`, `moderation-case-service.ts` from `P2-OPS-000`.
+- `src/modules/tutors/tutor-profile-editor-service.ts` from `P2-PROFILE-001` — the existing `setTutorListingPublication` tutor-owned Server Action. The new admin-side action lives in a sibling `src/modules/tutors/admin-listing-service.ts` and writes through the same service-role path; it does *not* call `setTutorListingPublication`, because that action's state machine deliberately rejects admin states.
+- `src/modules/accounts/account-state.ts` — `AccountStatus` enum (`active` | `limited` | `suspended` | `closed`), `isRestrictedAccount`. Account restriction is the existing `app_users.account_status` column; there is **no** separate `restriction_status` column.
+- `src/modules/payouts/service.ts` — canonical payout helpers (`loadTutorPayoutProfile`, `applyConnectAccountSnapshot`, `syncTutorPayoutFromStripe`, `recordConnectAccountStarted`). This module currently exposes **no** pause/release hooks, so admin finance interventions are recorded as `moderation_cases` with `case_kind = 'finance_intervention'` only — no Stripe writes from this surface.
+- `src/modules/lessons/lesson-actions.ts:614` — the existing refund path (`stripe.refunds.create`). Any refund-driven admin action calls this (or the helper extracted by `P2-DISPUTE-001`); it does not duplicate the Stripe call.
+- The `/internal/tutor-reviews/[applicationId]` detail page layout — mirror its multi-Panel composition.
+
+**Scope**
+
+- New route `/internal/users/[id]` (server component) at the existing reserved internal location. The page:
+  - resolves the admin via `requireInternalAdminAccount`, then loads a `D7` `getInternalUserDetail(id)` DTO that composes:
+    - account summary (display name, email — already a controlled field per the DTO map, account state, role list with `role_status` per role, created-at)
+    - tutor profile summary if the user holds the tutor role (current `application_status`, `public_listing_status`, `self_paused_at`, owning slug, listing-readiness gate summary via `buildReadinessGates` — read-only, no editing here)
+    - recent moderation cases involving this user as subject or reporter (most recent 10; reuses `loadCaseQueue` filtered by subject)
+    - recent admin actions targeting this user (most recent 10 from `admin_action_logs` filtered by `target_type in ('app_user','tutor_profile')` and `target_id` matching the user's id or owned tutor profile id)
+    - finance summary if the user holds the tutor role (current `payout_account_status`, last payout cycle outcome — read-only; no PII like bank account details, just status fields per `database-enum-and-status-glossary-v1.md` §15.3)
+  - composes one Panel per section using existing DS primitives; no new variants.
+- Admin actions on the user-detail page:
+  - `adminPauseTutorListing(tutorProfileId, reason)` — `listed` → `paused`. Requires `reason`. Writes `admin_action_logs`. Enqueues `tutor_listing_status_changed` notification with `reason: 'admin_hold'`. Tutor copy from readiness-model §5.2.
+  - `adminDelistTutorListing(tutorProfileId, reason)` — any non-terminal state → `delisted`. Requires `reason`. Same notification + audit posture. Coordinates with sitemap removal and Algolia removal exactly like `P2-OPS-001`'s public-takedown action — extract the shared "deindex public tutor profile" helper inside `src/modules/tutors/admin-listing-service.ts` so both tasks use it.
+  - `adminLiftTutorListingHold(tutorProfileId, reason)` — `paused` or `delisted` → `not_listed`. Tutor must re-publish from their own surface; admin does not auto-flip to `listed`. Notification + audit row.
+  - `recordFinanceInterventionNote(targetUserId, kind, body)` — admin-only note (a `moderation_case` row with `case_kind = 'report'` is wrong shape; introduce `case_kind = 'finance_intervention'` in the same migration that the `P2-OPS-000` CHECK constraint allows — extend the CHECK in this task's migration). `kind` enumerates `payout_hold`, `refund_anomaly`, `general_finance`. The case can be resolved later through the standard case lifecycle. **No Stripe write** — actually placing or releasing a payout hold uses the existing `P1-TUTOR-005` service if a hold action is implemented there; if not, this task records the intervention intent and a follow-up task wires the Stripe call.
+  - `setAccountStatus(targetUserId, nextStatus, reason)` — flips `app_users.account_status` between the existing `AccountStatus` values (`active`, `limited`, `suspended`, `closed`) per `src/modules/accounts/account-state.ts`. Transitions are constrained by a state-machine helper: `active ↔ limited`, `active|limited → suspended`, `suspended → limited|active`. `closed` is reserved for `P2-DSR-001` (account-deletion flow) and is not reachable from this surface. Requires `reason`; writes `admin_action_logs`; revalidates the affected user's auth/redirect path so the next request honors the new state.
+  - `grantAdminRole(targetUserId, reason)` — upserts a `user_roles` row with `role = 'admin'`, `role_status = 'active'` for the target user (matching the bootstrap script's shape, but written via the admin Server Action path with the **acting admin** as actor — not the self-actor pattern reserved for the bootstrap script). Requires the target user to already exist as an `app_user`. Writes an `admin_action_logs` row with `action_key = 'admin_role.grant'`. The user-detail page renders a confirm dialog before submission because adding admins is high-impact.
+  - `revokeAdminRole(targetUserId, reason)` — flips the target's `admin` row's `role_status` to `revoked` (or whatever the existing `user_roles.role_status` revoked-equivalent value is in the schema — verify against the column's CHECK constraint and use the canonical "no longer active" value; do **not** delete the row, so the audit chain stays intact). Writes `admin_action_logs` with `action_key = 'admin_role.revoke'`. **Lockout guardrail:** the action returns `conflict` if `targetUserId === actorAppUserId` (an admin cannot revoke their own row from this surface). It does not return `conflict` when the target is the last remaining admin — operators must use the `grant-admin` script to recover from full lockout, which is the intentional emergency path.
+  - Both grant and revoke actions are gated by the same `requireInternalAdminAccount` check as the rest of the page; capability-family-wise they belong to `platform_admin.*` and will be the first actions hoisted behind the capability split when it lands.
+- Lookup (architecture §18):
+  - The user-detail route is reached only by direct id link from `/internal/moderation`, `/internal/tutor-reviews/[applicationId]`, or the `/internal` hub's "recent admin actions" list. Do **not** introduce an `/internal/users` index search page in this task — §18.1's controlled-lookup rule is binding. A targeted search surface can be added later if real operational need arises.
+- DTO + audit:
+  - All reads `D7`. Audit row for every privileged write. Notification fan-out through the existing notification boundary. Tutor-facing messages from canonical readiness-model copy.
+
+**Out of scope**
+
+- raw database browsing or a generic user search index
+- bulk support queue tooling
+- direct Stripe writes (deposits, refunds, balance adjustments) from this surface — those route through existing payment domain services
+- account deletion or hard suspension flows (account deletion lives in `P2-DSR-001`; account suspension is a separate later task)
+- self-service public report-this-tutor entry (deferred from `P2-OPS-001`)
+- creating new internal capability roles or role assignments **beyond grant/revoke of the existing `admin` role** — granular capability-family splits (support, tutor-review, trust-and-safety, finance, platform) remain a later refactor; this task only grants/revokes the single `admin` role
+- editing a tutor's profile content (the editor is owned by `P2-PROFILE-001`; admin tasks do not bypass owner-edit)
+- viewing or editing message bodies outside the explicit case-evidence boundary
+
+**Acceptance criteria**
+
+- `/internal/users/[id]` renders only for admins (non-admins → `notFound()`); the page composes only existing DS primitives.
+- Each admin action writes an `admin_action_logs` row with a registered `ADMIN_ACTION_KEYS` entry; illegal transitions return `conflict` and do not mutate.
+- `grantAdminRole` and `revokeAdminRole` upsert/flip the target's `user_roles` row through the admin Server Action path with the acting admin as actor (never the self-actor pattern); `revokeAdminRole` rejects with `conflict` when `targetUserId === actorAppUserId` (self-revoke lockout guardrail).
+- Admin pause/delist flips `public_listing_status` correctly, fires the `tutor_listing_status_changed` notification with `reason: 'admin_hold'`, revalidates `/tutors/[slug]`, removes the tutor from `sitemap.ts`, and de-indexes from Algolia if present.
+- The shared deindex helper is consumed by both this task and `P2-OPS-001`'s public-content-takedown path; the two paths are not duplicated.
+- Lift-hold transitions to `not_listed` only (never auto-promotes to `listed`); the tutor must publish from `/tutor/profile`.
+- The finance-intervention note action records a `moderation_case` row with `case_kind = 'finance_intervention'` (added via a small CHECK-constraint migration in this task); no Stripe writes from this surface.
+- DTO-leak inspection confirms no bank account numbers, no Stripe IDs beyond opaque references, no other users' notes appear on the page.
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test` pass. DB smoke covers the extended CHECK constraint.
 
 **Verification**
 
 - privilege and DTO review
-- trust state-transition review
+- listing-state transition tests (admin paths only; tutor-owned paths remain untouched)
+- audit coverage check
+- sitemap regression test after admin delist
 
-## 11.9 `P2-OPS-002` Admin user detail and finance intervention surfaces
+## 11.11 `P2-OPS-003` Admin reference-data label and policy-broadcast management (label-edit-only)
 
-**Status:** `draft`
+**Status:** `ready`
 **Priority:** `P2`
 **Wave:** 3
-**Depends on:** `P1-DATA-001`, `P1-TUTOR-005`, `P2-OPS-001`
+**Depends on:** `P1-DATA-005`, `P2-APPLY-002`, `P2-OPS-000`
+
+**Capability family:** platform-level technical administration (per architecture §6.2).
 
 **Goal**
 
-Implement the internal admin user-detail and finance-intervention surfaces so account restrictions, payout holds, and case-driven user support can be handled through explicit internal tools.
+Implement a deliberately **narrow** admin surface over the canonical reference-data tables: admins can edit display labels, descriptions, sort order, and the `is_active` toggle for existing rows, and they can draft and publish a legal-policy notice through the existing notification flow. Admins **cannot** create new reference-data rows, delete rows, edit slugs/keys/codes, or change any column whose value is referenced from code, DTOs, or migrations.
 
-**Required source docs**
+**Anti-drift framing — read first**
 
-- `docs/architecture/admin-and-moderation-architecture-v1.md`
-- `docs/data/auth-and-authorization-matrix-v1.md`
-- `docs/data/data-dto-and-query-boundary-map-v1.md`
-- `docs/data/api-and-server-action-contracts-v1.md`
-- `docs/architecture/route-layout-implementation-map-v1.md`
+This is the highest-risk admin task in the pack. The whole point of `src/modules/reference/**`, `canonical-value-ownership-map-v1.md`, and `reference-data-governance-v1.md` is that shared vocabularies have **one** owner, and that owner is the codebase + migrations, not the admin UI. Letting admins create new subjects, focus areas, languages, or provider entries through a UI would silently break every place that compares against a hard-coded slug (`tutor_subject_capabilities.subject_id`, `video_media_providers.provider_key`, `meeting_providers.provider_key`, every reference loader in `src/modules/reference/**`, every i18n / SEO / icon mapping). That breakage is exactly what `canonical-value-ownership-map-v1.md` calls "drift".
 
-**Scope**
+The lockdown rules below are binding. Any future task that proposes to widen them must justify it against the canonical-value ownership map in the same change.
 
-- `/internal/users/[id]`
-- account state and role-safe internal user detail
-- payout hold or finance-anomaly intervention record
-- shaped internal action history
+**Editable vs read-only matrix**
 
-**Out of scope**
-
-- raw database browsing
-- bulk support queue tooling
-
-**Acceptance criteria**
-
-- admins can inspect and act on user-state issues through scoped DTOs
-- payout or finance interventions remain auditable and explicit
-- internal pages follow the approved 404 rule for unauthorized access
-
-**Verification**
-
-- DTO and privilege review
-- finance-intervention state review
-
-## 11.10 `P2-OPS-003` Admin reference-data and policy broadcast management
-
-**Status:** `draft`
-**Priority:** `P2`
-**Wave:** 3
-**Depends on:** `P1-DATA-005`, `P2-APPLY-002`
-
-**Goal**
-
-Implement the internal admin surface for managing canonical reference data and publishing policy broadcasts so shared vocabularies and legal updates are not maintained through ad hoc code edits.
+| Field family | Editable in admin UI? | Why |
+| --- | --- | --- |
+| `display_label`, `description`, `helper_text` | **Yes** (subject to allowlist) | Pure presentation; no code branch depends on the string |
+| `sort_order` | **Yes** | Pure presentation |
+| `is_active` (toggle off only) | **Yes** | Soft-disable for discovery; existing rows keep referencing the row by id |
+| Re-activating a previously inactive row | **Yes** | Same as above |
+| `slug` / `key` / `code` / any identifier referenced from code | **No** | Code-owned; changes require a migration + code change |
+| `id` (UUID) | **No** | Foreign-key target across the schema |
+| Creating a new row (subjects, focus areas, languages, countries, meeting providers, video media providers) | **No** | Code-referenced vocabularies; requires a migration in the same change as the code that uses the new value |
+| Deleting a row (hard delete) | **No** | Risks orphaning historical references; use `is_active = false` |
+| Translating labels into other locales | **No** | Localization architecture is out of scope for Phase 2 (`docs/data/reference-data-governance-v1.md` non-goal) |
+| Provider connection fields (API keys, endpoints) | **No** | Provider config lives in env, not in the row |
 
 **Required source docs**
 
 - `docs/data/reference-data-governance-v1.md`
-- `docs/data/database-schema-outline-v1.md`
-- `docs/architecture/background-jobs-and-notifications-architecture-v1.md`
+- `docs/architecture/canonical-value-ownership-map-v1.md` (binding — every editable field below is justified against this map)
+- `docs/data/database-schema-outline-v1.md` (reference tables)
+- `docs/architecture/configuration-and-governance-architecture-v1.md`
+- `docs/architecture/background-jobs-and-notifications-architecture-v1.md` (§8.9 legal-update visibility — the notice fan-out boundary this task uses)
 - `docs/architecture/route-layout-implementation-map-v1.md`
-- `docs/design-system/design-system-spec-final-v1.md`
+- `docs/design-system/agent-ui-rules.md`
+
+**Existing repo anchors to reuse**
+
+- `src/modules/reference/**` — all read loaders (`catalog.ts`, `discovery.ts`, `visuals.ts`, `schema.ts`). This task adds a parallel `src/modules/reference/admin/**` that only touches the allowed fields and re-exports through the same loaders so the rest of the app does not need to change.
+- `src/modules/admin/audit-service.ts` and `ADMIN_ACTION_KEYS` from `P2-OPS-000`.
+- `policy_notice_versions` table + `policy_notice_receipts` table (both shipped) and `src/modules/notifications/legal-notices.ts` `listLegalNoticesForAccount`. The legal-broadcast surface here writes a new `policy_notice_versions` row and calls `createPolicyNoticeNotification` from `src/modules/notifications/lifecycle.ts` to fan out the mandatory `policy_notice_updated` notification. `PolicyNoticeType` from `src/modules/notifications/constants.ts` defines the allowed `notice_type` values (`terms`, `privacy`). The `/privacy` notice surface already exists and consumes these rows — this task does not redesign it.
 
 **Scope**
 
-- `/internal/reference-data`
-- admin CRUD for subjects, subject focus areas, languages, countries, meeting providers, and video media providers
-- policy broadcast publish action for terms or privacy updates
-- audit trail expectations for internal changes
+- New route `/internal/reference-data` (queue/list page) with sub-routes per vocabulary family: `/internal/reference-data/subjects`, `/internal/reference-data/focus-areas`, `/internal/reference-data/languages`, `/internal/reference-data/countries`, `/internal/reference-data/meeting-providers`, `/internal/reference-data/video-media-providers`. Each sub-route lists existing rows with filter chips (`active` / `inactive`) and is sorted by current `sort_order`.
+- Row edit happens inline-or-via-detail (mirror `/internal/tutor-reviews` two-page pattern if the row has more than three editable fields; otherwise inline). Each editable field is rendered via the existing DS form primitives (`TextField`, `Textarea`, `Switch`, `SelectField` for sort-order step). No new DS primitive.
+- A single Server Action `updateReferenceDataRow({ family, id, changes })` validates that `changes` contains only the editable field allowlist for the given family (Zod schema per family — every Zod schema explicitly excludes `slug`/`key`/`code`/`id`/etc), writes through service-role, writes `admin_action_logs` via `recordAdminAction`, and revalidates the consuming public route(s). The action returns `forbidden` if `changes` contains any non-allowlisted key.
+- Each reference loader in `src/modules/reference/**` is updated to invalidate or revalidate its cached tag when a row is touched. No new caching layer.
+- Policy-broadcast surface (`/internal/reference-data/policy-notices` — separate from the reference-data tables themselves):
+  - draft a `policy_notice_versions` row (`notice_type` from `PolicyNoticeType` — `terms` or `privacy`, `version_label`, `title`, `summary`, `document_url`, `effective_at`, `requires_acknowledgement`); body is plain text + a `document_url` link to the canonical published doc — no rich-text editor and no markdown pipeline in this task
+  - publish action sets `published_at = now()` and invokes `createPolicyNoticeNotification` (from `src/modules/notifications/lifecycle.ts`) so the existing `policy_notice_updated` notification fans out as a mandatory category (per `P2-NOTIF-PREF-001`); the existing `/privacy` notice surface consumes the new row on the next read
+  - revoke action sets `published_at = null` and writes an audit row; no consumer-facing notification on revoke (the next `/privacy` read simply no longer includes the row)
+  - audit row on draft + publish + revoke via `recordAdminAction` with action keys `policy_notice.draft`, `policy_notice.publish`, `policy_notice.revoke`
+- Admin-only DTOs (D7). No public field of a reference row is changed without going through these admin actions.
+- Capability-family note: every action key registered here is tagged `platform_admin.*` so the future capability split can lift the whole vocabulary editor behind a `platform_admin` capability without rewriting the action surface.
 
 **Out of scope**
 
-- localization management
-- broad CMS ambitions
+- creating new subjects / focus areas / languages / countries / meeting providers / video media providers (always a migration + code change)
+- deleting any reference row (use `is_active = false`)
+- editing slugs / keys / codes / identifiers
+- localization of labels into additional locales
+- editing provider connection details (API keys, endpoints, etc. — these live in env)
+- a generic admin CMS surface or arbitrary content authoring
+- broad analytics on reference-data changes
+- editing the rules of legal-policy notice categories or the notification preference taxonomy (`P2-NOTIF-PREF-001` owns those)
+- promoting `is_active = false` rows that are referenced by active tutor capabilities — admins can flip the row inactive but the discovery loaders already filter on `is_active`; backfilling existing usage is not in scope
 
 **Acceptance criteria**
 
-- shared product vocabularies can be managed inside the internal admin surface
-- reference changes remain canonical and auditable
-- publishing a policy update can trigger the approved email, in-app, and post-login notice flow
+- The Zod schema for each vocabulary family explicitly enumerates the allowed editable fields; any `changes` payload containing a disallowed key returns `forbidden` before any write.
+- There is no UI path to create or delete a reference row from the admin surface (the page does not render an "Add" or "Delete" button).
+- Every edit writes an `admin_action_logs` row with a registered `ADMIN_ACTION_KEYS` entry under the `reference_data.*` namespace; before/after snapshots are captured.
+- Editing a label revalidates the consuming public route(s) so the new label appears on next render.
+- Publishing a policy notice fires the `policy_notice_updated` notification through the mandatory category (preferences cannot disable it) and updates the existing `/privacy` notice surface.
+- DTO-leak inspection confirms no env-stored provider secrets, no other admin users' draft notices, no unrelated reference families appear on a given family page.
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test` pass. Vitest covers: (a) Zod field allowlist enforcement (a payload with a `slug` field is rejected), (b) audit-row presence on success, (c) cache invalidation after an edit (mock the revalidator).
+- `P2-QUALITY-001`'s reference-data audit step finds no route-local arrays bypassing the central loaders.
 
 **Verification**
 
-- reference-data workflow review
-- legal-broadcast workflow review
+- privilege check + DTO leak inspection
+- field-allowlist regression test (every field outside the allowlist is rejected)
+- policy-notice fan-out check (the mandatory-category rule from `P2-NOTIF-PREF-001` is honored)
 
-## 11.11 `P2-DISPUTE-001` Lesson-issue internal review and dispute resolution surface
+## 11.12 `P2-DISPUTE-001` Lesson-issue internal review and dispute resolution surface
 
-**Status:** `draft`
+**Status:** `ready`
 **Priority:** `P2`
 **Wave:** 3
-**Depends on:** `P1-LESS-002`, `P2-OPS-001`
+**Depends on:** `P1-LESS-002`, `P2-OPS-000`, `P2-OPS-001`
+
+**Capability family:** trust-and-safety moderation + finance operations (per architecture §6.2 and §12.5–§12.7).
 
 **Goal**
 
-Implement the internal admin surface for reviewing and resolving lesson-issue disputes that reach `under_review` state, so conflicting participant claims are resolved through explicit, auditable decisions rather than ad hoc manual processes.
+Implement the internal admin surface for reviewing and resolving lesson-issue disputes that reach `under_review` state, so conflicting participant claims are resolved through explicit, auditable decisions. This task **reuses** the shared `moderation_cases` infrastructure from `P2-OPS-000` (`case_kind = 'lesson_issue'`) and the case-detail/queue UI pattern from `P2-OPS-001` rather than introducing parallel tables or a parallel admin shell. Per architecture §12.6 ("shared-queue rule"), lesson-issue cases share queue infrastructure with abuse/trust cases but keep distinct case typing and resolution outcomes.
+
+This task is bound by `11.7a Shared admin-surface conventions`.
 
 **Required source docs**
 
-- `docs/data/lesson-issue-and-dispute-model-v1.md`
-- `docs/architecture/admin-and-moderation-architecture-v1.md`
+- `docs/data/lesson-issue-and-dispute-model-v1.md` (primary — resolution semantics)
+- `docs/architecture/admin-and-moderation-architecture-v1.md` (§§ 12.5–12.7 operational lesson-issue rule)
 - `docs/data/auth-and-authorization-matrix-v1.md`
-- `docs/data/tutor-reliability-thresholds-v1.md`
+- `docs/data/tutor-reliability-thresholds-v1.md` (reliability penalty mapping)
 - `docs/planning/phase1-payment-scope-decision-v1.md`
+
+**Existing repo anchors to reuse**
+
+- `src/modules/admin/moderation-case-service.ts` from `P2-OPS-000` — `claimCase`, `resolveCase`, `dismissCase`, `addCaseNote`. The lesson-issue resolution path extends `resolveCase` by registering a per-`case_kind` resolution validator (not forking the service) and uses the **existing** `lessonIssueResolutionOutcomes` enum from `src/modules/lessons/constants.ts:150` as the resolution vocabulary: `student_no_show_confirmed`, `tutor_no_show_confirmed`, `wrong_link_tutor_fault`, `technical_issue_no_fault`, `partial_delivery_adjusted`, `lesson_completed`, `duplicate_or_invalid`. The abstract `moderation_cases.resolution_kind` (from `P2-OPS-000`) is set to a mapped abstract bucket (`uphold` / `reject` / `split` / `dismiss` / `no_action`) so the shared admin queue can sort cleanly, while the lesson-specific outcome is written into the existing `lessonIssueCases.resolution_outcome` column in the same transaction.
+- `src/modules/admin/moderation-case-repository.ts` queue/detail loaders — the dispute queue is the same `loadCaseQueue` call with `caseKind = 'lesson_issue'`.
+- `src/modules/lessons/schema.ts` `lessonIssueCases` table (`case_status` with `under_review`) and `src/modules/lessons/lesson-actions.ts` `case_status` transitions — the existing model carries cases up to `under_review`; this task adds the admin-side resolution path that flips them to `resolved` / `dismissed` plus the consequence calls.
+- `src/modules/lessons/lesson-actions.ts:614` (`stripe.refunds.create`) — extract the in-line refund call into a small `processLessonRefund(lessonId, reason)` helper in `lesson-actions.ts` (or a sibling `refund-service.ts`) in this task; both the existing cancellation path and the new dispute-resolution path consume the helper. Same for the payout-release path used when authorization needs to be voided.
+- `P2-OPS-001`'s `/internal/moderation/[caseId]` detail page composition.
+
+**New shared infrastructure introduced by this task**
+
+- `tutor_reliability_events` table: `id uuid pk`, `tutor_profile_id uuid not null references tutor_profiles(id) on delete cascade`, `event_kind text not null check (event_kind in ('no_show_confirmed','wrong_link_fault','partial_delivery'))`, `weight smallint not null default 1`, `source_kind text not null check (source_kind in ('lesson_issue_resolution','admin_manual'))`, `source_id uuid null`, `created_at timestamptz not null default now()`. RLS admin-only read/write (tutor read of their own aggregate is deferred to a later task). The reliability mapping referenced in copy strings (`lesson-actions.ts:148`) is currently a promise without storage; this task ships the storage so resolution-driven reliability penalties become real records. The aggregate read surface for tutors (a reliability score panel) is **out of scope** here — only the write path is implemented.
 
 **Scope**
 
-- `/internal/disputes`
-- dispute queue filtered by `under_review` state
-- side-by-side view of both participant claims and evidence
-- resolution actions: uphold student claim, uphold tutor claim, split, dismiss
-- consequence execution: refund trigger, payout adjustment, reliability penalty application
-- resolution audit trail
+- New route `/internal/disputes` — a focused view over `moderation_cases` filtered to `case_kind = 'lesson_issue'`. The page is structurally the same as `/internal/moderation` but pre-filtered and with a lesson-issue-specific column set (lesson date, student vs tutor view, refund eligibility flag from the lesson-issue model). It links to the shared `/internal/moderation/[caseId]` detail page for resolution; do not duplicate the detail page.
+- The detail page (already shipped by `P2-OPS-001`) renders the side-by-side participant-claim view when `case_kind = 'lesson_issue'`. The case-detail DTO is extended (in the lessons module, not the admin module) to include both participants' claim summaries.
+- Resolution actions are surfaced through the case-actions Panel by registering a per-`case_kind` resolution validator that accepts `lessonIssueResolutionOutcomes` values and maps them to consequence calls:
+  - `tutor_no_show_confirmed` → full refund via the extracted `processLessonRefund` helper; insert one `tutor_reliability_events` row with `event_kind = 'no_show_confirmed'`; `moderation_cases.resolution_kind = 'uphold'`
+  - `student_no_show_confirmed` → release payout authorization (extracted helper); no reliability event; `resolution_kind = 'uphold'`
+  - `wrong_link_tutor_fault` → full refund; insert `event_kind = 'wrong_link_fault'`; `resolution_kind = 'uphold'`
+  - `partial_delivery_adjusted` → partial refund (amount captured in `moderation_case_notes` by the admin before resolution; the existing payment row tracks the captured/remaining minor amounts); insert `event_kind = 'partial_delivery'` with `weight = 1`; `resolution_kind = 'split'`
+  - `lesson_completed` → no refund, no penalty (the dispute is resolved in the tutor's favor without no-show framing); `resolution_kind = 'reject'`
+  - `technical_issue_no_fault` → full refund; no reliability event (per architecture §12.7 "no-penalty outcomes for unresolved or no-fault incidents"); `resolution_kind = 'no_action'`
+  - `duplicate_or_invalid` → no consequence, both participants notified; `resolution_kind = 'dismiss'`
+- Every resolution writes an `admin_action_logs` row via `recordAdminAction` and is wrapped in the case-state transaction. Refund/payout calls that fail roll back the case transition (or, if the consequence service does not support rollback, record a compensating audit row and surface a clear `conflict` to the admin).
+- Notification fan-out: both participants receive the existing `lesson_issue_resolution` notification (mandatory category per `P2-NOTIF-PREF-001`) with the resolution kind and a short canonical message — no `internal_summary`, no reviewer identity.
 
 **Out of scope**
 
-- auto-resolved disputes (handled by the lesson-issue model automatically)
+- auto-resolved disputes (handled by the lesson-issue model automatically before reaching `under_review`)
 - public-facing dispute UI beyond what the lesson-issue flow already provides
 - legal arbitration tooling
+- introducing a new dispute-only table (this task uses `moderation_cases` with `case_kind = 'lesson_issue'`, linked to the existing `lessonIssueCases` row)
+- a separate dispute-detail route (the shared `/internal/moderation/[caseId]` page is the detail surface)
+- a tutor-facing reliability score panel (only the `tutor_reliability_events` write path is implemented; aggregate read + tutor display is a follow-up task)
+- changes to the reliability threshold mapping itself (the per-outcome `event_kind` mapping above is the binding contract for this task; tuning `weight` values is a follow-up)
 
 **Acceptance criteria**
 
-- disputes in `under_review` state appear in a prioritized internal queue
-- admins can review both sides before making a resolution decision
-- resolution triggers the correct refund, payout, and reliability consequences per the lesson-issue model
-- all resolution actions are auditable and stateful
-- resolved disputes notify both participants of the outcome
+- `/internal/disputes` is a filtered view over `moderation_cases`, not a parallel table; the route reuses `requireInternalAdminAccount` and the DS-first card/chip pattern.
+- The case-resolution allowlist for `case_kind = 'lesson_issue'` is registered through a per-kind validator without forking `moderation-case-service.ts`.
+- Resolution triggers the correct refund, payout-release, and reliability-penalty consequences through existing lessons-module services; failures roll back the case transition or write a clean compensating audit row.
+- Every resolution writes an `admin_action_logs` row and fires the `lesson_issue_resolution` mandatory-category notification.
+- DTO-leak inspection confirms no internal summaries or admin identity leak to participant notifications.
+- `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm lint:arch`, `pnpm test` pass.
 
 **Verification**
 
-- consequence-correctness review against the lesson-issue model
+- consequence-correctness review against the lesson-issue model and reliability thresholds
 - privilege and DTO review
-- notification delivery review
+- notification delivery review (mandatory category honored regardless of preference state)
 
-## 11.12 `P2-DSR-001` Data subject request implementation
+## 11.13 `P2-DSR-001` Data subject request implementation
 
 **Status:** `draft`
 **Priority:** `P2`
@@ -2005,7 +2307,7 @@ Implement the data subject request workflow so access, erasure, and portability 
 - data export completeness review against privacy inventory
 - referential integrity review after erasure
 
-## 11.13 `P2-NOTIF-PREF-001` Notification preferences and channel controls
+## 11.14 `P2-NOTIF-PREF-001` Notification preferences and channel controls
 
 **Status:** `ready`
 **Priority:** `P2`
@@ -2148,7 +2450,7 @@ Tests:
 - Reuse `src/modules/notifications/email-delivery.ts` skip-reason taxonomy by adding `channel_disabled_by_preference` next to the existing `channel_in_app_only`. Do not introduce a parallel skip surface.
 - If a `Switch`/`Toggle` primitive does not exist in `src/components/ui/`, extending the DS is in scope for this task per the DS-first rule; update `component-inventory-v1.md` in the same commit. If one already exists, reuse it as-is.
 
-## 11.14 `P2-GROW-001` Public tutor search page powered by Algolia
+## 11.15 `P2-GROW-001` Public tutor search page powered by Algolia
 
 **Status:** `ready`
 **Priority:** `P2`
@@ -2280,7 +2582,7 @@ SEO
 - run the one-shot rebuild script against the dev index to backfill from existing eligible tutor profiles
 - add the same four variables to the Vercel project (Preview + Production), with admin key marked server-only
 
-## 11.15 `P2-QUALITY-001` Phase 2 verification and operational hardening pass
+## 11.16 `P2-QUALITY-001` Phase 2 verification and operational hardening pass
 
 **Status:** `ready`
 **Priority:** `P2`
@@ -2305,6 +2607,9 @@ Run the final Phase 2 verification pass across application state safety, interna
 - unresolved risk and blocker summary
 - operational readiness for any newly added privileged or public-facing Phase 2 surfaces
 - DS adherence audit: confirm no route-local `.card`, `.chip`, or `.panel`-style CSS, no inline SVGs outside `src/components/ui/**`, no route-local copies of shared reference vocabularies, and no new `Intl.NumberFormat` or currency-code literals outside `src/modules/pricing/**`; if drift is found, raise a sub-task with an `-A` suffix on the offending feature task before marking the phase done
+- admin audit-coverage audit: every privileged write under `src/app/internal/**` and `src/modules/admin/**` registers an `ADMIN_ACTION_KEYS` entry and invokes `recordAdminAction` from `src/modules/admin/audit-service.ts`; any write without a matching audit row is a blocking finding (see `11.7a Shared admin-surface conventions`)
+- admin DS-reuse audit: every `/internal/**` page composes only the DS primitives enumerated in `11.7a`; no new internal shell, no route-local card/chip/panel/menu CSS, and the existing `/internal/tutor-reviews` two-page pattern (queue list → `[id]` detail) is the shape for every newly added admin queue
+- reference-data lockdown audit (per `P2-OPS-003`): no admin Server Action accepts a `slug`, `key`, `code`, or `id` change; no admin UI exposes "Add new" or "Delete" affordances for reference vocabularies
 
 **Out of scope**
 

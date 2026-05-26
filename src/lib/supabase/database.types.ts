@@ -259,6 +259,67 @@ type TutorApplicationReviewRow = {
   updated_at: string;
 };
 
+type AdminActionLogRow = {
+  action_key: string;
+  actor_app_user_id: string;
+  after_state: Json | null;
+  before_state: Json | null;
+  created_at: string;
+  id: string;
+  reason: string | null;
+  target_id: string;
+  target_type: string;
+};
+
+type ModerationCaseRow = {
+  case_kind:
+    | "report"
+    | "block"
+    | "lesson_issue"
+    | "public_content_takedown";
+  case_status:
+    | "queued"
+    | "under_review"
+    | "resolved"
+    | "dismissed"
+    | "escalated";
+  claimed_at: string | null;
+  claimed_by_app_user_id: string | null;
+  created_at: string;
+  id: string;
+  internal_summary: string | null;
+  priority: number;
+  reporter_app_user_id: string | null;
+  resolution_kind:
+    | "uphold"
+    | "reject"
+    | "split"
+    | "dismiss"
+    | "no_action"
+    | "escalated_to_legal"
+    | null;
+  resolved_at: string | null;
+  resolved_by_app_user_id: string | null;
+  subject_id: string;
+  subject_kind:
+    | "app_user"
+    | "tutor_profile"
+    | "message"
+    | "conversation"
+    | "lesson_booking";
+  triggering_event_id: string | null;
+  triggering_event_kind: string | null;
+  updated_at: string;
+};
+
+type ModerationCaseNoteRow = {
+  author_app_user_id: string;
+  body: string;
+  case_id: string;
+  created_at: string;
+  id: string;
+};
+
 type SchedulePolicyRow = {
   buffer_after_minutes: number;
   buffer_before_minutes: number;
@@ -722,6 +783,61 @@ export type MentorIbDatabase = {
         Relationships: [];
         Row: AppUserRow;
         Update: Partial<Omit<AppUserRow, "auth_user_id" | "created_at" | "id" | "updated_at">>;
+      };
+      admin_action_logs: {
+        Insert: Pick<
+          AdminActionLogRow,
+          "action_key" | "actor_app_user_id" | "target_id" | "target_type"
+        > & {
+          after_state?: Json | null;
+          before_state?: Json | null;
+          reason?: string | null;
+        };
+        Relationships: [];
+        Row: AdminActionLogRow;
+        Update: Partial<
+          Omit<AdminActionLogRow, "actor_app_user_id" | "created_at" | "id">
+        >;
+      };
+      moderation_cases: {
+        Insert: Pick<
+          ModerationCaseRow,
+          "case_kind" | "subject_id" | "subject_kind"
+        > & {
+          case_status?: ModerationCaseRow["case_status"];
+          claimed_at?: string | null;
+          claimed_by_app_user_id?: string | null;
+          internal_summary?: string | null;
+          priority?: number;
+          reporter_app_user_id?: string | null;
+          resolution_kind?: ModerationCaseRow["resolution_kind"];
+          resolved_at?: string | null;
+          resolved_by_app_user_id?: string | null;
+          triggering_event_id?: string | null;
+          triggering_event_kind?: string | null;
+        };
+        Relationships: [];
+        Row: ModerationCaseRow;
+        Update: Partial<
+          Omit<
+            ModerationCaseRow,
+            "case_kind" | "created_at" | "id" | "subject_id" | "subject_kind" | "updated_at"
+          >
+        >;
+      };
+      moderation_case_notes: {
+        Insert: Pick<
+          ModerationCaseNoteRow,
+          "author_app_user_id" | "body" | "case_id"
+        >;
+        Relationships: [];
+        Row: ModerationCaseNoteRow;
+        Update: Partial<
+          Omit<
+            ModerationCaseNoteRow,
+            "author_app_user_id" | "case_id" | "created_at" | "id"
+          >
+        >;
       };
       abuse_reports: {
         Insert: Pick<

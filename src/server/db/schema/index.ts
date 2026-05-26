@@ -1,4 +1,9 @@
 export {
+  adminActionLogs,
+  moderationCaseNotes,
+  moderationCases,
+} from "@/modules/admin/schema";
+export {
   appUsers,
   authUsers,
   studentProfiles,

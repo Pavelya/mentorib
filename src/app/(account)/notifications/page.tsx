@@ -6,13 +6,14 @@ import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
 import {
   Button,
   Card,
-  InlineNotice,
+  Chip,
   Panel,
   StatusBadge,
   TabBar,
 } from "@/components/ui";
 import { formatUtcDateTime } from "@/lib/datetime/format";
 import { hasRole } from "@/modules/accounts/account-state";
+import type { AccountNotificationDto } from "@/modules/accounts/shared-account";
 import {
   getSharedAccountRouteContext,
   listAccountNotifications,
@@ -62,10 +63,23 @@ export default async function NotificationsPage({
   const inboxHref = "/notifications" as Route;
   const preferencesHref = "/notifications?tab=preferences" as Route;
 
+  const notifications =
+    activeTab === "inbox" ? await listAccountNotifications(account.id) : null;
+  const unreadCount =
+    notifications?.filter((item) => item.notificationStatus === "unread")
+      .length ?? 0;
+
   return (
     <div className={styles.page}>
       <header className={styles.pageIntro}>
-        <h1 className={styles.pageTitle}>Notifications</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.pageTitle}>Notifications</h1>
+          {activeTab === "inbox" && unreadCount > 0 ? (
+            <Chip size="compact" tone="warning">
+              {unreadCount} unread
+            </Chip>
+          ) : null}
+        </div>
         <p className={styles.pageDescription}>
           Product updates, reminders, and legal notices for your account.
         </p>
@@ -89,9 +103,10 @@ export default async function NotificationsPage({
 
       {activeTab === "inbox" ? (
         <InboxTab
-          accountId={account.id}
           accountTimezone={account.timezone}
           activeRole={activeRole}
+          notifications={notifications ?? []}
+          unreadCount={unreadCount}
         />
       ) : (
         <PreferencesTab
@@ -121,163 +136,113 @@ function resolveActiveRole(
   return "tutor";
 }
 
-async function InboxTab({
-  accountId,
+function InboxTab({
   accountTimezone,
   activeRole,
+  notifications,
+  unreadCount,
 }: {
-  accountId: string;
   accountTimezone: string;
   activeRole: NotificationAudienceRole;
+  notifications: AccountNotificationDto[];
+  unreadCount: number;
 }) {
-  const notifications = await listAccountNotifications(accountId);
-  const unreadCount = notifications.filter((item) => item.notificationStatus === "unread").length;
-  const legalUpdateCount = notifications.filter(
-    (item) => item.notificationType === "policy_notice_updated",
-  ).length;
+  if (notifications.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <h2 className={styles.itemTitle}>No notifications yet</h2>
+        <p className={styles.bodyText}>
+          Lesson, payment, and legal updates will appear here as soon as they
+          happen.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
-      <InlineNotice title="Product inbox only" tone="info">
-        <p>
-          Tutor-student chat stays in the dedicated Messages route so conversation
-          traffic does not mix with the bell-style product notification inbox.
-        </p>
-      </InlineNotice>
-
-      <section className={styles.summaryGrid}>
-        <Panel
-          description="This inbox is reserved for lifecycle, payout, and legal updates."
-          title="Notification summary"
-          tone="raised"
-        >
-          <div className={styles.metricGrid}>
-            <Card>
-              <p className={styles.metricValue}>{notifications.length}</p>
-              <p className={styles.metricLabel}>Visible product updates</p>
-            </Card>
-            <Card>
-              <p className={styles.metricValue}>{unreadCount}</p>
-              <p className={styles.metricLabel}>Unread updates</p>
-            </Card>
-            <Card>
-              <p className={styles.metricValue}>{legalUpdateCount}</p>
-              <p className={styles.metricLabel}>Legal notices retained here</p>
-            </Card>
-          </div>
-        </Panel>
-
-        <Panel
-          description="The bell surface and chat surface stay intentionally separate in MVP."
-          title="Channel rule"
-          tone="mist"
-        >
-          <div className={styles.badgeRow}>
-            <StatusBadge tone="info">Bell inbox</StatusBadge>
-            <StatusBadge tone="trust">Lifecycle updates</StatusBadge>
-            <StatusBadge tone="warning">No chat replay</StatusBadge>
-          </div>
-          <p className={styles.bodyText}>
-            Lesson state, payout, and legal updates stay here. Tutor-student messages
-            keep their own unread behavior inside the conversation route.
-          </p>
-        </Panel>
-      </section>
-
-      <Panel
-        description="Notifications stay summarized and safe to render without exposing raw lesson or message payloads."
-        title="Latest product updates"
-      >
-        {unreadCount > 0 ? (
-          <form action={markAllNotificationsReadAction} className={styles.actions}>
-            <Button size="compact" type="submit" variant="secondary">
-              Mark all as read
-            </Button>
-          </form>
-        ) : null}
-        {notifications.length > 0 ? (
-          <div className={styles.list}>
-            {notifications.map((notification) => (
-              <Card key={notification.id}>
-                <div className={styles.itemHeader}>
-                  <div className={styles.itemCopy}>
-                    <h3 className={styles.itemTitle}>{notification.title}</h3>
-                    <p className={styles.bodyText}>{notification.bodySummary}</p>
-                  </div>
-                  <div className={styles.itemMeta}>
-                    <StatusBadge tone={getNotificationTypeTone(notification.notificationType)}>
-                      {getNotificationTypeLabel(notification.notificationType, activeRole)}
-                    </StatusBadge>
-                    <StatusBadge tone={getNotificationStatusTone(notification.notificationStatus)}>
-                      {formatNotificationStatus(notification.notificationStatus)}
-                    </StatusBadge>
-                  </div>
-                </div>
-                <p className={styles.muted}>
-                  {formatUtcDateTime(notification.createdAt, {
-                    timezone: accountTimezone,
-                  })}
-                </p>
-                <div className={styles.actions}>
-                  {notification.safeHref ? (
-                    <a className={styles.inlineLink} href={notification.safeHref}>
-                      Review related notice
-                    </a>
-                  ) : null}
-                  {notification.notificationStatus === "unread" ? (
-                    <form action={setNotificationStatusAction}>
-                      <input
-                        name="notificationId"
-                        type="hidden"
-                        value={notification.id}
-                      />
-                      <input name="nextStatus" type="hidden" value="read" />
-                      <Button size="compact" type="submit" variant="ghost">
-                        Mark as read
-                      </Button>
-                    </form>
-                  ) : null}
-                  {notification.notificationStatus !== "dismissed" ? (
-                    <form action={setNotificationStatusAction}>
-                      <input
-                        name="notificationId"
-                        type="hidden"
-                        value={notification.id}
-                      />
-                      <input name="nextStatus" type="hidden" value="dismissed" />
-                      <Button size="compact" type="submit" variant="ghost">
-                        Dismiss
-                      </Button>
-                    </form>
-                  ) : (
-                    <form action={setNotificationStatusAction}>
-                      <input
-                        name="notificationId"
-                        type="hidden"
-                        value={notification.id}
-                      />
-                      <input name="nextStatus" type="hidden" value="unread" />
-                      <Button size="compact" type="submit" variant="ghost">
-                        Restore
-                      </Button>
-                    </form>
+      {unreadCount > 0 ? (
+        <form action={markAllNotificationsReadAction} className={styles.actions}>
+          <Button size="compact" type="submit" variant="secondary">
+            Mark all as read
+          </Button>
+        </form>
+      ) : null}
+      <div className={styles.list}>
+        {notifications.map((notification) => (
+          <Card
+            key={notification.id}
+            selected={notification.notificationStatus === "unread"}
+          >
+            <div className={styles.itemHeader}>
+              <div className={styles.itemCopy}>
+                <h3 className={styles.itemTitle}>{notification.title}</h3>
+                <p className={styles.bodyText}>{notification.bodySummary}</p>
+              </div>
+              <div className={styles.itemMeta}>
+                <StatusBadge
+                  tone={getNotificationTypeTone(notification.notificationType)}
+                >
+                  {getNotificationTypeLabel(
+                    notification.notificationType,
+                    activeRole,
                   )}
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className={styles.emptyState}>
-            <p className={styles.bodyText}>
-              No bell-style product updates yet — lifecycle and legal items will
-              appear here as soon as they happen.
-            </p>
+                </StatusBadge>
+              </div>
+            </div>
             <p className={styles.muted}>
-              The bell inbox stays separate from the Messages route by design.
+              {formatUtcDateTime(notification.createdAt, {
+                timezone: accountTimezone,
+              })}
             </p>
-          </div>
-        )}
-      </Panel>
+            <div className={styles.actions}>
+              {notification.safeHref ? (
+                <a className={styles.inlineLink} href={notification.safeHref}>
+                  Review related notice
+                </a>
+              ) : null}
+              {notification.notificationStatus === "unread" ? (
+                <form action={setNotificationStatusAction}>
+                  <input
+                    name="notificationId"
+                    type="hidden"
+                    value={notification.id}
+                  />
+                  <input name="nextStatus" type="hidden" value="read" />
+                  <Button size="compact" type="submit" variant="ghost">
+                    Mark as read
+                  </Button>
+                </form>
+              ) : null}
+              {notification.notificationStatus !== "dismissed" ? (
+                <form action={setNotificationStatusAction}>
+                  <input
+                    name="notificationId"
+                    type="hidden"
+                    value={notification.id}
+                  />
+                  <input name="nextStatus" type="hidden" value="dismissed" />
+                  <Button size="compact" type="submit" variant="ghost">
+                    Dismiss
+                  </Button>
+                </form>
+              ) : (
+                <form action={setNotificationStatusAction}>
+                  <input
+                    name="notificationId"
+                    type="hidden"
+                    value={notification.id}
+                  />
+                  <input name="nextStatus" type="hidden" value="unread" />
+                  <Button size="compact" type="submit" variant="ghost">
+                    Restore
+                  </Button>
+                </form>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
     </>
   );
 }
@@ -309,26 +274,4 @@ async function PreferencesTab({
       />
     </Panel>
   );
-}
-
-function formatNotificationStatus(status: "dismissed" | "read" | "unread") {
-  switch (status) {
-    case "unread":
-      return "Unread";
-    case "read":
-      return "Read";
-    case "dismissed":
-      return "Dismissed";
-  }
-}
-
-function getNotificationStatusTone(status: "dismissed" | "read" | "unread") {
-  switch (status) {
-    case "unread":
-      return "warning";
-    case "read":
-      return "positive";
-    case "dismissed":
-      return "info";
-  }
 }

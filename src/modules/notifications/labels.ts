@@ -20,7 +20,7 @@ export function getNotificationTypeLabel(
     case "lesson_declined":
       return "Lesson declined";
     case "lesson_request_expired":
-      return "Lesson expired";
+      return "Lesson request expired";
     case "lesson_updated":
       return "Lesson update";
     case "upcoming_lesson_reminder":
@@ -38,7 +38,7 @@ export function getNotificationTypeLabel(
         ? "New review on your teaching"
         : "Your review published";
     case "tutor_application_submitted":
-      return "Application sent";
+      return "Tutor application sent";
     case "tutor_application_reviewed":
       return "Application reviewed";
     case "tutor_credential_reviewed":
@@ -46,7 +46,7 @@ export function getNotificationTypeLabel(
     case "tutor_listing_status_changed":
       return "Listing status updated";
     case "payout_processed":
-      return "Payout update";
+      return "Payout updated";
     case "policy_notice_updated":
       return "Legal update";
   }

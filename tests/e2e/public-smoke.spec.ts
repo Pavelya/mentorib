@@ -25,8 +25,16 @@ const IGNORED_REQUEST_HOST_PATTERNS: RegExp[] = [
   /i\.posthog\.com/,
 ];
 
-const GENERIC_RESOURCE_404_TEXT =
-  "Failed to load resource: the server responded with a status of 404 (Not Found)";
+// Console messages of the form
+//   "Failed to load resource: the server responded with a status of 404 (Not Found)"
+// carry no URL, so we cannot decide on the console side whether the failing
+// request is on the analytics ignore list. The companion `response` listener
+// below still catches genuine 4xx/5xx because it has the URL. The trailing
+// status-text segment may be `(Not Found)`, `(Unauthorized)`, `()`, etc.
+// depending on browser version and response shape — match any parenthesized
+// content (including empty).
+const GENERIC_RESOURCE_FAILURE_PATTERN =
+  /^Failed to load resource: the server responded with a status of \d+ \(.*\)$/;
 
 function isIgnoredUrl(url: string) {
   return IGNORED_REQUEST_HOST_PATTERNS.some((pattern) => pattern.test(url));
@@ -38,10 +46,10 @@ function trackErrors(page: Page) {
   page.on("console", (message: ConsoleMessage) => {
     if (message.type() !== "error") return;
     const text = message.text();
-    // Generic resource-load 404s carry no URL on the console message itself.
-    // The matching `response` listener below will report them with a URL when
-    // the URL is not on the analytics ignore list.
-    if (text === GENERIC_RESOURCE_404_TEXT) return;
+    // Generic resource-load failures carry no URL on the console message
+    // itself. The matching `response` listener below will report them with a
+    // URL when the URL is not on the analytics ignore list.
+    if (GENERIC_RESOURCE_FAILURE_PATTERN.test(text)) return;
     errors.push(text);
   });
 

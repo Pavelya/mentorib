@@ -58,18 +58,64 @@ export const NOTIFICATION_CATEGORY_LABELS: Record<NotificationCategory, string> 
   lesson_recaps: "Lesson recaps",
 };
 
+export type NotificationCategoryAudience = "student" | "tutor" | "both";
+
+export const NOTIFICATION_CATEGORY_AUDIENCE: Record<
+  NotificationCategory,
+  NotificationCategoryAudience
+> = {
+  lesson_reminders: "both",
+  reviews: "tutor",
+  tutor_application_updates: "tutor",
+  lesson_recaps: "student",
+};
+
+export type NotificationCategoryDescription =
+  | string
+  | { readonly student: string; readonly tutor: string };
+
 export const NOTIFICATION_CATEGORY_DESCRIPTIONS: Record<
   NotificationCategory,
-  string
+  NotificationCategoryDescription
 > = {
-  lesson_reminders:
-    "Heads-up before a scheduled lesson so you can prepare or join on time.",
+  lesson_reminders: {
+    student:
+      "Heads-up before a scheduled lesson so you can prepare or join on time.",
+    tutor:
+      "Heads-up before a scheduled lesson so you can be ready to teach on time.",
+  },
   reviews: "Notices when a student leaves a review on a lesson you taught.",
   tutor_application_updates:
     "Status updates while your tutor application is under review.",
   lesson_recaps:
     "Continuity notes your tutor shares after a lesson is complete.",
 };
+
+export type NotificationAudienceRole = "student" | "tutor";
+
+export function getNotificationCategoryDescription(
+  category: NotificationCategory,
+  role: NotificationAudienceRole,
+): string {
+  const value = NOTIFICATION_CATEGORY_DESCRIPTIONS[category];
+  return typeof value === "string" ? value : value[role];
+}
+
+export function filterNotificationCategoriesForRoles(roles: {
+  isStudent: boolean;
+  isTutor: boolean;
+}): readonly NotificationCategory[] {
+  return notificationCategories.filter((category) => {
+    const audience = NOTIFICATION_CATEGORY_AUDIENCE[category];
+    if (audience === "both") {
+      return roles.isStudent || roles.isTutor;
+    }
+    if (audience === "student") {
+      return roles.isStudent;
+    }
+    return roles.isTutor;
+  });
+}
 
 export const IN_APP_ONLY_NOTIFICATION_CATEGORIES = new Set<NotificationCategory>([
   "lesson_recaps",

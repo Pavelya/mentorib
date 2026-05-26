@@ -4,10 +4,11 @@ import { useState, useTransition } from "react";
 
 import { InlineNotice, Section, Switch } from "@/components/ui";
 import {
+  filterNotificationCategoriesForRoles,
+  getNotificationCategoryDescription,
   IN_APP_ONLY_NOTIFICATION_CATEGORIES,
-  NOTIFICATION_CATEGORY_DESCRIPTIONS,
   NOTIFICATION_CATEGORY_LABELS,
-  notificationCategories,
+  type NotificationAudienceRole,
   type NotificationCategory,
 } from "@/modules/notifications/constants";
 import type { NotificationPreferenceSnapshot } from "@/modules/notifications/preferences";
@@ -19,7 +20,10 @@ import {
 } from "./notification-preference-actions";
 
 type NotificationPreferencesFormProps = {
+  activeRole: NotificationAudienceRole;
   initialSnapshot: NotificationPreferenceSnapshot;
+  isStudent: boolean;
+  isTutor: boolean;
 };
 
 type PendingKey = `${NotificationCategory}:${"in_app" | "email"}`;
@@ -28,8 +32,15 @@ const ALWAYS_SENT_SUMMARY =
   "Booking confirmations · Payment receipts · Lesson cancellations · Dispute outcomes · Legal updates · Payout updates";
 
 export function NotificationPreferencesForm({
+  activeRole,
   initialSnapshot,
+  isStudent,
+  isTutor,
 }: NotificationPreferencesFormProps) {
+  const visibleCategories = filterNotificationCategoriesForRoles({
+    isStudent,
+    isTutor,
+  });
   const [snapshot, setSnapshot] =
     useState<NotificationPreferenceSnapshot>(initialSnapshot);
   const [pending, setPending] = useState<Set<PendingKey>>(new Set());
@@ -104,7 +115,7 @@ export function NotificationPreferencesForm({
         </InlineNotice>
       ) : null}
 
-      {notificationCategories.map((category) => {
+      {visibleCategories.map((category) => {
         const channelState = snapshot[category];
         const emailLocked = IN_APP_ONLY_NOTIFICATION_CATEGORIES.has(category);
         const inAppPendingKey: PendingKey = `${category}:in_app`;
@@ -117,7 +128,7 @@ export function NotificationPreferencesForm({
             key={category}
           >
             <p className={styles.sectionNote}>
-              {NOTIFICATION_CATEGORY_DESCRIPTIONS[category]}
+              {getNotificationCategoryDescription(category, activeRole)}
             </p>
             <Switch
               checked={channelState.in_app_enabled}

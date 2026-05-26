@@ -1,5 +1,6 @@
 import type { Route } from "next";
 
+import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
 import {
@@ -11,11 +12,16 @@ import {
   TabBar,
 } from "@/components/ui";
 import { formatUtcDateTime } from "@/lib/datetime/format";
+import { hasRole } from "@/modules/accounts/account-state";
 import {
   getSharedAccountRouteContext,
   listAccountNotifications,
 } from "@/modules/accounts/shared-account";
-import type { NotificationType } from "@/modules/notifications/constants";
+import type { NotificationAudienceRole } from "@/modules/notifications/constants";
+import {
+  getNotificationTypeLabel,
+  getNotificationTypeTone,
+} from "@/modules/notifications/labels";
 import { getNotificationPreferenceSnapshot } from "@/modules/notifications/preferences";
 
 import {
@@ -49,6 +55,10 @@ export default async function NotificationsPage({
   const activeTab = resolveTab(resolvedSearchParams.tab);
   const { account, pendingLegalNotice } = context;
 
+  const isStudent = hasRole(account, "student");
+  const isTutor = hasRole(account, "tutor");
+  const activeRole = resolveActiveRole(account, { isStudent, isTutor });
+
   const inboxHref = "/notifications" as Route;
   const preferencesHref = "/notifications?tab=preferences" as Route;
 
@@ -78,20 +88,47 @@ export default async function NotificationsPage({
       />
 
       {activeTab === "inbox" ? (
-        <InboxTab accountId={account.id} accountTimezone={account.timezone} />
+        <InboxTab
+          accountId={account.id}
+          accountTimezone={account.timezone}
+          activeRole={activeRole}
+        />
       ) : (
-        <PreferencesTab accountId={account.id} />
+        <PreferencesTab
+          accountId={account.id}
+          activeRole={activeRole}
+          isStudent={isStudent}
+          isTutor={isTutor}
+        />
       )}
     </div>
   );
 }
 
+function resolveActiveRole(
+  account: ResolvedAuthAccount,
+  presence: { isStudent: boolean; isTutor: boolean },
+): NotificationAudienceRole {
+  if (account.primary_role_context === "tutor" && presence.isTutor) {
+    return "tutor";
+  }
+  if (account.primary_role_context === "student" && presence.isStudent) {
+    return "student";
+  }
+  if (presence.isStudent) {
+    return "student";
+  }
+  return "tutor";
+}
+
 async function InboxTab({
   accountId,
   accountTimezone,
+  activeRole,
 }: {
   accountId: string;
   accountTimezone: string;
+  activeRole: NotificationAudienceRole;
 }) {
   const notifications = await listAccountNotifications(accountId);
   const unreadCount = notifications.filter((item) => item.notificationStatus === "unread").length;
@@ -169,7 +206,7 @@ async function InboxTab({
                   </div>
                   <div className={styles.itemMeta}>
                     <StatusBadge tone={getNotificationTypeTone(notification.notificationType)}>
-                      {getNotificationTypeLabel(notification.notificationType)}
+                      {getNotificationTypeLabel(notification.notificationType, activeRole)}
                     </StatusBadge>
                     <StatusBadge tone={getNotificationStatusTone(notification.notificationStatus)}>
                       {formatNotificationStatus(notification.notificationStatus)}
@@ -245,7 +282,17 @@ async function InboxTab({
   );
 }
 
-async function PreferencesTab({ accountId }: { accountId: string }) {
+async function PreferencesTab({
+  accountId,
+  activeRole,
+  isStudent,
+  isTutor,
+}: {
+  accountId: string;
+  activeRole: NotificationAudienceRole;
+  isStudent: boolean;
+  isTutor: boolean;
+}) {
   const snapshot = await getNotificationPreferenceSnapshot(accountId);
 
   return (
@@ -254,7 +301,12 @@ async function PreferencesTab({ accountId }: { accountId: string }) {
       title="Notification preferences"
       tone="raised"
     >
-      <NotificationPreferencesForm initialSnapshot={snapshot} />
+      <NotificationPreferencesForm
+        activeRole={activeRole}
+        initialSnapshot={snapshot}
+        isStudent={isStudent}
+        isTutor={isTutor}
+      />
     </Panel>
   );
 }
@@ -277,66 +329,6 @@ function getNotificationStatusTone(status: "dismissed" | "read" | "unread") {
     case "read":
       return "positive";
     case "dismissed":
-      return "info";
-  }
-}
-
-function getNotificationTypeLabel(type: NotificationType) {
-  switch (type) {
-    case "new_message":
-      return "Chat message";
-    case "lesson_request_submitted":
-      return "Lesson request";
-    case "lesson_accepted":
-      return "Lesson accepted";
-    case "lesson_declined":
-      return "Lesson declined";
-    case "lesson_request_expired":
-      return "Lesson expired";
-    case "lesson_updated":
-      return "Lesson update";
-    case "upcoming_lesson_reminder":
-      return "Lesson reminder";
-    case "lesson_issue_acknowledgement":
-      return "Issue received";
-    case "lesson_issue_resolution":
-      return "Issue resolved";
-    case "lesson_report_shared":
-      return "Lesson recap shared";
-    case "review_submitted":
-      return "Review activity";
-    case "tutor_application_submitted":
-      return "Application sent";
-    case "tutor_application_reviewed":
-      return "Application reviewed";
-    case "payout_processed":
-      return "Payout update";
-    case "policy_notice_updated":
-      return "Legal update";
-  }
-}
-
-function getNotificationTypeTone(type: NotificationType) {
-  switch (type) {
-    case "new_message":
-      return "info";
-    case "lesson_accepted":
-    case "lesson_issue_resolution":
-    case "payout_processed":
-      return "positive";
-    case "lesson_declined":
-    case "lesson_request_expired":
-    case "policy_notice_updated":
-    case "tutor_application_reviewed":
-      return "warning";
-    case "review_submitted":
-    case "tutor_application_submitted":
-      return "trust";
-    case "lesson_request_submitted":
-    case "lesson_updated":
-    case "upcoming_lesson_reminder":
-    case "lesson_issue_acknowledgement":
-    case "lesson_report_shared":
       return "info";
   }
 }

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
-import { loadViewerIdentity } from "@/lib/identity/viewer-loader";
+import {
+  loadPublicWorkspaceShortcut,
+  loadViewerIdentity,
+} from "@/lib/identity/viewer-loader";
 import { buildPublicLayoutMetadata } from "@/lib/seo/metadata/defaults";
 import { navigationByFamily } from "@/lib/routing/navigation";
 
@@ -13,7 +16,10 @@ type PublicLayoutProps = {
 };
 
 export default async function PublicLayout({ children }: PublicLayoutProps) {
-  const viewer = await loadViewerIdentity();
+  const [viewer, workspaceShortcut] = await Promise.all([
+    loadViewerIdentity(),
+    loadPublicWorkspaceShortcut(),
+  ]);
 
   return (
     <AppFrame
@@ -27,6 +33,10 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
         { href: "/terms", label: "Terms" },
       ]}
       footerNote="Mentor IB helps students and parents move from a specific IB need to a tutor who fits."
+      mobileDrawer={{
+        navItems: navigationByFamily.public.items,
+        workspaceShortcut: workspaceShortcut ?? undefined,
+      }}
       navItems={navigationByFamily.public.items}
       showHero={false}
       title="One ecosystem. Match-first guidance."

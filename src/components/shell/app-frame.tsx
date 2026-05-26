@@ -10,10 +10,16 @@ import type { ViewerIdentity } from "@/lib/identity/viewer";
 import { AppFrameNav } from "./app-frame-nav";
 import styles from "./app-frame.module.css";
 import { AvatarMenu, DEFAULT_AVATAR_MENU_ITEMS } from "./avatar-menu";
+import { PublicMobileMenu } from "./public-mobile-menu";
 
 export type AppFrameFooterLink = {
   href: Route;
   label: string;
+};
+
+export type AppFrameMobileDrawer = {
+  navItems: NavItem[];
+  workspaceShortcut?: { href: Route; label: string };
 };
 
 type AppFrameProps = {
@@ -26,6 +32,7 @@ type AppFrameProps = {
   bottomNavItems?: BottomNavItem[];
   bottomNavOverflowItems?: NavItem[];
   bottomNavAriaLabel?: string;
+  mobileDrawer?: AppFrameMobileDrawer;
   children: ReactNode;
   showHero?: boolean;
   tone?: "public" | "private" | "minimal";
@@ -42,12 +49,14 @@ export function AppFrame({
   bottomNavItems,
   bottomNavOverflowItems,
   bottomNavAriaLabel,
+  mobileDrawer,
   children,
   showHero = true,
   tone = "private",
   viewer,
 }: AppFrameProps) {
   const hasBottomNav = (bottomNavItems?.length ?? 0) > 0;
+  const hasMobileDrawer = Boolean(mobileDrawer);
   const frameClassName = [
     styles.frame,
     tone === "minimal" ? styles.minimal : "",
@@ -56,7 +65,10 @@ export function AppFrame({
     .filter(Boolean)
     .join(" ");
   const heroTone = tone === "public" ? "warm" : tone === "minimal" ? "soft" : "raised";
-  const desktopNavClassName = [styles.desktopNav, hasBottomNav ? styles.hideOnMobile : ""]
+  const desktopNavClassName = [
+    styles.desktopNav,
+    hasBottomNav || hasMobileDrawer ? styles.hideOnMobile : "",
+  ]
     .filter(Boolean)
     .join(" ");
   const overflowNavItems: NavItem[] | undefined =
@@ -68,6 +80,18 @@ export function AppFrame({
     <div className={frameClassName}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
+          {mobileDrawer ? (
+            <div className={styles.leadingSlot}>
+              <PublicMobileMenu
+                navItems={mobileDrawer.navItems}
+                signInHref={viewer ? undefined : (buildAuthSignInPath() as Route)}
+                workspaceShortcut={
+                  viewer ? mobileDrawer.workspaceShortcut : undefined
+                }
+              />
+            </div>
+          ) : null}
+
           <div className={[styles.brandBlock, styles.brandSlot].join(" ")}>
             <Link className={styles.brand} href="/">
               Mentor IB

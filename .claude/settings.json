@@ -27,7 +27,8 @@
       "Bash(kill %1)",
       "Bash(pkill -f \"next start\")",
       "Bash(lsof -i:3000 -i:3457)",
-      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3457 pnpm test:e2e)"
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3457 pnpm test:e2e)",
+      "Bash(pnpm test:e2e --grep \"renders without errors\")"
     ]
   }
 }

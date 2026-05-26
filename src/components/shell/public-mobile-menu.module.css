@@ -1,0 +1,51 @@
+.root {
+  display: inline-flex;
+}
+
+@media (min-width: 768px) {
+  .root {
+    display: none;
+  }
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-overlay);
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) ease;
+}
+
+.trigger:hover {
+  background: var(--state-info-surface);
+}
+
+.trigger:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--focus-ring),
+    0 0 0 1px var(--focus-outline);
+}
+
+@media (pointer: coarse) {
+  .trigger {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  .drawer {
+    left: var(--space-3) !important;
+    right: var(--space-3) !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}

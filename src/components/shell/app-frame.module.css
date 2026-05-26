@@ -52,6 +52,12 @@
   min-width: 0;
 }
 
+.leadingSlot {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
 .trailingSlot {
   flex: 0 0 auto;
   margin-left: auto;

@@ -116,7 +116,7 @@ export async function updateNotificationPreference(
     };
   }
 
-  revalidatePath("/settings");
+  revalidatePath("/notifications");
 
   return { code: "success" };
 }

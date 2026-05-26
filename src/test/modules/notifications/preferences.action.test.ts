@@ -22,7 +22,7 @@ vi.mock("@/lib/auth/account-service", () => ({
   ensureAuthAccount: (...args: unknown[]) => mockEnsureAuthAccount(...args),
 }));
 
-import { updateNotificationPreference } from "@/app/(account)/settings/notification-preference-actions";
+import { updateNotificationPreference } from "@/app/(account)/notifications/notification-preference-actions";
 
 const APP_USER_ID = "11111111-1111-4111-8111-111111111111";
 
@@ -101,7 +101,7 @@ describe("updateNotificationPreference", () => {
       notification_category: "reviews",
     });
     expect(options).toEqual({ onConflict: "app_user_id,notification_category" });
-    expect(mockRevalidatePath).toHaveBeenCalledWith("/settings");
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/notifications");
   });
 
   it("upserts the email_enabled value when channel is email", async () => {

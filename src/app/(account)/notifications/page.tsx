@@ -1,32 +1,56 @@
+import type { Route } from "next";
+
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
-import { Button, Card, InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import {
+  Button,
+  Card,
+  InlineNotice,
+  Panel,
+  StatusBadge,
+  TabBar,
+} from "@/components/ui";
 import { formatUtcDateTime } from "@/lib/datetime/format";
 import {
   getSharedAccountRouteContext,
   listAccountNotifications,
 } from "@/modules/accounts/shared-account";
 import type { NotificationType } from "@/modules/notifications/constants";
+import { getNotificationPreferenceSnapshot } from "@/modules/notifications/preferences";
 
 import {
   markAllNotificationsReadAction,
   setNotificationStatusAction,
 } from "./actions";
+import { NotificationPreferencesForm } from "./notification-preferences-form";
 import styles from "../account-surfaces.module.css";
 
-export default async function NotificationsPage() {
+type NotificationsTab = "inbox" | "preferences";
+
+type NotificationsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function resolveTab(value: string | string[] | undefined): NotificationsTab {
+  const candidate = Array.isArray(value) ? value[0] : value;
+  return candidate === "preferences" ? "preferences" : "inbox";
+}
+
+export default async function NotificationsPage({
+  searchParams,
+}: NotificationsPageProps) {
   const context = await getSharedAccountRouteContext("/notifications");
 
   if (context.status !== "ready") {
     return <AccountRouteState status={context.status} />;
   }
 
+  const resolvedSearchParams = await searchParams;
+  const activeTab = resolveTab(resolvedSearchParams.tab);
   const { account, pendingLegalNotice } = context;
-  const notifications = await listAccountNotifications(account.id);
-  const unreadCount = notifications.filter((item) => item.notificationStatus === "unread").length;
-  const legalUpdateCount = notifications.filter(
-    (item) => item.notificationType === "policy_notice_updated",
-  ).length;
+
+  const inboxHref = "/notifications" as Route;
+  const preferencesHref = "/notifications?tab=preferences" as Route;
 
   return (
     <div className={styles.page}>
@@ -38,9 +62,45 @@ export default async function NotificationsPage() {
       </header>
 
       {pendingLegalNotice ? (
-        <PendingLegalNotice notice={pendingLegalNotice} returnTo="/notifications" />
+        <PendingLegalNotice
+          notice={pendingLegalNotice}
+          returnTo={activeTab === "preferences" ? "/notifications?tab=preferences" : "/notifications"}
+        />
       ) : null}
 
+      <TabBar
+        activeId={activeTab}
+        ariaLabel="Notifications sections"
+        items={[
+          { id: "inbox", label: "Inbox", href: inboxHref },
+          { id: "preferences", label: "Preferences", href: preferencesHref },
+        ]}
+      />
+
+      {activeTab === "inbox" ? (
+        <InboxTab accountId={account.id} accountTimezone={account.timezone} />
+      ) : (
+        <PreferencesTab accountId={account.id} />
+      )}
+    </div>
+  );
+}
+
+async function InboxTab({
+  accountId,
+  accountTimezone,
+}: {
+  accountId: string;
+  accountTimezone: string;
+}) {
+  const notifications = await listAccountNotifications(accountId);
+  const unreadCount = notifications.filter((item) => item.notificationStatus === "unread").length;
+  const legalUpdateCount = notifications.filter(
+    (item) => item.notificationType === "policy_notice_updated",
+  ).length;
+
+  return (
+    <>
       <InlineNotice title="Product inbox only" tone="info">
         <p>
           Tutor-student chat stays in the dedicated Messages route so conversation
@@ -118,7 +178,7 @@ export default async function NotificationsPage() {
                 </div>
                 <p className={styles.muted}>
                   {formatUtcDateTime(notification.createdAt, {
-                    timezone: account.timezone,
+                    timezone: accountTimezone,
                   })}
                 </p>
                 <div className={styles.actions}>
@@ -181,7 +241,21 @@ export default async function NotificationsPage() {
           </div>
         )}
       </Panel>
-    </div>
+    </>
+  );
+}
+
+async function PreferencesTab({ accountId }: { accountId: string }) {
+  const snapshot = await getNotificationPreferenceSnapshot(accountId);
+
+  return (
+    <Panel
+      description="Choose which optional notifications reach you, and how. Critical lifecycle notifications keep sending so booking and payment events never go silent."
+      title="Notification preferences"
+      tone="raised"
+    >
+      <NotificationPreferencesForm initialSnapshot={snapshot} />
+    </Panel>
   );
 }
 

@@ -255,6 +255,8 @@ Primary layout:
 
 - `src/app/(account)/layout.tsx`
 
+Per-route IA, role-gating rules, and the binding decision that notification preferences live on `/notifications` (not `/settings`) are governed by `docs/architecture/account-family-shape-v1.md` (P2-SUX-001-21 ADR). The four routes' jobs in that ADR § 3 supersede any inferred per-route guidance in this map.
+
 ## 7.5 Student family
 
 URL posture:
@@ -391,6 +393,8 @@ It should not hardcode page-specific titles, descriptions, or structured data.
 - shared account navigation
 - settings and account-support chrome
 - noindex defaults
+
+The four routes hosted by this layout (`/settings`, `/notifications`, `/privacy`, `/billing`) follow the IA and role-gating rules in `docs/architecture/account-family-shape-v1.md` (P2-SUX-001-21 ADR). The nav rail stays flat (every signed-in account reaches all four routes); role gating is applied to each page body, never to the layout's nav.
 
 ## 9.5 Student layout
 

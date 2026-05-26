@@ -28,7 +28,12 @@
       "Bash(pkill -f \"next start\")",
       "Bash(lsof -i:3000 -i:3457)",
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3457 pnpm test:e2e)",
-      "Bash(pnpm test:e2e --grep \"renders without errors\")"
+      "Bash(pnpm test:e2e --grep \"renders without errors\")",
+      "Bash(PORT=3100 BASE_URL=http://localhost:3100 PLAYWRIGHT_BASE_URL=http://localhost:3100 pnpm start --port 3100)",
+      "Bash(curl -fs http://localhost:3100)",
+      "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3100 pnpm test:e2e)",
+      "Bash(grep -rn 'href={`/.*\\\\${' /Users/pavel/mentorib/src/app/\\\\\\(student\\\\\\))",
+      "Bash(git mv *)"
     ]
   }
 }

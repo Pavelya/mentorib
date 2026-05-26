@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Route } from "next";
 
+import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { formatPriceRange } from "@/modules/pricing/tutor-pricing";
 import {
   loadActiveReferenceSubjectFocusAreas,
@@ -284,6 +285,10 @@ export async function getComboLandingPageData(
 }
 
 export async function listPublishedSubjectSeoSlugs(): Promise<string[]> {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const slugs: string[] = [];
   for (const slug of listAuthoredSubjectSlugs()) {
     const data = await getSubjectLandingPageData(slug);
@@ -295,6 +300,10 @@ export async function listPublishedSubjectSeoSlugs(): Promise<string[]> {
 }
 
 export async function listPublishedServiceSeoSlugs(): Promise<string[]> {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const slugs: string[] = [];
   for (const slug of listAuthoredServiceSlugs()) {
     const data = await getServiceLandingPageData(slug);
@@ -308,6 +317,10 @@ export async function listPublishedServiceSeoSlugs(): Promise<string[]> {
 export async function listPublishedComboSeoPairs(): Promise<
   { needSlug: string; subjectSlug: string }[]
 > {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const pairs: { needSlug: string; subjectSlug: string }[] = [];
   for (const pair of listAuthoredComboPairs()) {
     const data = await getComboLandingPageData(pair.subjectSlug, pair.needSlug);

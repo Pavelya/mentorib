@@ -13,7 +13,9 @@ on:
 env:
   NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-dummy-publishable-key
-  SUPABASE_SERVICE_ROLE_KEY: ci-dummy-service-role-key
+  # SUPABASE_SERVICE_ROLE_KEY intentionally unset: with no service-role key,
+  # `isSupabaseAuthConfigured()` returns false and DB-backed loaders take
+  # their "skip" branches instead of querying the dummy URL.
   NEXT_PUBLIC_SITE_URL: http://localhost:3000
   STRIPE_SECRET_KEY: sk_test_ci_dummy
   STRIPE_PUBLISHABLE_KEY: pk_test_ci_dummy

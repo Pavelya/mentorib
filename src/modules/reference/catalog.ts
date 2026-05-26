@@ -1,3 +1,4 @@
+import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import type { LearningNeedOptionGroup } from "@/modules/lessons/constants";
 
@@ -80,6 +81,10 @@ export type ReferenceLearningNeedOptionValue = {
 };
 
 export async function loadActiveReferenceSubjects(): Promise<ReferenceSubject[]> {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("subjects")
@@ -152,6 +157,10 @@ export async function loadReferenceSubjectsByIds(
 export async function loadActiveReferenceSubjectFocusAreas(): Promise<
   ReferenceSubjectFocusArea[]
 > {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("subject_focus_areas")
@@ -222,6 +231,10 @@ export async function loadReferenceSubjectFocusAreasByIds(
 }
 
 export async function loadActiveReferenceLanguages(): Promise<ReferenceLanguage[]> {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("languages")
@@ -278,6 +291,10 @@ export async function loadReferenceLanguagesByCodes(
 export async function loadActiveReferenceLearningNeedOptionValues(): Promise<
   ReferenceLearningNeedOptionValue[]
 > {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("learning_need_option_values")
@@ -298,6 +315,10 @@ export async function loadActiveReferenceLearningNeedOptionValues(): Promise<
 export async function loadActiveReferenceMeetingProviders(): Promise<
   ReferenceMeetingProvider[]
 > {
+  if (!isSupabaseAuthConfigured()) {
+    return [];
+  }
+
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("meeting_providers")

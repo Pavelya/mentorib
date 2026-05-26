@@ -3,6 +3,7 @@ export {
   formatUtcDate,
   formatUtcDateTime,
   formatUtcLessonRange,
+  formatUtcShortDate,
   formatUtcTime,
   getTimezoneExplanation,
 } from "@/lib/datetime/format";

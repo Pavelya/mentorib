@@ -38,6 +38,14 @@ export function formatUtcDate(value: UtcDateInput, timezone?: string | null) {
   });
 }
 
+export function formatUtcShortDate(value: UtcDateInput, timezone?: string | null) {
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
+    day: "numeric",
+    month: "short",
+    timeZone: resolveTimezone(timezone),
+  }).format(toUtcDate(value));
+}
+
 export function formatUtcTime(value: UtcDateInput, timezone?: string | null) {
   return formatUtcDateTime(value, {
     dateStyle: undefined,

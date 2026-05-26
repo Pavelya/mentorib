@@ -19,6 +19,12 @@ export default async function SettingsPage() {
 
   const { account, pendingLegalNotice } = context;
   const roleBadges = buildAccountRoleBadges(account);
+  const hasStudentRole = account.roles.some(
+    (role) => role.role === "student" && role.role_status !== "revoked",
+  );
+  const hasTutorRole = account.roles.some(
+    (role) => role.role === "tutor" && role.role_status !== "revoked",
+  );
   const optionsByField = await loadDiscoveryOptions();
   const languageOptions = optionsByField.languageCode;
   const initialPreferredLanguageCode = resolveInitialPreferredLanguageCode(
@@ -41,6 +47,8 @@ export default async function SettingsPage() {
           <SettingsProfileForm
             avatarUrl={account.avatar_url ?? undefined}
             email={account.email}
+            hasStudentRole={hasStudentRole}
+            hasTutorRole={hasTutorRole}
             initialFullName={account.full_name?.trim() ?? ""}
             initialPreferredLanguageCode={initialPreferredLanguageCode}
             languageOptions={languageOptions}
@@ -52,7 +60,7 @@ export default async function SettingsPage() {
               className={styles.inlineLink}
               href={{ pathname: "/notifications", query: { tab: "preferences" } }}
             >
-              Manage notification preferences
+              Manage notification preferences →
             </Link>
           </p>
         </Panel>

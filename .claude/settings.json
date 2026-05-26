@@ -33,7 +33,12 @@
       "Bash(curl -fs http://localhost:3100)",
       "Bash(PLAYWRIGHT_BASE_URL=http://localhost:3100 pnpm test:e2e)",
       "Bash(grep -rn 'href={`/.*\\\\${' /Users/pavel/mentorib/src/app/\\\\\\(student\\\\\\))",
-      "Bash(git mv *)"
+      "Bash(git mv *)",
+      "Bash(curl -sS -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(PORT=3100 pnpm start)",
+      "Bash(curl -sS -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3100/)",
+      "Bash(awk 'NR>1 && $1==\"node\" {print $2}')",
+      "Bash(xargs -r kill)"
     ]
   }
 }

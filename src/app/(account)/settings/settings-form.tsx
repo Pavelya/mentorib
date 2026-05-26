@@ -11,6 +11,7 @@ import {
   StatusBadge,
   TextField,
 } from "@/components/ui";
+import { getTimezoneLabel } from "@/lib/datetime/timezone";
 import {
   emptyAccountProfileFormValues,
   type AccountProfileFormValues,
@@ -25,6 +26,8 @@ import styles from "../account-surfaces.module.css";
 type SettingsProfileFormProps = {
   avatarUrl?: string;
   email: string;
+  hasStudentRole: boolean;
+  hasTutorRole: boolean;
   initialFullName: string;
   initialPreferredLanguageCode: string;
   languageOptions: readonly MatchLanguageOption[];
@@ -42,6 +45,8 @@ const emptyAccountProfileActionState: AccountProfileActionState = {
 export function SettingsProfileForm({
   avatarUrl,
   email,
+  hasStudentRole,
+  hasTutorRole,
   initialFullName,
   initialPreferredLanguageCode,
   languageOptions,
@@ -71,6 +76,8 @@ export function SettingsProfileForm({
       action={formAction}
       avatarUrl={avatarUrl}
       email={email}
+      hasStudentRole={hasStudentRole}
+      hasTutorRole={hasTutorRole}
       languageOptions={languageOptions}
       roleBadges={roleBadges}
       serverState={state}
@@ -83,6 +90,8 @@ function SettingsProfileFormBody({
   action,
   avatarUrl,
   email,
+  hasStudentRole,
+  hasTutorRole,
   languageOptions,
   roleBadges,
   serverState,
@@ -91,6 +100,8 @@ function SettingsProfileFormBody({
   action: (formData: FormData) => void;
   avatarUrl?: string;
   email: string;
+  hasStudentRole: boolean;
+  hasTutorRole: boolean;
   languageOptions: readonly MatchLanguageOption[];
   roleBadges: SettingsProfileFormProps["roleBadges"];
   serverState: AccountProfileActionState;
@@ -98,6 +109,11 @@ function SettingsProfileFormBody({
 }) {
   const [values, setValues] = useState(serverState.values);
   const displayName = values.fullName.trim() || "Account owner";
+  const lessonLanguageDescription = resolveLessonLanguageDescription({
+    hasStudentRole,
+    hasTutorRole,
+  });
+  const timezoneLabel = getTimezoneLabel(timezone);
 
   return (
     <form action={action} className={styles.profileForm}>
@@ -152,13 +168,20 @@ function SettingsProfileFormBody({
 
         <Section divider="bottom" eyebrow="Email">
           <p className={styles.settingValue}>{email}</p>
+          <p className={styles.sectionNote}>
+            Sign in email cannot be changed here. Contact Support to update it.
+          </p>
         </Section>
 
-        <Section divider="bottom" eyebrow="Preferred lesson language">
+        <Section
+          description={lessonLanguageDescription}
+          divider="bottom"
+          eyebrow="Lesson language"
+        >
           <OptionCardGroup
             error={serverState.fieldErrors.preferredLanguageCode}
             hideLegend
-            legend="Preferred lesson language"
+            legend="Lesson language"
             name="preferredLanguageCode"
             onChange={(preferredLanguageCode) =>
               setValues((currentValues) => ({
@@ -172,7 +195,11 @@ function SettingsProfileFormBody({
         </Section>
 
         <Section divider="bottom" eyebrow="Timezone">
-          <p className={styles.settingValue}>{timezone}</p>
+          <p className={styles.settingValue}>{timezoneLabel}</p>
+          <p className={styles.sectionNote}>
+            Mentor IB detects your timezone at sign-in. Travelling? Booking and lessons
+            always display in this zone until detection picks up a new one.
+          </p>
         </Section>
       </div>
 
@@ -191,6 +218,24 @@ function SaveButton() {
       {pending ? "Saving changes" : "Save changes"}
     </Button>
   );
+}
+
+function resolveLessonLanguageDescription({
+  hasStudentRole,
+  hasTutorRole,
+}: {
+  hasStudentRole: boolean;
+  hasTutorRole: boolean;
+}) {
+  if (hasStudentRole && hasTutorRole) {
+    return "We use this for matching as a student and for Mentor IB communication as a tutor.";
+  }
+
+  if (hasTutorRole) {
+    return "We use this for your own communication with Mentor IB and as a default when you message students.";
+  }
+
+  return "We use this to filter tutors by lesson language during matching.";
 }
 
 function normalizeActionState(

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AccountRouteState } from "@/components/account/account-route-state";
 import { PendingLegalNotice } from "@/components/account/pending-legal-notice";
-import { Card, getButtonClassName, InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import { Card, getButtonClassName, InlineNotice, Panel, Section, StatusBadge } from "@/components/ui";
 import { getSafeRedirectPath } from "@/lib/auth/allowed-redirects";
 import { formatUtcDate, formatUtcDateTime } from "@/lib/datetime/format";
 import { getSharedAccountRouteContext } from "@/modules/accounts/shared-account";
@@ -39,26 +39,13 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
   }
 
   const highlightedNotice = selectedNotice ?? context.pendingLegalNotice ?? notices[0] ?? null;
-  const pendingCount = notices.filter((notice) => requiresLegalNoticeAction(notice)).length;
-  const acknowledgementCount = notices.filter((notice) => {
-    return notice.requiresAcknowledgement;
-  }).length;
 
   return (
     <div className={styles.page}>
       <header className={styles.pageIntro}>
-        <h1 className={styles.pageTitle}>Privacy &amp; legal</h1>
+        <h1 className={styles.pageTitle}>Legal &amp; privacy</h1>
         <p className={styles.pageDescription}>
-          Review required policy updates and see the basics of your account privacy surface.
-          See the public{" "}
-          <a className={styles.inlineLink} href="/privacy-policy">
-            Privacy Policy
-          </a>{" "}
-          and{" "}
-          <a className={styles.inlineLink} href="/terms">
-            Terms
-          </a>{" "}
-          for the canonical legal text.
+          Review required policy updates and find your account&apos;s legal documents.
         </p>
       </header>
 
@@ -77,7 +64,6 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
 
       {highlightedNotice ? (
         <Panel
-          description="Legal updates stay visible after sign-in and remain accessible later in this shared privacy route."
           title={
             requiresLegalNoticeAction(highlightedNotice)
               ? "Review required before you continue"
@@ -90,9 +76,6 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
               {getLegalNoticeTypeLabel(highlightedNotice.noticeType)}
             </StatusBadge>
             <StatusBadge tone="info">{highlightedNotice.versionLabel}</StatusBadge>
-            {highlightedNotice.requiresAcknowledgement ? (
-              <StatusBadge tone="trust">Acknowledgement tracked</StatusBadge>
-            ) : null}
           </div>
           <p className={styles.bodyText}>{highlightedNotice.summary}</p>
           <p className={styles.muted}>
@@ -135,61 +118,30 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
         </Panel>
       ) : null}
 
-      <section className={styles.summaryGrid}>
-        <Panel
-          description="This route explains the shared account data posture before delete/export flows arrive."
-          title="Privacy surface scope"
-          tone="mist"
-        >
-          <div className={styles.detailGrid}>
-            <Card>
-              <p className={styles.detailLabel}>Account email</p>
-              <p className={styles.detailValue}>{context.account.email}</p>
-            </Card>
-            <Card>
-              <p className={styles.detailLabel}>Local timezone</p>
-              <p className={styles.detailValue}>{context.account.timezone}</p>
-            </Card>
-            <Card>
-              <p className={styles.detailLabel}>Legal updates</p>
-              <p className={styles.detailValue}>
-                Terms and privacy broadcasts stay visible here and in Notifications.
-              </p>
-            </Card>
-            <Card>
-              <p className={styles.detailLabel}>Deferred controls</p>
-              <p className={styles.detailValue}>
-                Delete-account, export, and advanced preferences ship in later phases.
-              </p>
-            </Card>
-          </div>
-        </Panel>
+      <Section title="Policy documents">
+        <div className={styles.actions}>
+          <a
+            className={getButtonClassName({ size: "compact", variant: "secondary" })}
+            href="/privacy-policy"
+          >
+            Privacy Policy
+          </a>
+          <a
+            className={getButtonClassName({ size: "compact", variant: "secondary" })}
+            href="/terms"
+          >
+            Terms
+          </a>
+          <a
+            className={getButtonClassName({ size: "compact", variant: "secondary" })}
+            href="/trust-and-safety"
+          >
+            Trust &amp; Safety
+          </a>
+        </div>
+      </Section>
 
-        <Panel
-          description="Pending legal work is tracked separately from the bell inbox so policy changes do not get buried."
-          title="Current notice state"
-        >
-          <div className={styles.metricGrid}>
-            <Card>
-              <p className={styles.metricValue}>{notices.length}</p>
-              <p className={styles.metricLabel}>Published legal notices</p>
-            </Card>
-            <Card>
-              <p className={styles.metricValue}>{pendingCount}</p>
-              <p className={styles.metricLabel}>Updates still needing review</p>
-            </Card>
-            <Card>
-              <p className={styles.metricValue}>{acknowledgementCount}</p>
-              <p className={styles.metricLabel}>Notices with acknowledgement tracking</p>
-            </Card>
-          </div>
-        </Panel>
-      </section>
-
-      <Panel
-        description="Unauthorized or missing notice selections collapse to the shared 404 posture instead of leaking private object state."
-        title="Published legal notice history"
-      >
+      <Panel title="Published legal notice history">
         {notices.length > 0 ? (
           <div className={styles.list}>
             {notices.map((notice) => (
@@ -223,7 +175,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
                     className={styles.inlineLink}
                     href={buildLegalNoticeReviewPath(notice.id, returnTo ?? "/privacy")}
                   >
-                    Focus notice
+                    Open notice
                   </a>
                   <a
                     className={styles.inlineLink}
@@ -239,12 +191,9 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
           </div>
         ) : (
           <div className={styles.emptyState}>
-            <p className={styles.bodyText}>
-              No published legal notice versions are visible to this account yet.
-            </p>
+            <p className={styles.bodyText}>No published policies yet</p>
             <p className={styles.muted}>
-              Terms and privacy updates will accumulate here as the policy publication
-              flow comes online.
+              Terms and privacy updates will appear here when published.
             </p>
           </div>
         )}

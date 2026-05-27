@@ -177,6 +177,7 @@ function totalModerationOpenCount(
 ): number {
   return (
     counts.block +
+    counts.finance_intervention +
     counts.lesson_issue +
     counts.public_content_takedown +
     counts.report

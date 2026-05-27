@@ -276,7 +276,8 @@ type ModerationCaseRow = {
     | "report"
     | "block"
     | "lesson_issue"
-    | "public_content_takedown";
+    | "public_content_takedown"
+    | "finance_intervention";
   case_status:
     | "queued"
     | "under_review"

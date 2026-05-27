@@ -3,7 +3,21 @@ export const MODERATION_CASE_KINDS = [
   "block",
   "lesson_issue",
   "public_content_takedown",
+  "finance_intervention",
 ] as const;
+
+// Sub-vocabulary for `case_kind = 'finance_intervention'` cases opened by
+// the admin user-detail surface (`P2-OPS-002`). Stored in
+// `moderation_cases.internal_summary` alongside the operator-provided body
+// so the case detail page can re-render the intent label.
+export const FINANCE_INTERVENTION_KINDS = [
+  "payout_hold",
+  "refund_anomaly",
+  "general_finance",
+] as const;
+
+export type FinanceInterventionKind =
+  (typeof FINANCE_INTERVENTION_KINDS)[number];
 
 export type ModerationCaseKind = (typeof MODERATION_CASE_KINDS)[number];
 

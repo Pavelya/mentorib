@@ -33,6 +33,7 @@ const VISIBLE_CASE_KINDS: readonly ModerationCaseKind[] = [
 
 const CASE_KIND_LABELS: Record<ModerationCaseKind, string> = {
   block: "Blocks",
+  finance_intervention: "Finance",
   lesson_issue: "Lesson issues",
   public_content_takedown: "Takedowns",
   report: "Reports",

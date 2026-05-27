@@ -159,6 +159,7 @@ export async function loadModerationCaseCountsByKind(): Promise<
   const supabase = createSupabaseServiceRoleClient();
   const result: Record<ModerationCaseKind, number> = {
     block: 0,
+    finance_intervention: 0,
     lesson_issue: 0,
     public_content_takedown: 0,
     report: 0,

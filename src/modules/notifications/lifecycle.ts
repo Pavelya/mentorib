@@ -329,12 +329,13 @@ export async function createPayoutNotification(input: PayoutNotificationInput) {
 type TutorListingStatusChangeReason =
   | "self"
   | "gate_regression"
-  | "admin_takedown";
+  | "admin_takedown"
+  | "admin_hold";
 
 type TutorListingStatusChangedInput = {
   appUserId: string;
   missingGateKeys?: readonly string[];
-  publicListingStatus: "listed" | "not_listed" | "delisted";
+  publicListingStatus: "listed" | "not_listed" | "paused" | "delisted";
   reason: TutorListingStatusChangeReason;
   tutorProfileId: string;
 };
@@ -345,24 +346,36 @@ export async function createTutorListingStatusChangedNotification(
   const title =
     input.reason === "admin_takedown"
       ? "Your public listing was removed"
-      : input.publicListingStatus === "listed"
-        ? "Your public listing is live"
-        : input.reason === "gate_regression"
-          ? "Your public listing was paused"
-          : "Listing paused";
+      : input.reason === "admin_hold"
+        ? input.publicListingStatus === "paused"
+          ? "Your public listing is temporarily paused"
+          : input.publicListingStatus === "delisted"
+            ? "Your public listing was removed"
+            : "Listing hold lifted"
+        : input.publicListingStatus === "listed"
+          ? "Your public listing is live"
+          : input.reason === "gate_regression"
+            ? "Your public listing was paused"
+            : "Listing paused";
 
   const summary =
     input.reason === "admin_takedown"
       ? "Your profile has been removed from public listing — check notifications for details. Contact support if you need more context."
-      : input.publicListingStatus === "listed"
-        ? "Your tutor profile is now discoverable to students. You can pause it any time from /tutor/profile."
-        : input.reason === "gate_regression"
-          ? `A readiness step needs your attention, so your public listing has been paused. Open /tutor/profile to finish the remaining steps${
-              input.missingGateKeys && input.missingGateKeys.length > 0
-                ? ` (${input.missingGateKeys.join(", ")})`
-                : ""
-            }.`
-          : "You paused your public listing. Resume it from /tutor/profile whenever you're ready.";
+      : input.reason === "admin_hold"
+        ? input.publicListingStatus === "paused"
+          ? "Your profile is temporarily paused. Contact support if you need more context."
+          : input.publicListingStatus === "delisted"
+            ? "Your profile has been removed from public listing — check notifications for details. Contact support if you need more context."
+            : "The hold on your public listing has been lifted. Re-publish from /tutor/profile when you're ready."
+        : input.publicListingStatus === "listed"
+          ? "Your tutor profile is now discoverable to students. You can pause it any time from /tutor/profile."
+          : input.reason === "gate_regression"
+            ? `A readiness step needs your attention, so your public listing has been paused. Open /tutor/profile to finish the remaining steps${
+                input.missingGateKeys && input.missingGateKeys.length > 0
+                  ? ` (${input.missingGateKeys.join(", ")})`
+                  : ""
+              }.`
+            : "You paused your public listing. Resume it from /tutor/profile whenever you're ready.";
 
   const notification = await createNotification({
     appUserId: input.appUserId,

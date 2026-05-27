@@ -23,6 +23,12 @@ export const ADMIN_ACTION_KEYS = [
   "moderation_case.note_added",
   // Trust-and-safety surfaces (P2-OPS-001)
   "tutor_listing.public_takedown",
+  // Admin user-detail surface (P2-OPS-002)
+  "tutor_listing.admin_pause",
+  "tutor_listing.admin_delist",
+  "tutor_listing.admin_lift_hold",
+  "account.set_status",
+  "finance_intervention.note",
   // Platform-level reference-data label edits (P2-OPS-003).
   // Each key edits the editable-field allowlist on the named vocabulary
   // row — slugs / keys / codes / identifiers are never editable.

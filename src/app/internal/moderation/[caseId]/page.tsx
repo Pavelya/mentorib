@@ -32,6 +32,7 @@ import styles from "../moderation.module.css";
 
 const CASE_KIND_LABELS: Record<ModerationCaseKind, string> = {
   block: "Block",
+  finance_intervention: "Finance intervention",
   lesson_issue: "Lesson issue",
   public_content_takedown: "Public takedown",
   report: "Report",

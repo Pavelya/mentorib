@@ -60,7 +60,12 @@ const BLOCK_RESOLUTION_KINDS: ModerationCaseResolutionKind[] = [
 
 type Props = {
   caseId: string;
-  caseKind: "report" | "block" | "public_content_takedown" | "lesson_issue";
+  caseKind:
+    | "report"
+    | "block"
+    | "public_content_takedown"
+    | "lesson_issue"
+    | "finance_intervention";
   caseStatus: ModerationCaseStatus;
 };
 

@@ -1,16 +1,12 @@
 import "server-only";
 
-import { revalidatePath } from "next/cache";
-
-import { logEvent } from "@/lib/observability/logger";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import { recordAdminAction } from "@/modules/admin/audit-service";
 import {
   ModerationCaseError,
   openCase,
 } from "@/modules/admin/moderation-case-service";
-import { createTutorListingStatusChangedNotification } from "@/modules/notifications/lifecycle";
-import { syncPublicTutorRecord } from "@/modules/search/public-tutor-indexer";
+import { deindexPublicTutorProfile } from "@/modules/tutors/admin-listing-service";
 import type { TutorPublicListingStatus } from "@/modules/tutors/constants";
 
 type TutorProfileRow = {
@@ -118,7 +114,13 @@ export async function applyPublicTakedownEffects(input: {
 
   if (profile.public_listing_status === "delisted") {
     // Idempotent: takedown already applied; still ensure side effects ran.
-    await runPublicTakedownSideEffects(profile);
+    await deindexPublicTutorProfile({
+      publicListingStatus: "delisted",
+      publicSlug: profile.public_slug,
+      reason: "admin_takedown",
+      tutorAppUserId: profile.app_user_id,
+      tutorProfileId: profile.id,
+    });
     return;
   }
 
@@ -153,45 +155,11 @@ export async function applyPublicTakedownEffects(input: {
     throw auditError;
   }
 
-  await runPublicTakedownSideEffects(profile);
-}
-
-async function runPublicTakedownSideEffects(profile: TutorProfileRow): Promise<void> {
-  try {
-    await createTutorListingStatusChangedNotification({
-      appUserId: profile.app_user_id,
-      publicListingStatus: "delisted",
-      reason: "admin_takedown",
-      tutorProfileId: profile.id,
-    });
-  } catch (notifyError) {
-    logEvent("jobs", "warn", "public_takedown_notification_failed", {
-      error_message:
-        notifyError instanceof Error
-          ? notifyError.message
-          : "Unknown notification error",
-      tutor_profile_id: profile.id,
-    });
-  }
-
-  try {
-    await syncPublicTutorRecord(profile.id);
-  } catch (indexError) {
-    logEvent("jobs", "warn", "public_takedown_search_index_sync_failed", {
-      error_message:
-        indexError instanceof Error
-          ? indexError.message
-          : "Unknown index error",
-      tutor_profile_id: profile.id,
-    });
-  }
-
-  if (profile.public_slug) {
-    revalidatePath(`/tutors/${profile.public_slug}`);
-  }
-  // Sitemap and tutor-discovery surfaces read off listing-eligible rows;
-  // revalidating both keeps the public surface in sync with the new
-  // delisted state.
-  revalidatePath("/sitemap.xml");
-  revalidatePath("/tutors");
+  await deindexPublicTutorProfile({
+    publicListingStatus: "delisted",
+    publicSlug: profile.public_slug,
+    reason: "admin_takedown",
+    tutorAppUserId: profile.app_user_id,
+    tutorProfileId: profile.id,
+  });
 }

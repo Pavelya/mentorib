@@ -45,6 +45,8 @@ export function getNotificationTypeLabel(
       return "Credential reviewed";
     case "tutor_listing_status_changed":
       return "Listing status updated";
+    case "moderation_report_acknowledgement":
+      return "Report reviewed";
     case "payout_processed":
       return "Payout updated";
     case "policy_notice_updated":
@@ -77,6 +79,7 @@ export function getNotificationTypeTone(
     case "upcoming_lesson_reminder":
     case "lesson_issue_acknowledgement":
     case "lesson_report_shared":
+    case "moderation_report_acknowledgement":
       return "info";
   }
 }

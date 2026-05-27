@@ -14,6 +14,7 @@ export const notificationTypes = [
   "tutor_application_reviewed",
   "tutor_credential_reviewed",
   "tutor_listing_status_changed",
+  "moderation_report_acknowledgement",
   "payout_processed",
   "policy_notice_updated",
 ] as const;
@@ -129,6 +130,7 @@ export const MANDATORY_NOTIFICATION_TYPES = new Set<NotificationType>([
   "lesson_updated",
   "lesson_issue_acknowledgement",
   "lesson_issue_resolution",
+  "moderation_report_acknowledgement",
   "payout_processed",
   "policy_notice_updated",
 ]);
@@ -152,6 +154,7 @@ export const NOTIFICATION_TYPE_TO_CATEGORY: Record<
   tutor_application_reviewed: "tutor_application_updates",
   tutor_credential_reviewed: "tutor_application_updates",
   tutor_listing_status_changed: null,
+  moderation_report_acknowledgement: null,
   payout_processed: null,
   policy_notice_updated: null,
 };

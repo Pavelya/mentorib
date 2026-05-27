@@ -47,3 +47,23 @@ export const initialConversationFlagActionState: ConversationFlagActionState = {
   message: null,
   submittedAt: null,
 };
+
+export type ReportSubjectKind = "message" | "conversation";
+
+export type ReportSubjectActionState = {
+  code: string | null;
+  caseId: string | null;
+  message: string | null;
+  submittedAt: number | null;
+  subjectKind: ReportSubjectKind | null;
+  subjectId: string | null;
+};
+
+export const initialReportSubjectActionState: ReportSubjectActionState = {
+  caseId: null,
+  code: null,
+  message: null,
+  submittedAt: null,
+  subjectId: null,
+  subjectKind: null,
+};

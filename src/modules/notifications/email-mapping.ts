@@ -38,6 +38,11 @@ const NON_EMAIL_NOTIFICATION_TYPES = new Set<NotificationType>([
   // listed↔not_listed transitions; the tutor sees the editor immediately
   // after taking the action, so an email duplicate would be noise.
   "tutor_listing_status_changed",
+  // `moderation_report_acknowledgement` is the generic in-app heads-up
+  // that closes the loop with a reporter once their report has been
+  // reviewed. Per `P2-OPS-001`, the payload never carries any detail
+  // about the resolved party, so email delivery is intentionally off.
+  "moderation_report_acknowledgement",
 ]);
 
 export function buildNotificationEmailPayload(
@@ -233,6 +238,16 @@ function resolveEmailDescriptor(
         ctaLabel: "Open tutor profile",
         ctaPath: "/tutor/profile",
         subject: "Mentor IB · Listing status update",
+      };
+    case "moderation_report_acknowledgement":
+      // In-app only — the early-return in `buildNotificationEmailPayload`
+      // covers this branch, but the switch must stay exhaustive.
+      return {
+        ctaContextNote:
+          "Report outcomes stay inside Mentor IB and never carry details about other people.",
+        ctaLabel: "Open Mentor IB",
+        ctaPath: NOTIFICATIONS_INBOX_PATH,
+        subject: "Mentor IB · Report reviewed",
       };
   }
 }

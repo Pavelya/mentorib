@@ -42,6 +42,7 @@ export type OpenCaseInput = {
   triggeringEventKind?: string | null;
   triggeringEventId?: string | null;
   priority?: number;
+  internalSummary?: string | null;
 };
 
 // Opens a new case. The "opening" actor is the admin/system process that
@@ -50,10 +51,12 @@ export type OpenCaseInput = {
 // (e.g. from a Report action) are wired in `P2-OPS-001`.
 export async function openCase(input: OpenCaseInput): Promise<{ caseId: string }> {
   const supabase = createSupabaseServiceRoleClient();
+  const sanitizedSummary = sanitizeNote(input.internalSummary ?? null);
   const { data, error } = await supabase
     .from("moderation_cases")
     .insert({
       case_kind: input.caseKind,
+      internal_summary: sanitizedSummary,
       priority: input.priority ?? 0,
       reporter_app_user_id: input.reporterAppUserId ?? null,
       subject_id: input.subjectId,
@@ -342,6 +345,55 @@ function sanitizeNote(value: string | null | undefined): string | null {
     return null;
   }
   return trimmed.slice(0, NOTE_MAX_LENGTH);
+}
+
+export type OpenReportFromProductInput = {
+  reporterAppUserId: string;
+  reporterReason: string;
+  subjectKind: ModerationCaseSubjectKind;
+  subjectId: string;
+  triggeringEventKind?: string | null;
+  triggeringEventId?: string | null;
+};
+
+// Opens a `report` case from a product surface (e.g. the "Report this
+// message" action in the messages experience). The reporter's free-text
+// reason is captured durably in two ways per `P2-OPS-001`:
+//   1. as `moderation_cases.internal_summary` (admin-only, surfaced on
+//      the case-detail "Case summary" Panel)
+//   2. as a `moderation_case_notes` row authored by the reporter,
+//      written via service-role so the reporter never reads other
+//      operators' notes back from the same table
+export async function openReportFromProduct(
+  input: OpenReportFromProductInput,
+): Promise<{ caseId: string }> {
+  const reason = sanitizeNote(input.reporterReason);
+  if (!reason) {
+    throw new ModerationCaseError(
+      "reason_required",
+      "Add a short note about what you're reporting.",
+    );
+  }
+
+  const opened = await openCase({
+    actorAppUserId: input.reporterAppUserId,
+    caseKind: "report",
+    internalSummary: reason,
+    reporterAppUserId: input.reporterAppUserId,
+    subjectId: input.subjectId,
+    subjectKind: input.subjectKind,
+    triggeringEventId: input.triggeringEventId ?? null,
+    triggeringEventKind: input.triggeringEventKind ?? null,
+  });
+
+  const supabase = createSupabaseServiceRoleClient();
+  await supabase.from("moderation_case_notes").insert({
+    author_app_user_id: input.reporterAppUserId,
+    body: reason,
+    case_id: opened.caseId,
+  });
+
+  return opened;
 }
 
 function resolveOpenActionKey() {

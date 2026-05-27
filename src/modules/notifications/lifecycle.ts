@@ -326,12 +326,15 @@ export async function createPayoutNotification(input: PayoutNotificationInput) {
   return notification;
 }
 
-type TutorListingStatusChangeReason = "self" | "gate_regression";
+type TutorListingStatusChangeReason =
+  | "self"
+  | "gate_regression"
+  | "admin_takedown";
 
 type TutorListingStatusChangedInput = {
   appUserId: string;
   missingGateKeys?: readonly string[];
-  publicListingStatus: "listed" | "not_listed";
+  publicListingStatus: "listed" | "not_listed" | "delisted";
   reason: TutorListingStatusChangeReason;
   tutorProfileId: string;
 };
@@ -340,22 +343,26 @@ export async function createTutorListingStatusChangedNotification(
   input: TutorListingStatusChangedInput,
 ) {
   const title =
-    input.publicListingStatus === "listed"
-      ? "Your public listing is live"
-      : input.reason === "gate_regression"
-        ? "Your public listing was paused"
-        : "Listing paused";
+    input.reason === "admin_takedown"
+      ? "Your public listing was removed"
+      : input.publicListingStatus === "listed"
+        ? "Your public listing is live"
+        : input.reason === "gate_regression"
+          ? "Your public listing was paused"
+          : "Listing paused";
 
   const summary =
-    input.publicListingStatus === "listed"
-      ? "Your tutor profile is now discoverable to students. You can pause it any time from /tutor/profile."
-      : input.reason === "gate_regression"
-        ? `A readiness step needs your attention, so your public listing has been paused. Open /tutor/profile to finish the remaining steps${
-            input.missingGateKeys && input.missingGateKeys.length > 0
-              ? ` (${input.missingGateKeys.join(", ")})`
-              : ""
-          }.`
-        : "You paused your public listing. Resume it from /tutor/profile whenever you're ready.";
+    input.reason === "admin_takedown"
+      ? "Your profile has been removed from public listing — check notifications for details. Contact support if you need more context."
+      : input.publicListingStatus === "listed"
+        ? "Your tutor profile is now discoverable to students. You can pause it any time from /tutor/profile."
+        : input.reason === "gate_regression"
+          ? `A readiness step needs your attention, so your public listing has been paused. Open /tutor/profile to finish the remaining steps${
+              input.missingGateKeys && input.missingGateKeys.length > 0
+                ? ` (${input.missingGateKeys.join(", ")})`
+                : ""
+            }.`
+          : "You paused your public listing. Resume it from /tutor/profile whenever you're ready.";
 
   const notification = await createNotification({
     appUserId: input.appUserId,
@@ -368,6 +375,41 @@ export async function createTutorListingStatusChangedNotification(
 
   // `tutor_listing_status_changed` is in-app only; the email-mapping module
   // short-circuits delivery for this type.
+  await dispatchNotificationEmail(notification);
+
+  return notification;
+}
+
+type ModerationReportAcknowledgementInput = {
+  reporterAppUserId: string;
+  caseId: string;
+  resolutionKind: "upheld" | "rejected";
+};
+
+// Generic in-app heads-up to a reporter once their report case has been
+// resolved. The payload intentionally carries no details about the
+// resolved party, internal notes, or reviewer identity — per
+// `P2-OPS-001` §8.3/§15.
+export async function createModerationReportAcknowledgementNotification(
+  input: ModerationReportAcknowledgementInput,
+) {
+  const title = "Your report was reviewed";
+  const summary =
+    input.resolutionKind === "upheld"
+      ? "Thanks for flagging this. Our team reviewed your report and acted on it. We can't share details about the other person involved."
+      : "Thanks for flagging this. Our team reviewed your report and decided no further action was needed at this time.";
+
+  const notification = await createNotification({
+    appUserId: input.reporterAppUserId,
+    bodySummary: truncate(summary),
+    notificationType: "moderation_report_acknowledgement",
+    objectId: input.caseId,
+    objectType: NOTIFICATION_OBJECT_TYPES.moderationCase,
+    title,
+  });
+
+  // `moderation_report_acknowledgement` is in-app only; the email-mapping
+  // module short-circuits delivery for this type.
   await dispatchNotificationEmail(notification);
 
   return notification;

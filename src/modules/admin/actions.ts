@@ -21,6 +21,8 @@ export const ADMIN_ACTION_KEYS = [
   "moderation_case.dismiss",
   "moderation_case.escalate",
   "moderation_case.note_added",
+  // Trust-and-safety surfaces (P2-OPS-001)
+  "tutor_listing.public_takedown",
 ] as const;
 
 export type AdminActionKey = (typeof ADMIN_ACTION_KEYS)[number];

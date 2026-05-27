@@ -12,11 +12,21 @@ import {
   requiresRoleSelection,
 } from "@/modules/accounts/account-state";
 import {
+  isUuid,
+  loadConversationOwners,
+  resolveParticipantRole,
+} from "@/modules/messages/access";
+import {
   setConversationParticipantFlag,
   type ConversationFlagResult,
   type ConversationParticipantFlag,
 } from "@/modules/messages/conversation-state";
 import { logMessagesEvent } from "@/modules/messages/observability";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import {
+  ModerationCaseError,
+  openReportFromProduct,
+} from "@/modules/admin/moderation-case-service";
 import { markConversationRead } from "@/modules/messages/read-state";
 import {
   toggleMessageReaction,
@@ -29,6 +39,8 @@ import {
 
 import type {
   ConversationFlagActionState,
+  ReportSubjectActionState,
+  ReportSubjectKind,
   SendMessageActionState,
   ToggleReactionActionState,
 } from "./actions-state";
@@ -472,6 +484,170 @@ async function runConversationFlagAction(
     message: result.message ?? "We couldn't update this conversation.",
     submittedAt: Date.now(),
   };
+}
+
+// Opens a `report` moderation case from the messages experience. The
+// reporter must be a participant in the surrounding conversation —
+// otherwise the action returns a generic `forbidden` boundary error.
+// The free-text reason is captured durably in two places via
+// `openReportFromProduct`: `moderation_cases.internal_summary` and a
+// `moderation_case_notes` row authored by the reporter.
+export async function reportConversationOrMessageAction(
+  _previousState: ReportSubjectActionState,
+  formData: FormData,
+): Promise<ReportSubjectActionState> {
+  const subjectKind = readFormString(formData, "subject_kind");
+  const subjectId = readFormString(formData, "subject_id");
+  const conversationId = readFormString(formData, "conversation_id");
+  const reason = readFormString(formData, "reason");
+
+  const baseState = {
+    caseId: null,
+    submittedAt: Date.now(),
+    subjectId: subjectId || null,
+    subjectKind:
+      subjectKind === "message" || subjectKind === "conversation"
+        ? (subjectKind as ReportSubjectKind)
+        : null,
+  } as const;
+
+  if (subjectKind !== "message" && subjectKind !== "conversation") {
+    return {
+      ...baseState,
+      code: "invalid_request",
+      message: "Pick something to report before submitting.",
+    };
+  }
+  if (!subjectId || !conversationId || !isUuid(conversationId)) {
+    return {
+      ...baseState,
+      code: "invalid_request",
+      message: "Pick something to report before submitting.",
+    };
+  }
+  if (!reason || reason.length < 3) {
+    return {
+      ...baseState,
+      code: "reason_required",
+      message: "Share a short note about what you're reporting.",
+    };
+  }
+
+  if (!isSupabaseAuthConfigured()) {
+    return {
+      ...baseState,
+      code: "auth_unconfigured",
+      message: "Reporting is unavailable in this environment.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user?.email?.trim()) {
+    return {
+      ...baseState,
+      code: "unauthenticated",
+      message: "Sign in again to submit a report.",
+    };
+  }
+
+  let account: Awaited<ReturnType<typeof ensureAuthAccount>>;
+  try {
+    account = await ensureAuthAccount(user);
+  } catch {
+    return {
+      ...baseState,
+      code: "account_resolution_failed",
+      message: "We couldn't resolve your account. Try again.",
+    };
+  }
+
+  if (requiresRoleSelection(account) || isRestrictedAccount(account)) {
+    return {
+      ...baseState,
+      code: "forbidden",
+      message: "Your account cannot submit reports right now.",
+    };
+  }
+
+  const owners = await loadConversationOwners(conversationId);
+  if (!owners || !resolveParticipantRole(owners, account.id)) {
+    return {
+      ...baseState,
+      code: "forbidden",
+      message: "Only conversation participants can submit a report.",
+    };
+  }
+
+  if (subjectKind === "message") {
+    const service = createSupabaseServiceRoleClient();
+    const { data: messageRow } = await service
+      .from("messages")
+      .select("conversation_id, id")
+      .eq("id", subjectId)
+      .maybeSingle<{ conversation_id: string; id: string }>();
+    if (!messageRow || messageRow.conversation_id !== conversationId) {
+      return {
+        ...baseState,
+        code: "forbidden",
+        message: "That message isn't part of this conversation.",
+      };
+    }
+  } else if (subjectId !== conversationId) {
+    return {
+      ...baseState,
+      code: "invalid_request",
+      message: "We couldn't match this conversation to your report.",
+    };
+  }
+
+  try {
+    const opened = await openReportFromProduct({
+      reporterAppUserId: account.id,
+      reporterReason: reason,
+      subjectId,
+      subjectKind,
+      triggeringEventId: conversationId,
+      triggeringEventKind: "messages_conversation",
+    });
+
+    logMessagesEvent("info", "moderation_report_opened", {
+      actor_app_user_id: account.id,
+      conversation_id: conversationId,
+      message_id: subjectKind === "message" ? subjectId : undefined,
+      reason: subjectKind,
+    });
+
+    return {
+      ...baseState,
+      caseId: opened.caseId,
+      code: "ok",
+      message: null,
+    };
+  } catch (error) {
+    if (error instanceof ModerationCaseError) {
+      return {
+        ...baseState,
+        code: error.code,
+        message: error.message,
+      };
+    }
+    logMessagesEvent("error", "report_action_unhandled_error", {
+      actor_app_user_id: account.id,
+      conversation_id: conversationId,
+      message_id: subjectKind === "message" ? subjectId : undefined,
+      reason: subjectKind,
+    });
+    return {
+      ...baseState,
+      code: "temporary_failure",
+      message: "We couldn't submit the report. Try again in a moment.",
+    };
+  }
 }
 
 function readFormString(formData: FormData, key: string) {

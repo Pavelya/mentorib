@@ -15,6 +15,7 @@ import {
 } from "react";
 
 import shellStyles from "@/components/continuity/conversation-shell.module.css";
+import { ReportDialog } from "@/components/messages/report-dialog";
 import { ScreenState } from "@/components/continuity";
 import { PersonSummary } from "@/components/continuity/continuity-primitives";
 import {
@@ -208,6 +209,7 @@ function ConversationListRow({
 }) {
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [muteState, muteAction, mutePending] = useActionState<
     ConversationFlagActionState,
     FormData
@@ -358,8 +360,25 @@ function ConversationListRow({
           >
             {conversation.isArchived ? "Unarchive" : "Archive"}
           </MenuItem>
+          <MenuItem
+            onSelect={() => {
+              setMenuOpen(false);
+              setReportOpen(true);
+            }}
+            tone="destructive"
+          >
+            Report conversation
+          </MenuItem>
         </Menu>
       </div>
+      <ReportDialog
+        conversationId={conversation.id}
+        counterpartName={conversation.counterpart.displayName}
+        onClose={() => setReportOpen(false)}
+        open={reportOpen}
+        subjectId={conversation.id}
+        subjectKind="conversation"
+      />
     </div>
   );
 }
@@ -379,6 +398,9 @@ function ThreadView({
     actorRole,
   );
   const counterpartOnline = isCounterpartOnline;
+  const headerTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   return (
     <section aria-label="Active conversation" className={shellStyles.thread}>
@@ -397,7 +419,45 @@ function ThreadView({
           }
           variant="compact"
         />
+        <div>
+          <OverflowMenuTrigger
+            aria-label={`Safety options for conversation with ${conversation.counterpart.displayName}`}
+            {...getPopoverTriggerProps({
+              contentId: `thread-options-${conversation.id}`,
+              haspopup: "menu",
+              open: headerMenuOpen,
+            })}
+            onClick={() => setHeaderMenuOpen((open) => !open)}
+            ref={headerTriggerRef}
+          />
+          <Menu
+            anchorRef={headerTriggerRef}
+            contentId={`thread-options-${conversation.id}`}
+            onOpenChange={setHeaderMenuOpen}
+            open={headerMenuOpen}
+            placement="bottom-end"
+          >
+            <MenuItem
+              onSelect={() => {
+                setHeaderMenuOpen(false);
+                setReportOpen(true);
+              }}
+              tone="destructive"
+            >
+              Report this conversation
+            </MenuItem>
+          </Menu>
+        </div>
       </header>
+
+      <ReportDialog
+        conversationId={conversation.id}
+        counterpartName={conversation.counterpart.displayName}
+        onClose={() => setReportOpen(false)}
+        open={reportOpen}
+        subjectId={conversation.id}
+        subjectKind="conversation"
+      />
 
       <div className={styles.threadStatusRow}>
         {counterpartOnline ? (
@@ -427,7 +487,12 @@ function ThreadView({
 
           <ol className={shellStyles.messages}>
             {messages.map((message) => (
-              <ThreadMessage key={message.id} message={message} />
+              <ThreadMessage
+                conversationId={conversation.id}
+                counterpartName={conversation.counterpart.displayName}
+                key={message.id}
+                message={message}
+              />
             ))}
           </ol>
         </ConversationBroadcastContext.Provider>
@@ -445,8 +510,12 @@ function ThreadView({
 }
 
 function ThreadMessage({
+  conversationId,
+  counterpartName,
   message,
 }: {
+  conversationId: string;
+  counterpartName: string;
   message: ThreadMessageDto;
 }) {
   const isRemoved = message.status === "removed";
@@ -455,6 +524,9 @@ function ThreadMessage({
     : message.senderRole === "tutor"
       ? "Tutor"
       : "Student";
+  const overflowRef = useRef<HTMLButtonElement | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   return (
     <li
@@ -504,6 +576,46 @@ function ThreadMessage({
       </p>
 
       {!isRemoved ? <MessageReactionRow message={message} /> : null}
+
+      {!isRemoved && !message.isFromCurrentActor ? (
+        <div className={styles.messageActions}>
+          <OverflowMenuTrigger
+            aria-label="Message safety options"
+            {...getPopoverTriggerProps({
+              contentId: `message-options-${message.id}`,
+              haspopup: "menu",
+              open: menuOpen,
+            })}
+            onClick={() => setMenuOpen((open) => !open)}
+            ref={overflowRef}
+          />
+          <Menu
+            anchorRef={overflowRef}
+            contentId={`message-options-${message.id}`}
+            onOpenChange={setMenuOpen}
+            open={menuOpen}
+            placement="bottom-end"
+          >
+            <MenuItem
+              onSelect={() => {
+                setMenuOpen(false);
+                setReportOpen(true);
+              }}
+              tone="destructive"
+            >
+              Report this message
+            </MenuItem>
+          </Menu>
+          <ReportDialog
+            conversationId={conversationId}
+            counterpartName={counterpartName}
+            onClose={() => setReportOpen(false)}
+            open={reportOpen}
+            subjectId={message.id}
+            subjectKind="message"
+          />
+        </div>
+      ) : null}
     </li>
   );
 }

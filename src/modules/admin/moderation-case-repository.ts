@@ -14,10 +14,12 @@ import {
 import {
   MODERATION_CASE_QUEUE_PAGE_SIZE,
   type ModerationCaseDetailDto,
+  type ModerationCaseNoteDto,
   type ModerationCaseQueueCounter,
   type ModerationCaseQueueDto,
   type ModerationCaseQueueFilter,
   type ModerationCaseQueueRowDto,
+  type ModerationSubjectBlockDto,
 } from "@/modules/admin/moderation-case";
 
 type CaseQueueRow = {
@@ -189,6 +191,120 @@ function mapQueueRow(row: CaseQueueRow): ModerationCaseQueueRowDto {
     subjectId: row.subject_id,
     subjectKind: row.subject_kind,
   };
+}
+
+type CaseNoteRow = {
+  author_app_user_id: string;
+  body: string;
+  created_at: string;
+  id: string;
+};
+
+export async function loadModerationCaseNotes(
+  caseId: string,
+): Promise<ModerationCaseNoteDto[]> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("moderation_case_notes")
+    .select("author_app_user_id, body, created_at, id")
+    .eq("case_id", caseId)
+    .order("created_at", { ascending: true })
+    .returns<CaseNoteRow[]>();
+
+  if (error) {
+    throw new Error("Could not load moderation case notes.");
+  }
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  const authorIds = Array.from(new Set(data.map((row) => row.author_app_user_id)));
+  const authorNames = await loadDisplayNamesByAppUserIds(authorIds);
+
+  return data.map((row) => ({
+    authorAppUserId: row.author_app_user_id,
+    authorDisplayName: authorNames.get(row.author_app_user_id) ?? null,
+    body: row.body,
+    createdAt: row.created_at,
+    id: row.id,
+  }));
+}
+
+type BlockRow = {
+  block_status: "active" | "released";
+  blocked_app_user_id: string;
+  blocker_app_user_id: string;
+  created_at: string;
+  id: string;
+};
+
+// Admin-only loader for the case-detail "Existing blocks involving this
+// subject" panel. Returns D7-shaped rows scoped to a single subject —
+// never widens visibility into the broader block table.
+export async function loadBlocksInvolvingSubject(
+  subjectKind: "app_user",
+  subjectAppUserId: string,
+): Promise<ModerationSubjectBlockDto[]> {
+  if (subjectKind !== "app_user") {
+    return [];
+  }
+
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("user_blocks")
+    .select("block_status, blocked_app_user_id, blocker_app_user_id, created_at, id")
+    .or(
+      `blocker_app_user_id.eq.${subjectAppUserId},blocked_app_user_id.eq.${subjectAppUserId}`,
+    )
+    .order("created_at", { ascending: false })
+    .limit(20)
+    .returns<BlockRow[]>();
+
+  if (error) {
+    throw new Error("Could not load blocks involving the subject.");
+  }
+
+  return (data ?? []).map((row) => ({
+    blockId: row.id,
+    blockedAppUserId: row.blocked_app_user_id,
+    blockerAppUserId: row.blocker_app_user_id,
+    blockStatus: row.block_status,
+    createdAt: row.created_at,
+  }));
+}
+
+async function loadDisplayNamesByAppUserIds(
+  appUserIds: readonly string[],
+): Promise<Map<string, string>> {
+  const lookup = new Map<string, string>();
+  if (appUserIds.length === 0) {
+    return lookup;
+  }
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("app_users")
+    .select("full_name, id")
+    .in("id", appUserIds)
+    .returns<Array<{ full_name: string | null; id: string }>>();
+
+  if (error) {
+    return lookup;
+  }
+
+  for (const row of data ?? []) {
+    const trimmed = row.full_name?.trim();
+    if (trimmed) {
+      lookup.set(row.id, trimmed);
+    }
+  }
+  return lookup;
+}
+
+export async function loadAppUserDisplayName(
+  appUserId: string,
+): Promise<string | null> {
+  const names = await loadDisplayNamesByAppUserIds([appUserId]);
+  return names.get(appUserId) ?? null;
 }
 
 function mapDetailRow(row: CaseDetailRow): ModerationCaseDetailDto {

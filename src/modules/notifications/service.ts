@@ -16,6 +16,7 @@ export const NOTIFICATION_OBJECT_TYPES = {
   conversation: "conversation",
   lesson: "lesson",
   lessonIssueCase: "lesson_issue_case",
+  moderationCase: "moderation_case",
   payment: "payment",
   policyNoticeVersion: "policy_notice_version",
   tutorApplication: "tutor_application",

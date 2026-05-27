@@ -95,41 +95,48 @@ export default async function InternalHomePage() {
           </Link>
         </li>
         <li>
-          <Card>
-            <div className={styles.queueRow}>
-              <div className={styles.queueRowHeader}>
-                <h2 className={styles.queueRowTitle}>Moderation cases</h2>
-                <StatusBadge tone="trust">
-                  {totalModerationOpenCount(moderationCounts) > 0
-                    ? `${totalModerationOpenCount(moderationCounts)} open`
-                    : "0 open"}
-                </StatusBadge>
+          <Link
+            className={styles.queueLink}
+            href={"/internal/moderation" as Route}
+            prefetch={false}
+          >
+            <Card>
+              <div className={styles.queueRow}>
+                <div className={styles.queueRowHeader}>
+                  <h2 className={styles.queueRowTitle}>Moderation cases</h2>
+                  <StatusBadge
+                    tone={
+                      totalTrustOpenCount(moderationCounts) > 0
+                        ? "info"
+                        : "positive"
+                    }
+                  >
+                    {totalTrustOpenCount(moderationCounts) > 0
+                      ? `${totalTrustOpenCount(moderationCounts)} open`
+                      : "Caught up"}
+                  </StatusBadge>
+                </div>
+                <p className={styles.queueRowMeta}>
+                  Claim reports, action public-content takedowns, and review
+                  block-related cases.
+                </p>
+                <div className={styles.queueChips}>
+                  <Chip size="compact" tone="default">
+                    Reports · {moderationCounts.report}
+                  </Chip>
+                  <Chip size="compact" tone="default">
+                    Blocks · {moderationCounts.block}
+                  </Chip>
+                  <Chip size="compact" tone="default">
+                    Lesson issues · {moderationCounts.lesson_issue}
+                  </Chip>
+                  <Chip size="compact" tone="default">
+                    Takedowns · {moderationCounts.public_content_takedown}
+                  </Chip>
+                </div>
               </div>
-              <ScreenState
-                description={
-                  totalModerationOpenCount(moderationCounts) === 0
-                    ? "No queue UI is mounted yet. The trust and report surface lands in P2-OPS-001; the lesson-issue dispute surface lands in P2-DISPUTE-001."
-                    : "Open cases exist but the queue UI is not yet mounted. Surfaces land in P2-OPS-001 and P2-DISPUTE-001."
-                }
-                kind="empty"
-                title="Queue UI not yet mounted"
-              />
-              <div className={styles.queueChips}>
-                <Chip size="compact" tone="default">
-                  Reports · {moderationCounts.report}
-                </Chip>
-                <Chip size="compact" tone="default">
-                  Blocks · {moderationCounts.block}
-                </Chip>
-                <Chip size="compact" tone="default">
-                  Lesson issues · {moderationCounts.lesson_issue}
-                </Chip>
-                <Chip size="compact" tone="default">
-                  Takedowns · {moderationCounts.public_content_takedown}
-                </Chip>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         </li>
         <li>
           <Card>
@@ -170,3 +177,13 @@ function totalModerationOpenCount(
     counts.report
   );
 }
+
+// Trust-lane subtotal — excludes lesson_issue, which surfaces in its own
+// dispute queue (P2-DISPUTE-001).
+function totalTrustOpenCount(
+  counts: Awaited<ReturnType<typeof loadModerationCaseCountsByKind>>,
+): number {
+  return counts.block + counts.public_content_takedown + counts.report;
+}
+
+void totalModerationOpenCount;

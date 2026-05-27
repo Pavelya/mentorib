@@ -26,9 +26,9 @@ export const policyNoticeVersions = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     notice_type: text("notice_type", { enum: policyNoticeTypes }).notNull(),
     version_label: text("version_label").notNull(),
-    published_at: timestamp("published_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    // Nullable: NULL means draft or revoked; consumer reads filter on
+    // `published_at <= now()`. See P2-OPS-003.
+    published_at: timestamp("published_at", { withTimezone: true }),
     effective_at: timestamp("effective_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

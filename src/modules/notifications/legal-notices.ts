@@ -167,6 +167,7 @@ export async function recordLegalNoticeReview(
     noticeError ||
     !notice ||
     !isLegalNoticeType(notice.notice_type) ||
+    !notice.published_at ||
     new Date(notice.published_at).getTime() > Date.now()
   ) {
     throw new Error("The selected legal notice is not available.");
@@ -215,7 +216,10 @@ function mapLegalNoticeDto(
     effectiveAt: notice.effective_at,
     id: notice.id,
     noticeType: notice.notice_type,
-    publishedAt: notice.published_at,
+    // Listing query filters `published_at <= now()` so null values are
+    // already excluded; the empty-string fallback satisfies the DTO type
+    // when this mapper is reused defensively elsewhere.
+    publishedAt: notice.published_at ?? "",
     receipt: receipt
       ? {
           acknowledgedAt: receipt.acknowledged_at,

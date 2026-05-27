@@ -23,6 +23,18 @@ export const ADMIN_ACTION_KEYS = [
   "moderation_case.note_added",
   // Trust-and-safety surfaces (P2-OPS-001)
   "tutor_listing.public_takedown",
+  // Platform-level reference-data label edits (P2-OPS-003).
+  // Each key edits the editable-field allowlist on the named vocabulary
+  // row — slugs / keys / codes / identifiers are never editable.
+  "reference_data.subject.update",
+  "reference_data.subject_focus_area.update",
+  "reference_data.language.update",
+  "reference_data.meeting_provider.update",
+  "reference_data.video_media_provider.update",
+  // Policy-notice broadcast lifecycle (P2-OPS-003).
+  "policy_notice.draft",
+  "policy_notice.publish",
+  "policy_notice.revoke",
 ] as const;
 
 export type AdminActionKey = (typeof ADMIN_ACTION_KEYS)[number];

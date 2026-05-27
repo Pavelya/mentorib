@@ -453,7 +453,7 @@ type PolicyNoticeVersionRow = {
   effective_at: string;
   id: string;
   notice_type: PolicyNoticeType;
-  published_at: string;
+  published_at: string | null;
   requires_acknowledgement: boolean;
   summary: string;
   title: string;
@@ -1347,7 +1347,7 @@ export type MentorIbDatabase = {
           "document_url" | "notice_type" | "summary" | "title" | "version_label"
         > & {
           effective_at?: string;
-          published_at?: string;
+          published_at?: string | null;
           requires_acknowledgement?: boolean;
         };
         Relationships: [];

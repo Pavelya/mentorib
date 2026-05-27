@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
 
-import { ScreenState } from "@/components/continuity";
 import { Card, Chip, Panel, StatusBadge } from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 import { loadModerationCaseCountsByKind } from "@/modules/admin/moderation-case-repository";
@@ -139,19 +138,25 @@ export default async function InternalHomePage() {
           </Link>
         </li>
         <li>
-          <Card>
-            <div className={styles.queueRow}>
-              <div className={styles.queueRowHeader}>
-                <h2 className={styles.queueRowTitle}>Reference data</h2>
-                <StatusBadge tone="trust">Not mounted</StatusBadge>
+          <Link
+            className={styles.queueLink}
+            href={"/internal/reference-data" as Route}
+            prefetch={false}
+          >
+            <Card>
+              <div className={styles.queueRow}>
+                <div className={styles.queueRowHeader}>
+                  <h2 className={styles.queueRowTitle}>Reference data</h2>
+                  <StatusBadge tone="info">Editable labels</StatusBadge>
+                </div>
+                <p className={styles.queueRowMeta}>
+                  Edit display labels, descriptions, sort order, and the active
+                  toggle on existing reference rows. Publish or revoke Terms
+                  and Privacy notices.
+                </p>
               </div>
-              <ScreenState
-                description="The reference-data editor lands in P2-OPS-003. No live counter is available yet."
-                kind="empty"
-                title="Queue UI not yet mounted"
-              />
-            </div>
-          </Card>
+            </Card>
+          </Link>
         </li>
       </ul>
 

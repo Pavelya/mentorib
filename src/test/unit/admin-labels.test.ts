@@ -6,6 +6,7 @@ import {
   adminActionLabel,
   APPLICATION_STATUS_LABELS,
   CASE_STATUS_LABELS,
+  FINANCE_INTERVENTION_KIND_LABELS,
   PAYOUT_READINESS_LABELS,
 } from "@/modules/admin/labels";
 
@@ -15,6 +16,7 @@ describe("admin labels — view-model copy map", () => {
       ACCOUNT_STATUS_LABELS,
       APPLICATION_STATUS_LABELS,
       CASE_STATUS_LABELS,
+      FINANCE_INTERVENTION_KIND_LABELS,
       PAYOUT_READINESS_LABELS,
     ];
     for (const map of maps) {

@@ -11,6 +11,8 @@ import {
   Textarea,
 } from "@/components/ui";
 
+import { FINANCE_INTERVENTION_KIND_LABELS } from "@/modules/admin/labels";
+
 import {
   initialUserDetailActionState,
   runUserDetailAction,
@@ -33,12 +35,6 @@ const ACCOUNT_STATUS_LABELS = {
   active: "Active",
   limited: "Limited",
   suspended: "Suspended",
-} as const;
-
-const FINANCE_KIND_LABELS = {
-  payout_hold: "Payout hold (intent only)",
-  refund_anomaly: "Refund anomaly",
-  general_finance: "General finance note",
 } as const;
 
 export function UserDetailActionForms(props: Props) {
@@ -388,7 +384,7 @@ function FinanceInterventionActions({
           {(["payout_hold", "refund_anomaly", "general_finance"] as const).map(
             (kind) => (
               <option key={kind} value={kind}>
-                {FINANCE_KIND_LABELS[kind]}
+                {FINANCE_INTERVENTION_KIND_LABELS[kind]}
               </option>
             ),
           )}

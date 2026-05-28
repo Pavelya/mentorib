@@ -10,6 +10,7 @@
 import type { AccountStatus, Role, RoleStatus } from "@/modules/accounts/constants";
 import { ADMIN_ACTION_KEYS, type AdminActionKey } from "@/modules/admin/actions";
 import type {
+  FinanceInterventionKind,
   ModerationCaseKind,
   ModerationCaseResolutionKind,
   ModerationCaseStatus,
@@ -167,6 +168,14 @@ export const SUBJECT_KIND_LABELS = {
   message: "Message",
   tutor_profile: "Tutor profile",
 } as const satisfies Record<ModerationCaseSubjectKind, string>;
+
+// Sub-vocabulary for `case_kind = 'finance_intervention'` cases (the kind an
+// operator picks when opening a finance case from the user-detail surface).
+export const FINANCE_INTERVENTION_KIND_LABELS = {
+  general_finance: "General finance note",
+  payout_hold: "Payout hold (intent only)",
+  refund_anomaly: "Refund anomaly",
+} as const satisfies Record<FinanceInterventionKind, string>;
 
 export const INVOLVEMENT_LABELS = {
   reporter: "Reporter",

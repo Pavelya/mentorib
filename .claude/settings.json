@@ -42,7 +42,8 @@
       "Bash(sed -n '1,40p' /Users/pavel/mentorib/src/app/tutor/overview/page.tsx)",
       "Bash(sed -n '1,40p' /Users/pavel/mentorib/src/app/internal/tutor-reviews/\\\\[applicationId\\\\]/review-actions-panel.tsx)",
       "Bash(grep -n \"^      [a-z_]*: {$\\\\|tutor_application_reviews\\\\|tutor_profiles: {\\\\|user_roles: {\" src/lib/supabase/database.types.ts)",
-      "Bash(echo \"exit=$?\")"
+      "Bash(echo \"exit=$?\")",
+      "Bash(grep -nA15 \"loadModerationCaseCountsByKind\" src/modules/admin/moderation-case-repository.ts)"
     ]
   }
 }

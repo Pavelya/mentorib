@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { Route } from "next";
 
-import { Card, Chip, Panel, StatusBadge } from "@/components/ui";
+import { Card, Chip, PageHeader, Panel, StatusBadge } from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
+import { CASE_KIND_LABELS } from "@/modules/admin/labels";
+import type { ModerationCaseKind } from "@/modules/admin/constants";
 import { loadModerationCaseCountsByKind } from "@/modules/admin/moderation-case-repository";
 import {
   TUTOR_APPLICATION_REVIEW_FILTER_STATUSES,
@@ -26,6 +28,14 @@ const TUTOR_REVIEW_FILTER_LABELS: Record<TutorApplicationReviewFilterStatus, str
   rejected: "Rejected",
 };
 
+// Trust-lane case kinds shown on the moderation card, in display order.
+// `finance_intervention` and `lesson_issue` surface in their own queues.
+const MODERATION_CARD_KINDS: readonly ModerationCaseKind[] = [
+  "report",
+  "block",
+  "public_content_takedown",
+];
+
 export default async function InternalHomePage() {
   await requireInternalAdminAccount();
 
@@ -43,17 +53,17 @@ export default async function InternalHomePage() {
     return sum + (counter?.count ?? 0);
   }, 0);
 
+  const trustOpenCount = totalTrustOpenCount(moderationCounts);
+
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>Internal · Home</p>
-        <h1 className={styles.title}>Operational queues</h1>
-        <p className={styles.helperText}>
-          Each queue lives behind a dedicated surface. Counts reflect work
-          waiting on a reviewer right now.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Internal · Home"
+        title="Operational queues"
+        description="Each queue lives behind a dedicated surface. Counts reflect work waiting on a reviewer right now."
+      />
 
+      {/* Queue cards attach here; later capability queues join the same grid. */}
       <ul className={styles.queueGrid}>
         <li>
           <Link
@@ -103,16 +113,8 @@ export default async function InternalHomePage() {
               <div className={styles.queueRow}>
                 <div className={styles.queueRowHeader}>
                   <h2 className={styles.queueRowTitle}>Moderation cases</h2>
-                  <StatusBadge
-                    tone={
-                      totalTrustOpenCount(moderationCounts) > 0
-                        ? "info"
-                        : "positive"
-                    }
-                  >
-                    {totalTrustOpenCount(moderationCounts) > 0
-                      ? `${totalTrustOpenCount(moderationCounts)} open`
-                      : "Caught up"}
+                  <StatusBadge tone={trustOpenCount > 0 ? "info" : "positive"}>
+                    {trustOpenCount > 0 ? `${trustOpenCount} open` : "Caught up"}
                   </StatusBadge>
                 </div>
                 <p className={styles.queueRowMeta}>
@@ -120,18 +122,11 @@ export default async function InternalHomePage() {
                   block-related cases.
                 </p>
                 <div className={styles.queueChips}>
-                  <Chip size="compact" tone="default">
-                    Reports · {moderationCounts.report}
-                  </Chip>
-                  <Chip size="compact" tone="default">
-                    Blocks · {moderationCounts.block}
-                  </Chip>
-                  <Chip size="compact" tone="default">
-                    Lesson issues · {moderationCounts.lesson_issue}
-                  </Chip>
-                  <Chip size="compact" tone="default">
-                    Takedowns · {moderationCounts.public_content_takedown}
-                  </Chip>
+                  {MODERATION_CARD_KINDS.map((kind) => (
+                    <Chip key={kind} size="compact" tone="default">
+                      {CASE_KIND_LABELS[kind]} · {moderationCounts[kind]}
+                    </Chip>
+                  ))}
                 </div>
               </div>
             </Card>
@@ -160,27 +155,13 @@ export default async function InternalHomePage() {
         </li>
       </ul>
 
-      <Panel eyebrow="Audit" tone="mist" title="Every privileged write is logged">
-        <p className={styles.helperText}>
-          Each admin action emits an `admin_action_logs` row in the same
-          transaction as the underlying state change. The audit table is the
-          source of truth for &ldquo;who did what when&rdquo;; a dedicated viewer surface
-          is reserved for a later phase.
-        </p>
-      </Panel>
+      <Panel
+        eyebrow="Audit"
+        tone="mist"
+        title="Every privileged write is logged"
+        description="Each admin action emits an admin_action_logs row in the same transaction as the underlying state change. The audit table is the source of truth for who did what when; a dedicated viewer surface is reserved for a later phase."
+      />
     </article>
-  );
-}
-
-function totalModerationOpenCount(
-  counts: Awaited<ReturnType<typeof loadModerationCaseCountsByKind>>,
-): number {
-  return (
-    counts.block +
-    counts.finance_intervention +
-    counts.lesson_issue +
-    counts.public_content_takedown +
-    counts.report
   );
 }
 
@@ -191,5 +172,3 @@ function totalTrustOpenCount(
 ): number {
   return counts.block + counts.public_content_takedown + counts.report;
 }
-
-void totalModerationOpenCount;

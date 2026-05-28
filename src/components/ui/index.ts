@@ -1,3 +1,4 @@
+export { ActivityList, type ActivityListItem } from "./activity-list";
 export { Avatar } from "./avatar";
 export {
   BottomNav,
@@ -9,6 +10,10 @@ export { Button, getButtonClassName } from "./button";
 export { Card, type CardProps } from "./card";
 export { Chip, type ChipProps, type ChipTone } from "./chip";
 export { ConfirmDialog, type ConfirmDialogProps } from "./confirm-dialog";
+export {
+  DescriptionList,
+  type DescriptionListItem,
+} from "./description-list";
 export { FileField, type FileFieldProps } from "./file-field";
 export { Flag, type FlagCode } from "./flag";
 export { GoogleMark } from "./google-mark";
@@ -27,6 +32,7 @@ export {
   OverflowMenuTrigger,
   type OverflowMenuTriggerProps,
 } from "./overflow-menu-trigger";
+export { PageHeader } from "./page-header";
 export { Panel } from "./panel";
 export { ReactionGlyph, getReactionLabel } from "./reaction-glyph";
 export {

@@ -1,6 +1,9 @@
 import "server-only";
 
+import type { Route } from "next";
+
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import { SUBJECT_KIND_LABELS } from "@/modules/admin/labels";
 import type {
   ModerationCaseEvidenceDto,
   ModerationCaseReporterSummaryDto,
@@ -9,7 +12,11 @@ import type {
 import type {
   ModerationCaseDetailDto,
 } from "@/modules/admin/moderation-case";
-import { loadAppUserDisplayName } from "@/modules/admin/moderation-case-repository";
+import {
+  loadAppUserIdentities,
+  loadAppUserIdentity,
+} from "@/modules/admin/moderation-case-repository";
+import { getPublishedTutorProfilePhotoUrl } from "@/modules/tutors/media-public-assets";
 
 type MessageRow = {
   body: string;
@@ -55,6 +62,7 @@ export async function loadCaseEvidence(
     if (error || !data) {
       return { kind: "none" };
     }
+    const sender = await loadAppUserIdentity(data.sender_app_user_id);
     return {
       kind: "message",
       message: {
@@ -63,6 +71,8 @@ export async function loadCaseEvidence(
         createdAt: data.created_at,
         messageId: data.id,
         senderAppUserId: data.sender_app_user_id,
+        senderAvatarSrc: sender.avatarUrl,
+        senderDisplayName: sender.displayName,
       },
     };
   }
@@ -88,12 +98,24 @@ export async function loadCaseEvidence(
         .eq("id", data.tutor_profile_id)
         .maybeSingle<ProfileLookupRow>(),
     ]);
+    const studentAppUserId = studentResult.data?.app_user_id ?? "";
+    const tutorAppUserId = tutorResult.data?.app_user_id ?? "";
+    const identities = await loadAppUserIdentities([
+      studentAppUserId,
+      tutorAppUserId,
+    ]);
+    const student = identities.get(studentAppUserId);
+    const tutor = identities.get(tutorAppUserId);
     return {
       kind: "conversation",
       conversation: {
         conversationId: data.id,
-        studentAppUserId: studentResult.data?.app_user_id ?? "",
-        tutorAppUserId: tutorResult.data?.app_user_id ?? "",
+        studentAppUserId,
+        studentAvatarSrc: student?.avatarUrl ?? null,
+        studentDisplayName: student?.displayName ?? null,
+        tutorAppUserId,
+        tutorAvatarSrc: tutor?.avatarUrl ?? null,
+        tutorDisplayName: tutor?.displayName ?? null,
       },
     };
   }
@@ -107,9 +129,20 @@ export async function loadCaseEvidence(
     if (error || !data) {
       return { kind: "none" };
     }
+    const [identity, avatarSrc] = await Promise.all([
+      data.app_user_id
+        ? loadAppUserIdentity(data.app_user_id)
+        : Promise.resolve({ avatarUrl: null, displayName: null }),
+      getPublishedTutorProfilePhotoUrl(data.id),
+    ]);
     return {
       kind: "tutor_profile",
       tutorProfile: {
+        avatarSrc,
+        displayName: identity.displayName,
+        publicProfileHref: data.public_slug
+          ? (`/tutors/${data.public_slug}` as Route)
+          : null,
         publicProfileUrl: data.public_slug ? `/tutors/${data.public_slug}` : null,
         publicSlug: data.public_slug,
         tutorProfileId: data.id,
@@ -130,12 +163,16 @@ export async function loadCaseSubjectSummary(
   const supabase = createSupabaseServiceRoleClient();
 
   if (caseDetail.subjectKind === "app_user") {
-    const displayName = await loadAppUserDisplayName(caseDetail.subjectId);
+    const identity = await loadAppUserIdentity(caseDetail.subjectId);
     return {
       appUserId: caseDetail.subjectId,
+      avatarSrc: identity.avatarUrl,
       kind: "app_user",
-      primaryLabel: displayName ?? "Unknown user",
+      kindLabel: SUBJECT_KIND_LABELS.app_user,
+      primaryLabel: identity.displayName ?? "Unknown user",
+      publicProfileHref: null,
       secondaryLabel: null,
+      technicalRef: null,
       tutorProfileId: null,
       tutorPublicSlug: null,
     };
@@ -152,14 +189,23 @@ export async function loadCaseSubjectSummary(
         public_slug: string | null;
         headline: string | null;
       }>();
-    const displayName = data?.app_user_id
-      ? await loadAppUserDisplayName(data.app_user_id)
-      : null;
+    const [identity, avatarSrc] = await Promise.all([
+      data?.app_user_id
+        ? loadAppUserIdentity(data.app_user_id)
+        : Promise.resolve({ avatarUrl: null, displayName: null }),
+      data?.id ? getPublishedTutorProfilePhotoUrl(data.id) : Promise.resolve(null),
+    ]);
     return {
       appUserId: data?.app_user_id ?? null,
+      avatarSrc,
       kind: "tutor_profile",
-      primaryLabel: displayName ?? "Tutor profile",
+      kindLabel: SUBJECT_KIND_LABELS.tutor_profile,
+      primaryLabel: identity.displayName ?? "Tutor profile",
+      publicProfileHref: data?.public_slug
+        ? (`/tutors/${data.public_slug}` as Route)
+        : null,
       secondaryLabel: data?.headline?.trim() || null,
+      technicalRef: null,
       tutorProfileId: data?.id ?? null,
       tutorPublicSlug: data?.public_slug ?? null,
     };
@@ -168,9 +214,13 @@ export async function loadCaseSubjectSummary(
   if (caseDetail.subjectKind === "conversation") {
     return {
       appUserId: null,
+      avatarSrc: null,
       kind: "conversation",
+      kindLabel: SUBJECT_KIND_LABELS.conversation,
       primaryLabel: "Conversation",
-      secondaryLabel: caseDetail.subjectId,
+      publicProfileHref: null,
+      secondaryLabel: null,
+      technicalRef: caseDetail.subjectId,
       tutorProfileId: null,
       tutorPublicSlug: null,
     };
@@ -179,9 +229,13 @@ export async function loadCaseSubjectSummary(
   if (caseDetail.subjectKind === "message") {
     return {
       appUserId: null,
+      avatarSrc: null,
       kind: "message",
+      kindLabel: SUBJECT_KIND_LABELS.message,
       primaryLabel: "Message",
-      secondaryLabel: caseDetail.subjectId,
+      publicProfileHref: null,
+      secondaryLabel: null,
+      technicalRef: caseDetail.subjectId,
       tutorProfileId: null,
       tutorPublicSlug: null,
     };
@@ -189,9 +243,13 @@ export async function loadCaseSubjectSummary(
 
   return {
     appUserId: null,
+    avatarSrc: null,
     kind: caseDetail.subjectKind,
-    primaryLabel: "Subject",
-    secondaryLabel: caseDetail.subjectId,
+    kindLabel: SUBJECT_KIND_LABELS[caseDetail.subjectKind],
+    primaryLabel: SUBJECT_KIND_LABELS[caseDetail.subjectKind],
+    publicProfileHref: null,
+    secondaryLabel: null,
+    technicalRef: caseDetail.subjectId,
     tutorProfileId: null,
     tutorPublicSlug: null,
   };
@@ -209,10 +267,11 @@ export async function loadCaseReporterSummary(
   if (!caseDetail.reporterAppUserId) {
     return null;
   }
-  const displayName = await loadAppUserDisplayName(caseDetail.reporterAppUserId);
+  const identity = await loadAppUserIdentity(caseDetail.reporterAppUserId);
   return {
     appUserId: caseDetail.reporterAppUserId,
-    displayName,
+    avatarSrc: identity.avatarUrl,
+    displayName: identity.displayName,
     reasonText: caseDetail.internalSummary,
   };
 }

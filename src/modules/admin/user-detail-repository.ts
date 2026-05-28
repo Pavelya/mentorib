@@ -1,5 +1,8 @@
 import "server-only";
 
+import type { Route } from "next";
+
+import { type FlagCode, toFlagCode } from "@/components/ui/flag";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
 import type {
   AccountStatus,
@@ -11,11 +14,33 @@ import type {
   ModerationCaseStatus,
   ModerationCaseSubjectKind,
 } from "@/modules/admin/constants";
+import {
+  ACCOUNT_STATUS_LABELS,
+  ACCOUNT_STATUS_TONES,
+  adminActionLabel,
+  APPLICATION_STATUS_LABELS,
+  APPLICATION_STATUS_TONES,
+  CASE_KIND_LABELS,
+  CASE_STATUS_LABELS,
+  CASE_STATUS_TONES,
+  INVOLVEMENT_LABELS,
+  LISTING_STATUS_LABELS,
+  LISTING_STATUS_TONES,
+  PAYOUT_READINESS_LABELS,
+  PAYOUT_READINESS_TONES,
+  ROLE_LABELS,
+  ROLE_STATUS_LABELS,
+  ROLE_STATUS_TONES,
+  type StatusTone,
+  SUBJECT_KIND_LABELS,
+} from "@/modules/admin/labels";
+import { loadAppUserIdentities } from "@/modules/admin/moderation-case-repository";
 import type {
   PayoutReadinessStatus,
   TutorApplicationStatus,
   TutorPublicListingStatus,
 } from "@/modules/tutors/constants";
+import { getPublishedTutorProfilePhotoUrl } from "@/modules/tutors/media-public-assets";
 
 // `P2-OPS-002` D7 internal user-detail DTO.
 //
@@ -30,30 +55,45 @@ export type InternalUserAccountSummaryDto = {
   appUserId: string;
   email: string;
   displayName: string | null;
+  avatarSrc: string | null;
   accountStatus: AccountStatus;
+  accountStatusLabel: string;
+  accountStatusTone: StatusTone;
   createdAt: string;
   timezone: string;
 };
 
 export type InternalUserRoleDto = {
   role: Role;
+  roleLabel: string;
   roleStatus: RoleStatus;
+  roleStatusLabel: string;
+  roleStatusTone: StatusTone;
   grantedAt: string;
   revokedAt: string | null;
 };
 
 export type InternalUserTutorSummaryDto = {
   tutorProfileId: string;
+  avatarSrc: string | null;
   applicationStatus: TutorApplicationStatus;
+  applicationStatusLabel: string;
+  applicationStatusTone: StatusTone;
   publicListingStatus: TutorPublicListingStatus;
+  publicListingStatusLabel: string;
+  publicListingStatusTone: StatusTone;
   selfPausedAt: string | null;
   publicSlug: string | null;
+  publicProfileHref: Route | null;
   headline: string | null;
 };
 
 export type InternalUserFinanceSummaryDto = {
   payoutReadinessStatus: PayoutReadinessStatus;
+  payoutReadinessStatusLabel: string;
+  payoutReadinessStatusTone: StatusTone;
   payoutAccountCountry: string | null;
+  countryFlagCode: FlagCode | null;
   payoutOnboardingCompletedAt: string | null;
   payoutOnboardingStartedAt: string | null;
   payoutStatusSyncedAt: string | null;
@@ -63,21 +103,28 @@ export type InternalUserFinanceSummaryDto = {
 export type InternalUserCaseDto = {
   caseId: string;
   caseKind: ModerationCaseKind;
+  caseKindLabel: string;
   caseStatus: ModerationCaseStatus;
+  caseStatusLabel: string;
+  caseStatusTone: StatusTone;
   subjectKind: ModerationCaseSubjectKind;
+  subjectKindLabel: string;
   involvement: "subject" | "reporter";
+  involvementLabel: string;
   createdAt: string;
 };
 
 export type InternalUserAdminActionDto = {
   id: string;
   actionKey: string;
+  actionKeyLabel: string;
   targetType: string;
   targetId: string;
   reason: string | null;
   createdAt: string;
   actorAppUserId: string;
   actorDisplayName: string | null;
+  actorAvatarSrc: string | null;
 };
 
 export type InternalUserDetailDto = {
@@ -100,11 +147,12 @@ export async function getInternalUserDetail(
   const { data: userRow, error: userError } = await supabase
     .from("app_users")
     .select(
-      "account_status, created_at, email, full_name, id, timezone",
+      "account_status, avatar_url, created_at, email, full_name, id, timezone",
     )
     .eq("id", appUserId)
     .maybeSingle<{
       account_status: AccountStatus;
+      avatar_url: string | null;
       created_at: string;
       email: string;
       full_name: string | null;
@@ -136,7 +184,10 @@ export async function getInternalUserDetail(
   return {
     account: {
       accountStatus: userRow.account_status,
+      accountStatusLabel: ACCOUNT_STATUS_LABELS[userRow.account_status],
+      accountStatusTone: ACCOUNT_STATUS_TONES[userRow.account_status],
       appUserId: userRow.id,
+      avatarSrc: userRow.avatar_url?.trim() || null,
       createdAt: userRow.created_at,
       displayName: userRow.full_name?.trim() || null,
       email: userRow.email,
@@ -173,7 +224,10 @@ async function loadRoles(appUserId: string): Promise<InternalUserRoleDto[]> {
     grantedAt: row.granted_at,
     revokedAt: row.revoked_at,
     role: row.role,
+    roleLabel: ROLE_LABELS[row.role],
     roleStatus: row.role_status,
+    roleStatusLabel: ROLE_STATUS_LABELS[row.role_status],
+    roleStatusTone: ROLE_STATUS_TONES[row.role_status],
   }));
 }
 
@@ -200,14 +254,41 @@ async function loadTutorProfile(
     return null;
   }
 
+  const avatarSrc = await getPublishedTutorProfilePhotoUrl(data.id);
+
   return {
     applicationStatus: data.application_status,
+    applicationStatusLabel: APPLICATION_STATUS_LABELS[data.application_status],
+    applicationStatusTone: APPLICATION_STATUS_TONES[data.application_status],
+    avatarSrc,
     headline: data.headline,
     publicListingStatus: data.public_listing_status,
+    publicListingStatusLabel: LISTING_STATUS_LABELS[data.public_listing_status],
+    publicListingStatusTone: LISTING_STATUS_TONES[data.public_listing_status],
+    publicProfileHref: data.public_slug
+      ? (`/tutors/${data.public_slug}` as Route)
+      : null,
     publicSlug: data.public_slug,
     selfPausedAt: data.self_paused_at,
     tutorProfileId: data.id,
   };
+}
+
+// Lightweight tutor-profile id lookup for the cases/audit paths that only
+// need the id to widen their target filters — avoids the published-photo
+// resolution that the full `loadTutorProfile` performs.
+async function loadTutorProfileId(appUserId: string): Promise<string | null> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("tutor_profiles")
+    .select("id")
+    .eq("app_user_id", appUserId)
+    .maybeSingle<{ id: string }>();
+
+  if (error || !data) {
+    return null;
+  }
+  return data.id;
 }
 
 async function loadFinanceSummary(
@@ -236,11 +317,16 @@ async function loadFinanceSummary(
   // Never expose the raw `stripe_account_id` — flatten to a boolean so
   // the admin can see "has account" without an opaque provider id leak.
   return {
+    countryFlagCode: toFlagCode(data.payout_account_country),
     hasStripeAccount: Boolean(data.stripe_account_id),
     payoutAccountCountry: data.payout_account_country,
     payoutOnboardingCompletedAt: data.payout_onboarding_completed_at,
     payoutOnboardingStartedAt: data.payout_onboarding_started_at,
     payoutReadinessStatus: data.payout_readiness_status,
+    payoutReadinessStatusLabel:
+      PAYOUT_READINESS_LABELS[data.payout_readiness_status],
+    payoutReadinessStatusTone:
+      PAYOUT_READINESS_TONES[data.payout_readiness_status],
     payoutStatusSyncedAt: data.payout_status_synced_at,
   };
 }
@@ -254,8 +340,7 @@ async function loadRecentCases(
   // Tutor-profile cases (`subject_kind = 'tutor_profile'`) are resolved
   // separately because the subject_id is the tutor_profile.id, not the
   // app_user.id. The tutor-profile lookup happens below.
-  const tutorProfile = await loadTutorProfile(appUserId);
-  const tutorProfileId = tutorProfile?.tutorProfileId ?? null;
+  const tutorProfileId = await loadTutorProfileId(appUserId);
 
   const subjectFilters: Array<{ subject_kind: string; subject_id: string }> = [
     { subject_id: appUserId, subject_kind: "app_user" },
@@ -310,28 +395,41 @@ async function loadRecentCases(
       >(),
   ]);
 
-  const subjectRows = (subjectRes.data ?? []).map((row) => ({
-    caseId: row.id,
-    caseKind: row.case_kind,
-    caseStatus: row.case_status,
-    createdAt: row.created_at,
-    involvement: "subject" as const,
-    subjectKind: row.subject_kind,
-  }));
+  const subjectRows = (subjectRes.data ?? []).map((row) =>
+    mapInternalUserCase(row, "subject"),
+  );
   const reporterRows = (reporterRes.data ?? [])
     .filter((row) => !subjectRows.some((existing) => existing.caseId === row.id))
-    .map((row) => ({
-      caseId: row.id,
-      caseKind: row.case_kind,
-      caseStatus: row.case_status,
-      createdAt: row.created_at,
-      involvement: "reporter" as const,
-      subjectKind: row.subject_kind,
-    }));
+    .map((row) => mapInternalUserCase(row, "reporter"));
 
   return [...subjectRows, ...reporterRows]
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     .slice(0, RECENT_CASE_LIMIT);
+}
+
+function mapInternalUserCase(
+  row: {
+    case_kind: ModerationCaseKind;
+    case_status: ModerationCaseStatus;
+    created_at: string;
+    id: string;
+    subject_kind: ModerationCaseSubjectKind;
+  },
+  involvement: "subject" | "reporter",
+): InternalUserCaseDto {
+  return {
+    caseId: row.id,
+    caseKind: row.case_kind,
+    caseKindLabel: CASE_KIND_LABELS[row.case_kind],
+    caseStatus: row.case_status,
+    caseStatusLabel: CASE_STATUS_LABELS[row.case_status],
+    caseStatusTone: CASE_STATUS_TONES[row.case_status],
+    createdAt: row.created_at,
+    involvement,
+    involvementLabel: INVOLVEMENT_LABELS[involvement],
+    subjectKind: row.subject_kind,
+    subjectKindLabel: SUBJECT_KIND_LABELS[row.subject_kind],
+  };
 }
 
 async function loadRecentAdminActions(
@@ -339,10 +437,10 @@ async function loadRecentAdminActions(
 ): Promise<InternalUserAdminActionDto[]> {
   const supabase = createSupabaseServiceRoleClient();
 
-  const tutorProfile = await loadTutorProfile(appUserId);
+  const tutorProfileId = await loadTutorProfileId(appUserId);
   const targetIds = [appUserId];
-  if (tutorProfile) {
-    targetIds.push(tutorProfile.tutorProfileId);
+  if (tutorProfileId) {
+    targetIds.push(tutorProfileId);
   }
 
   const { data, error } = await supabase
@@ -370,43 +468,22 @@ async function loadRecentAdminActions(
     return [];
   }
 
-  const actorIds = Array.from(new Set(data.map((row) => row.actor_app_user_id)));
-  const actorNames = await loadDisplayNamesByAppUserIds(actorIds);
+  const actorIds = data.map((row) => row.actor_app_user_id);
+  const actorIdentities = await loadAppUserIdentities(actorIds);
 
-  return data.map((row) => ({
-    actionKey: row.action_key,
-    actorAppUserId: row.actor_app_user_id,
-    actorDisplayName: actorNames.get(row.actor_app_user_id) ?? null,
-    createdAt: row.created_at,
-    id: row.id,
-    reason: row.reason,
-    targetId: row.target_id,
-    targetType: row.target_type,
-  }));
-}
-
-async function loadDisplayNamesByAppUserIds(
-  appUserIds: readonly string[],
-): Promise<Map<string, string>> {
-  const lookup = new Map<string, string>();
-  if (appUserIds.length === 0) {
-    return lookup;
-  }
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("app_users")
-    .select("full_name, id")
-    .in("id", appUserIds)
-    .returns<Array<{ full_name: string | null; id: string }>>();
-
-  if (error) {
-    return lookup;
-  }
-  for (const row of data ?? []) {
-    const trimmed = row.full_name?.trim();
-    if (trimmed) {
-      lookup.set(row.id, trimmed);
-    }
-  }
-  return lookup;
+  return data.map((row) => {
+    const actor = actorIdentities.get(row.actor_app_user_id);
+    return {
+      actionKey: row.action_key,
+      actionKeyLabel: adminActionLabel(row.action_key),
+      actorAppUserId: row.actor_app_user_id,
+      actorAvatarSrc: actor?.avatarUrl ?? null,
+      actorDisplayName: actor?.displayName ?? null,
+      createdAt: row.created_at,
+      id: row.id,
+      reason: row.reason,
+      targetId: row.target_id,
+      targetType: row.target_type,
+    };
+  });
 }

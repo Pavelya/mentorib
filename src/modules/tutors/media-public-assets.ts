@@ -105,6 +105,28 @@ export async function hasPublishedTutorProfilePhoto(
   return (count ?? 0) > 0;
 }
 
+// Resolve the public URL of a tutor's currently-published profile photo, or
+// `null` when none is published. Used by the admin view-model boundary
+// (`P2-OPSFIX-001`) so operator surfaces can show the same avatar the public
+// sees without reimplementing the media lookup.
+export async function getPublishedTutorProfilePhotoUrl(
+  tutorProfileId: string,
+): Promise<string | null> {
+  const supabase = createSupabaseServiceRoleClient();
+  const { data, error } = await supabase
+    .from("tutor_public_media_assets")
+    .select("storage_object_path")
+    .eq("tutor_profile_id", tutorProfileId)
+    .eq("media_role", "profile_photo")
+    .eq("publication_status", "published")
+    .maybeSingle<{ storage_object_path: string }>();
+
+  if (error || !data?.storage_object_path) {
+    return null;
+  }
+  return getTutorPublicMediaPublicUrl(data.storage_object_path);
+}
+
 export function getTutorPublicMediaPublicUrl(storageObjectPath: string): string {
   const supabase = createSupabaseServiceRoleClient();
   const { data } = supabase.storage

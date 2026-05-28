@@ -12,6 +12,15 @@ import {
   MODERATION_CASE_STATUSES,
 } from "@/modules/admin/constants";
 import {
+  CASE_KIND_LABELS,
+  CASE_RESOLUTION_LABELS,
+  CASE_STATUS_LABELS,
+  CASE_STATUS_TONES,
+  SUBJECT_BLOCK_STATUS_LABELS,
+  SUBJECT_BLOCK_STATUS_TONES,
+  SUBJECT_KIND_LABELS,
+} from "@/modules/admin/labels";
+import {
   MODERATION_CASE_QUEUE_PAGE_SIZE,
   type ModerationCaseDetailDto,
   type ModerationCaseNoteDto,
@@ -185,12 +194,16 @@ function mapQueueRow(row: CaseQueueRow): ModerationCaseQueueRowDto {
   return {
     caseId: row.id,
     caseKind: row.case_kind,
+    caseKindLabel: CASE_KIND_LABELS[row.case_kind],
     caseStatus: row.case_status,
+    caseStatusLabel: CASE_STATUS_LABELS[row.case_status],
+    caseStatusTone: CASE_STATUS_TONES[row.case_status],
     claimedAt: row.claimed_at,
     createdAt: row.created_at,
     priority: row.priority,
     subjectId: row.subject_id,
     subjectKind: row.subject_kind,
+    subjectKindLabel: SUBJECT_KIND_LABELS[row.subject_kind],
   };
 }
 
@@ -265,37 +278,84 @@ export async function loadBlocksInvolvingSubject(
     throw new Error("Could not load blocks involving the subject.");
   }
 
-  return (data ?? []).map((row) => ({
-    blockId: row.id,
-    blockedAppUserId: row.blocked_app_user_id,
-    blockerAppUserId: row.blocker_app_user_id,
-    blockStatus: row.block_status,
-    createdAt: row.created_at,
-  }));
+  const rows = data ?? [];
+  const identities = await loadAppUserIdentities(
+    rows.flatMap((row) => [row.blocker_app_user_id, row.blocked_app_user_id]),
+  );
+
+  return rows.map((row) => {
+    const blocker = identities.get(row.blocker_app_user_id);
+    const blocked = identities.get(row.blocked_app_user_id);
+    return {
+      blockedAppUserId: row.blocked_app_user_id,
+      blockedAvatarSrc: blocked?.avatarUrl ?? null,
+      blockedDisplayName: blocked?.displayName ?? null,
+      blockerAppUserId: row.blocker_app_user_id,
+      blockerAvatarSrc: blocker?.avatarUrl ?? null,
+      blockerDisplayName: blocker?.displayName ?? null,
+      blockId: row.id,
+      blockStatus: row.block_status,
+      blockStatusLabel: SUBJECT_BLOCK_STATUS_LABELS[row.block_status],
+      blockStatusTone: SUBJECT_BLOCK_STATUS_TONES[row.block_status],
+      createdAt: row.created_at,
+    };
+  });
 }
 
-async function loadDisplayNamesByAppUserIds(
+// Display-ready identity for an app user: trimmed name + account avatar URL.
+// Shared across the admin DTO boundary so subjects, reporters, note authors,
+// audit actors, and block participants all resolve a `PersonSummary`-ready
+// name and avatar from one place (`P2-OPSFIX-001`).
+export type AdminAppUserIdentity = {
+  displayName: string | null;
+  avatarUrl: string | null;
+};
+
+export async function loadAppUserIdentities(
   appUserIds: readonly string[],
-): Promise<Map<string, string>> {
-  const lookup = new Map<string, string>();
-  if (appUserIds.length === 0) {
+): Promise<Map<string, AdminAppUserIdentity>> {
+  const lookup = new Map<string, AdminAppUserIdentity>();
+  const uniqueIds = Array.from(new Set(appUserIds)).filter(Boolean);
+  if (uniqueIds.length === 0) {
     return lookup;
   }
   const supabase = createSupabaseServiceRoleClient();
   const { data, error } = await supabase
     .from("app_users")
-    .select("full_name, id")
-    .in("id", appUserIds)
-    .returns<Array<{ full_name: string | null; id: string }>>();
+    .select("avatar_url, full_name, id")
+    .in("id", uniqueIds)
+    .returns<
+      Array<{ avatar_url: string | null; full_name: string | null; id: string }>
+    >();
 
   if (error) {
     return lookup;
   }
 
   for (const row of data ?? []) {
-    const trimmed = row.full_name?.trim();
-    if (trimmed) {
-      lookup.set(row.id, trimmed);
+    lookup.set(row.id, {
+      avatarUrl: row.avatar_url?.trim() || null,
+      displayName: row.full_name?.trim() || null,
+    });
+  }
+  return lookup;
+}
+
+export async function loadAppUserIdentity(
+  appUserId: string,
+): Promise<AdminAppUserIdentity> {
+  const identities = await loadAppUserIdentities([appUserId]);
+  return identities.get(appUserId) ?? { avatarUrl: null, displayName: null };
+}
+
+async function loadDisplayNamesByAppUserIds(
+  appUserIds: readonly string[],
+): Promise<Map<string, string>> {
+  const identities = await loadAppUserIdentities(appUserIds);
+  const lookup = new Map<string, string>();
+  for (const [id, identity] of identities) {
+    if (identity.displayName) {
+      lookup.set(id, identity.displayName);
     }
   }
   return lookup;
@@ -304,8 +364,8 @@ async function loadDisplayNamesByAppUserIds(
 export async function loadAppUserDisplayName(
   appUserId: string,
 ): Promise<string | null> {
-  const names = await loadDisplayNamesByAppUserIds([appUserId]);
-  return names.get(appUserId) ?? null;
+  const identity = await loadAppUserIdentity(appUserId);
+  return identity.displayName;
 }
 
 function mapDetailRow(row: CaseDetailRow): ModerationCaseDetailDto {
@@ -315,6 +375,9 @@ function mapDetailRow(row: CaseDetailRow): ModerationCaseDetailDto {
     internalSummary: row.internal_summary,
     reporterAppUserId: row.reporter_app_user_id,
     resolutionKind: row.resolution_kind,
+    resolutionKindLabel: row.resolution_kind
+      ? CASE_RESOLUTION_LABELS[row.resolution_kind]
+      : null,
     resolvedAt: row.resolved_at,
     resolvedByAppUserId: row.resolved_by_app_user_id,
     triggeringEventId: row.triggering_event_id,

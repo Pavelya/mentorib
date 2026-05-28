@@ -76,16 +76,24 @@ describe("moderation case repository — DTO leak guard", () => {
     expect(Object.keys(row).sort()).toEqual([
       "caseId",
       "caseKind",
+      "caseKindLabel",
       "caseStatus",
+      "caseStatusLabel",
+      "caseStatusTone",
       "claimedAt",
       "createdAt",
       "priority",
       "subjectId",
       "subjectKind",
+      "subjectKindLabel",
     ]);
     expect(row).not.toHaveProperty("internalSummary");
     expect(row).not.toHaveProperty("triggeringEventId");
     expect(row).not.toHaveProperty("reporterAppUserId");
+    // Display-ready: enum values never leak as the rendered label.
+    expect(row.caseKindLabel).toBe("Report");
+    expect(row.caseStatusLabel).toBe("Queued");
+    expect(row.subjectKindLabel).toBe("User");
   });
 
   it("queue select never asks the DB for triggering content or internal_summary", async () => {

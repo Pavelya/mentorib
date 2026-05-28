@@ -83,10 +83,13 @@ describe("moderation case repository — DTO leak guard", () => {
       "claimedAt",
       "createdAt",
       "priority",
+      "reasonSnippet",
       "subjectId",
       "subjectKind",
       "subjectKindLabel",
     ]);
+    // The list carries only a derived, length-capped reason snippet — never
+    // the raw `internal_summary` column or any triggering content.
     expect(row).not.toHaveProperty("internalSummary");
     expect(row).not.toHaveProperty("triggeringEventId");
     expect(row).not.toHaveProperty("reporterAppUserId");
@@ -96,7 +99,7 @@ describe("moderation case repository — DTO leak guard", () => {
     expect(row.subjectKindLabel).toBe("User");
   });
 
-  it("queue select never asks the DB for triggering content or internal_summary", async () => {
+  it("queue select pulls only the reason snippet source, never triggering content or the reporter", async () => {
     queueRows = [];
     await loadModerationCaseQueue({ filters: ["queued"] });
     const queueSelect = selectCalls.find(
@@ -106,7 +109,8 @@ describe("moderation case repository — DTO leak guard", () => {
         call.columns.length > 1,
     );
     expect(queueSelect).toBeDefined();
-    expect(queueSelect!.columns).not.toContain("internal_summary");
+    // `internal_summary` is read solely to derive a truncated reason snippet
+    // (`P2-OPSFIX-004`); triggering content and the reporter stay out of the list.
     expect(queueSelect!.columns).not.toContain("triggering_event_id");
     expect(queueSelect!.columns).not.toContain("reporter_app_user_id");
   });

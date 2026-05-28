@@ -1,19 +1,21 @@
 import Link from "next/link";
 import type { Route } from "next";
 
-import { Card, Chip, InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import { PersonSummary } from "@/components/continuity";
+import { Card, Chip, InlineNotice, PageHeader, Panel } from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
-import { formatUtcDateTime } from "@/lib/datetime";
+import {
+  CASE_KIND_LABELS,
+  CASE_STATUS_LABELS,
+} from "@/modules/admin/labels";
 import {
   DEFAULT_MODERATION_CASE_QUEUE_FILTERS,
   isModerationCaseQueueFilter,
   loadModerationCaseQueue,
   normalizeModerationCaseFilters,
 } from "@/modules/admin/moderation-case-repository";
-import type {
-  ModerationCaseQueueFilter,
-  ModerationCaseQueueRowDto,
-} from "@/modules/admin/moderation-case";
+import { loadCaseSubjectSummary } from "@/modules/admin/moderation-case-evidence";
+import type { ModerationCaseQueueFilter } from "@/modules/admin/moderation-case";
 import {
   MODERATION_CASE_KINDS,
   type ModerationCaseKind,
@@ -30,22 +32,6 @@ const VISIBLE_CASE_KINDS: readonly ModerationCaseKind[] = [
   "block",
   "public_content_takedown",
 ];
-
-const CASE_KIND_LABELS: Record<ModerationCaseKind, string> = {
-  block: "Blocks",
-  finance_intervention: "Finance",
-  lesson_issue: "Lesson issues",
-  public_content_takedown: "Takedowns",
-  report: "Reports",
-};
-
-const CASE_STATUS_LABELS: Record<ModerationCaseStatus, string> = {
-  dismissed: "Dismissed",
-  escalated: "Escalated",
-  queued: "Queued",
-  resolved: "Resolved",
-  under_review: "Under review",
-};
 
 const VISIBLE_STATUS_FILTERS: readonly ModerationCaseStatus[] = [
   "queued",
@@ -75,16 +61,17 @@ export default async function InternalModerationQueuePage({
     filters,
   });
 
+  const subjects = await Promise.all(
+    queue.rows.map((row) => loadCaseSubjectSummary(row)),
+  );
+
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>Internal · Moderation</p>
-        <h1 className={styles.title}>Trust &amp; safety queue</h1>
-        <p className={styles.helperText}>
-          Reports, block-related cases, and admin-initiated public-content
-          takedowns. Lesson-issue disputes live in their own queue.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Internal · Moderation"
+        title="Trust & safety queue"
+        description="Reports, block-related cases, and admin-initiated public-content takedowns. Lesson-issue disputes live in their own queue."
+      />
 
       <div className={styles.filterGroup}>
         <p className={styles.filterLabel}>Case kind</p>
@@ -145,42 +132,64 @@ export default async function InternalModerationQueuePage({
         </InlineNotice>
       ) : (
         <ul className={styles.queueList}>
-          {queue.rows.map((row) => (
-            <li key={row.caseId}>
-              <Link
-                className={styles.queueRowLink}
-                href={`/internal/moderation/${row.caseId}` as Route}
-                prefetch={false}
-              >
-                <Card>
-                  <div className={styles.queueRow}>
-                    <div className={styles.queueRowHeader}>
-                      <h2 className={styles.queueRowTitle}>
-                        {CASE_KIND_LABELS[row.caseKind]}
-                      </h2>
-                      <StatusBadge tone={getStatusTone(row.caseStatus)}>
-                        {CASE_STATUS_LABELS[row.caseStatus]}
-                      </StatusBadge>
+          {queue.rows.map((row, index) => {
+            const subject = subjects[index];
+            return (
+              <li key={row.caseId}>
+                <Link
+                  className={styles.queueRowLink}
+                  href={`/internal/moderation/${row.caseId}` as Route}
+                  prefetch={false}
+                >
+                  <Card>
+                    <div className={styles.queueRow}>
+                      <PersonSummary
+                        avatarSrc={subject.avatarSrc ?? undefined}
+                        badges={[
+                          {
+                            label: row.caseStatusLabel,
+                            tone: row.caseStatusTone,
+                          },
+                        ]}
+                        descriptor={subject.kindLabel}
+                        name={subject.primaryLabel}
+                        variant="operational"
+                      />
+                      <div className={styles.queueChips}>
+                        <Chip size="compact" tone="default">
+                          {row.caseKindLabel}
+                        </Chip>
+                        <Chip size="compact" tone="default">
+                          {formatAge(row.createdAt)}
+                        </Chip>
+                        {row.priority > 0 ? (
+                          <Chip size="compact" tone="default">
+                            Priority {row.priority}
+                          </Chip>
+                        ) : null}
+                      </div>
+                      {row.reasonSnippet ? (
+                        <p className={styles.reasonSnippet}>
+                          {row.reasonSnippet}
+                        </p>
+                      ) : null}
                     </div>
-                    <p className={styles.queueRowMeta}>
-                      {buildQueueRowMeta(row)}
-                    </p>
-                  </div>
-                </Card>
-              </Link>
-            </li>
-          ))}
+                  </Card>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
 
       <OpenTakedownForm />
 
-      <Panel eyebrow="Capacity" tone="mist" title="Queue limits">
-        <p className={styles.helperText}>
-          The queue shows the oldest matching cases first. Resolve or dismiss
-          a case to surface the next one.
-        </p>
-      </Panel>
+      <Panel
+        eyebrow="Capacity"
+        tone="mist"
+        title="Queue limits"
+        description="The queue shows the oldest matching cases first. Resolve or dismiss a case to surface the next one."
+      />
     </article>
   );
 }
@@ -270,49 +279,29 @@ function buildQueueHref(
   return (search ? `/internal/moderation?${search}` : "/internal/moderation") as Route;
 }
 
-function buildQueueRowMeta(row: ModerationCaseQueueRowDto): string {
-  const parts: string[] = [];
-  parts.push(`Opened ${formatUtcDateTime(row.createdAt)}`);
-  parts.push(`Subject: ${humanizeSubjectKind(row.subjectKind)}`);
-  if (row.priority > 0) {
-    parts.push(`Priority ${row.priority}`);
-  }
-  if (row.claimedAt) {
-    parts.push(`Claimed ${formatUtcDateTime(row.claimedAt)}`);
-  }
-  return parts.join(" · ");
-}
+const AGE_RELATIVE_FORMAT = new Intl.RelativeTimeFormat("en", {
+  numeric: "auto",
+});
 
-function humanizeSubjectKind(kind: ModerationCaseQueueRowDto["subjectKind"]): string {
-  switch (kind) {
-    case "app_user":
-      return "User";
-    case "tutor_profile":
-      return "Tutor profile";
-    case "message":
-      return "Message";
-    case "conversation":
-      return "Conversation";
-    case "lesson_booking":
-      return "Lesson";
-  }
-}
+const AGE_UNIT_THRESHOLDS: ReadonlyArray<[Intl.RelativeTimeFormatUnit, number]> =
+  [
+    ["year", 1000 * 60 * 60 * 24 * 365],
+    ["month", 1000 * 60 * 60 * 24 * 30],
+    ["day", 1000 * 60 * 60 * 24],
+    ["hour", 1000 * 60 * 60],
+    ["minute", 1000 * 60],
+  ];
 
-function getStatusTone(
-  status: ModerationCaseStatus,
-): "positive" | "warning" | "destructive" | "trust" | "info" {
-  switch (status) {
-    case "resolved":
-      return "positive";
-    case "under_review":
-      return "info";
-    case "dismissed":
-      return "warning";
-    case "escalated":
-      return "destructive";
-    case "queued":
-    default:
-      return "trust";
+function formatAge(createdAt: string): string {
+  const openedMs = Date.parse(createdAt);
+  if (Number.isNaN(openedMs)) {
+    return "Age unknown";
   }
+  const elapsed = openedMs - Date.now();
+  for (const [unit, msPerUnit] of AGE_UNIT_THRESHOLDS) {
+    if (Math.abs(elapsed) >= msPerUnit) {
+      return `Opened ${AGE_RELATIVE_FORMAT.format(Math.round(elapsed / msPerUnit), unit)}`;
+    }
+  }
+  return "Opened just now";
 }
-

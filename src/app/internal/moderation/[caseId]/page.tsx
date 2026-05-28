@@ -2,20 +2,20 @@ import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 
+import { PersonSummary } from "@/components/continuity";
 import {
+  ActivityList,
   Card,
+  DescriptionList,
+  type DescriptionListItem,
   InlineNotice,
+  PageHeader,
   Section,
   StatusBadge,
   getButtonClassName,
 } from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 import { formatUtcDateTime } from "@/lib/datetime";
-import type {
-  ModerationCaseKind,
-  ModerationCaseResolutionKind,
-  ModerationCaseStatus,
-} from "@/modules/admin/constants";
 import {
   loadCaseEvidence,
   loadCaseReporterSummary,
@@ -29,31 +29,6 @@ import {
 
 import { AddCaseNoteForm, CaseActionsPanel } from "./case-actions-panel";
 import styles from "../moderation.module.css";
-
-const CASE_KIND_LABELS: Record<ModerationCaseKind, string> = {
-  block: "Block",
-  finance_intervention: "Finance intervention",
-  lesson_issue: "Lesson issue",
-  public_content_takedown: "Public takedown",
-  report: "Report",
-};
-
-const STATUS_LABELS: Record<ModerationCaseStatus, string> = {
-  dismissed: "Dismissed",
-  escalated: "Escalated",
-  queued: "Queued",
-  resolved: "Resolved",
-  under_review: "Under review",
-};
-
-const RESOLUTION_LABELS: Record<ModerationCaseResolutionKind, string> = {
-  dismiss: "Dismissed",
-  escalated_to_legal: "Escalated to legal",
-  no_action: "No action",
-  reject: "Rejected",
-  split: "Split outcome",
-  uphold: "Upheld",
-};
 
 type PageProps = {
   params: Promise<{ caseId: string }>;
@@ -80,86 +55,107 @@ export default async function InternalModerationCaseDetailPage({
         : Promise.resolve([]),
     ]);
 
+  const subjectLink = subjectSummary.publicProfileHref ? (
+    <Link
+      className={getButtonClassName({ size: "compact", variant: "ghost" })}
+      href={subjectSummary.publicProfileHref}
+      prefetch={false}
+    >
+      View public profile
+    </Link>
+  ) : subjectSummary.appUserId ? (
+    <Link
+      className={getButtonClassName({ size: "compact", variant: "ghost" })}
+      href={`/internal/users/${subjectSummary.appUserId}` as Route}
+      prefetch={false}
+    >
+      View user record
+    </Link>
+  ) : null;
+
+  const subjectItems: DescriptionListItem[] = [
+    { label: "Kind", value: subjectSummary.kindLabel },
+  ];
+  if (subjectSummary.secondaryLabel) {
+    subjectItems.push({
+      label: "Details",
+      value: subjectSummary.secondaryLabel,
+    });
+  }
+  if (subjectSummary.publicProfileHref) {
+    subjectItems.push({
+      label: "Public profile",
+      value: (
+        <Link href={subjectSummary.publicProfileHref} prefetch={false}>
+          {subjectSummary.publicProfileHref}
+        </Link>
+      ),
+    });
+  }
+
+  const technicalRefs: DescriptionListItem[] = [
+    { label: "Case id", value: detail.caseId },
+    { label: "Subject id", value: detail.subjectId },
+  ];
+  if (detail.triggeringEventId) {
+    technicalRefs.push({
+      label: "Triggering event id",
+      value: detail.triggeringEventId,
+    });
+  }
+
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>
-          Internal · Moderation · {CASE_KIND_LABELS[detail.caseKind]}
-        </p>
-        <h1 className={styles.title}>
-          {subjectSummary.primaryLabel}
-        </h1>
-        <p className={styles.helperText}>
-          <Link
-            className={getButtonClassName({
-              size: "compact",
-              variant: "ghost",
-            })}
-            href={"/internal/moderation" as Route}
-            prefetch={false}
-          >
-            ← Back to queue
-          </Link>
-        </p>
-        <p>
-          <StatusBadge tone={getStatusTone(detail.caseStatus)}>
-            {STATUS_LABELS[detail.caseStatus]}
-          </StatusBadge>
-          <span className={styles.queueRowMeta}>
-            {" · Opened "}
-            {formatUtcDateTime(detail.createdAt)}
-          </span>
-          {detail.resolutionKind ? (
-            <span className={styles.queueRowMeta}>
-              {" · "}
-              {RESOLUTION_LABELS[detail.resolutionKind]}
+      <PageHeader
+        backLink={{ href: "/internal/moderation" as Route, label: "← Back to queue" }}
+        eyebrow={`Internal · Moderation · ${detail.caseKindLabel}`}
+        status={
+          <>
+            <StatusBadge tone={detail.caseStatusTone}>
+              {detail.caseStatusLabel}
+            </StatusBadge>
+            {detail.resolutionKindLabel ? (
+              <StatusBadge tone="info">{detail.resolutionKindLabel}</StatusBadge>
+            ) : null}
+            <span className={styles.statusMeta}>
+              Opened {formatUtcDateTime(detail.createdAt)}
             </span>
-          ) : null}
-        </p>
-      </header>
+          </>
+        }
+        title={subjectSummary.primaryLabel}
+      />
 
       <div className={styles.detailGrid}>
-        <div>
+        <div className={styles.detailColumn}>
           <Section eyebrow="Subject" title="Case subject" titleAs="h2">
             <Card>
-              <ul className={styles.detailList}>
-                <DetailRow
-                  label="Subject"
-                  value={subjectSummary.primaryLabel}
-                />
-                {subjectSummary.secondaryLabel ? (
-                  <DetailRow
-                    label="Details"
-                    value={subjectSummary.secondaryLabel}
-                  />
-                ) : null}
-                {subjectSummary.tutorPublicSlug ? (
-                  <DetailRow
-                    label="Public profile"
-                    value={`/tutors/${subjectSummary.tutorPublicSlug}`}
-                  />
-                ) : null}
-                <DetailRow label="Kind" value={detail.subjectKind} />
-                <DetailRow label="Subject id" value={detail.subjectId} />
-              </ul>
+              <PersonSummary
+                action={subjectLink}
+                avatarSrc={subjectSummary.avatarSrc ?? undefined}
+                descriptor={subjectSummary.kindLabel}
+                name={subjectSummary.primaryLabel}
+                variant="header"
+              />
+              <DescriptionList items={subjectItems} />
             </Card>
           </Section>
 
           {reporterSummary ? (
             <Section eyebrow="Reporter" title="Who reported" titleAs="h2">
               <Card>
-                <ul className={styles.detailList}>
-                  <DetailRow
-                    label="Display name"
-                    value={reporterSummary.displayName ?? "Unknown"}
+                <PersonSummary
+                  avatarSrc={reporterSummary.avatarSrc ?? undefined}
+                  descriptor="Reporter"
+                  name={reporterSummary.displayName ?? "Unknown reporter"}
+                  variant="standard"
+                />
+                {reporterSummary.reasonText ? (
+                  <DescriptionList
+                    items={[
+                      { label: "Reason", value: reporterSummary.reasonText },
+                    ]}
                   />
-                  {reporterSummary.reasonText ? (
-                    <DetailRow
-                      label="Reason"
-                      value={reporterSummary.reasonText}
-                    />
-                  ) : null}
-                </ul>
+                ) : null}
               </Card>
             </Section>
           ) : null}
@@ -167,46 +163,70 @@ export default async function InternalModerationCaseDetailPage({
           <Section eyebrow="Evidence" title="Triggering content" titleAs="h2">
             {evidence.kind === "message" && evidence.message ? (
               <Card>
-                <ul className={styles.detailList}>
-                  <DetailRow
-                    label="Message body"
-                    value={evidence.message.body}
-                  />
-                  <DetailRow
-                    label="Sent"
-                    value={formatUtcDateTime(evidence.message.createdAt)}
-                  />
-                  <DetailRow
-                    label="Conversation id"
-                    value={evidence.message.conversationId}
-                  />
-                </ul>
+                <PersonSummary
+                  avatarSrc={evidence.message.senderAvatarSrc ?? undefined}
+                  descriptor="Message sender"
+                  name={evidence.message.senderDisplayName ?? "Unknown sender"}
+                  variant="standard"
+                />
+                <DescriptionList
+                  items={[
+                    { label: "Message body", value: evidence.message.body },
+                    {
+                      label: "Sent",
+                      value: formatUtcDateTime(evidence.message.createdAt),
+                    },
+                  ]}
+                />
               </Card>
             ) : null}
             {evidence.kind === "tutor_profile" && evidence.tutorProfile ? (
               <Card>
-                <ul className={styles.detailList}>
-                  {evidence.tutorProfile.publicProfileUrl ? (
-                    <DetailRow
-                      label="Public profile"
-                      value={evidence.tutorProfile.publicProfileUrl}
-                    />
-                  ) : null}
-                  <DetailRow
-                    label="Tutor profile id"
-                    value={evidence.tutorProfile.tutorProfileId}
-                  />
-                </ul>
+                <PersonSummary
+                  action={
+                    evidence.tutorProfile.publicProfileHref ? (
+                      <Link
+                        className={getButtonClassName({
+                          size: "compact",
+                          variant: "ghost",
+                        })}
+                        href={evidence.tutorProfile.publicProfileHref}
+                        prefetch={false}
+                      >
+                        View public profile
+                      </Link>
+                    ) : null
+                  }
+                  avatarSrc={evidence.tutorProfile.avatarSrc ?? undefined}
+                  descriptor="Tutor profile"
+                  name={evidence.tutorProfile.displayName ?? "Tutor profile"}
+                  variant="standard"
+                />
               </Card>
             ) : null}
             {evidence.kind === "conversation" && evidence.conversation ? (
               <Card>
-                <ul className={styles.detailList}>
-                  <DetailRow
-                    label="Conversation id"
-                    value={evidence.conversation.conversationId}
+                <div className={styles.personPair}>
+                  <PersonSummary
+                    avatarSrc={
+                      evidence.conversation.studentAvatarSrc ?? undefined
+                    }
+                    descriptor="Student"
+                    name={
+                      evidence.conversation.studentDisplayName ??
+                      "Unknown student"
+                    }
+                    variant="compact"
                   />
-                </ul>
+                  <PersonSummary
+                    avatarSrc={evidence.conversation.tutorAvatarSrc ?? undefined}
+                    descriptor="Tutor"
+                    name={
+                      evidence.conversation.tutorDisplayName ?? "Unknown tutor"
+                    }
+                    variant="compact"
+                  />
+                </div>
               </Card>
             ) : null}
             {evidence.kind === "none" ? (
@@ -219,10 +239,12 @@ export default async function InternalModerationCaseDetailPage({
             ) : null}
           </Section>
 
-          {detail.internalSummary ? (
+          {!reporterSummary && detail.internalSummary ? (
             <Section eyebrow="Summary" title="Case summary" titleAs="h2">
               <Card>
-                <p className={styles.detailValue}>{detail.internalSummary}</p>
+                <DescriptionList
+                  items={[{ label: "Summary", value: detail.internalSummary }]}
+                />
               </Card>
             </Section>
           ) : null}
@@ -233,22 +255,35 @@ export default async function InternalModerationCaseDetailPage({
               title="Existing blocks involving this subject"
               titleAs="h2"
             >
-              <Card>
-                <ul className={styles.detailList}>
-                  {blocks.map((block) => (
-                    <li className={styles.detailRow} key={block.blockId}>
-                      <p className={styles.detailLabel}>
-                        {block.blockStatus === "active" ? "Active" : "Released"}
-                      </p>
-                      <p className={styles.detailValue}>
-                        {block.blockerAppUserId} → {block.blockedAppUserId}
-                        {" · "}
-                        {formatUtcDateTime(block.createdAt)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
+              <ul className={styles.blockList}>
+                {blocks.map((block) => (
+                  <li key={block.blockId}>
+                    <Card>
+                      <div className={styles.blockPair}>
+                        <PersonSummary
+                          avatarSrc={block.blockerAvatarSrc ?? undefined}
+                          descriptor="Initiated block"
+                          name={block.blockerDisplayName ?? "Unknown user"}
+                          variant="compact"
+                        />
+                        <span className={styles.blockConnector}>blocked</span>
+                        <PersonSummary
+                          avatarSrc={block.blockedAvatarSrc ?? undefined}
+                          descriptor="Blocked party"
+                          name={block.blockedDisplayName ?? "Unknown user"}
+                          variant="compact"
+                        />
+                        <StatusBadge tone={block.blockStatusTone}>
+                          {block.blockStatusLabel}
+                        </StatusBadge>
+                        <span className={styles.blockConnector}>
+                          {formatUtcDateTime(block.createdAt)}
+                        </span>
+                      </div>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
             </Section>
           ) : null}
 
@@ -258,25 +293,28 @@ export default async function InternalModerationCaseDetailPage({
                 <p>Notes are admin-only and never user-visible.</p>
               </InlineNotice>
             ) : (
-              <ul className={styles.notesList}>
-                {notes.map((note) => (
-                  <li key={note.id}>
-                    <Card>
-                      <div className={styles.noteEntry}>
-                        <p className={styles.noteMeta}>
-                          {note.authorDisplayName ?? note.authorAppUserId}
-                          {" · "}
-                          {formatUtcDateTime(note.createdAt)}
-                        </p>
-                        <p className={styles.noteBody}>{note.body}</p>
-                      </div>
-                    </Card>
-                  </li>
-                ))}
-              </ul>
+              <ActivityList
+                items={notes.map((note) => ({
+                  body: note.body,
+                  header: (
+                    <PersonSummary
+                      descriptor="Note author"
+                      name={note.authorDisplayName ?? "Unknown operator"}
+                      variant="compact"
+                    />
+                  ),
+                  id: note.id,
+                  timestamp: formatUtcDateTime(note.createdAt),
+                }))}
+              />
             )}
             <AddCaseNoteForm caseId={detail.caseId} />
           </Section>
+
+          <details className={styles.technicalDisclosure}>
+            <summary>Technical references</summary>
+            <DescriptionList items={technicalRefs} />
+          </details>
         </div>
 
         <CaseActionsPanel
@@ -287,31 +325,4 @@ export default async function InternalModerationCaseDetailPage({
       </div>
     </article>
   );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <li className={styles.detailRow}>
-      <p className={styles.detailLabel}>{label}</p>
-      <p className={styles.detailValue}>{value}</p>
-    </li>
-  );
-}
-
-function getStatusTone(
-  status: ModerationCaseStatus,
-): "positive" | "warning" | "destructive" | "trust" | "info" {
-  switch (status) {
-    case "resolved":
-      return "positive";
-    case "under_review":
-      return "info";
-    case "dismissed":
-      return "warning";
-    case "escalated":
-      return "destructive";
-    case "queued":
-    default:
-      return "trust";
-  }
 }

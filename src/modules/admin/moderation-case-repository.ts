@@ -27,9 +27,25 @@ import {
   type ModerationCaseQueueCounter,
   type ModerationCaseQueueDto,
   type ModerationCaseQueueFilter,
+  type ModerationCaseQueueItemDto,
   type ModerationCaseQueueRowDto,
   type ModerationSubjectBlockDto,
 } from "@/modules/admin/moderation-case";
+
+// One-line reason snippets keep the list scannable without pulling the full
+// reporter-supplied text through the queue payload.
+const QUEUE_REASON_SNIPPET_MAX = 140;
+
+function toReasonSnippet(value: string | null): string | null {
+  const text = value?.trim();
+  if (!text) {
+    return null;
+  }
+  if (text.length <= QUEUE_REASON_SNIPPET_MAX) {
+    return text;
+  }
+  return `${text.slice(0, QUEUE_REASON_SNIPPET_MAX - 1).trimEnd()}…`;
+}
 
 type CaseQueueRow = {
   case_kind: ModerationCaseKind;
@@ -40,6 +56,12 @@ type CaseQueueRow = {
   priority: number;
   subject_id: string;
   subject_kind: ModerationCaseSubjectKind;
+};
+
+// The queue select pulls `internal_summary` only to derive a truncated reason
+// snippet; the raw column never reaches the list DTO.
+type CaseQueueSelectRow = CaseQueueRow & {
+  internal_summary: string | null;
 };
 
 type CaseDetailRow = CaseQueueRow & {
@@ -89,7 +111,7 @@ export async function loadModerationCaseQueue(input: {
   let query = supabase
     .from("moderation_cases")
     .select(
-      "case_kind, case_status, claimed_at, created_at, id, priority, subject_id, subject_kind",
+      "case_kind, case_status, claimed_at, created_at, id, internal_summary, priority, subject_id, subject_kind",
     )
     .in("case_status", input.filters as readonly ModerationCaseStatus[])
     .order("priority", { ascending: false })
@@ -100,7 +122,7 @@ export async function loadModerationCaseQueue(input: {
     query = query.in("case_kind", input.caseKinds as readonly ModerationCaseKind[]);
   }
 
-  const { data, error } = await query.returns<CaseQueueRow[]>();
+  const { data, error } = await query.returns<CaseQueueSelectRow[]>();
   if (error) {
     throw new Error("Could not load the moderation case queue.");
   }
@@ -108,7 +130,7 @@ export async function loadModerationCaseQueue(input: {
   return {
     appliedFilters: input.filters,
     counters,
-    rows: (data ?? []).map(mapQueueRow),
+    rows: (data ?? []).map(mapQueueItem),
   };
 }
 
@@ -204,6 +226,13 @@ function mapQueueRow(row: CaseQueueRow): ModerationCaseQueueRowDto {
     subjectId: row.subject_id,
     subjectKind: row.subject_kind,
     subjectKindLabel: SUBJECT_KIND_LABELS[row.subject_kind],
+  };
+}
+
+function mapQueueItem(row: CaseQueueSelectRow): ModerationCaseQueueItemDto {
+  return {
+    ...mapQueueRow(row),
+    reasonSnippet: toReasonSnippet(row.internal_summary),
   };
 }
 

@@ -31,6 +31,14 @@ export type ModerationCaseQueueRowDto = {
   subjectId: string;
 };
 
+// The queue list adds a short, truncated reason snippet to the base row so an
+// operator can triage at a glance (`P2-OPSFIX-004`). The snippet is derived
+// and length-capped at the repository boundary — the full `internal_summary`
+// and all triggering content stay out of the list payload.
+export type ModerationCaseQueueItemDto = ModerationCaseQueueRowDto & {
+  reasonSnippet: string | null;
+};
+
 export type ModerationCaseQueueCounter = {
   count: number;
   status: ModerationCaseQueueFilter;
@@ -39,7 +47,7 @@ export type ModerationCaseQueueCounter = {
 export type ModerationCaseQueueDto = {
   appliedFilters: readonly ModerationCaseQueueFilter[];
   counters: readonly ModerationCaseQueueCounter[];
-  rows: readonly ModerationCaseQueueRowDto[];
+  rows: readonly ModerationCaseQueueItemDto[];
 };
 
 // D7 (admin scope) DTO. The detail surface adds `internalSummary` and the

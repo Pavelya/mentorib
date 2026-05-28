@@ -3,30 +3,6 @@
   gap: var(--space-6);
 }
 
-.intro {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.eyebrow {
-  color: var(--ink-500);
-  font-size: 0.875rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-.title {
-  font-size: 1.75rem;
-  margin: 0;
-}
-
-.helperText {
-  color: var(--ink-500);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
 .filterGroup {
   display: grid;
   gap: var(--space-2);
@@ -47,6 +23,12 @@
   align-items: center;
 }
 
+.helperText {
+  color: var(--ink-500);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
 .queueList {
   display: grid;
   gap: var(--space-3);
@@ -57,31 +39,32 @@
 
 .queueRow {
   display: grid;
-  gap: var(--space-2);
-}
-
-.queueRowHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
   gap: var(--space-3);
+}
+
+.queueChips {
+  display: flex;
   flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
 }
 
-.queueRowTitle {
+.reasonSnippet {
   margin: 0;
-  font-size: 1.0625rem;
-}
-
-.queueRowMeta {
-  color: var(--ink-500);
-  font-size: 0.875rem;
+  color: var(--ink-700);
+  font-size: var(--body-sm);
+  overflow-wrap: anywhere;
 }
 
 .queueRowLink {
   text-decoration: none;
   color: inherit;
   display: block;
+}
+
+.statusMeta {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
 }
 
 .detailGrid {
@@ -91,42 +74,20 @@
   align-items: start;
 }
 
-.detailList {
+.detailColumn {
   display: grid;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--space-5);
 }
 
-.detailRow {
-  display: grid;
-  gap: var(--space-1);
-  border-top: 1px solid var(--ink-100);
-  padding-top: var(--space-2);
+.personPair,
+.blockPair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
 }
 
-.detailRow:first-child {
-  border-top: none;
-  padding-top: 0;
-}
-
-.detailLabel {
-  color: var(--ink-500);
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0;
-}
-
-.detailValue {
-  margin: 0;
-  color: var(--ink-700);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.notesList {
+.blockList {
   display: grid;
   gap: var(--space-3);
   list-style: none;
@@ -134,20 +95,20 @@
   padding: 0;
 }
 
-.noteEntry {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.noteMeta {
+.blockConnector {
   color: var(--ink-500);
-  font-size: 0.8125rem;
+  font-size: var(--body-sm);
 }
 
-.noteBody {
-  margin: 0;
-  color: var(--ink-700);
-  white-space: pre-wrap;
+.technicalDisclosure {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.technicalDisclosure summary {
+  cursor: pointer;
 }
 
 .actionPanel {

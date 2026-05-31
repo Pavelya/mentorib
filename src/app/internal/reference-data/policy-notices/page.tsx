@@ -1,6 +1,16 @@
-import { Card, InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import type { Route } from "next";
+
+import {
+  Card,
+  DescriptionList,
+  InlineNotice,
+  PageHeader,
+  Panel,
+  StatusBadge,
+} from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 import { formatUtcDateTime } from "@/lib/datetime/format";
+import { POLICY_NOTICE_TYPE_LABELS } from "@/modules/admin/labels";
 import { listAdminPolicyNotices } from "@/modules/admin/policy-notice-service";
 
 import styles from "../reference-data.module.css";
@@ -14,18 +24,15 @@ export default async function InternalPolicyNoticesPage() {
 
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>
-          Internal · Reference data · Policy notices
-        </p>
-        <h1 className={styles.title}>Policy notices</h1>
-        <p className={styles.helperText}>
-          Draft a Terms or Privacy version, publish it to fan out the mandatory{" "}
-          <code>policy_notice_updated</code> notification, or revoke a published
-          version. The <code>/privacy</code> surface picks up changes on next
-          read.
-        </p>
-      </header>
+      <PageHeader
+        backLink={{
+          href: "/internal/reference-data" as Route,
+          label: "← Back to reference data",
+        }}
+        eyebrow="Internal · Reference data"
+        title="Policy notices"
+        description="Draft a Terms of service or Privacy policy version, then publish it to notify every member — a notice they cannot silence. The public privacy page picks up changes on its next read."
+      />
 
       <PolicyNoticeDraftForm />
 
@@ -52,24 +59,44 @@ export default async function InternalPolicyNoticesPage() {
                           {isPublished ? "Published" : "Draft"}
                         </StatusBadge>
                       </div>
-                      <p className={styles.rowMeta}>
-                        {notice.noticeType} · v{notice.versionLabel} · effective{" "}
-                        {formatUtcDateTime(notice.effectiveAt)}
-                        {notice.publishedAt
-                          ? ` · published ${formatUtcDateTime(notice.publishedAt)}`
-                          : " · not published"}
-                      </p>
+                      <DescriptionList
+                        items={[
+                          {
+                            label: "Type",
+                            value: POLICY_NOTICE_TYPE_LABELS[notice.noticeType],
+                          },
+                          { label: "Version", value: notice.versionLabel },
+                          {
+                            label: "Effective",
+                            value: formatUtcDateTime(notice.effectiveAt),
+                          },
+                          {
+                            label: "Published",
+                            value: notice.publishedAt
+                              ? formatUtcDateTime(notice.publishedAt)
+                              : "Not published",
+                          },
+                          {
+                            label: "Acknowledgement",
+                            value: notice.requiresAcknowledgement
+                              ? "Required"
+                              : "Not required",
+                          },
+                          {
+                            label: "Document",
+                            value: (
+                              <a
+                                href={notice.documentUrl}
+                                rel="noreferrer noopener"
+                                target="_blank"
+                              >
+                                {notice.documentUrl}
+                              </a>
+                            ),
+                          },
+                        ]}
+                      />
                       <p className={styles.rowMeta}>{notice.summary}</p>
-                      <p className={styles.rowMeta}>
-                        Doc:{" "}
-                        <a
-                          href={notice.documentUrl}
-                          rel="noreferrer noopener"
-                          target="_blank"
-                        >
-                          {notice.documentUrl}
-                        </a>
-                      </p>
                       <PolicyNoticeRowForm
                         id={notice.id}
                         intent={isPublished ? "revoke" : "publish"}

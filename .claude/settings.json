@@ -43,7 +43,12 @@
       "Bash(sed -n '1,40p' /Users/pavel/mentorib/src/app/internal/tutor-reviews/\\\\[applicationId\\\\]/review-actions-panel.tsx)",
       "Bash(grep -n \"^      [a-z_]*: {$\\\\|tutor_application_reviews\\\\|tutor_profiles: {\\\\|user_roles: {\" src/lib/supabase/database.types.ts)",
       "Bash(echo \"exit=$?\")",
-      "Bash(grep -nA15 \"loadModerationCaseCountsByKind\" src/modules/admin/moderation-case-repository.ts)"
+      "Bash(grep -nA15 \"loadModerationCaseCountsByKind\" src/modules/admin/moderation-case-repository.ts)",
+      "Bash(node -e \"const {GB}=require\\('country-flag-icons/react/3x2'\\); const React=require\\('react'\\); const {renderToStaticMarkup}=require\\('react-dom/server'\\); console.log\\(renderToStaticMarkup\\(React.createElement\\(GB\\)\\).slice\\(0,120\\)\\);\")",
+      "Bash(git --no-pager diff --stat)",
+      "Bash(git --no-pager diff .claude/settings.json)",
+      "Bash(grep -rho 'styles\\\\.__TRACKED_VAR__\\\\b' src/app/internal/reference-data)",
+      "Bash(grep -rn 'styles\\\\.__TRACKED_VAR__\\\\b' src/app/internal/reference-data)"
     ]
   }
 }

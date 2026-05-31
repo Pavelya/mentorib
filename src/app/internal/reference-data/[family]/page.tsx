@@ -2,8 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Route } from "next";
 
-import { Card, Chip, InlineNotice, Panel, StatusBadge } from "@/components/ui";
+import {
+  Card,
+  Chip,
+  DescriptionList,
+  InlineNotice,
+  PageHeader,
+  Panel,
+  StatusBadge,
+} from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
+import { REFERENCE_EDITABLE_FIELD_LABELS } from "@/modules/admin/labels";
 import {
   REFERENCE_FAMILIES,
   isReferenceFamilySlug,
@@ -51,13 +60,15 @@ export default async function InternalReferenceFamilyPage({
 
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>
-          Internal · Reference data · {descriptor.label}
-        </p>
-        <h1 className={styles.title}>{descriptor.label}</h1>
-        <p className={styles.helperText}>{descriptor.description}</p>
-      </header>
+      <PageHeader
+        backLink={{
+          href: "/internal/reference-data" as Route,
+          label: "← Back to reference data",
+        }}
+        eyebrow="Internal · Reference data"
+        title={descriptor.label}
+        description={descriptor.description}
+      />
 
       <div className={styles.filterRow}>
         {FILTER_OPTIONS.map((option) => {
@@ -97,9 +108,14 @@ export default async function InternalReferenceFamilyPage({
                       {row.isActive ? "Active" : "Inactive"}
                     </StatusBadge>
                   </div>
-                  <p className={styles.rowMeta}>
-                    <code>{descriptor.identifierColumn}</code>: {row.identifier}
-                  </p>
+                  <DescriptionList
+                    items={[
+                      {
+                        label: "Identifier (read-only)",
+                        value: row.identifier,
+                      },
+                    ]}
+                  />
                   <ReferenceRowEditForm
                     editableFields={descriptor.editableFields}
                     family={familyParam}
@@ -116,13 +132,10 @@ export default async function InternalReferenceFamilyPage({
         eyebrow="Allowed edits"
         tone="mist"
         title="Editable fields for this family"
-      >
-        <p className={styles.helperText}>
-          {descriptor.editableFields.map((f) => f.replace(/_/g, " ")).join(", ")}.
-          The Server Action rejects any other key with a <code>forbidden</code>{" "}
-          error before it reaches the database.
-        </p>
-      </Panel>
+        description={`You can change ${descriptor.editableFields
+          .map((field) => REFERENCE_EDITABLE_FIELD_LABELS[field].toLowerCase())
+          .join(", ")}. Any other field is refused before it reaches the database.`}
+      />
     </article>
   );
 }

@@ -16,6 +16,8 @@ import type {
   ModerationCaseStatus,
   ModerationCaseSubjectKind,
 } from "@/modules/admin/constants";
+import type { PolicyNoticeType } from "@/modules/notifications/constants";
+import type { ReferenceEditableField } from "@/modules/reference/admin/families";
 import type { ReviewStatus } from "@/modules/reviews/constants";
 import type {
   PayoutReadinessStatus,
@@ -209,6 +211,32 @@ export const REVIEW_STATUS_TONES = {
   submitted: "trust",
   under_review: "info",
 } as const satisfies Record<ReviewStatus, StatusTone>;
+
+// --- reference data ---------------------------------------------------------
+
+// Plain operator-facing names for each editable reference-data field, so the
+// admin surface never prints a raw column token like `display_name` or
+// `is_active`. Identifier columns (slug / key / code) are deliberately absent:
+// they are code-owned and never editable.
+export const REFERENCE_EDITABLE_FIELD_LABELS = {
+  display_name: "Display name",
+  display_label: "Display label",
+  display_description: "Description",
+  helper_text: "Helper text",
+  sort_order: "Sort order",
+  is_active: "Active toggle",
+} as const satisfies Record<ReferenceEditableField, string>;
+
+// --- policy notices ---------------------------------------------------------
+
+export const POLICY_NOTICE_TYPE_LABELS = {
+  terms: "Terms of service",
+  privacy: "Privacy policy",
+  cookie_notice: "Cookie notice",
+  tutor_agreement: "Tutor agreement",
+  trust_and_safety: "Trust & safety policy",
+  refund_policy: "Refund policy",
+} as const satisfies Record<PolicyNoticeType, string>;
 
 // --- admin action keys ------------------------------------------------------
 

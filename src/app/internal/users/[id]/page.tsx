@@ -2,74 +2,29 @@ import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 
-import { Card, Chip, Section, StatusBadge, getButtonClassName } from "@/components/ui";
+import { PersonSummary } from "@/components/continuity";
+import {
+  ActivityList,
+  Card,
+  DescriptionList,
+  type DescriptionListItem,
+  Flag,
+  InlineNotice,
+  PageHeader,
+  Section,
+  StatusBadge,
+} from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 import { formatUtcDateTime } from "@/lib/datetime";
-import type { AccountStatus, RoleStatus } from "@/modules/accounts/constants";
-import type {
-  ModerationCaseKind,
-  ModerationCaseStatus,
-} from "@/modules/admin/constants";
 import {
   getInternalUserDetail,
   type InternalUserDetailDto,
+  type InternalUserFinanceSummaryDto,
+  type InternalUserTutorSummaryDto,
 } from "@/modules/admin/user-detail-repository";
-import type { TutorPublicListingStatus } from "@/modules/tutors/constants";
 
 import { UserDetailActionForms } from "./user-detail-action-forms";
 import styles from "./user-detail.module.css";
-
-const ACCOUNT_STATUS_TONES: Record<
-  AccountStatus,
-  "positive" | "warning" | "destructive" | "info"
-> = {
-  active: "positive",
-  closed: "destructive",
-  limited: "warning",
-  suspended: "destructive",
-};
-
-const ROLE_STATUS_LABELS: Record<RoleStatus, string> = {
-  active: "Active",
-  pending: "Pending",
-  revoked: "Revoked",
-  suspended: "Suspended",
-};
-
-const LISTING_STATUS_LABELS: Record<TutorPublicListingStatus, string> = {
-  delisted: "Delisted (admin hold)",
-  eligible: "Eligible",
-  listed: "Listed",
-  not_listed: "Not listed",
-  paused: "Paused (admin hold)",
-};
-
-const LISTING_STATUS_TONES: Record<
-  TutorPublicListingStatus,
-  "positive" | "warning" | "destructive" | "info" | "trust"
-> = {
-  delisted: "destructive",
-  eligible: "info",
-  listed: "positive",
-  not_listed: "trust",
-  paused: "warning",
-};
-
-const CASE_KIND_LABELS: Record<ModerationCaseKind, string> = {
-  block: "Block",
-  finance_intervention: "Finance",
-  lesson_issue: "Lesson issue",
-  public_content_takedown: "Public takedown",
-  report: "Report",
-};
-
-const CASE_STATUS_LABELS: Record<ModerationCaseStatus, string> = {
-  dismissed: "Dismissed",
-  escalated: "Escalated",
-  queued: "Queued",
-  resolved: "Resolved",
-  under_review: "Under review",
-};
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -83,57 +38,54 @@ export default async function InternalUserDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const { account } = detail;
   const hasActiveAdminRole = detail.roles.some(
     (role) => role.role === "admin" && role.roleStatus === "active",
   );
-  const actorIsSelf = admin.id === detail.account.appUserId;
+  const actorIsSelf = admin.id === account.appUserId;
 
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>Internal · Users</p>
-        <h1 className={styles.title}>
-          {detail.account.displayName ?? detail.account.email}
-        </h1>
-        <p className={styles.helperText}>
-          <Link
-            className={getButtonClassName({
-              size: "compact",
-              variant: "ghost",
-            })}
-            href={"/internal" as Route}
-            prefetch={false}
-          >
-            ← Back to internal home
-          </Link>
-        </p>
-        <p>
-          <StatusBadge tone={ACCOUNT_STATUS_TONES[detail.account.accountStatus]}>
-            {detail.account.accountStatus}
-          </StatusBadge>
-          <span className={styles.recentMeta}>
-            {" · Joined "}
-            {formatUtcDateTime(detail.account.createdAt)}
-          </span>
-        </p>
-      </header>
+      <PageHeader
+        backLink={{
+          href: "/internal" as Route,
+          label: "← Back to internal home",
+        }}
+        eyebrow="Internal · Users"
+        status={
+          <>
+            <StatusBadge tone={account.accountStatusTone}>
+              {account.accountStatusLabel}
+            </StatusBadge>
+            <span className={styles.statusMeta}>
+              Joined {formatUtcDateTime(account.createdAt)}
+            </span>
+          </>
+        }
+        title={account.displayName ?? account.email}
+      />
 
       <div className={styles.detailGrid}>
         <div className={styles.detailColumn}>
           <AccountSection detail={detail} />
           <RolesSection detail={detail} />
-          {detail.tutorProfile ? <TutorSection detail={detail} /> : null}
-          {detail.finance ? <FinanceSection detail={detail} /> : null}
+          {detail.tutorProfile ? (
+            <TutorSection
+              name={account.displayName ?? account.email}
+              tutor={detail.tutorProfile}
+            />
+          ) : null}
+          {detail.finance ? <FinanceSection finance={detail.finance} /> : null}
           <RecentCasesSection detail={detail} />
           <RecentAdminActionsSection detail={detail} />
         </div>
 
         <UserDetailActionForms
           actorIsSelf={actorIsSelf}
-          currentAccountStatus={detail.account.accountStatus}
+          currentAccountStatus={account.accountStatus}
           currentListingStatus={detail.tutorProfile?.publicListingStatus ?? null}
           hasActiveAdminRole={hasActiveAdminRole}
-          targetAppUserId={detail.account.appUserId}
+          targetAppUserId={account.appUserId}
           tutorProfileId={detail.tutorProfile?.tutorProfileId ?? null}
         />
       </div>
@@ -142,19 +94,37 @@ export default async function InternalUserDetailPage({ params }: PageProps) {
 }
 
 function AccountSection({ detail }: { detail: InternalUserDetailDto }) {
+  const { account } = detail;
   return (
-    <Section eyebrow="Account" title="Account summary" titleAs="h2">
+    <Section eyebrow="Account" title="Account" titleAs="h2">
       <Card>
-        <ul className={styles.detailList}>
-          <DetailRow label="Display name" value={detail.account.displayName ?? "—"} />
-          <DetailRow label="Email" value={detail.account.email} />
-          <DetailRow label="App user id" value={detail.account.appUserId} />
-          <DetailRow label="Timezone" value={detail.account.timezone} />
-          <DetailRow
-            label="Account status"
-            value={detail.account.accountStatus}
-          />
-        </ul>
+        <PersonSummary
+          avatarSrc={account.avatarSrc ?? undefined}
+          badges={[
+            {
+              label: account.accountStatusLabel,
+              tone: account.accountStatusTone,
+            },
+          ]}
+          descriptor={account.email}
+          name={account.displayName ?? account.email}
+          variant="header"
+        />
+        <DescriptionList
+          items={[
+            { label: "Email", value: account.email },
+            {
+              label: "Account status",
+              value: (
+                <StatusBadge tone={account.accountStatusTone}>
+                  {account.accountStatusLabel}
+                </StatusBadge>
+              ),
+            },
+            { label: "Timezone", value: account.timezone },
+            { label: "Joined", value: formatUtcDateTime(account.createdAt) },
+          ]}
+        />
       </Card>
     </Section>
   );
@@ -165,115 +135,153 @@ function RolesSection({ detail }: { detail: InternalUserDetailDto }) {
     <Section eyebrow="Roles" title="Roles" titleAs="h2">
       <Card>
         {detail.roles.length === 0 ? (
-          <p className={styles.helperText}>
-            No roles recorded. Sign-up flow assigns roles after onboarding.
-          </p>
+          <InlineNotice tone="info" title="No roles recorded">
+            <p>Roles are assigned after onboarding completes.</p>
+          </InlineNotice>
         ) : (
-          <ul className={styles.recentList}>
-            {detail.roles.map((role) => (
-              <li className={styles.recentRow} key={`${role.role}-${role.grantedAt}`}>
-                <p>
-                  <Chip size="compact" tone="default">
-                    {role.role} · {ROLE_STATUS_LABELS[role.roleStatus]}
-                  </Chip>
-                </p>
-                <p className={styles.recentMeta}>
-                  Granted {formatUtcDateTime(role.grantedAt)}
-                  {role.revokedAt
-                    ? ` · Revoked ${formatUtcDateTime(role.revokedAt)}`
-                    : ""}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <DescriptionList
+            items={detail.roles.map((role) => ({
+              label: role.roleLabel,
+              value: (
+                <span className={styles.inlineMeta}>
+                  <StatusBadge tone={role.roleStatusTone}>
+                    {role.roleStatusLabel}
+                  </StatusBadge>
+                  <span className={styles.statusMeta}>
+                    Granted {formatUtcDateTime(role.grantedAt)}
+                    {role.revokedAt
+                      ? ` · Revoked ${formatUtcDateTime(role.revokedAt)}`
+                      : ""}
+                  </span>
+                </span>
+              ),
+            }))}
+          />
         )}
       </Card>
     </Section>
   );
 }
 
-function TutorSection({ detail }: { detail: InternalUserDetailDto }) {
-  if (!detail.tutorProfile) {
-    return null;
+function TutorSection({
+  name,
+  tutor,
+}: {
+  name: string;
+  tutor: InternalUserTutorSummaryDto;
+}) {
+  const isApproved = tutor.applicationStatus === "approved";
+
+  const items: DescriptionListItem[] = [
+    {
+      label: "Application status",
+      value: (
+        <StatusBadge tone={tutor.applicationStatusTone}>
+          {tutor.applicationStatusLabel}
+        </StatusBadge>
+      ),
+    },
+    {
+      label: "Listing status",
+      value: (
+        <StatusBadge tone={tutor.publicListingStatusTone}>
+          {tutor.publicListingStatusLabel}
+        </StatusBadge>
+      ),
+    },
+  ];
+  if (tutor.selfPausedAt) {
+    items.push({
+      label: "Self-paused",
+      value: formatUtcDateTime(tutor.selfPausedAt),
+    });
   }
-  const tutor = detail.tutorProfile;
+  if (tutor.publicProfileHref) {
+    items.push({
+      label: "Public profile",
+      value: (
+        <Link href={tutor.publicProfileHref} prefetch={false}>
+          View public profile
+        </Link>
+      ),
+    });
+  }
+
   return (
     <Section eyebrow="Tutor profile" title="Tutor profile" titleAs="h2">
       <Card>
-        <ul className={styles.detailList}>
-          <DetailRow label="Application status" value={tutor.applicationStatus} />
-          <li className={styles.detailRow}>
-            <p className={styles.detailLabel}>Listing status</p>
-            <p>
-              <StatusBadge tone={LISTING_STATUS_TONES[tutor.publicListingStatus]}>
-                {LISTING_STATUS_LABELS[tutor.publicListingStatus]}
-              </StatusBadge>
-            </p>
-          </li>
-          {tutor.selfPausedAt ? (
-            <DetailRow
-              label="Self paused at"
-              value={formatUtcDateTime(tutor.selfPausedAt)}
-            />
-          ) : null}
-          {tutor.publicSlug ? (
-            <DetailRow
-              label="Public profile"
-              value={`/tutors/${tutor.publicSlug}`}
-            />
-          ) : null}
-          {tutor.headline ? (
-            <DetailRow label="Headline" value={tutor.headline} />
-          ) : null}
-          <DetailRow label="Tutor profile id" value={tutor.tutorProfileId} />
-        </ul>
+        {isApproved ? (
+          <PersonSummary
+            avatarSrc={tutor.avatarSrc ?? undefined}
+            descriptor={tutor.headline ?? "Approved tutor"}
+            name={name}
+            variant="header"
+          />
+        ) : null}
+        <DescriptionList items={items} />
       </Card>
     </Section>
   );
 }
 
-function FinanceSection({ detail }: { detail: InternalUserDetailDto }) {
-  if (!detail.finance) {
-    return null;
+function FinanceSection({
+  finance,
+}: {
+  finance: InternalUserFinanceSummaryDto;
+}) {
+  const items: DescriptionListItem[] = [
+    {
+      label: "Payout readiness",
+      value: (
+        <StatusBadge tone={finance.payoutReadinessStatusTone}>
+          {finance.payoutReadinessStatusLabel}
+        </StatusBadge>
+      ),
+    },
+    {
+      label: "Stripe Connect account",
+      value: finance.hasStripeAccount ? "Linked" : "Not linked",
+    },
+  ];
+  if (finance.payoutAccountCountry) {
+    items.push({
+      label: "Country",
+      value: finance.countryFlagCode ? (
+        <>
+          <Flag
+            aria-label={finance.payoutAccountCountry}
+            code={finance.countryFlagCode}
+          />
+          {finance.payoutAccountCountry}
+        </>
+      ) : (
+        finance.payoutAccountCountry
+      ),
+    });
   }
-  const finance = detail.finance;
+  if (finance.payoutOnboardingStartedAt) {
+    items.push({
+      label: "Onboarding started",
+      value: formatUtcDateTime(finance.payoutOnboardingStartedAt),
+    });
+  }
+  if (finance.payoutOnboardingCompletedAt) {
+    items.push({
+      label: "Onboarding completed",
+      value: formatUtcDateTime(finance.payoutOnboardingCompletedAt),
+    });
+  }
+  if (finance.payoutStatusSyncedAt) {
+    items.push({
+      label: "Last sync",
+      value: formatUtcDateTime(finance.payoutStatusSyncedAt),
+    });
+  }
+
   return (
     <Section eyebrow="Finance" title="Payout status" titleAs="h2">
       <Card>
-        <ul className={styles.detailList}>
-          <DetailRow
-            label="Payout readiness"
-            value={finance.payoutReadinessStatus}
-          />
-          <DetailRow
-            label="Stripe Connect account"
-            value={finance.hasStripeAccount ? "Linked" : "Not linked"}
-          />
-          {finance.payoutAccountCountry ? (
-            <DetailRow
-              label="Country"
-              value={finance.payoutAccountCountry}
-            />
-          ) : null}
-          {finance.payoutOnboardingStartedAt ? (
-            <DetailRow
-              label="Onboarding started"
-              value={formatUtcDateTime(finance.payoutOnboardingStartedAt)}
-            />
-          ) : null}
-          {finance.payoutOnboardingCompletedAt ? (
-            <DetailRow
-              label="Onboarding completed"
-              value={formatUtcDateTime(finance.payoutOnboardingCompletedAt)}
-            />
-          ) : null}
-          {finance.payoutStatusSyncedAt ? (
-            <DetailRow
-              label="Last sync"
-              value={formatUtcDateTime(finance.payoutStatusSyncedAt)}
-            />
-          ) : null}
-        </ul>
+        <DescriptionList items={items} />
       </Card>
     </Section>
   );
@@ -282,33 +290,38 @@ function FinanceSection({ detail }: { detail: InternalUserDetailDto }) {
 function RecentCasesSection({ detail }: { detail: InternalUserDetailDto }) {
   return (
     <Section eyebrow="Cases" title="Recent moderation cases" titleAs="h2">
-      <Card>
-        {detail.recentCases.length === 0 ? (
-          <p className={styles.helperText}>
-            No moderation cases involving this user.
-          </p>
-        ) : (
-          <ul className={styles.recentList}>
-            {detail.recentCases.map((row) => (
-              <li className={styles.recentRow} key={row.caseId}>
-                <p>
-                  <Link
-                    href={`/internal/moderation/${row.caseId}` as Route}
-                    prefetch={false}
-                  >
-                    {CASE_KIND_LABELS[row.caseKind]} ·{" "}
-                    {CASE_STATUS_LABELS[row.caseStatus]}
-                  </Link>
-                </p>
-                <p className={styles.recentMeta}>
-                  Involvement: {row.involvement} ·{" "}
-                  {formatUtcDateTime(row.createdAt)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      {detail.recentCases.length === 0 ? (
+        <InlineNotice tone="info" title="No moderation cases">
+          <p>No moderation cases involve this user.</p>
+        </InlineNotice>
+      ) : (
+        <Card>
+          <ActivityList
+            items={detail.recentCases.map((row) => ({
+              body: (
+                <span className={styles.inlineMeta}>
+                  <StatusBadge tone={row.caseStatusTone}>
+                    {row.caseStatusLabel}
+                  </StatusBadge>
+                  <span className={styles.statusMeta}>
+                    {row.involvementLabel} · {row.subjectKindLabel}
+                  </span>
+                </span>
+              ),
+              header: (
+                <Link
+                  href={`/internal/moderation/${row.caseId}` as Route}
+                  prefetch={false}
+                >
+                  {row.caseKindLabel}
+                </Link>
+              ),
+              id: row.caseId,
+              timestamp: formatUtcDateTime(row.createdAt),
+            }))}
+          />
+        </Card>
+      )}
     </Section>
   );
 }
@@ -320,42 +333,34 @@ function RecentAdminActionsSection({
 }) {
   return (
     <Section eyebrow="Audit" title="Recent admin actions" titleAs="h2">
-      <Card>
-        {detail.recentAdminActions.length === 0 ? (
-          <p className={styles.helperText}>
-            No prior admin actions recorded against this user.
-          </p>
-        ) : (
-          <ul className={styles.recentList}>
-            {detail.recentAdminActions.map((row) => (
-              <li className={styles.recentRow} key={row.id}>
-                <p>
-                  <Chip size="compact" tone="default">
-                    {row.actionKey}
-                  </Chip>
-                </p>
-                <p className={styles.recentMeta}>
-                  {row.actorDisplayName ?? row.actorAppUserId} ·{" "}
-                  {formatUtcDateTime(row.createdAt)}
-                </p>
-                {row.reason ? (
-                  <p className={styles.detailValue}>{row.reason}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      {detail.recentAdminActions.length === 0 ? (
+        <InlineNotice tone="info" title="No admin actions">
+          <p>No prior admin actions recorded against this user.</p>
+        </InlineNotice>
+      ) : (
+        <Card>
+          <ActivityList
+            items={detail.recentAdminActions.map((row) => ({
+              body: (
+                <div className={styles.actionBody}>
+                  <span className={styles.statusMeta}>{row.actionKeyLabel}</span>
+                  {row.reason ? <p>{row.reason}</p> : null}
+                </div>
+              ),
+              header: (
+                <PersonSummary
+                  avatarSrc={row.actorAvatarSrc ?? undefined}
+                  descriptor="Operator"
+                  name={row.actorDisplayName ?? "Unknown operator"}
+                  variant="compact"
+                />
+              ),
+              id: row.id,
+              timestamp: formatUtcDateTime(row.createdAt),
+            }))}
+          />
+        </Card>
+      )}
     </Section>
   );
 }
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <li className={styles.detailRow}>
-      <p className={styles.detailLabel}>{label}</p>
-      <p className={styles.detailValue}>{value}</p>
-    </li>
-  );
-}
-

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { Route } from "next";
 
-import { Card, Chip, Panel, StatusBadge } from "@/components/ui";
+import { Card, Chip, PageHeader, Panel, StatusBadge } from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
+import { REFERENCE_EDITABLE_FIELD_LABELS } from "@/modules/admin/labels";
 import {
   REFERENCE_FAMILIES,
   REFERENCE_FAMILY_SLUGS,
@@ -15,15 +16,11 @@ export default async function InternalReferenceDataIndexPage() {
 
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>Internal · Reference data</p>
-        <h1 className={styles.title}>Reference data and policy notices</h1>
-        <p className={styles.helperText}>
-          Edit display labels, descriptions, sort order, and the active toggle
-          on existing reference rows. Creating new rows or editing slugs /
-          keys / codes requires a migration paired with a code change.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Internal · Reference data"
+        title="Reference data and policy notices"
+        description="Edit display names, descriptions, sort order, and the active toggle on existing rows. Adding new rows or changing the underlying codes is a code change, not something this surface can do."
+      />
 
       <ul className={styles.queueGrid}>
         {REFERENCE_FAMILY_SLUGS.map((slug) => {
@@ -49,7 +46,7 @@ export default async function InternalReferenceDataIndexPage() {
                     <div className={styles.queueChips}>
                       {descriptor.editableFields.map((field) => (
                         <Chip key={field} size="compact" tone="default">
-                          {field.replace(/_/g, " ")}
+                          {REFERENCE_EDITABLE_FIELD_LABELS[field]}
                         </Chip>
                       ))}
                     </div>
@@ -72,9 +69,9 @@ export default async function InternalReferenceDataIndexPage() {
                   <StatusBadge tone="trust">Broadcast</StatusBadge>
                 </div>
                 <p className={styles.queueRowMeta}>
-                  Draft, publish, or revoke Terms and Privacy notices. Publishing
-                  fires the mandatory <code>policy_notice_updated</code>{" "}
-                  notification.
+                  Draft, publish, or revoke Terms of service and Privacy policy
+                  notices. Publishing notifies every member — this notice cannot
+                  be silenced by their preferences.
                 </p>
               </div>
             </Card>
@@ -88,12 +85,12 @@ export default async function InternalReferenceDataIndexPage() {
         title="What this surface intentionally cannot do"
       >
         <ul className={styles.helperList}>
-          <li>Create new subjects, focus areas, languages, or providers.</li>
-          <li>Delete any reference row. Use the active toggle instead.</li>
-          <li>Edit slugs, keys, codes, or identifiers — these are code-owned.</li>
+          <li>Add new subjects, focus areas, languages, or providers.</li>
+          <li>Delete any row. Switch off the active toggle instead.</li>
+          <li>Change a row’s underlying code — those are set in the codebase.</li>
           <li>
-            Edit provider connection details (API keys, endpoints) — those live
-            in env, not in the row.
+            Edit provider connection details such as API keys or endpoints —
+            those live in configuration, not on the row.
           </li>
         </ul>
       </Panel>

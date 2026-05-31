@@ -36,3 +36,11 @@
   line-height: var(--line-body);
   overflow-wrap: anywhere;
 }
+
+/* Country flags arrive as unsized SVGs (only `Icon` sets a width attribute);
+   constrain them so the documented inline flag + label pairing renders cleanly. */
+.value svg:not([width]) {
+  width: 1.25rem;
+  height: auto;
+  flex: none;
+}

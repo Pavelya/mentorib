@@ -28,6 +28,7 @@ export const ADMIN_ACTION_KEYS = [
   "tutor_listing.admin_delist",
   "tutor_listing.admin_lift_hold",
   "account.set_status",
+  "account.update_display_name",
   "finance_intervention.note",
   // Platform-level reference-data label edits (P2-OPS-003).
   // Each key edits the editable-field allowlist on the named vocabulary

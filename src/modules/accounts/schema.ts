@@ -58,6 +58,17 @@ export const appUsers = pgTable(
     uniqueIndex("app_users_auth_user_id_key").on(table.auth_user_id),
     index("app_users_onboarding_state_idx").on(table.onboarding_state),
     index("app_users_primary_role_context_idx").on(table.primary_role_context),
+    // Trigram GIN indexes backing the admin people-directory ILIKE search
+    // (P2-ADMIN-PEOPLE-001). Declared for schema fidelity; the canonical
+    // definition lives in the SQL migration of the same name.
+    index("app_users_full_name_trgm_idx").using(
+      "gin",
+      table.full_name.op("gin_trgm_ops"),
+    ),
+    index("app_users_email_trgm_idx").using(
+      "gin",
+      table.email.op("gin_trgm_ops"),
+    ),
   ],
 );
 

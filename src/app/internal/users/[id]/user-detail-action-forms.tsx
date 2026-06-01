@@ -9,6 +9,7 @@ import {
   Panel,
   SelectField,
   Textarea,
+  TextField,
 } from "@/components/ui";
 
 import { FINANCE_INTERVENTION_KIND_LABELS } from "@/modules/admin/labels";
@@ -27,6 +28,7 @@ type Props = {
   tutorProfileId: string | null;
   currentListingStatus: TutorListingState | null;
   currentAccountStatus: "active" | "limited" | "suspended" | "closed";
+  currentDisplayName: string | null;
   hasActiveAdminRole: boolean;
   actorIsSelf: boolean;
 };
@@ -40,6 +42,10 @@ const ACCOUNT_STATUS_LABELS = {
 export function UserDetailActionForms(props: Props) {
   return (
     <div className={styles.actionStack}>
+      <IdentityActions
+        currentDisplayName={props.currentDisplayName}
+        targetAppUserId={props.targetAppUserId}
+      />
       <ListingActions
         currentListingStatus={props.currentListingStatus}
         targetAppUserIdValue={props.targetAppUserId}
@@ -56,6 +62,78 @@ export function UserDetailActionForms(props: Props) {
       />
       <FinanceInterventionActions targetAppUserId={props.targetAppUserId} />
     </div>
+  );
+}
+
+function IdentityActions({
+  currentDisplayName,
+  targetAppUserId,
+}: {
+  currentDisplayName: string | null;
+  targetAppUserId: string;
+}) {
+  const [state, formAction, pending] = useActionState<
+    UserDetailActionState,
+    FormData
+  >(runUserDetailAction, initialUserDetailActionState);
+
+  return (
+    <Panel eyebrow="Identity" tone="raised" title="Display name">
+      <p className={styles.helperText}>
+        Edit the name shown across Mentor IB for this account. The change is
+        audited with your reason.
+      </p>
+      <IdentityActionFeedback state={state} />
+      <form action={formAction} className={styles.actionForm}>
+        <input name="intent" type="hidden" value="update_display_name" />
+        <input name="target_app_user_id" type="hidden" value={targetAppUserId} />
+        <TextField
+          defaultValue={currentDisplayName ?? ""}
+          label="Display name"
+          maxLength={120}
+          name="display_name"
+          placeholder="Name shown on Mentor IB"
+          required
+        />
+        <Textarea
+          description="Admin-only audit reason."
+          label="Reason"
+          maxLength={2000}
+          name="reason"
+          placeholder="Why are you changing this name?"
+          required
+          rows={2}
+        />
+        <Button disabled={pending} type="submit" variant="primary">
+          {pending ? "Saving…" : "Update name"}
+        </Button>
+      </form>
+      <RemoveFromPlatformNotice />
+    </Panel>
+  );
+}
+
+// `IdentityActions` runs its own action state, so its feedback must not show
+// success messages bled in from another panel's submission.
+function IdentityActionFeedback({ state }: { state: UserDetailActionState }) {
+  if (state.intent !== "update_display_name") {
+    return null;
+  }
+  return <ActionFeedback state={state} />;
+}
+
+function RemoveFromPlatformNotice() {
+  return (
+    <InlineNotice tone="info" title="Remove from platform">
+      <p>
+        Removing an account goes through the data-subject-request erasure flow
+        so retention rules are honored. That flow (P2-DSR-001) is not built yet,
+        so removal is disabled here — there is no raw-delete path.
+      </p>
+      <Button disabled type="button" variant="danger">
+        Remove from platform
+      </Button>
+    </InlineNotice>
   );
 }
 

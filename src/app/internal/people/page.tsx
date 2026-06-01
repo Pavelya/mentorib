@@ -1,3 +1,5 @@
+import type { Route } from "next";
+
 import { SectionLanding, type SectionLandingCard } from "@/components/shell/section-landing";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 
@@ -7,21 +9,21 @@ const PEOPLE_CARDS: SectionLandingCard[] = [
     title: "Students",
     description:
       "Find and manage student accounts: search by name or email, review activity, and open a person detail.",
-    status: { label: "Planned", tone: "trust" },
+    href: "/internal/students" as Route,
   },
   {
     key: "tutors",
     title: "Tutors",
     description:
       "Browse tutors, filter by listing and application status, and open a tutor's full operating picture.",
-    status: { label: "Planned", tone: "trust" },
+    href: "/internal/tutors" as Route,
   },
   {
     key: "admins",
     title: "Admins",
     description:
       "Review who holds the admin role, promote a user, or revoke access.",
-    status: { label: "Planned", tone: "trust" },
+    href: "/internal/admins" as Route,
   },
 ];
 

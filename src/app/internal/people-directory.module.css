@@ -1,0 +1,78 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.searchField {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.filterField {
+  flex: 0 1 14rem;
+}
+
+.directoryList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rowLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.paginationControls {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.paginationMeta {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+  margin: 0;
+}
+
+.candidateList {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.candidateRow {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.helperText {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+  margin: 0;
+}

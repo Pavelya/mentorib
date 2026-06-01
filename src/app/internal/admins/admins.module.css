@@ -1,0 +1,52 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.list {
+  display: grid;
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.rowHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detailLink {
+  font-size: var(--body-sm);
+}
+
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.searchField {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.actionForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.helperText {
+  color: var(--ink-500);
+  font-size: var(--body-sm);
+  margin: 0;
+}

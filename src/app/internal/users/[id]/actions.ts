@@ -10,6 +10,10 @@ import {
   type AdminReachableAccountStatus,
 } from "@/modules/admin/account-status-service";
 import {
+  AdminDisplayNameError,
+  adminUpdateDisplayName,
+} from "@/modules/admin/display-name-service";
+import {
   FinanceInterventionError,
   isFinanceInterventionKind,
   recordFinanceInterventionNote,
@@ -31,6 +35,7 @@ export type UserDetailActionIntent =
   | "delist_listing"
   | "lift_listing_hold"
   | "set_account_status"
+  | "update_display_name"
   | "grant_admin_role"
   | "revoke_admin_role"
   | "record_finance_intervention";
@@ -54,6 +59,7 @@ const INTENTS: readonly UserDetailActionIntent[] = [
   "delist_listing",
   "lift_listing_hold",
   "set_account_status",
+  "update_display_name",
   "grant_admin_role",
   "revoke_admin_role",
   "record_finance_intervention",
@@ -137,6 +143,15 @@ export async function runUserDetailAction(
         reason,
         targetAppUserId,
       });
+    } else if (intent === "update_display_name") {
+      const name = readString(formData, "display_name");
+      const reason = readString(formData, "reason");
+      await adminUpdateDisplayName({
+        actorAppUserId: admin.id,
+        name,
+        reason,
+        targetAppUserId,
+      });
     } else if (intent === "grant_admin_role") {
       const reason = readString(formData, "reason");
       await grantAdminRole({
@@ -173,6 +188,7 @@ export async function runUserDetailAction(
     if (
       error instanceof AdminListingError ||
       error instanceof AccountStatusError ||
+      error instanceof AdminDisplayNameError ||
       error instanceof AdminRoleError ||
       error instanceof FinanceInterventionError
     ) {
@@ -212,6 +228,8 @@ function buildSuccessMessage(intent: UserDetailActionIntent): string {
       return "Listing hold lifted.";
     case "set_account_status":
       return "Account status updated.";
+    case "update_display_name":
+      return "Display name updated.";
     case "grant_admin_role":
       return "Admin access granted.";
     case "revoke_admin_role":

@@ -83,6 +83,7 @@ export default async function InternalUserDetailPage({ params }: PageProps) {
         <UserDetailActionForms
           actorIsSelf={actorIsSelf}
           currentAccountStatus={account.accountStatus}
+          currentDisplayName={account.displayName}
           currentListingStatus={detail.tutorProfile?.publicListingStatus ?? null}
           hasActiveAdminRole={hasActiveAdminRole}
           targetAppUserId={account.appUserId}

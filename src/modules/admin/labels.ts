@@ -267,6 +267,7 @@ export const POLICY_NOTICE_TYPE_LABELS = {
 
 const ADMIN_ACTION_LABELS = {
   "account.set_status": "Changed account status",
+  "account.update_display_name": "Updated display name",
   "admin_role.bootstrap": "Bootstrapped admin role",
   "admin_role.grant": "Granted admin role",
   "admin_role.revoke": "Revoked admin role",

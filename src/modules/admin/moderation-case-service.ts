@@ -396,6 +396,52 @@ export async function openReportFromProduct(
   return opened;
 }
 
+export type OpenReviewReportInput = {
+  reporterAppUserId: string;
+  reporterReason: string;
+  tutorProfileId: string;
+  reviewId: string;
+};
+
+// Opens a `review` case from the public tutor profile when a viewer reports
+// an inappropriate published review (`P2-ADMIN-TRUST-001`). The subject is the
+// tutor profile the review lives on; the reported review id is captured in
+// `triggering_event_id` so the operator can find the exact review in the
+// `/internal/reviews` moderation queue. The reporter's note is stored the same
+// way `openReportFromProduct` stores it: as `internal_summary` plus a
+// reporter-authored case note.
+export async function openReviewReport(
+  input: OpenReviewReportInput,
+): Promise<{ caseId: string }> {
+  const reason = sanitizeNote(input.reporterReason);
+  if (!reason) {
+    throw new ModerationCaseError(
+      "reason_required",
+      "Add a short note about what you're reporting.",
+    );
+  }
+
+  const opened = await openCase({
+    actorAppUserId: input.reporterAppUserId,
+    caseKind: "review",
+    internalSummary: reason,
+    reporterAppUserId: input.reporterAppUserId,
+    subjectId: input.tutorProfileId,
+    subjectKind: "tutor_profile",
+    triggeringEventId: input.reviewId,
+    triggeringEventKind: "tutor_review",
+  });
+
+  const supabase = createSupabaseServiceRoleClient();
+  await supabase.from("moderation_case_notes").insert({
+    author_app_user_id: input.reporterAppUserId,
+    body: reason,
+    case_id: opened.caseId,
+  });
+
+  return opened;
+}
+
 function resolveOpenActionKey() {
   return "moderation_case.open" as const;
 }

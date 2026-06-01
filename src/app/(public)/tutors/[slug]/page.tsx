@@ -36,6 +36,10 @@ import { ensureAuthAccount } from "@/lib/auth/account-service";
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
+  isRestrictedAccount,
+  requiresRoleSelection,
+} from "@/modules/accounts/account-state";
+import {
   getTutorShortlistContext,
   type TutorShortlistContextDto,
 } from "@/modules/lessons/shortlist";
@@ -44,6 +48,7 @@ import {
   toggleShortlistAction,
 } from "@/modules/lessons/shortlist-actions";
 
+import { ReportReviewControl } from "./report-review-control";
 import styles from "./tutor-profile.module.css";
 
 type TutorProfilePageProps = {
@@ -91,7 +96,10 @@ export default async function TutorProfilePage({
     notFound();
   }
 
-  const shortlistContext = await loadViewerShortlistContext(profile.id);
+  const [shortlistContext, canReportReviews] = await Promise.all([
+    loadViewerShortlistContext(profile.id),
+    loadViewerCanReportReviews(),
+  ]);
   const pathname = `/tutors/${profile.slug}`;
   const qualityGate = evaluateTutorProfileIndexability(
     buildTutorProfileIndexabilityInput(profile),
@@ -305,7 +313,10 @@ export default async function TutorProfilePage({
           </div>
         </Section>
 
-        <ReviewSurfaceSection profile={profile} />
+        <ReviewSurfaceSection
+          canReportReviews={canReportReviews}
+          profile={profile}
+        />
 
         {profile.introVideo ? <IntroVideoSection profile={profile} /> : null}
 
@@ -366,6 +377,32 @@ async function loadViewerShortlistContext(
     return await getTutorShortlistContext(account, tutorProfileId);
   } catch {
     return null;
+  }
+}
+
+// Whether the current viewer is a signed-in, unrestricted account that may
+// report a review. The report Server Action re-validates this; this gate just
+// avoids showing the entry to logged-out visitors and crawlers.
+async function loadViewerCanReportReviews(): Promise<boolean> {
+  if (!isSupabaseAuthConfigured()) {
+    return false;
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user?.email?.trim()) {
+      return false;
+    }
+
+    const account = await ensureAuthAccount(user);
+    return !requiresRoleSelection(account) && !isRestrictedAccount(account);
+  } catch {
+    return false;
   }
 }
 
@@ -546,7 +583,13 @@ function uniqueLinkValues<T extends { slug: string }>(values: T[]): T[] {
   return out;
 }
 
-function ReviewSurfaceSection({ profile }: { profile: PublicTutorProfileDto }) {
+function ReviewSurfaceSection({
+  canReportReviews,
+  profile,
+}: {
+  canReportReviews: boolean;
+  profile: PublicTutorProfileDto;
+}) {
   const { rating, reviews } = profile.reviewSummary;
   const hasFeatured = rating.hasPublicRating && rating.smoothedRatingValue !== null;
   const eyebrow = "Student reviews";
@@ -595,6 +638,9 @@ function ReviewSurfaceSection({ profile }: { profile: PublicTutorProfileDto }) {
               ) : null}
               {review.comment ? (
                 <p className={styles.reviewCardComment}>{review.comment}</p>
+              ) : null}
+              {canReportReviews ? (
+                <ReportReviewControl reviewId={review.id} />
               ) : null}
             </li>
           ))}

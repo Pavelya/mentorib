@@ -16,7 +16,7 @@ const TRUST_CARDS: SectionLandingCard[] = [
     title: "Review moderation",
     description:
       "Hide or redact a published tutor review that contains inappropriate content, with a required reason.",
-    status: { label: "Planned", tone: "trust" },
+    href: "/internal/reviews" as Route,
   },
   {
     key: "disputes",

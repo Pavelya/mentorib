@@ -60,6 +60,12 @@ const BLOCK_RESOLUTION_KINDS: ModerationCaseResolutionKind[] = [
   "uphold",
 ];
 
+const REVIEW_RESOLUTION_KINDS: ModerationCaseResolutionKind[] = [
+  "uphold",
+  "reject",
+  "no_action",
+];
+
 type Props = {
   caseId: string;
   caseKind:
@@ -67,7 +73,8 @@ type Props = {
     | "block"
     | "public_content_takedown"
     | "lesson_issue"
-    | "finance_intervention";
+    | "finance_intervention"
+    | "review";
   caseStatus: ModerationCaseStatus;
 };
 
@@ -298,6 +305,9 @@ function resolutionKindsForCase(
   }
   if (caseKind === "block") {
     return BLOCK_RESOLUTION_KINDS;
+  }
+  if (caseKind === "review") {
+    return REVIEW_RESOLUTION_KINDS;
   }
   return [
     "uphold",

@@ -595,3 +595,9 @@
   line-height: var(--line-body);
   margin: 0;
 }
+
+.reviewReportRow {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}

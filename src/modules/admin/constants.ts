@@ -4,6 +4,7 @@ export const MODERATION_CASE_KINDS = [
   "lesson_issue",
   "public_content_takedown",
   "finance_intervention",
+  "review",
 ] as const;
 
 // Sub-vocabulary for `case_kind = 'finance_intervention'` cases opened by

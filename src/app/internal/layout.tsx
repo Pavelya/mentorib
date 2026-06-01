@@ -24,7 +24,8 @@ export default async function InternalLayout({ children }: InternalLayoutProps) 
     <AppFrame
       description="Privileged internal shell kept inside the same application architecture."
       navItems={navigationByFamily.internal.items}
-      title="Internal operations share the same app shell"
+      showHero={false}
+      title="Internal operations"
       viewer={viewer}
     >
       {children}

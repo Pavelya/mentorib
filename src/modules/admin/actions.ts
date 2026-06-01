@@ -23,6 +23,8 @@ export const ADMIN_ACTION_KEYS = [
   "moderation_case.note_added",
   // Trust-and-safety surfaces (P2-OPS-001)
   "tutor_listing.public_takedown",
+  // Tutor-review moderation (P2-ADMIN-TRUST-001)
+  "review.set_status",
   // Admin user-detail surface (P2-OPS-002)
   "tutor_listing.admin_pause",
   "tutor_listing.admin_delist",

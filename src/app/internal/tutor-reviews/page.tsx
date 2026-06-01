@@ -5,6 +5,7 @@ import {
   Card,
   Chip,
   InlineNotice,
+  PageHeader,
   Panel,
   StatusBadge,
 } from "@/components/ui";
@@ -52,14 +53,11 @@ export default async function InternalTutorReviewsPage({
 
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>Internal · Tutor reviews</p>
-        <h1 className={styles.title}>Tutor application queue</h1>
-        <p className={styles.helperText}>
-          Filter by review status, then open an application to claim it,
-          request changes, approve, or reject.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Internal · Tutor reviews"
+        title="Tutor application queue"
+        description="Filter by review status, then open an application to claim it, request changes, approve, or reject."
+      />
 
       <div className={styles.filterRow}>
         {TUTOR_APPLICATION_REVIEW_FILTER_STATUSES.map((filter) => {

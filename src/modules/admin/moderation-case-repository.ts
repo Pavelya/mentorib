@@ -194,6 +194,7 @@ export async function loadModerationCaseCountsByKind(): Promise<
     lesson_issue: 0,
     public_content_takedown: 0,
     report: 0,
+    review: 0,
   };
 
   await Promise.all(

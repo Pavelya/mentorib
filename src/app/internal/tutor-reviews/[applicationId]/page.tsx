@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
 
@@ -7,9 +6,9 @@ import {
   Chip,
   Icon,
   InlineNotice,
+  PageHeader,
   Section,
   StatusBadge,
-  getButtonClassName,
 } from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 import { formatUtcDateTime, getTimezoneLabel } from "@/lib/datetime";
@@ -50,33 +49,23 @@ export default async function InternalTutorReviewDetailPage({
 
   return (
     <article className={styles.page}>
-      <header className={styles.intro}>
-        <p className={styles.eyebrow}>Internal · Tutor reviews</p>
-        <h1 className={styles.title}>{detail.applicantDisplayName}</h1>
-        <p className={styles.helperText}>
-          <Link
-            className={getButtonClassName({
-              size: "compact",
-              variant: "ghost",
-            })}
-            href={"/internal/tutor-reviews" as Route}
-            prefetch={false}
-          >
-            ← Back to queue
-          </Link>
-        </p>
-        <p>
-          <StatusBadge tone={getStatusBadgeTone(detail.applicationStatus)}>
-            {getStatusLabel(detail.applicationStatus)}
-          </StatusBadge>
-          {detail.submittedAt ? (
-            <span className={styles.queueRowMeta}>
-              {" · Submitted "}
-              {formatUtcDateTime(detail.submittedAt)}
-            </span>
-          ) : null}
-        </p>
-      </header>
+      <PageHeader
+        backLink={{ href: "/internal/tutor-reviews" as Route, label: "← Back to queue" }}
+        eyebrow="Internal · Tutor reviews"
+        status={
+          <>
+            <StatusBadge tone={getStatusBadgeTone(detail.applicationStatus)}>
+              {getStatusLabel(detail.applicationStatus)}
+            </StatusBadge>
+            {detail.submittedAt ? (
+              <span className={styles.queueRowMeta}>
+                Submitted {formatUtcDateTime(detail.submittedAt)}
+              </span>
+            ) : null}
+          </>
+        }
+        title={detail.applicantDisplayName}
+      />
 
       <div className={styles.detailGrid}>
         <div>

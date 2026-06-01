@@ -31,6 +31,7 @@ const VISIBLE_CASE_KINDS: readonly ModerationCaseKind[] = [
   "report",
   "block",
   "public_content_takedown",
+  "review",
 ];
 
 const VISIBLE_STATUS_FILTERS: readonly ModerationCaseStatus[] = [

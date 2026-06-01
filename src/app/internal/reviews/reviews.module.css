@@ -1,0 +1,42 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.queueList {
+  display: grid;
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.queueRow {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.queueChips {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.reviewComment {
+  color: var(--ink-700);
+  line-height: var(--line-body);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.moderationForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.moderationSubmitRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

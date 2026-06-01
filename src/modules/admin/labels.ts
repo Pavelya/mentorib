@@ -142,6 +142,7 @@ export const CASE_KIND_LABELS = {
   lesson_issue: "Lesson issue",
   public_content_takedown: "Public profile takedown",
   report: "Report",
+  review: "Reported review",
 } as const satisfies Record<ModerationCaseKind, string>;
 
 export const CASE_STATUS_LABELS = {
@@ -332,6 +333,7 @@ const ADMIN_ACTION_LABELS = {
     "Updated focus-area reference data",
   "reference_data.video_media_provider.update":
     "Updated video-provider reference data",
+  "review.set_status": "Updated review moderation status",
   "tutor_application.approve": "Approved tutor application",
   "tutor_application.claim": "Claimed a tutor application",
   "tutor_application.reject": "Rejected tutor application",

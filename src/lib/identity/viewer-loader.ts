@@ -8,6 +8,10 @@ import { resolveViewerIdentity, type ViewerIdentity } from "@/lib/identity/viewe
 import { isSupabaseAuthConfigured } from "@/lib/supabase/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasRole } from "@/modules/accounts/account-state";
+import {
+  getPendingAcknowledgementNotice,
+  type LegalNoticeDto,
+} from "@/modules/notifications/legal-notices";
 
 const loadResolvedAuthAccount = cache(async (): Promise<ResolvedAuthAccount | null> => {
   if (!isSupabaseAuthConfigured()) {
@@ -38,6 +42,20 @@ export const loadViewerIdentity = cache(
       return null;
     }
     return resolveViewerIdentity(account);
+  },
+);
+
+export const loadPendingPolicyAcknowledgement = cache(
+  async (): Promise<LegalNoticeDto | null> => {
+    const account = await loadResolvedAuthAccount();
+    if (!account) {
+      return null;
+    }
+    try {
+      return await getPendingAcknowledgementNotice(account.id);
+    } catch {
+      return null;
+    }
   },
 );
 

@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { PendingPolicyAcknowledgement } from "@/components/account/pending-policy-acknowledgement";
 import { BottomNav, type BottomNavItem, Panel, getButtonClassName } from "@/components/ui";
 import { buildAuthSignInPath } from "@/lib/auth/allowed-redirects";
 import type { NavItem } from "@/lib/routing/navigation";
@@ -124,6 +125,8 @@ export function AppFrame({
       </header>
 
       <main className={styles.main}>
+        {viewer ? <PendingPolicyAcknowledgement /> : null}
+
         {showHero ? (
           <Panel
             className={styles.heroPanel}

@@ -58,7 +58,13 @@
       "Bash(sed -n '1,60p' src/components/ui/activity-list.tsx)",
       "Bash(sed -n '1,50p' src/components/ui/star-rating.tsx)",
       "Bash(sed -n '1,40p' src/components/ui/status-badge.tsx)",
-      "Bash(grep -rn \"tutors/\\\\${\" src/)"
+      "Bash(grep -rn \"tutors/\\\\${\" src/)",
+      "Bash(grep -iA3 -B3 \"error\\\\|server-only\\\\|only be imported\\\\|use server\\\\|cannot\")",
+      "Bash(cd /Users/pavel/mentorib; ls tests/e2e 2>/dev/null; echo \"---playwright browsers---\"; ls ~/Library/Caches/ms-playwright 2>/dev/null | head)",
+      "Read(//Users/pavel/Library/Caches/ms-playwright/**)",
+      "Bash(sed -n '1,40p' src/lib/seo/metadata/defaults.ts)",
+      "Bash(sed -n '25,60p' src/lib/seo/metadata/build-metadata.ts)",
+      "Bash(pkill -f \"next-server\")"
     ]
   }
 }

@@ -106,6 +106,28 @@ export async function ensurePolicyNoticeNotificationsForUser(
   );
 }
 
+export async function getPendingAcknowledgementNotice(appUserId: string) {
+  const notices = await listLegalNoticesForAccount(appUserId);
+
+  const pending = notices.find(
+    (notice) => notice.requiresAcknowledgement && !notice.receipt?.acknowledgedAt,
+  );
+
+  if (!pending) {
+    return null;
+  }
+
+  if (!pending.receipt?.firstShownAt) {
+    try {
+      await recordLegalNoticeFirstShown(appUserId, pending.id);
+    } catch {
+      // First-shown tracking is best-effort and must never block the banner.
+    }
+  }
+
+  return pending;
+}
+
 export function requiresLegalNoticeAction(notice: LegalNoticeDto) {
   if (notice.requiresAcknowledgement) {
     return !notice.receipt?.acknowledgedAt;
@@ -198,6 +220,46 @@ export async function recordLegalNoticeReview(
       first_shown_at: existingReceipt?.first_shown_at ?? nowIso,
       policy_notice_version_id: noticeId,
       viewed_at: existingReceipt?.viewed_at ?? nowIso,
+    },
+    { onConflict: "policy_notice_version_id,app_user_id" },
+  );
+
+  if (upsertError) {
+    throw new Error("The legal notice review state could not be saved.");
+  }
+}
+
+export async function recordLegalNoticeFirstShown(appUserId: string, noticeId: string) {
+  const serviceRoleClient = createSupabaseServiceRoleClient();
+  const nowIso = new Date().toISOString();
+
+  const { data: existingReceipt, error: receiptError } = await serviceRoleClient
+    .from("policy_notice_receipts")
+    .select("id, first_shown_at, viewed_at, acknowledged_at")
+    .eq("app_user_id", appUserId)
+    .eq("policy_notice_version_id", noticeId)
+    .maybeSingle<
+      Pick<
+        PolicyNoticeReceiptRow,
+        "acknowledged_at" | "first_shown_at" | "id" | "viewed_at"
+      >
+    >();
+
+  if (receiptError) {
+    throw new Error("The legal notice review state could not be read.");
+  }
+
+  if (existingReceipt?.first_shown_at) {
+    return;
+  }
+
+  const { error: upsertError } = await serviceRoleClient.from("policy_notice_receipts").upsert(
+    {
+      acknowledged_at: existingReceipt?.acknowledged_at ?? null,
+      app_user_id: appUserId,
+      first_shown_at: nowIso,
+      policy_notice_version_id: noticeId,
+      viewed_at: existingReceipt?.viewed_at ?? null,
     },
     { onConflict: "policy_notice_version_id,app_user_id" },
   );

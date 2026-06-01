@@ -90,11 +90,18 @@ export const navigationByFamily: Record<RouteFamilyKey, FamilyNavigation> = {
     ],
   },
   internal: {
+    // Two-level header (capability-map §3): the header carries the 7 capability
+    // groups, each pointing at its section landing route. Multi-leaf groups land
+    // on a card-list section page; single-leaf groups (Applications, Support)
+    // point straight at their leaf. Leaves are reached from the section page.
     items: [
-      { href: "/internal", label: "Internal Home" },
-      { href: "/internal/tutor-reviews", label: "Tutor Reviews" },
-      { href: "/internal/moderation", label: "Moderation" },
-      { href: "/internal/reference-data", label: "Reference Data" },
+      { href: "/internal", label: "Overview" },
+      { href: "/internal/people" as Route, label: "People" },
+      { href: "/internal/tutor-reviews", label: "Applications" },
+      { href: "/internal/trust" as Route, label: "Trust & Safety" },
+      { href: "/internal/support" as Route, label: "Support" },
+      { href: "/internal/finance" as Route, label: "Finance" },
+      { href: "/internal/configuration" as Route, label: "Configuration" },
     ],
   },
 };

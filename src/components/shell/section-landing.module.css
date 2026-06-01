@@ -1,0 +1,41 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.cardDescription {
+  color: var(--ink-500);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.plannedCard {
+  opacity: 0.72;
+}

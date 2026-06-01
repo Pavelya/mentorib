@@ -5,6 +5,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
@@ -30,6 +31,8 @@ import {
   paymentProviders,
   paymentStatuses,
   persistedLessonReportStatuses,
+  tutorReliabilityEventKinds,
+  tutorReliabilityEventSourceKinds,
 } from "@/modules/lessons/constants";
 import {
   languages,
@@ -507,6 +510,33 @@ export const payments = pgTable(
     index("payments_status_updated_at_idx").on(
       table.payment_status,
       table.updated_at,
+    ),
+  ],
+);
+
+export const tutorReliabilityEvents = pgTable(
+  "tutor_reliability_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tutor_profile_id: uuid("tutor_profile_id")
+      .notNull()
+      .references(() => tutorProfiles.id, { onDelete: "cascade" }),
+    event_kind: text("event_kind", {
+      enum: tutorReliabilityEventKinds,
+    }).notNull(),
+    weight: smallint("weight").notNull().default(1),
+    source_kind: text("source_kind", {
+      enum: tutorReliabilityEventSourceKinds,
+    }).notNull(),
+    source_id: uuid("source_id"),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("tutor_reliability_events_tutor_profile_id_created_at_idx").on(
+      table.tutor_profile_id,
+      table.created_at,
     ),
   ],
 );

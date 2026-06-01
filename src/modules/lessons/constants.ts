@@ -160,6 +160,27 @@ export const lessonIssueResolutionOutcomes = [
 export type LessonIssueResolutionOutcome =
   (typeof lessonIssueResolutionOutcomes)[number];
 
+// Reliability-event vocabulary recorded when a lesson-issue dispute resolves
+// against the tutor (P2-OPSFIX-006). The penalty mapping lives in
+// `src/modules/admin/lesson-issue-resolution.ts`; aggregation/scoring is a
+// later task. `weight` defaults to 1 per event.
+export const tutorReliabilityEventKinds = [
+  "no_show_confirmed",
+  "wrong_link_fault",
+  "partial_delivery",
+] as const;
+
+export type TutorReliabilityEventKind =
+  (typeof tutorReliabilityEventKinds)[number];
+
+export const tutorReliabilityEventSourceKinds = [
+  "lesson_issue_resolution",
+  "admin_manual",
+] as const;
+
+export type TutorReliabilityEventSourceKind =
+  (typeof tutorReliabilityEventSourceKinds)[number];
+
 // Lesson recap (continuity record) lifecycle.
 //
 // `due` is intentionally a derived view-model state surfaced when a completed

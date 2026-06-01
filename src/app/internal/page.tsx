@@ -135,6 +135,34 @@ export default async function InternalHomePage() {
         <li>
           <Link
             className={styles.queueLink}
+            href={"/internal/disputes" as Route}
+            prefetch={false}
+          >
+            <Card>
+              <div className={styles.queueRow}>
+                <div className={styles.queueRowHeader}>
+                  <h2 className={styles.queueRowTitle}>Lesson disputes</h2>
+                  <StatusBadge
+                    tone={
+                      moderationCounts.lesson_issue > 0 ? "info" : "positive"
+                    }
+                  >
+                    {moderationCounts.lesson_issue > 0
+                      ? `${moderationCounts.lesson_issue} open`
+                      : "Caught up"}
+                  </StatusBadge>
+                </div>
+                <p className={styles.queueRowMeta}>
+                  Resolve contested lesson issues. The outcome drives the
+                  refund, payout, and reliability consequences.
+                </p>
+              </div>
+            </Card>
+          </Link>
+        </li>
+        <li>
+          <Link
+            className={styles.queueLink}
             href={"/internal/reference-data" as Route}
             prefetch={false}
           >

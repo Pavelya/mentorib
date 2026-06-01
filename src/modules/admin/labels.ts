@@ -16,6 +16,10 @@ import type {
   ModerationCaseStatus,
   ModerationCaseSubjectKind,
 } from "@/modules/admin/constants";
+import type {
+  LessonIssueResolutionOutcome,
+  LessonIssueType,
+} from "@/modules/lessons/constants";
 import type { PolicyNoticeType } from "@/modules/notifications/constants";
 import type { ReferenceEditableField } from "@/modules/reference/admin/families";
 import type { ReviewStatus } from "@/modules/reviews/constants";
@@ -162,6 +166,27 @@ export const CASE_RESOLUTION_LABELS = {
   split: "Split decision",
   uphold: "Upheld",
 } as const satisfies Record<ModerationCaseResolutionKind, string>;
+
+// Lesson-issue dispute vocabularies (P2-OPSFIX-006). The issue type is what a
+// participant reported; the resolution outcome is what an admin decided. Both
+// render as plain operator copy so the dispute surfaces never print a raw enum.
+export const LESSON_ISSUE_TYPE_LABELS = {
+  partial_delivery: "Partial delivery",
+  student_absent: "Student absent",
+  technical_failure: "Technical failure",
+  tutor_absent: "Tutor absent",
+  wrong_meeting_link: "Wrong or missing meeting link",
+} as const satisfies Record<LessonIssueType, string>;
+
+export const LESSON_ISSUE_OUTCOME_LABELS = {
+  duplicate_or_invalid: "Duplicate or invalid",
+  lesson_completed: "Lesson completed as normal",
+  partial_delivery_adjusted: "Partial delivery (adjusted)",
+  student_no_show_confirmed: "Student no-show confirmed",
+  technical_issue_no_fault: "Technical issue (no fault)",
+  tutor_no_show_confirmed: "Tutor no-show confirmed",
+  wrong_link_tutor_fault: "Wrong link (tutor at fault)",
+} as const satisfies Record<LessonIssueResolutionOutcome, string>;
 
 export const SUBJECT_KIND_LABELS = {
   app_user: "User",

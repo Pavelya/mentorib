@@ -26,6 +26,7 @@ import {
   loadModerationCaseDetail,
   loadModerationCaseNotes,
 } from "@/modules/admin/moderation-case-repository";
+import { loadLessonIssueDisputeDetail } from "@/modules/lessons/lesson-issue-dispute";
 
 import { AddCaseNoteForm, CaseActionsPanel } from "./case-actions-panel";
 import styles from "../moderation.module.css";
@@ -54,6 +55,14 @@ export default async function InternalModerationCaseDetailPage({
         ? loadBlocksInvolvingSubject("app_user", detail.subjectId)
         : Promise.resolve([]),
     ]);
+
+  // Lesson-issue cases extend the detail with a side-by-side participant-claim
+  // view, loaded from the lessons module (the admin module never widens its DTO
+  // surface into lesson internals).
+  const dispute =
+    detail.caseKind === "lesson_issue"
+      ? await loadLessonIssueDisputeDetail(detail.subjectId)
+      : null;
 
   const subjectLink = subjectSummary.publicProfileHref ? (
     <Link
@@ -104,6 +113,45 @@ export default async function InternalModerationCaseDetailPage({
     });
   }
 
+  const disputeLessonItems: DescriptionListItem[] = dispute
+    ? [
+        { label: "Lesson", value: dispute.scheduledStartAtLabel },
+        { label: "Reported issue", value: dispute.issueTypeLabel },
+        {
+          label: "Refund eligibility",
+          value: dispute.refundEligible
+            ? "Captured payment is refundable"
+            : "No refundable captured payment",
+        },
+      ]
+    : [];
+  if (dispute?.resolutionOutcomeLabel) {
+    disputeLessonItems.push({
+      label: "Recorded outcome",
+      value: dispute.resolutionOutcomeLabel,
+    });
+  }
+
+  const studentClaimItems: DescriptionListItem[] = dispute
+    ? [{ label: "Claim", value: dispute.student.claimLabel }]
+    : [];
+  if (dispute?.student.claimSummary) {
+    studentClaimItems.push({
+      label: "Details",
+      value: dispute.student.claimSummary,
+    });
+  }
+
+  const tutorClaimItems: DescriptionListItem[] = dispute
+    ? [{ label: "Claim", value: dispute.tutor.claimLabel }]
+    : [];
+  if (dispute?.tutor.claimSummary) {
+    tutorClaimItems.push({
+      label: "Details",
+      value: dispute.tutor.claimSummary,
+    });
+  }
+
   return (
     <article className={styles.page}>
       <PageHeader
@@ -139,6 +187,44 @@ export default async function InternalModerationCaseDetailPage({
               <DescriptionList items={subjectItems} />
             </Card>
           </Section>
+
+          {dispute ? (
+            <Section
+              eyebrow="Dispute"
+              title="Participant claims"
+              titleAs="h2"
+            >
+              <Card>
+                <DescriptionList items={disputeLessonItems} />
+              </Card>
+              <div className={styles.personPair}>
+                <Card>
+                  <PersonSummary
+                    avatarSrc={dispute.student.avatarSrc ?? undefined}
+                    descriptor={
+                      dispute.student.isReporter
+                        ? "Student · reporter"
+                        : "Student"
+                    }
+                    name={dispute.student.displayName ?? "Unknown student"}
+                    variant="standard"
+                  />
+                  <DescriptionList items={studentClaimItems} />
+                </Card>
+                <Card>
+                  <PersonSummary
+                    avatarSrc={dispute.tutor.avatarSrc ?? undefined}
+                    descriptor={
+                      dispute.tutor.isReporter ? "Tutor · reporter" : "Tutor"
+                    }
+                    name={dispute.tutor.displayName ?? "Unknown tutor"}
+                    variant="standard"
+                  />
+                  <DescriptionList items={tutorClaimItems} />
+                </Card>
+              </div>
+            </Section>
+          ) : null}
 
           {reporterSummary ? (
             <Section eyebrow="Reporter" title="Who reported" titleAs="h2">

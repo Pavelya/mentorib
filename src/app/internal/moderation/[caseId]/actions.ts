@@ -8,6 +8,12 @@ import {
   type ModerationCaseResolutionKind,
 } from "@/modules/admin/constants";
 import {
+  LessonIssueResolutionError,
+  applyLessonIssueResolution,
+  isLessonIssueResolutionOutcome,
+  lessonIssueOutcomeToResolutionKind,
+} from "@/modules/admin/lesson-issue-resolution";
+import {
   ModerationCaseError,
   addCaseNote,
   claimCase,
@@ -16,7 +22,11 @@ import {
 } from "@/modules/admin/moderation-case-service";
 import { loadModerationCaseDetail } from "@/modules/admin/moderation-case-repository";
 import { applyPublicTakedownEffects } from "@/modules/admin/public-takedown-service";
-import { createModerationReportAcknowledgementNotification } from "@/modules/notifications/lifecycle";
+import { LessonRefundError } from "@/modules/lessons/refund-service";
+import {
+  createLessonIssueResolutionNotifications,
+  createModerationReportAcknowledgementNotification,
+} from "@/modules/notifications/lifecycle";
 
 export type CaseActionState = {
   code: string | null;
@@ -68,21 +78,11 @@ export async function runCaseAction(
       const reason = readString(formData, "reason");
       await dismissCase({ actorAppUserId: admin.id, caseId, reason });
     } else if (intent === "resolve") {
-      const resolutionKind = readResolutionKind(formData);
       const internalSummary = readString(formData, "internal_summary") || null;
       const reason = readString(formData, "reason") || null;
 
-      if (!resolutionKind) {
-        return {
-          code: "invalid_resolution_kind",
-          intent,
-          message: "Pick a resolution kind before saving.",
-          successMessage: null,
-        };
-      }
-
-      // Capture pre-resolve case context so the side-effect dispatch
-      // knows the case kind without a second round-trip.
+      // Capture pre-resolve case context so consequence dispatch knows the
+      // case kind without a second round-trip.
       const detail = await loadModerationCaseDetail(caseId);
       if (!detail) {
         return {
@@ -93,23 +93,83 @@ export async function runCaseAction(
         };
       }
 
-      await resolveCase({
-        actorAppUserId: admin.id,
-        caseId,
-        internalSummary,
-        reason,
-        resolutionKind,
-      });
+      if (detail.caseKind === "lesson_issue") {
+        const outcome = readString(formData, "resolution_outcome");
+        if (!isLessonIssueResolutionOutcome(outcome)) {
+          return {
+            code: "invalid_resolution_kind",
+            intent,
+            message: "Pick a resolution outcome before saving.",
+            successMessage: null,
+          };
+        }
 
-      await dispatchPostResolveSideEffects({
-        actorAppUserId: admin.id,
-        caseDetail: detail,
-        reason,
-        resolutionKind,
-      });
+        // Consequences run first (idempotent) so a failed refund leaves the
+        // case in `under_review` for retry; the abstract resolution_kind is
+        // recorded on the moderation case afterwards, in the same action.
+        const result = await applyLessonIssueResolution({
+          actorAppUserId: admin.id,
+          lessonId: detail.subjectId,
+          outcome,
+          reason,
+        });
+
+        await resolveCase({
+          actorAppUserId: admin.id,
+          caseId,
+          internalSummary,
+          reason,
+          resolutionKind: lessonIssueOutcomeToResolutionKind(outcome),
+        });
+
+        try {
+          const recipients = [
+            result.studentAppUserId,
+            result.tutorAppUserId,
+          ].filter((value): value is string => Boolean(value));
+          if (recipients.length > 0) {
+            await createLessonIssueResolutionNotifications({
+              appUserIds: recipients,
+              caseId: result.lessonIssueCaseId,
+              outcome: result.dismissed ? "dismissed" : "resolved",
+            });
+          }
+        } catch {
+          // notification dispatch must not block the resolution outcome
+        }
+      } else {
+        const resolutionKind = readResolutionKind(formData);
+        if (!resolutionKind) {
+          return {
+            code: "invalid_resolution_kind",
+            intent,
+            message: "Pick a resolution kind before saving.",
+            successMessage: null,
+          };
+        }
+
+        await resolveCase({
+          actorAppUserId: admin.id,
+          caseId,
+          internalSummary,
+          reason,
+          resolutionKind,
+        });
+
+        await dispatchPostResolveSideEffects({
+          actorAppUserId: admin.id,
+          caseDetail: detail,
+          reason,
+          resolutionKind,
+        });
+      }
     }
   } catch (error) {
-    if (error instanceof ModerationCaseError) {
+    if (
+      error instanceof ModerationCaseError ||
+      error instanceof LessonIssueResolutionError ||
+      error instanceof LessonRefundError
+    ) {
       return {
         code: error.code,
         intent,
@@ -127,6 +187,7 @@ export async function runCaseAction(
 
   revalidatePath(`/internal/moderation/${caseId}`);
   revalidatePath("/internal/moderation");
+  revalidatePath("/internal/disputes");
   revalidatePath("/internal");
 
   return {

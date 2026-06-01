@@ -30,6 +30,8 @@ import type {
   PaymentProvider,
   PaymentStatus,
   PersistedLessonReportStatus,
+  TutorReliabilityEventKind,
+  TutorReliabilityEventSourceKind,
 } from "@/modules/lessons/constants";
 import type {
   AbuseReportStatus,
@@ -651,6 +653,16 @@ type LessonIssueCaseRow = {
   updated_at: string;
 };
 
+type TutorReliabilityEventRow = {
+  created_at: string;
+  event_kind: TutorReliabilityEventKind;
+  id: string;
+  source_id: string | null;
+  source_kind: TutorReliabilityEventSourceKind;
+  tutor_profile_id: string;
+  weight: number;
+};
+
 type LessonReportRow = {
   acknowledged_at: string | null;
   coverage_summary: string | null;
@@ -837,6 +849,23 @@ export type MentorIbDatabase = {
           Omit<
             ModerationCaseNoteRow,
             "author_app_user_id" | "case_id" | "created_at" | "id"
+          >
+        >;
+      };
+      tutor_reliability_events: {
+        Insert: Pick<
+          TutorReliabilityEventRow,
+          "event_kind" | "source_kind" | "tutor_profile_id"
+        > & {
+          source_id?: string | null;
+          weight?: number;
+        };
+        Relationships: [];
+        Row: TutorReliabilityEventRow;
+        Update: Partial<
+          Omit<
+            TutorReliabilityEventRow,
+            "created_at" | "id" | "tutor_profile_id"
           >
         >;
       };

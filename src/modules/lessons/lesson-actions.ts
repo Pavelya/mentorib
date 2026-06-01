@@ -1,6 +1,8 @@
 import type { ResolvedAuthAccount } from "@/lib/auth/account-service";
 import { createStripeServerClient, isStripeCheckoutConfigured } from "@/lib/stripe/server";
 import { createSupabaseServiceRoleClient } from "@/lib/supabase/service-role";
+import { ensureLessonIssueDisputeCase } from "@/modules/admin/lesson-issue-resolution";
+import { processLessonRefund } from "@/modules/lessons/refund-service";
 import {
   createLessonAcceptedNotification,
   createLessonDeclinedOrExpiredNotification,
@@ -230,11 +232,18 @@ export async function cancelLessonAsParticipant(
     );
   }
 
-  await applyStripeCancellationSideEffect(policy.outcome, payment);
-
   const cancelledAt = new Date().toISOString();
+  if (policy.outcome === "refund_issued") {
+    // Refunds go through the shared `processLessonRefund` helper so the Stripe
+    // refund call lives in exactly one place (also used by dispute resolution).
+    await processLessonRefund(lesson.id);
+  } else {
+    await applyStripeCancellationSideEffect(policy.outcome, payment);
+  }
   await updateLessonStatus(lesson.id, cancelledAt);
-  await updatePaymentForOutcome(payment, policy.outcome, cancelledAt);
+  if (policy.outcome !== "refund_issued") {
+    await updatePaymentForOutcome(payment, policy.outcome, cancelledAt);
+  }
   await insertLessonStatusHistory({
     bookingOperationId: operation.id,
     fromStatus: lesson.lesson_status,
@@ -367,11 +376,31 @@ export async function reportLessonIssueAsParticipant({
       return { caseId: updated.id, created: false };
     }
 
+    const counterpartyStatus = alignedIssueCaseStatus(
+      existingCase.issue_type,
+      input.issueType,
+    );
     const updated = await updateIssueCase(existingCase.id, {
       counterparty_response_type: input.issueType,
       counterparty_summary: summary,
-      case_status: alignedIssueCaseStatus(existingCase.issue_type, input.issueType),
+      case_status: counterpartyStatus,
     });
+
+    // Conflicting accounts move the case to manual review: open (or reuse) the
+    // shared moderation case that backs the internal disputes queue. Failure
+    // here must not block the participant's report.
+    if (counterpartyStatus === "under_review") {
+      try {
+        await ensureLessonIssueDisputeCase({
+          actorAppUserId: account.id,
+          lessonId: lesson.id,
+          lessonIssueCaseId: existingCase.id,
+          reporterAppUserId: existingCase.reported_by_app_user_id,
+        });
+      } catch {
+        // dispute-case creation is best-effort; the report still succeeds
+      }
+    }
 
     return { caseId: updated.id, created: false };
   }
@@ -609,16 +638,6 @@ async function applyStripeCancellationSideEffect(
 
     return;
   }
-
-  if (outcome === "refund_issued" && payment.payment_status === "paid") {
-    await stripe.refunds.create({
-      payment_intent: payment.stripe_payment_intent_id,
-    });
-  }
-
-  if (outcome === "refund_issued" && payment.payment_status === "authorized") {
-    await stripe.paymentIntents.cancel(payment.stripe_payment_intent_id);
-  }
 }
 
 async function updateLessonStatus(lessonId: string, cancelledAt: string) {
@@ -673,24 +692,6 @@ async function updatePaymentForOutcome(
     return;
   }
 
-  if (outcome === "refund_issued") {
-    const nextStatus = payment.payment_status === "paid" ? "refunded" : "cancelled";
-    const { error } = await supabase
-      .from("payments")
-      .update({
-        payment_status: nextStatus,
-        refunded_at: nextStatus === "refunded" ? cancelledAt : null,
-        capture_cancelled_at: nextStatus === "cancelled" ? cancelledAt : null,
-      })
-      .eq("id", payment.id);
-
-    if (error) {
-      throw new LessonActionError(
-        "payment_update_failed",
-        "We couldn't update the payment record after the refund.",
-      );
-    }
-  }
 }
 
 async function insertLessonStatusHistory({

@@ -48,7 +48,11 @@
       "Bash(git --no-pager diff --stat)",
       "Bash(git --no-pager diff .claude/settings.json)",
       "Bash(grep -rho 'styles\\\\.__TRACKED_VAR__\\\\b' src/app/internal/reference-data)",
-      "Bash(grep -rn 'styles\\\\.__TRACKED_VAR__\\\\b' src/app/internal/reference-data)"
+      "Bash(grep -rn 'styles\\\\.__TRACKED_VAR__\\\\b' src/app/internal/reference-data)",
+      "Bash(echo \"ARCH_EXIT=$?\")",
+      "Bash(echo \"LINT_EXIT=$?\")",
+      "Bash(echo \"BUILD_EXIT=$?\")",
+      "Bash(echo \"TEST_EXIT=$?\")"
     ]
   }
 }

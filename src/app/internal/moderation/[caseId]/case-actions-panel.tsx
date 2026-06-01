@@ -15,6 +15,8 @@ import type {
   ModerationCaseResolutionKind,
   ModerationCaseStatus,
 } from "@/modules/admin/constants";
+import { LESSON_ISSUE_OUTCOME_LABELS } from "@/modules/admin/labels";
+import { lessonIssueResolutionOutcomes } from "@/modules/lessons/constants";
 
 import {
   initialCaseActionState,
@@ -147,21 +149,38 @@ export function CaseActionsPanel({ caseId, caseKind, caseStatus }: Props) {
           <input name="case_id" type="hidden" value={caseId} />
           <input name="intent" type="hidden" value={activeAction} />
 
-          {activeAction === "resolve" && resolutionKinds ? (
-            <label className={styles.actionForm}>
-              <span className={styles.helperText}>Resolution kind</span>
-              <select
-                defaultValue={resolutionKinds[0]}
-                name="resolution_kind"
-                required
-              >
-                {resolutionKinds.map((kind) => (
-                  <option key={kind} value={kind}>
-                    {RESOLUTION_LABELS[kind]}
-                  </option>
-                ))}
-              </select>
-            </label>
+          {activeAction === "resolve" ? (
+            caseKind === "lesson_issue" ? (
+              <label className={styles.actionForm}>
+                <span className={styles.helperText}>Resolution outcome</span>
+                <select
+                  defaultValue={lessonIssueResolutionOutcomes[0]}
+                  name="resolution_outcome"
+                  required
+                >
+                  {lessonIssueResolutionOutcomes.map((outcome) => (
+                    <option key={outcome} value={outcome}>
+                      {LESSON_ISSUE_OUTCOME_LABELS[outcome]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : resolutionKinds ? (
+              <label className={styles.actionForm}>
+                <span className={styles.helperText}>Resolution kind</span>
+                <select
+                  defaultValue={resolutionKinds[0]}
+                  name="resolution_kind"
+                  required
+                >
+                  {resolutionKinds.map((kind) => (
+                    <option key={kind} value={kind}>
+                      {RESOLUTION_LABELS[kind]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null
           ) : null}
 
           {activeAction === "resolve" ? (

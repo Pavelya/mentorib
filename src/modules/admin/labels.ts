@@ -15,6 +15,7 @@ import type {
   ModerationCaseResolutionKind,
   ModerationCaseStatus,
   ModerationCaseSubjectKind,
+  SupportTicketStatus,
 } from "@/modules/admin/constants";
 import type {
   LessonIssueResolutionOutcome,
@@ -240,6 +241,22 @@ export const REVIEW_STATUS_TONES = {
   under_review: "info",
 } as const satisfies Record<ReviewStatus, StatusTone>;
 
+// --- support tickets --------------------------------------------------------
+
+export const SUPPORT_TICKET_STATUS_LABELS = {
+  closed: "Closed",
+  in_progress: "In progress",
+  open: "Open",
+  resolved: "Resolved",
+} as const satisfies Record<SupportTicketStatus, string>;
+
+export const SUPPORT_TICKET_STATUS_TONES = {
+  closed: "trust",
+  in_progress: "warning",
+  open: "info",
+  resolved: "positive",
+} as const satisfies Record<SupportTicketStatus, StatusTone>;
+
 // --- lessons ----------------------------------------------------------------
 
 // Operator-facing labels/tones for `lessons.lesson_status`, consumed by the
@@ -334,6 +351,9 @@ const ADMIN_ACTION_LABELS = {
   "reference_data.video_media_provider.update":
     "Updated video-provider reference data",
   "review.set_status": "Updated review moderation status",
+  "support.assign": "Assigned a support ticket",
+  "support.reply": "Replied to a support ticket",
+  "support.set_status": "Changed support ticket status",
   "tutor_application.approve": "Approved tutor application",
   "tutor_application.claim": "Claimed a tutor application",
   "tutor_application.reject": "Rejected tutor application",

@@ -6,6 +6,7 @@ import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 import { CASE_KIND_LABELS } from "@/modules/admin/labels";
 import type { ModerationCaseKind } from "@/modules/admin/constants";
 import { loadModerationCaseCountsByKind } from "@/modules/admin/moderation-case-repository";
+import { loadOpenSupportTicketCount } from "@/modules/admin/support-ticket-repository";
 import {
   TUTOR_APPLICATION_REVIEW_FILTER_STATUSES,
   type TutorApplicationReviewFilterStatus,
@@ -39,12 +40,14 @@ const MODERATION_CARD_KINDS: readonly ModerationCaseKind[] = [
 export default async function InternalHomePage() {
   await requireInternalAdminAccount();
 
-  const [tutorReviewQueue, moderationCounts] = await Promise.all([
-    loadTutorApplicationReviewQueue({
-      filters: normalizeQueueFilters(undefined),
-    }),
-    loadModerationCaseCountsByKind(),
-  ]);
+  const [tutorReviewQueue, moderationCounts, openSupportTicketCount] =
+    await Promise.all([
+      loadTutorApplicationReviewQueue({
+        filters: normalizeQueueFilters(undefined),
+      }),
+      loadModerationCaseCountsByKind(),
+      loadOpenSupportTicketCount(),
+    ]);
 
   const pendingTutorReviewCount = TUTOR_APPLICATION_REVIEW_FILTER_STATUSES.filter(
     (status) => PENDING_TUTOR_REVIEW_FILTERS.includes(status),
@@ -155,6 +158,32 @@ export default async function InternalHomePage() {
                 <p className={styles.queueRowMeta}>
                   Resolve contested lesson issues. The outcome drives the
                   refund, payout, and reliability consequences.
+                </p>
+              </div>
+            </Card>
+          </Link>
+        </li>
+        <li>
+          <Link
+            className={styles.queueLink}
+            href={"/internal/support" as Route}
+            prefetch={false}
+          >
+            <Card>
+              <div className={styles.queueRow}>
+                <div className={styles.queueRowHeader}>
+                  <h2 className={styles.queueRowTitle}>Support tickets</h2>
+                  <StatusBadge
+                    tone={openSupportTicketCount > 0 ? "info" : "positive"}
+                  >
+                    {openSupportTicketCount > 0
+                      ? `${openSupportTicketCount} open`
+                      : "Caught up"}
+                  </StatusBadge>
+                </div>
+                <p className={styles.queueRowMeta}>
+                  Triage contact-us messages and reply to the requester by
+                  email.
                 </p>
               </div>
             </Card>

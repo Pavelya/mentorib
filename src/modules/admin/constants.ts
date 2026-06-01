@@ -54,3 +54,24 @@ export const MODERATION_CASE_RESOLUTION_KINDS = [
 
 export type ModerationCaseResolutionKind =
   (typeof MODERATION_CASE_RESOLUTION_KINDS)[number];
+
+// Support tickets (`P2-ADMIN-SUPPORT-001`). The public contact-us form is the
+// only ingestion channel this wave; status drives the internal triage queue.
+export const SUPPORT_TICKET_CHANNELS = ["contact_form"] as const;
+
+export type SupportTicketChannel = (typeof SUPPORT_TICKET_CHANNELS)[number];
+
+export const SUPPORT_TICKET_STATUSES = [
+  "open",
+  "in_progress",
+  "resolved",
+  "closed",
+] as const;
+
+export type SupportTicketStatus = (typeof SUPPORT_TICKET_STATUSES)[number];
+
+// Statuses an operator can still act on (queue defaults to these, oldest-first).
+export const SUPPORT_TICKET_OPEN_STATUSES = [
+  "open",
+  "in_progress",
+] as const satisfies readonly SupportTicketStatus[];

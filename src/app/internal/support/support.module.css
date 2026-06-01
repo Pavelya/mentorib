@@ -1,0 +1,84 @@
+.page {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.queueList {
+  display: grid;
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.queueRow {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.queueChips {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.bodySnippet {
+  color: var(--ink-700);
+  line-height: var(--line-body);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.pagination {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.detailGrid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (min-width: 60rem) {
+  .detailGrid {
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  }
+}
+
+.detailColumn {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.messageBody {
+  color: var(--ink-800);
+  line-height: var(--line-body);
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.actionsPanel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.actionForm {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.actionSubmitRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

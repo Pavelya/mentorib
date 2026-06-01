@@ -664,6 +664,19 @@ type TutorReliabilityEventRow = {
   weight: number;
 };
 
+type SupportTicketRow = {
+  assigned_to_app_user_id: string | null;
+  body: string;
+  channel: "contact_form";
+  created_at: string;
+  id: string;
+  requester_app_user_id: string | null;
+  requester_email: string;
+  status: "open" | "in_progress" | "resolved" | "closed";
+  subject: string;
+  updated_at: string;
+};
+
 type LessonReportRow = {
   acknowledged_at: string | null;
   coverage_summary: string | null;
@@ -868,6 +881,19 @@ export type MentorIbDatabase = {
             TutorReliabilityEventRow,
             "created_at" | "id" | "tutor_profile_id"
           >
+        >;
+      };
+      support_tickets: {
+        Insert: Pick<SupportTicketRow, "body" | "requester_email" | "subject"> & {
+          assigned_to_app_user_id?: string | null;
+          channel?: SupportTicketRow["channel"];
+          requester_app_user_id?: string | null;
+          status?: SupportTicketRow["status"];
+        };
+        Relationships: [];
+        Row: SupportTicketRow;
+        Update: Partial<
+          Omit<SupportTicketRow, "created_at" | "id" | "updated_at">
         >;
       };
       abuse_reports: {

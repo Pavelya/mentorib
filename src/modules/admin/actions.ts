@@ -44,6 +44,10 @@ export const ADMIN_ACTION_KEYS = [
   "policy_notice.draft",
   "policy_notice.publish",
   "policy_notice.revoke",
+  // Support-ticket triage (P2-ADMIN-SUPPORT-001)
+  "support.reply",
+  "support.set_status",
+  "support.assign",
 ] as const;
 
 export type AdminActionKey = (typeof ADMIN_ACTION_KEYS)[number];

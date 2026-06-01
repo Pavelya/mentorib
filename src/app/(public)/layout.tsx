@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import type { ReactNode } from "react";
 
 import { AppFrame } from "@/components/shell/app-frame";
@@ -29,6 +29,7 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
         { href: "/how-it-works", label: "How It Works" },
         { href: "/trust-and-safety", label: "Trust & Safety" },
         { href: "/support", label: "Support" },
+        { href: "/contact" as Route, label: "Contact" },
         { href: "/privacy-policy", label: "Privacy policy" },
         { href: "/terms", label: "Terms" },
       ]}

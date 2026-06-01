@@ -14,6 +14,8 @@ import {
   MODERATION_CASE_RESOLUTION_KINDS,
   MODERATION_CASE_STATUSES,
   MODERATION_CASE_SUBJECT_KINDS,
+  SUPPORT_TICKET_CHANNELS,
+  SUPPORT_TICKET_STATUSES,
 } from "@/modules/admin/constants";
 
 export const adminActionLogs = pgTable(
@@ -103,6 +105,46 @@ export const moderationCases = pgTable(
     index("moderation_cases_subject_idx").on(
       table.subject_kind,
       table.subject_id,
+    ),
+  ],
+);
+
+export const supportTickets = pgTable(
+  "support_tickets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requester_app_user_id: uuid("requester_app_user_id").references(
+      () => appUsers.id,
+      { onDelete: "set null" },
+    ),
+    requester_email: text("requester_email").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    channel: text("channel", { enum: SUPPORT_TICKET_CHANNELS })
+      .notNull()
+      .default("contact_form"),
+    status: text("status", { enum: SUPPORT_TICKET_STATUSES })
+      .notNull()
+      .default("open"),
+    assigned_to_app_user_id: uuid("assigned_to_app_user_id").references(
+      () => appUsers.id,
+      { onDelete: "set null" },
+    ),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("support_tickets_status_created_at_idx").on(
+      table.status,
+      table.created_at,
+    ),
+    index("support_tickets_requester_email_created_at_idx").on(
+      table.requester_email,
+      table.created_at,
     ),
   ],
 );

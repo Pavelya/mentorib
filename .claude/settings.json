@@ -52,7 +52,12 @@
       "Bash(echo \"ARCH_EXIT=$?\")",
       "Bash(echo \"LINT_EXIT=$?\")",
       "Bash(echo \"BUILD_EXIT=$?\")",
-      "Bash(echo \"TEST_EXIT=$?\")"
+      "Bash(echo \"TEST_EXIT=$?\")",
+      "Bash(sed -n '1,80p' src/components/ui/index.ts)",
+      "Bash(sed -n '1,80p' src/components/continuity/person-summary.tsx)",
+      "Bash(sed -n '1,60p' src/components/ui/activity-list.tsx)",
+      "Bash(sed -n '1,50p' src/components/ui/star-rating.tsx)",
+      "Bash(sed -n '1,40p' src/components/ui/status-badge.tsx)"
     ]
   }
 }

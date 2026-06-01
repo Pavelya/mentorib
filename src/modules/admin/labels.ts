@@ -19,6 +19,7 @@ import type {
 import type {
   LessonIssueResolutionOutcome,
   LessonIssueType,
+  LessonStatus,
 } from "@/modules/lessons/constants";
 import type { PolicyNoticeType } from "@/modules/notifications/constants";
 import type { ReferenceEditableField } from "@/modules/reference/admin/families";
@@ -28,6 +29,7 @@ import type {
   TutorApplicationStatus,
   TutorPublicListingStatus,
 } from "@/modules/tutors/constants";
+import type { TutorApplicationReviewStatus } from "@/modules/tutors/review-constants";
 
 // `StatusBadge` accepts exactly these tones.
 export type StatusTone =
@@ -236,6 +238,48 @@ export const REVIEW_STATUS_TONES = {
   submitted: "trust",
   under_review: "info",
 } as const satisfies Record<ReviewStatus, StatusTone>;
+
+// --- lessons ----------------------------------------------------------------
+
+// Operator-facing labels/tones for `lessons.lesson_status`, consumed by the
+// admin tutor-detail lessons panel (P2-ADMIN-PEOPLE-002) so the surface never
+// prints a raw lesson-status enum.
+export const LESSON_STATUS_LABELS = {
+  accepted: "Accepted",
+  cancelled: "Cancelled",
+  completed: "Completed",
+  declined: "Declined",
+  draft_request: "Draft request",
+  in_progress: "In progress",
+  pending: "Pending",
+  reviewed: "Reviewed",
+  upcoming: "Upcoming",
+} as const satisfies Record<LessonStatus, string>;
+
+export const LESSON_STATUS_TONES = {
+  accepted: "info",
+  cancelled: "trust",
+  completed: "positive",
+  declined: "destructive",
+  draft_request: "trust",
+  in_progress: "warning",
+  pending: "info",
+  reviewed: "positive",
+  upcoming: "info",
+} as const satisfies Record<LessonStatus, StatusTone>;
+
+// --- tutor application review lifecycle -------------------------------------
+
+// Verb phrases for `tutor_application_reviews.review_status`, consumed by the
+// admin tutor-detail lifecycle timeline (P2-ADMIN-PEOPLE-002). These read as
+// completed actions in a chronological log, not as bare status nouns.
+export const APPLICATION_REVIEW_STATUS_LABELS = {
+  approved: "Approved application",
+  changes_requested: "Requested changes",
+  queued: "Application queued for review",
+  rejected: "Rejected application",
+  under_review: "Claimed for review",
+} as const satisfies Record<TutorApplicationReviewStatus, string>;
 
 // --- reference data ---------------------------------------------------------
 

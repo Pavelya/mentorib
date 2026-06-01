@@ -12,10 +12,15 @@ import {
   InlineNotice,
   PageHeader,
   Section,
+  StarRating,
   StatusBadge,
 } from "@/components/ui";
 import { requireInternalAdminAccount } from "@/lib/auth/internal-access";
 import { formatUtcDateTime } from "@/lib/datetime";
+import {
+  getInternalTutorDetail,
+  type InternalTutorDetailDto,
+} from "@/modules/admin/tutor-detail-repository";
 import {
   getInternalUserDetail,
   type InternalUserDetailDto,
@@ -39,6 +44,12 @@ export default async function InternalUserDetailPage({ params }: PageProps) {
   }
 
   const { account } = detail;
+  const tutorDetail = detail.tutorProfile
+    ? await getInternalTutorDetail({
+        appUserId: account.appUserId,
+        tutorProfileId: detail.tutorProfile.tutorProfileId,
+      })
+    : null;
   const hasActiveAdminRole = detail.roles.some(
     (role) => role.role === "admin" && role.roleStatus === "active",
   );
@@ -74,6 +85,17 @@ export default async function InternalUserDetailPage({ params }: PageProps) {
               name={account.displayName ?? account.email}
               tutor={detail.tutorProfile}
             />
+          ) : null}
+          {tutorDetail ? (
+            <>
+              <TutorLifecycleSection lifecycle={tutorDetail.lifecycle} />
+              <TutorLessonsSection lessons={tutorDetail.lessons} />
+              <TutorReviewsSection
+                rating={tutorDetail.rating}
+                reviews={tutorDetail.reviews}
+              />
+              <TutorEarningsSection earnings={tutorDetail.earnings} />
+            </>
           ) : null}
           {detail.finance ? <FinanceSection finance={detail.finance} /> : null}
           <RecentCasesSection detail={detail} />
@@ -283,6 +305,205 @@ function FinanceSection({
     <Section eyebrow="Finance" title="Payout status" titleAs="h2">
       <Card>
         <DescriptionList items={items} />
+      </Card>
+    </Section>
+  );
+}
+
+function TutorLifecycleSection({
+  lifecycle,
+}: {
+  lifecycle: InternalTutorDetailDto["lifecycle"];
+}) {
+  return (
+    <Section eyebrow="Tutor lifecycle" title="Lifecycle timeline" titleAs="h2">
+      {lifecycle.length === 0 ? (
+        <InlineNotice tone="info" title="No lifecycle events">
+          <p>No application reviews or lifecycle actions recorded yet.</p>
+        </InlineNotice>
+      ) : (
+        <Card>
+          <ActivityList
+            items={lifecycle.map((entry) => ({
+              body: (
+                <div className={styles.actionBody}>
+                  <span className={styles.statusMeta}>{entry.title}</span>
+                  {entry.detail ? <p>{entry.detail}</p> : null}
+                </div>
+              ),
+              header: (
+                <PersonSummary
+                  avatarSrc={entry.actorAvatarSrc ?? undefined}
+                  descriptor="Operator"
+                  name={entry.actorDisplayName ?? "Unknown operator"}
+                  variant="compact"
+                />
+              ),
+              id: entry.id,
+              timestamp: formatUtcDateTime(entry.occurredAt),
+            }))}
+          />
+        </Card>
+      )}
+    </Section>
+  );
+}
+
+function TutorLessonsSection({
+  lessons,
+}: {
+  lessons: InternalTutorDetailDto["lessons"];
+}) {
+  return (
+    <Section eyebrow="Lessons" title="Lessons" titleAs="h2">
+      {lessons.length === 0 ? (
+        <InlineNotice tone="info" title="No lessons yet">
+          <p>This tutor has not delivered or scheduled any lessons.</p>
+        </InlineNotice>
+      ) : (
+        <Card>
+          <ActivityList
+            items={lessons.map((lesson) => ({
+              body: (
+                <span className={styles.inlineMeta}>
+                  <StatusBadge tone={lesson.lessonStatusTone}>
+                    {lesson.lessonStatusLabel}
+                  </StatusBadge>
+                  <span className={styles.statusMeta}>
+                    {lesson.priceLabel}
+                    {lesson.isTrial ? " · Trial" : ""}
+                    {lesson.hasOpenIssue ? " · Open issue" : ""}
+                  </span>
+                </span>
+              ),
+              header: (
+                <PersonSummary
+                  avatarSrc={lesson.student.avatarSrc ?? undefined}
+                  descriptor={lesson.subjectLabel ?? "Lesson"}
+                  name={lesson.student.displayName}
+                  variant="compact"
+                />
+              ),
+              id: lesson.id,
+              timestamp: formatUtcDateTime(lesson.startAt),
+            }))}
+          />
+        </Card>
+      )}
+    </Section>
+  );
+}
+
+function TutorReviewsSection({
+  rating,
+  reviews,
+}: {
+  rating: InternalTutorDetailDto["rating"];
+  reviews: InternalTutorDetailDto["reviews"];
+}) {
+  const ratingItems: DescriptionListItem[] = [
+    {
+      label: "Average rating",
+      value:
+        rating.averageRatingValue !== null && rating.publishedReviewCount > 0 ? (
+          <span className={styles.inlineMeta}>
+            <StarRating
+              aria-label={`${rating.averageRatingValue.toFixed(2)} out of 5 stars`}
+              mode="display"
+              value={rating.averageRatingValue}
+            />
+            <span className={styles.statusMeta}>
+              {rating.averageRatingValue.toFixed(2)} / 5
+            </span>
+          </span>
+        ) : (
+          "No published rating yet"
+        ),
+    },
+    {
+      label: "Published reviews",
+      value: String(rating.publishedReviewCount),
+    },
+  ];
+
+  return (
+    <Section eyebrow="Reviews" title="Rating & reviews" titleAs="h2">
+      <Card>
+        <DescriptionList items={ratingItems} />
+        {reviews.length === 0 ? (
+          <InlineNotice tone="info" title="No reviews">
+            <p>No reviews have been left for this tutor yet.</p>
+          </InlineNotice>
+        ) : (
+          <ActivityList
+            items={reviews.map((review) => ({
+              body: (
+                <div className={styles.actionBody}>
+                  {review.comment ? <p>{review.comment}</p> : null}
+                  {review.moderationNote ? (
+                    <p className={styles.statusMeta}>
+                      Moderation note: {review.moderationNote}
+                    </p>
+                  ) : null}
+                </div>
+              ),
+              header: (
+                <span className={styles.inlineMeta}>
+                  <StarRating
+                    aria-label={`${review.ratingValue} out of 5 stars`}
+                    mode="display"
+                    value={review.ratingValue}
+                  />
+                  <StatusBadge tone={review.reviewStatusTone}>
+                    {review.reviewStatusLabel}
+                  </StatusBadge>
+                  <span className={styles.statusMeta}>
+                    {review.reviewerLabel}
+                    {review.subjectLabel ? ` · ${review.subjectLabel}` : ""}
+                  </span>
+                </span>
+              ),
+              id: review.id,
+              timestamp: formatUtcDateTime(review.timestamp),
+            }))}
+          />
+        )}
+      </Card>
+    </Section>
+  );
+}
+
+function TutorEarningsSection({
+  earnings,
+}: {
+  earnings: InternalTutorDetailDto["earnings"];
+}) {
+  const items: DescriptionListItem[] = [
+    {
+      label: "Total earnings (gross)",
+      value: earnings.totalEarningsLabel ?? "No captured earnings yet",
+    },
+    { label: "Lessons paid", value: String(earnings.totalLessonCount) },
+    { label: "Commission paid", value: earnings.commissionNote },
+  ];
+
+  return (
+    <Section eyebrow="Earnings" title="Earnings (gross)" titleAs="h2">
+      <Card>
+        <DescriptionList items={items} />
+        {earnings.monthlySummary.length > 0 ? (
+          <DescriptionList
+            items={earnings.monthlySummary.map((bucket) => ({
+              label: bucket.monthLabel,
+              value: (
+                <span className={styles.statusMeta}>
+                  {bucket.earningsLabel} · {bucket.lessonCount} lesson
+                  {bucket.lessonCount === 1 ? "" : "s"}
+                </span>
+              ),
+            }))}
+          />
+        ) : null}
       </Card>
     </Section>
   );

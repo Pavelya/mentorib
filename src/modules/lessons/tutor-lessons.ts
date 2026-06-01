@@ -293,6 +293,105 @@ export async function getTutorLessonList(
   };
 }
 
+const ADMIN_TUTOR_LESSON_LIMIT = 25;
+
+// Admin-scoped lesson read for the internal tutor-detail surface
+// (P2-ADMIN-PEOPLE-002). Unlike `getTutorLessonList`, it is keyed by the
+// tutor's `tutor_profile_id` (an operator is not the lesson owner) and returns
+// a flat, most-recent-first list shaped for an operator timeline. It carries
+// the raw `lesson_status` enum so the admin view-model boundary owns the
+// humanized label/tone — this module stays free of admin copy.
+export type AdminTutorLessonItemDto = {
+  endAt: string;
+  focusLabel: string | null;
+  hasOpenIssue: boolean;
+  id: string;
+  isTrial: boolean;
+  lessonStatus: LessonStatus;
+  lessonTimezone: string;
+  priceLabel: string;
+  startAt: string;
+  student: {
+    appUserId: string;
+    avatarUrl: string | null;
+    displayName: string;
+  };
+  subjectLabel: string | null;
+};
+
+export async function getAdminTutorLessonList(
+  tutorProfileId: string,
+  limit: number = ADMIN_TUTOR_LESSON_LIMIT,
+): Promise<AdminTutorLessonItemDto[]> {
+  const supabase = createSupabaseServiceRoleClient();
+
+  const { data: lessonRows, error: lessonError } = await supabase
+    .from("lessons")
+    .select(
+      "id, cancelled_at, completed_at, currency_code, focus_snapshot, is_trial, lesson_status, lesson_timezone, meeting_method, price_amount, request_expires_at, scheduled_end_at, scheduled_start_at, student_note_snapshot, student_profile_id, subject_snapshot, tutor_profile_id",
+    )
+    .eq("tutor_profile_id", tutorProfileId)
+    .in("lesson_status", [...VISIBLE_LESSON_STATUSES])
+    .order("scheduled_start_at", { ascending: false })
+    .limit(limit)
+    .returns<LessonRecord[]>();
+
+  if (lessonError) {
+    throw new Error("Could not load tutor lessons for the admin surface.");
+  }
+
+  const lessons = lessonRows ?? [];
+
+  if (lessons.length === 0) {
+    return [];
+  }
+
+  const studentProfileIds = uniqueStrings(
+    lessons.map((lesson) => lesson.student_profile_id),
+  );
+  const lessonIds = lessons.map((lesson) => lesson.id);
+
+  const [studentLookup, issueLookup] = await Promise.all([
+    loadStudentLookup(studentProfileIds),
+    loadIssueLookup(lessonIds),
+  ]);
+
+  return lessons.flatMap<AdminTutorLessonItemDto>((lesson) => {
+    const student = studentLookup.get(lesson.student_profile_id);
+
+    if (!student) {
+      return [];
+    }
+
+    const issueRecord = issueLookup.get(lesson.id) ?? null;
+    const context = buildContextDto(lesson);
+    const schedule = buildScheduleDto(lesson);
+    const studentDto = buildStudentDto(student);
+
+    return [
+      {
+        endAt: schedule.endAt,
+        focusLabel: context.focus?.label ?? null,
+        hasOpenIssue: issueRecord
+          ? !TERMINAL_ISSUE_CASE_STATUSES.includes(issueRecord.case_status)
+          : false,
+        id: lesson.id,
+        isTrial: lesson.is_trial,
+        lessonStatus: lesson.lesson_status,
+        lessonTimezone: schedule.lessonTimezone,
+        priceLabel: schedule.priceLabel,
+        startAt: schedule.startAt,
+        student: {
+          appUserId: studentDto.appUserId,
+          avatarUrl: studentDto.avatarUrl,
+          displayName: studentDto.displayName,
+        },
+        subjectLabel: context.subject?.label ?? null,
+      },
+    ];
+  });
+}
+
 export async function getTutorLessonDetail(
   account: Pick<ResolvedAuthAccount, "id">,
   lessonId: string,
